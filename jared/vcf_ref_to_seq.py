@@ -2,7 +2,7 @@ import Bio
 import sys
 import pysam
 import argparse
-
+from gene_region import Region, RegionList
 
 
 
@@ -11,6 +11,7 @@ import argparse
 #Output: Sequences with reference genome overlayed with VCF SNP calls
 
 def checkRecordIsSnp(rec):
+    """Checks if this record is a single nucleotide variant, returns bool."""
     if len(rec.ref) != 1:
         return False
     for allele in rec.alts:
@@ -18,15 +19,18 @@ def checkRecordIsSnp(rec):
             return False
     return True
 
-def replaceVar(ref_seq,rec,offset):
-    ref_base = rec.ref
 	
 def indivIdx(indiv):
+    """For now, returns individual haplotype as an individual index and 
+    individual haplotype index. May be expanded for non-diploid samples"""
     return indiv/2,indiv%2
 
 def generateSequence(vcf_reader,ref_seq,region,chrom,indiv):
-
-    var_sites = vcf_reader.fetch(chrom,region[0],region[1])
+    """Fetches variant sites from a given region, then outputs sequences
+    from each individual with their correct variants. Will print sequence
+    up to the variant site, then print correct variant. After last site,
+    will output the rest of the reference sequence."""
+    var_sites = vcf_reader.fetch(chrom,region.start,region.end)
     fl = 0
     seq = ''
     prev_offset = 0
@@ -41,7 +45,7 @@ def generateSequence(vcf_reader,ref_seq,region,chrom,indiv):
         if not checkRecordIsSnp(vcf_record):
             continue
 
-        pos_offset = vcf_record.pos - 1 - region[0]
+        pos_offset = vcf_record.pos - 1 - region.start
         for i in xrange(prev_offset,pos_offset-1):
             seq += ref_seq[i]
 
@@ -54,7 +58,6 @@ def generateSequence(vcf_reader,ref_seq,region,chrom,indiv):
 
     return seq
         
-def readGeneRegionList
 
 
 parser = argparse.ArgumentParser(description=("Generates sequences from samples"
@@ -62,9 +65,12 @@ parser = argparse.ArgumentParser(description=("Generates sequences from samples"
                                  "list of gene regions."))
 parser.add_argument("--vcf", dest="vcfname",help="Input VCF filename")
 parser.add_argument("--ref",dest="refname",help="Reference FASTA file")
+parser.add_argument("--gr",dest="genename",help="Name of gene region file")
+parser.add_argument("-g1",dest="gene_idx",action="store_true",help="Gene Region list is 1 index based, not 0")
+
 args = parser.parse_args()
 
-region_list = [[176200,176250]]
+region_list = RegionList(args.genename)
 
 vcf_reader = pysam.VariantFile(args.vcfname)
 first_el = next(vcf_reader)
@@ -73,11 +79,10 @@ sample_size = len(first_el.samples)*2
 
 fasta_ref = pysam.FastaFile(args.refname)
 
-for region in region_list:
-    ref_seq = fasta_ref.fetch(chrom,region[0],region[1])
+for region in region_list.regions:
+    ref_seq = fasta_ref.fetch(chrom,region.start,region.end)
     print ">TestHeader"
     for i in xrange(sample_size):
         seq = generateSequence(vcf_reader,ref_seq,region,chrom,i)
         print seq
-    #var_sites = vcf_reader.fetch(chrom,region[0],region[1],reopen=True)
 
