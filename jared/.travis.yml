@@ -1,6 +1,6 @@
 sudo: required
 before_install:
-  - pip install pysam
+  - sudo pip install pysam
 
 
 script: python jared/tests.py
