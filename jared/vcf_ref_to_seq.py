@@ -1,4 +1,3 @@
-import Bio
 import sys
 import pysam
 import argparse
