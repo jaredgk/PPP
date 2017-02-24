@@ -1,5 +1,6 @@
 before_install:
   - pip install --user pysam
 
+cache: pip
 
 script: python jared/tests.py
