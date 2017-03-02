@@ -8,10 +8,10 @@ class Region:
 
 
 class RegionList:
-    
-    def __init__(self,filename,oneidx=False,collist=None):
+
+    def __init__(self,filename,oneidx=True,collist=None,defaultchrom=None):
         if collist is None:
-            collist = [0,1,2]
+            collist = [1,2,0]
         if filename is None:
             raise Exception("Filename for gene region list not provided")
         self.regions = []
@@ -19,9 +19,12 @@ class RegionList:
             for line in regionfile:
                 la = line.strip().split()
                 try:
-                    start = int(la[collist[1]])
-                    end = int(la[collist[2]])
-                    chrom = la[collist[0]]
+                    start = int(la[collist[0]])
+                    end = int(la[collist[1]])
+                    if len(collist) == 3:
+                        chrom = la[collist[2]]
+                    else:
+                        chrom = defaultchrom
                 except:
                     sys.stderr.write("Column is missing")
                 if oneidx:

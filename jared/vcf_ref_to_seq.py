@@ -1,6 +1,7 @@
 import sys
 import pysam
 import argparse
+import os.path
 from gene_region import Region, RegionList
 
 
@@ -8,6 +9,26 @@ from gene_region import Region, RegionList
 
 #Input: VCF file, reference sequence, region list (possibly .bed file)
 #Output: Sequences with reference genome overlayed with VCF SNP calls
+
+def createParser():
+    parser = argparse.ArgumentParser(description=("Generates sequences from samples"
+                                 "from a VCF file, a reference genome, and a"
+                                 "list of gene regions."))
+    parser.add_argument("--vcf", dest="vcfname",help="Input VCF filename")
+    parser.add_argument("--ref",dest="refname",help="Reference FASTA file")
+    parser.add_argument("--gr",dest="genename",help="Name of gene region file")
+    parser.add_argument("--gr0",dest="gene_idx",action="store_false",help="Gene Region list is 0 index based, not 1")
+    parser.add_argument("--indels",dest="indel_flag",action="store_true",help="Include indels when reporting sequences")
+    parser.add_argument("--trim-to-ref-length",dest="trim_seq",action="store_true",help="Trims sequences if indels cause them to be longer than reference")
+    return parser
+
+def validateFiles(args):
+    """Validates that files provided to args all exist on users system"""
+    for var in ['vcfname','refname','genename']:
+        f = vars(args)[var]
+        if not os.path.exists(f):
+            raise ValueError('Filepath for %s not found at %s' %
+                            (var,f))
 
 def checkRecordIsSnp(rec):
     """Checks if this record is a single nucleotide variant, returns bool."""
@@ -23,9 +44,9 @@ def getMaxAlleleLength(alleles):
     """If an indel, returns length of longest allele (returns 1 for snp)"""
     return max([len(r) for r in alleles])
 
-	
+
 def indivIdx(indiv):
-    """For now, returns individual haplotype as an individual index and 
+    """For now, returns individual haplotype as an individual index and
     individual haplotype index. May be expanded for non-diploid samples"""
     return indiv/2,indiv%2
 
@@ -53,7 +74,8 @@ def generateSequence(vcf_reader,ref_seq,region,chrom,indiv,args):
         pos_offset = vcf_record.pos - 1 - region.start
         for i in xrange(prev_offset,pos_offset-1):
             seq += ref_seq[i]
-
+        #vref = vcf_record.ref
+        #rref =
         idv,idx = indivIdx(indiv)
         if issnp:
             seq += vcf_record.samples[idv].alleles[idx]
@@ -67,41 +89,47 @@ def generateSequence(vcf_reader,ref_seq,region,chrom,indiv,args):
             indel_offset = len(vcf_record.ref)-1
             prev_offset = pos_offset+indel_offset
             #total_length += indel_offset
-            
+
 
     for i in xrange(prev_offset,len(ref_seq)):
         seq += ref_seq[i]
     if args.trim_seq:
     	return seq[:len(ref_seq)]
     return seq
-        
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=("Generates sequences from samples"
-                                 "from a VCF file, a reference genome, and a"
-                                 "list of gene regions."))
-    parser.add_argument("--vcf", dest="vcfname",help="Input VCF filename")
-    parser.add_argument("--ref",dest="refname",help="Reference FASTA file")
-    parser.add_argument("--gr",dest="genename",help="Name of gene region file")
-    parser.add_argument("--gene-1-offset",dest="gene_idx",action="store_true",help="Gene Region list is 1 index based, not 0")
-    parser.add_argument("--indels",dest="indel_flag",action="store_true",help="Include indels when reporting sequences")
-    parser.add_argument("--trim-to-ref-length",dest="trim_seq",action="store_true",help="Trims sequences if indels cause them to be longer than reference")
+def getHeader(record_count,chrom,region):
+    return '>'+str(record_count)+' '+chrom+' '+str(region.start)+':'+str(region.end)
 
-    args = parser.parse_args()
+def getFastaFilename(vcfname):
+    for ext in ['.vcf.gz','.vcf','.bcf','vcf.bgz']:
+        if ext in vcfname:
+            return vcfname[:-1*len(ext)]+'.fasta'
+    return vcfname
 
-    region_list = RegionList(args.genename)
+def main(args):
+    parser = createParser()
 
+    args = parser.parse_args(args)
+    validateFiles(args)
+    region_list = RegionList(args.genename,oneidx=args.gene_idx)
+    fasta_filename = getFastaFilename(args.vcfname)
+    fasta_file = open(fasta_filename,'w')
     vcf_reader = pysam.VariantFile(args.vcfname)
     first_el = next(vcf_reader)
     chrom = first_el.chrom
     sample_size = len(first_el.samples)*2
-    
+
     fasta_ref = pysam.FastaFile(args.refname)
-    
+    record_count = 1
     for region in region_list.regions:
+        if region.chrom is not None:
+            chrom = region.chrom
         ref_seq = fasta_ref.fetch(chrom,region.start,region.end)
-        print ">TestHeader"
+        fasta_header = getHeader(record_count,chrom,region)
+        fasta_file.write(fasta_header+'\n')
         for i in xrange(sample_size):
             seq = generateSequence(vcf_reader,ref_seq,region,chrom,i,args)
-            print seq
+            fasta_file.write(seq+'\n')
 
+if __name__ == "__main__":
+    main(sys.argv[1:])
