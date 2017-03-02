@@ -1,6 +1,9 @@
 before_install:
   - pip install --user pysam
+  - ./install_vcftools.sh
 
 cache: pip
 
-script: python jared/tests.py
+script: 
+  - python jared/tests.py
+#  - python andrew/vcf_tests.py
