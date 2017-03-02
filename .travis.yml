@@ -2,7 +2,7 @@ before_install:
   - pip install --user pysam
   - wget https://github.com/vcftools/vcftools/tarball/master -O master_vcftools.tar.gz
   - tar -xzvf master_vcftools.tar.gz
-  - pushd vcftools* && ./configure --prefix=/usr && make && sudo make install && popd
+  - cd vcftools* && ./configure --prefix=/usr && make && sudo make install
 
 cache: pip
 
