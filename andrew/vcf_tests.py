@@ -56,4 +56,5 @@ class vcftools_tests (unittest.TestCase):
         self.addCleanup(os.remove, 'out.het.log')
 
 if __name__ == "__main__":
+    print os.getcwd()
     unittest.main()
