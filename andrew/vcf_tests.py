@@ -54,6 +54,12 @@ class vcftools_tests (unittest.TestCase):
         self.assertTrue(compare_to_expected('out.het', 'andrew' + '/' + 'example/locus8.het'))
         self.addCleanup(os.remove, 'out.het')
         self.addCleanup(os.remove, 'out.het.log')
+        
+    def test_calculate_vcftools_call(self):    
+        vcftools_Fst_call = subprocess.Popen(['vcftools'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        vcftools_Fst_out, vcftools_Fst_err = vcftools_Fst_call.communicate()
+        print vcftools_Fst_out
+        print vcftools_Fst_err
 
 if __name__ == "__main__":
     unittest.main()
