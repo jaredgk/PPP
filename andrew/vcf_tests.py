@@ -57,7 +57,7 @@ class vcftools_tests (unittest.TestCase):
         
     def test_calculate_vcftools_call(self):
         import subprocess
-        vcftools_Fst_call = subprocess.Popen(['vcftools', '--gzvcf', 'andrew/example/locus8.vcf.gz'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        vcftools_Fst_call = subprocess.Popen(['vcftools', '--gzvcf', 'andrew/example/locus8.vcf.gz', '--weir-fst-pop', 'andrew/example/Paniscus.txt', '--weir-fst-pop', 'andrew/example/Troglodytes.txt'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         vcftools_Fst_out, vcftools_Fst_err = vcftools_Fst_call.communicate()
         print vcftools_Fst_out
         print vcftools_Fst_err
