@@ -72,7 +72,6 @@ def check_vcftools_for_errors (vcftools_output):
     if 'Run Time' in vcftools_output:
         return True
     else:
-        print vcftools_output
         sys.exit('Error with vcftools')
     
 def produce_vcftools_log (output, filename, function):
