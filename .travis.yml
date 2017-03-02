@@ -1,9 +1,10 @@
 before_install:
   - pip install --user pysam
+  - sudo apt-get -qq update
   - sudo apt-get install vcftools
 
 cache: pip
 
 script: 
   - python jared/tests.py
-  - python andrew/vcf_tests.py
+#  - python andrew/vcf_tests.py
