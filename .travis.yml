@@ -1,6 +1,6 @@
 before_install:
   - pip install --user pysam
-  - apt-get install vcftools
+  - sudo apt-get install vcftools
 
 cache: pip
 
