@@ -21,7 +21,7 @@ class snpTest(unittest.TestCase):
 
     def test_generateSequence_snp(self):
         main(['--vcf','example/chr11.subsamples.vcf.gz','--ref',
-            'human_g1k_chr11.fasta','--gr','example/snp_region.txt'])
+            'example/human_g1k_chr11.fasta','--gr','example/snp_region.txt'])
         self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
                          'example/chr11.snpex.fasta'),True)
 
