@@ -45,7 +45,7 @@ class snpTest(unittest.TestCase):
             '--ref','example/human_g1k_chr11.fasta',
             '--gr','example/multi_inregion.txt'])
         self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
-                        'example/chr11.snp.example.fasta'),True)
+                        'example/chr11.multi.example.fasta'),True)
 
     def tearDown(self):
         try:
