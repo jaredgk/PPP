@@ -7,5 +7,5 @@ before_install:
 cache: pip
 
 script: 
-  - cd jared && python jared/tests.py && cd ..
+  - sh run_jared_tests.sh
   - cd andrew && python vcf_tests.py && cd ..
