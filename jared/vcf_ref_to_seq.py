@@ -11,15 +11,20 @@ from gene_region import Region, RegionList
 #Output: Sequences with reference genome overlayed with VCF SNP calls
 
 def createParser():
-    parser = argparse.ArgumentParser(description=("Generates sequences from samples"
-                                 "from a VCF file, a reference genome, and a"
-                                 "list of gene regions."))
+    parser = argparse.ArgumentParser(description=("Generates sequences from"
+                                 " samples from a VCF file, a reference"
+                                 " genome, and a list of gene regions."))
     parser.add_argument("--vcf", dest="vcfname",help="Input VCF filename")
     parser.add_argument("--ref",dest="refname",help="Reference FASTA file")
-    parser.add_argument("--gr",dest="genename",help="Name of gene region file")
-    parser.add_argument("--gr0",dest="gene_idx",action="store_false",help="Gene Region list is 0 index based, not 1")
-    parser.add_argument("--indels",dest="indel_flag",action="store_true",help="Include indels when reporting sequences")
-    parser.add_argument("--trim-to-ref-length",dest="trim_seq",action="store_true",help="Trims sequences if indels cause them to be longer than reference")
+    parser.add_argument("--gr",dest="genename",
+                        help="Name of gene region file")
+    parser.add_argument("--gr0",dest="gene_idx",action="store_false",
+                        help="Gene Region list is 0 index based, not 1")
+    parser.add_argument("--indels",dest="indel_flag",action="store_true",
+                        help="Include indels when reporting sequences")
+    parser.add_argument("--trim-to-ref-length",dest="trim_seq",
+                        action="store_true",
+                        help="Trims sequences if indels cause them to be longer than reference")
     return parser
 
 def validateFiles(args):

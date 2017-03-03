@@ -21,10 +21,31 @@ class snpTest(unittest.TestCase):
 
     def test_generateSequence_snp(self):
         main(['--vcf','example/chr11.subsamples.vcf.gz','--ref',
-            'example/human_g1k_chr11.fasta','--gr','example/snp_region.txt'])
+            'example/human_g1k_chr11.fasta',
+            '--gr','example/snp_region.txt'])
         self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
-                         'example/chr11.snpex.fasta'),True)
+                         'example/chr11.snp.example.fasta'),True)
 
+    def test_generateSequence_insert(self):
+        main(['--vcf','example/chr11.subsamples.vcf.gz',
+            '--ref','example/human_g1k_chr11.fasta',
+            '--gr','example/insert_region.txt','--indels'])
+        self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
+                         'example/chr11.insert.example.fasta'),True)
+
+    def test_generateSequence_del(self):
+        main(['--vcf','example/chr11.subsamples.vcf.gz',
+            '--ref','example/human_g1k_chr11.fasta',
+            '--gr','example/del_region.txt','--indels'])
+        self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
+                        'example/chr11.del.example.fasta'),True)
+
+    def test_generateSequence_multi(self):
+        main(['--vcf','example/chr11.subsamples.vcf.gz',
+            '--ref','example/human_g1k_chr11.fasta',
+            '--gr','example/multi_inregion.txt'])
+        self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
+                        'example/chr11.multi.example.fasta'),True)
 
     def tearDown(self):
         try:
