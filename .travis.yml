@@ -8,4 +8,4 @@ cache: pip
 
 script: 
   - python jared/tests.py
-#  - python andrew/vcf_tests.py
+  - python andrew/vcf_tests.py
