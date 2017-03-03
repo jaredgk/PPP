@@ -124,6 +124,7 @@ def calculate_pi (passed_arguments = []):
     vcftools_command = return_basic_args(vcf_args) + vcf_args.window_pi + vcf_args.window_pi_step
     vcftools_pi_call = subprocess.Popen(vcftools_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     vcftools_pi_out, vcftools_pi_err = vcftools_pi_call.communicate()
+    print vcftools_pi_out, vcftools_pi_err
     if check_vcftools_for_errors(vcftools_pi_err):
         produce_vcftools_log(vcftools_pi_err, vcf_args.out[1], '.windowed.pi')
         
