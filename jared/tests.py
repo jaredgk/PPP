@@ -2,11 +2,13 @@ import unittest
 import pysam
 import filecmp
 import os
-from vcf_ref_to_seq import getMaxAlleleLength,getFastaFilename,main
+from vcf_ref_to_seq import getMaxAlleleLength,getFastaFilename,main, \
+                           createParser, validateFiles
+from gene_region import RegionList, Region
 
 
 
-class FirstTestOfGmal(unittest.TestCase):
+class funcTest(unittest.TestCase):
 
     def test_getMaxAlleleLength(self):
         l = ('AAA','A','AAAAAAA')
@@ -14,7 +16,24 @@ class FirstTestOfGmal(unittest.TestCase):
 
     def test_getFastaFilename(self):
         fn = 'test.vcf.gz'
-        self.assertEqual(getFastaFilename(fn),'test.fasta')
+        self.assertEqual(getFastaFilename(fn),('test.fasta','.vcf.gz'))
+
+    def testPathValidator(self):
+        parser = createParser()
+        args = ['--vcf','example/doesntexist.vcf.gz',
+                '--ref','example/human_g1k_chr11.fasta',
+                '--gr','example/snp_region.txt']
+        pa = parser.parse_args(args)
+        self.assertRaises(ValueError,validateFiles,pa)
+
+class geneRegionTest(unittest.TestCase):
+
+    def test_RL_collist(self):
+        collist = [2,4,6]
+        rl = RegionList('example/gr_ex_multicolumn.txt',collist=collist)
+        r = rl.regions[0]
+        set_r = Region(99999,100099,'11')
+        self.assertEqual(r,set_r)
 
 
 class snpTest(unittest.TestCase):

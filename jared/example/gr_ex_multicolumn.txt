@@ -1,0 +1,1 @@
+Info start 100000 end 100100 chrom 11
