@@ -55,7 +55,15 @@ def indivIdx(indiv):
     individual haplotype index. May be expanded for non-diploid samples"""
     return indiv/2,indiv%2
 
-def generateSequence(vcf_reader,ref_seq,region,chrom,indiv,args):
+def checkRefAlign(vcf_r,fasta_ref,chrom):
+    vcf_seq = vcf_r.ref
+    pos = vcf_r.pos-1
+    fasta_seq = fasta_ref.fetch(chrom,pos,pos+len(vcf_seq))
+    if vcf_seq != fasta_seq:
+        raise Exception(("VCF bases and reference bases do not match.\n "
+                        "VCF reference: %s\nFASTA reference: %s")%(vcf_seq,fasta_seq))
+
+def generateSequence(vcf_reader,ref_seq,fasta_ref,region,chrom,indiv,args):
     """Fetches variant sites from a given region, then outputs sequences
     from each individual with their correct variants. Will print sequence
     up to the variant site, then print correct variant. After last site,
@@ -79,8 +87,7 @@ def generateSequence(vcf_reader,ref_seq,region,chrom,indiv,args):
         pos_offset = vcf_record.pos - 1 - region.start
         for i in xrange(prev_offset,pos_offset-1):
             seq += ref_seq[i]
-        #vref = vcf_record.ref
-        #rref =
+        checkRefAlign(vcf_record,fasta_ref,chrom)
         idv,idx = indivIdx(indiv)
         if issnp:
             seq += vcf_record.samples[idv].alleles[idx]
@@ -108,8 +115,8 @@ def getHeader(record_count,chrom,region):
 def getFastaFilename(vcfname):
     for ext in ['.vcf.gz','.vcf','.bcf','vcf.bgz']:
         if ext in vcfname:
-            return vcfname[:-1*len(ext)]+'.fasta'
-    return vcfname
+            return vcfname[:-1*len(ext)]+'.fasta',ext
+    return vcfname,"noext"
 
 def main(args):
     parser = createParser()
@@ -117,7 +124,7 @@ def main(args):
     args = parser.parse_args(args)
     validateFiles(args)
     region_list = RegionList(args.genename,oneidx=args.gene_idx)
-    fasta_filename = getFastaFilename(args.vcfname)
+    fasta_filename,input_ext = getFastaFilename(args.vcfname)
     fasta_file = open(fasta_filename,'w')
     vcf_reader = pysam.VariantFile(args.vcfname)
     first_el = next(vcf_reader)
@@ -133,7 +140,8 @@ def main(args):
         fasta_header = getHeader(record_count,chrom,region)
         fasta_file.write(fasta_header+'\n')
         for i in xrange(sample_size):
-            seq = generateSequence(vcf_reader,ref_seq,region,chrom,i,args)
+            seq = generateSequence(vcf_reader,ref_seq,fasta_ref,
+                                   region,chrom,i,args)
             fasta_file.write(seq+'\n')
 
 if __name__ == "__main__":
