@@ -62,31 +62,32 @@ def checkRefAlign(vcf_r,fasta_ref,chrom):
         raise Exception(("VCF bases and reference bases do not match.\n "
                         "VCF reference: %s\nFASTA reference: %s")%(vcf_seq,fasta_seq))
 
-def getRecordList(vcf_reader,chrom,record):
-    var_sites = vcf_reader.fetch(chrom,record.start,record.end)
+def getRecordList(vcf_reader,region,chrom):
+    var_sites = vcf_reader.fetch(chrom,region.start,region.end)
     lst = []
     for rec in var_sites:
         lst.append(rec)
     return lst
 
-def generateSequence(vcf_reader,ref_seq,fasta_ref,
+def generateSequence(rec_list,ref_seq,fasta_ref,
                     region,chrom,indiv,ploidy,args):
     """Fetches variant sites from a given region, then outputs sequences
     from each individual with their correct variants. Will print sequence
     up to the variant site, then print correct variant. After last site,
     will output the rest of the reference sequence."""
-    var_sites = vcf_reader.fetch(chrom,region.start,region.end)
+    #var_sites = vcf_reader.fetch(chrom,region.start,region.end)
     fl = 0
     seq = ''
     prev_offset = 0
     #total_length = region.end-region.start
 
-    while fl == 0:
-        try:
-            vcf_record = next(var_sites)
-        except:
-            fl = 1
-            break
+    #while fl == 0:
+    for vcf_record in rec_list:
+        #try:
+        #    vcf_record = next(var_sites)
+        #except:
+        #    fl = 1
+        #    break
         issnp = checkRecordIsSnp(vcf_record)
         if not args.indel_flag and not issnp:
             continue
@@ -144,13 +145,13 @@ def main(args):
     for region in region_list.regions:
         if region.chrom is not None:
             chrom = region.chrom
-        #rec_list = getRecordList(vcf_reader,region,chrom)
+        rec_list = getRecordList(vcf_reader,region,chrom)
         ref_seq = fasta_ref.fetch(chrom,region.start,region.end)
         fasta_header = getHeader(record_count,chrom,region)
         fasta_file.write(fasta_header+'\n')
         indiv,idx = 0,0
         for i in xrange(sample_size):
-            seq = generateSequence(vcf_reader,ref_seq,fasta_ref,
+            seq = generateSequence(rec_list,ref_seq,fasta_ref,
                                    region,chrom,i,ploidy,args)
             fasta_file.write(seq+'\n')
 
