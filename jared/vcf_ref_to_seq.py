@@ -6,7 +6,6 @@ from gene_region import Region, RegionList
 
 
 
-
 #Input: VCF file, reference sequence, region list (possibly .bed file)
 #Output: Sequences with reference genome overlayed with VCF SNP calls
 
@@ -50,10 +49,10 @@ def getMaxAlleleLength(alleles):
     return max([len(r) for r in alleles])
 
 
-def indivIdx(indiv):
+def indivIdx(indiv,ploidy):
     """For now, returns individual haplotype as an individual index and
     individual haplotype index. May be expanded for non-diploid samples"""
-    return indiv/2,indiv%2
+    return indiv/ploidy,indiv%ploidy
 
 def checkRefAlign(vcf_r,fasta_ref,chrom):
     vcf_seq = vcf_r.ref
@@ -63,7 +62,15 @@ def checkRefAlign(vcf_r,fasta_ref,chrom):
         raise Exception(("VCF bases and reference bases do not match.\n "
                         "VCF reference: %s\nFASTA reference: %s")%(vcf_seq,fasta_seq))
 
-def generateSequence(vcf_reader,ref_seq,fasta_ref,region,chrom,indiv,args):
+def getRecordList(vcf_reader,chrom,record):
+    var_sites = vcf_reader.fetch(chrom,record.start,record.end)
+    lst = []
+    for rec in var_sites:
+        lst.append(rec)
+    return lst
+
+def generateSequence(vcf_reader,ref_seq,fasta_ref,
+                    region,chrom,indiv,ploidy,args):
     """Fetches variant sites from a given region, then outputs sequences
     from each individual with their correct variants. Will print sequence
     up to the variant site, then print correct variant. After last site,
@@ -88,7 +95,7 @@ def generateSequence(vcf_reader,ref_seq,fasta_ref,region,chrom,indiv,args):
         for i in xrange(prev_offset,pos_offset-1):
             seq += ref_seq[i]
         checkRefAlign(vcf_record,fasta_ref,chrom)
-        idv,idx = indivIdx(indiv)
+        idv,idx = indivIdx(indiv,ploidy)
         if issnp:
             seq += vcf_record.samples[idv].alleles[idx]
             prev_offset = pos_offset
@@ -129,19 +136,22 @@ def main(args):
     vcf_reader = pysam.VariantFile(args.vcfname)
     first_el = next(vcf_reader)
     chrom = first_el.chrom
-    sample_size = len(first_el.samples)*2
+    ploidy = 2
+    sample_size = len(first_el.samples)*ploidy
 
     fasta_ref = pysam.FastaFile(args.refname)
     record_count = 1
     for region in region_list.regions:
         if region.chrom is not None:
             chrom = region.chrom
+        #rec_list = getRecordList(vcf_reader,region,chrom)
         ref_seq = fasta_ref.fetch(chrom,region.start,region.end)
         fasta_header = getHeader(record_count,chrom,region)
         fasta_file.write(fasta_header+'\n')
+        indiv,idx = 0,0
         for i in xrange(sample_size):
             seq = generateSequence(vcf_reader,ref_seq,fasta_ref,
-                                   region,chrom,i,args)
+                                   region,chrom,i,ploidy,args)
             fasta_file.write(seq+'\n')
 
 if __name__ == "__main__":
