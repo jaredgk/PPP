@@ -66,10 +66,22 @@ class snpTest(unittest.TestCase):
         self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
                         'example/chr11.multi.example.fasta'),True)
 
+    def test_subsample(self):
+        main(['--vcf','example/chr11.vcf.gz','--ref',
+            'example/human_g1k_chr11.fasta',
+            '--gr','example/snp_region.txt',
+            '--subsamp_list','example/subsample_list.txt'])
+        self.assertEqual(filecmp.cmp('example/chr11.fasta',
+                         'example/chr11.snp.example.fasta'),True)
+
     def tearDown(self):
         try:
             os.remove('example/chr11.subsamples.fasta')
             #figure out how to do this if test fails
+        except:
+            pass
+        try:
+            os.remove('example/chr11.fasta')
         except:
             pass
 
