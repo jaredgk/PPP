@@ -6,18 +6,24 @@ def vcf_argument_parser(passed_arguments):
     ([--fst-window-step, 2000]) or not (i.e. [])'''
     
     
-    def vcf_argument_file (vcf_argument):
-        '''Custom action to transform input files into a list with it's
+    def vcf_argument_confirm_file (vcf_argument):
+        '''Custom action to transform a single input file into a list with it's
         respective argument prefix.'''
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
-                if not isinstance(value, list):
-                    if os.path.isfile(value):
-                        setattr(args, self.dest, [vcf_argument, value])
-                    else:
-                        setattr(args, self.dest, [])
-                else:
-                    setattr(args, self.dest, [current_argument_element for value_in_list in value for current_argument_element in [vcf_argument, value_in_list] if os.path.isfile(value_in_list)])
+                if not os.path.isfile(value):
+                    raise IOError
+                setattr(args, self.dest, [vcf_argument, value])
+        return customAction
+    
+    def vcf_argument_confirm_and_append_file (vcf_argument):
+        '''Custom action to transform multiple input files into a list with it's
+        respective argument prefix.'''
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, value, option_string=None):
+                if not os.path.isfile(value):
+                    raise IOError
+                getattr(args, self.dest).extend([vcf_argument, value])                
         return customAction
     
     def vcf_argument_attribute (vcf_argument):
@@ -32,24 +38,24 @@ def vcf_argument_parser(passed_arguments):
        
     # Input arguments. Currently mutually exclusive to only allow a single input type
     vcf_input = vcf_parser.add_mutually_exclusive_group(required=True)
-    vcf_input.add_argument('--vcf', dest = 'input', help='Defines the VCF file to be processed', default = [], action=vcf_argument_file('--vcf'))
-    vcf_input.add_argument('--gzvcf', dest = 'input', help='Defines the compressed (gzipped) VCF file to be processed', default = [], action=vcf_argument_file('--gzvcf'))
-    vcf_input.add_argument('--bcf', dest = 'input', help='Defines the BCF file to be processed', default = [], action=vcf_argument_file('--bcf'))
+    vcf_input.add_argument('--vcf', dest = 'input', help='Defines the VCF file to be processed', default = [], action=vcf_argument_confirm_file('--vcf'))
+    vcf_input.add_argument('--gzvcf', dest = 'input', help='Defines the compressed (gzipped) VCF file to be processed', default = [], action=vcf_argument_confirm_file('--gzvcf'))
+    vcf_input.add_argument('--bcf', dest = 'input', help='Defines the BCF file to be processed', default = [], action=vcf_argument_confirm_file('--bcf'))
     
     # Other basic arguments. Expand as needed
     vcf_parser.add_argument('--out', help='Defines the output filename', default = ['--out', 'out'], action=vcf_argument_attribute('--out'))
     
     # Fst arguments
-    vcf_parser.add_argument('--weir-fst-pops', help='Defines the population (list of individuals) files for calculating Fst', default = [], nargs='+', action=vcf_argument_file('--weir-fst-pop'))
-    vcf_parser.add_argument('--fst-window-size', help='Defines the size of the Fst calculation windows (rather than Fst calculations per site)', default = ['--fst-window-size', '10000'], action=vcf_argument_attribute('--fst-window-size'))
-    vcf_parser.add_argument('--fst-window-step', help='Defines the step size between Fst windows', default = ['--fst-window-step', '20000'], action=vcf_argument_attribute('--fst-window-step'))
+    vcf_parser.add_argument('--weir-fst-pop', help='Defines the population (list of individuals) files for calculating Fst', default = [], action=vcf_argument_confirm_and_append_file('--weir-fst-pop'))
+    vcf_parser.add_argument('--fst-window-size', help='Defines the size of the Fst calculation windows (rather than Fst calculations per site)', nargs='?', default = [], const = 10000, type=int, action=vcf_argument_attribute('--fst-window-size'))
+    vcf_parser.add_argument('--fst-window-step', help='Defines the step size between Fst windows', nargs='?', default = [], const = 20000, type=int, action=vcf_argument_attribute('--fst-window-step'))
     
-    # Tajima's D arguments
-    vcf_parser.add_argument('--TajimaD', help="Defines the Tajima's D bin size", type = int, default = ['--TajimaD', '10000'], action=vcf_argument_attribute('--TajimaD'))
+    # Tajima's D arguments   
+    vcf_parser.add_argument('--TajimaD', help="Defines the Tajima's D bin size", nargs='?', default = [], const = 10000, type=int, action=vcf_argument_attribute('--TajimaD'))
     
     # Nucleotide Diversity (Pi) arguments
-    vcf_parser.add_argument('--window-pi', help="Calcualtes nucleotide diversity for the defined window size", type = int, default = ['--window-pi', '10000'], action=vcf_argument_attribute('--window-pi'))
-    vcf_parser.add_argument('--window-pi-step', help="Calcualtes nucleotide diversity by site", type = int, default = ['--window-pi-step', '20000'], action=vcf_argument_attribute('--window-pi-step'))
+    vcf_parser.add_argument('--window-pi', help="Calcualtes nucleotide diversity for the defined window size", nargs='?', default = [], const = 10000, type=int, action=vcf_argument_attribute('--window-pi'))
+    vcf_parser.add_argument('--window-pi-step', help="Calcualtes nucleotide diversity by site", nargs='?', default = [], const = 20000, type=int, action=vcf_argument_attribute('--window-pi-step'))
     
     # Allele frequency arguments. Currently mutually exclusive to only allow a single allele frequency reporting method
     vcf_allele_freq = vcf_parser.add_mutually_exclusive_group()
@@ -57,10 +63,10 @@ def vcf_argument_parser(passed_arguments):
     vcf_allele_freq.add_argument('--freq2', dest = 'allele_freq', help="Outputs the allele frequency without information on the alleles", action = 'store_const', const = ['--freq2'])
     
     # Heterozygosity arguments
-    vcf_parser.add_argument('--het', help="Outputs the heterozygosity", action = 'store_const', const = ['--het'], default = ['--het'])
+    vcf_parser.add_argument('--het', help="Outputs the heterozygosity", action = 'store_const', const = ['--het'], default = [])
     
     # Sets the --freq argument as default for allele frequency
-    vcf_parser.set_defaults(allele_freq = ['--freq'])
+    vcf_parser.set_defaults(allele_freq = [])
     
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)
@@ -83,81 +89,46 @@ def produce_vcftools_log (output, filename, function):
     else:
         sys.exit('Error: Log file already exits')
                 
-def return_basic_args (vcf_arguments):
-    '''Returns a list with the general arguments for VCFtools. Will be expanded as needed.'''
-    return ['vcftools'] + vcf_arguments.input + vcf_arguments.out
-
-def calculate_Fst (passed_arguments = []):
-    '''Calculates Fst using VCFTools'''
+def assign_log_suffix (passed_command):
+    '''Assigns a suffix for the log file to reduce overwriting'''
+    if '--weir-fst-pop' in passed_command and '--fst-window-size' in passed_command and '--fst-window-step' in passed_command:
+        return '.windowed.weir.fst'
+    elif '--weir-fst-pop' in passed_command:
+        return '.weir.fst'
+    elif '--TajimaD' in passed_command:
+        return '.Tajima.D'
+    elif '--window-pi' in passed_command:
+        return '.windowed.pi'
+    elif '--het' in passed_command:
+        return '.het'
+    elif '--freq' in passed_command or '--freq2' in passed_command:
+        return '.frq'
+    
+def vcftools_wrapper (passed_arguments = []):
+    ''' Wrapper code for VCFTools. Commands are assigned using argparse.'''
     
     # Grab VCF arguments from command line
     vcf_args = vcf_argument_parser(passed_arguments)
+     
+    # Only allows a single statistic to be run at a time, may update to loop statistics
+    if sum(1 for data in (vcf_args.weir_fst_pop, vcf_args.TajimaD, vcf_args.window_pi, vcf_args.het, vcf_args.allele_freq) if data) > 1:
+        sys.exit('Statistic limit')
     
-    if (len(vcf_args.weir_fst_pops) / 2) < 2:
+    # Checks that two or more population files are assigned if calculating Fst 
+    if vcf_args.weir_fst_pop and (len(vcf_args.weir_fst_pop) / 2) < 2:
         sys.exit('Two or more population files requried. Please assign using --weir-fst-pops')
     
-    vcftools_command = return_basic_args(vcf_args) + vcf_args.weir_fst_pops + vcf_args.fst_window_size + vcf_args.fst_window_step
-    vcftools_Fst_call = subprocess.Popen(vcftools_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # Assigns the vcftools arguments to a single command line
+    vcftools_command =  [split_arg for arg in vars(vcf_args) for split_arg in getattr(vcf_args, arg)]
+    
+    # vcftools subprocess call
+    vcftools_Fst_call = subprocess.Popen(['vcftools'] + vcftools_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     vcftools_Fst_out, vcftools_Fst_err = vcftools_Fst_call.communicate()
-
+    
+    # Check that the log file was created correctly, get the suffix for the log file, and create the file
     if check_vcftools_for_errors(vcftools_Fst_err):
-        produce_vcftools_log(vcftools_Fst_err, vcf_args.out[1], '.windowed.weir.fst')
-  
-def calculate_tajimasD (passed_arguments = []):
-    '''Calculates Tajima's D using VCFTools'''
-    
-    # Grab VCF arguments from command line
-    vcf_args = vcf_argument_parser(passed_arguments)
-    
-    vcftools_command = return_basic_args(vcf_args) + vcf_args.TajimaD
-    vcftools_tajimasD_call = subprocess.Popen(vcftools_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    vcftools_tajimasD_out, vcftools_tajimasD_err = vcftools_tajimasD_call.communicate()
-    if check_vcftools_for_errors(vcftools_tajimasD_err):
-        produce_vcftools_log(vcftools_tajimasD_err, vcf_args.out[1], '.Tajima.D')  
-        
-def calculate_pi (passed_arguments = []):
-    '''Calculates nucleotide diversity (pi) using VCFTools'''
-    
-    # Grab VCF arguments from command line
-    vcf_args = vcf_argument_parser(passed_arguments)
-    
-    vcftools_command = return_basic_args(vcf_args) + vcf_args.window_pi + vcf_args.window_pi_step
-    vcftools_pi_call = subprocess.Popen(vcftools_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    vcftools_pi_out, vcftools_pi_err = vcftools_pi_call.communicate()
+        log_suffix = assign_log_suffix(vcftools_command)
+        produce_vcftools_log(vcftools_Fst_err, vcf_args.out[1], log_suffix)
 
-    if check_vcftools_for_errors(vcftools_pi_err):
-        produce_vcftools_log(vcftools_pi_err, vcf_args.out[1], '.windowed.pi')
-        
-def calculate_af (passed_arguments = []):
-    '''Calculates the allele frequency using VCFTools. Currently works with --freq as default
-    but the user can specify --freq2 if that is prefered.'''
-    
-    # Grab VCF arguments from command line
-    vcf_args = vcf_argument_parser(passed_arguments)
-      
-    vcftools_command = return_basic_args(vcf_args) + vcf_args.allele_freq
-    vcftools_af_call = subprocess.Popen(vcftools_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    vcftools_af_out, vcftools_af_err = vcftools_af_call.communicate()
-    
-    if check_vcftools_for_errors(vcftools_af_err):
-        produce_vcftools_log(vcftools_af_err, vcf_args.out[1], '.frq')
-        
-def calculate_heterozygosity (passed_arguments = []):
-    '''Calculates the heterozygosity using VCFTools.'''
-    
-    # Grab VCF arguments from command line
-    vcf_args = vcf_argument_parser(passed_arguments)
-       
-    vcftools_command = return_basic_args(vcf_args) + vcf_args.het
-    vcftools_het_call = subprocess.Popen(vcftools_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    vcftools_het_out, vcftools_het_err = vcftools_het_call.communicate()
-    if check_vcftools_for_errors(vcftools_het_err):
-        produce_vcftools_log(vcftools_het_err, vcf_args.out[1], '.het')
-        
 if __name__ == "__main__":
-    cmd_parser = argparse.ArgumentParser()
-    cmd_choices = ['calculate_Fst', 'calculate_tajimasD', 'calculate_pi', 'calculate_af', 'calculate_heterozygosity']
-    cmd_parser.add_argument('command', help='Defines the command to be invoked', choices = cmd_choices)
-    cmd_args = cmd_parser.parse_args()
-    
-    locals()[cmd_args.command]()
+    run_vcftools()
