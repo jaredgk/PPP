@@ -2,6 +2,8 @@ import sys
 import pysam
 import argparse
 import os.path
+import logging
+from logging_module import formatLogger
 from random import sample
 from gene_region import Region, RegionList
 
@@ -33,6 +35,11 @@ def createParser():
                                      "subsampled from VCF file"))
     return parser
 
+
+def logArgs(args):
+    logging.warning('Arguments for vcf_to_seq:')
+    for k in vars(args):
+        logging.warning('Argument %s: %s' % (k, vars(args)[k]))
 
 def validateFiles(args):
     """Validates that files provided to args all exist on users system"""
@@ -173,16 +180,16 @@ def getVcfReader(args):
     return vcf_reader
 
 
-def main(sys_args):
+def vcf_to_seq(sys_args):
+    #formatLogger()
     parser = createParser()
     args = parser.parse_args(sys_args)
-
+    logArgs(args)
     validateFiles(args)
     region_list = RegionList(args.genename, oneidx=args.gene_idx)
     fasta_filename, input_ext = getFastaFilename(args.vcfname)
-    #TO DO: Add bgzip/tabix wrapper
-
     fasta_file = open(fasta_filename, 'w')
+
     vcf_reader = getVcfReader(args)
     first_el = next(vcf_reader)
     chrom = first_el.chrom
@@ -196,12 +203,14 @@ def main(sys_args):
         ref_seq = fasta_ref.fetch(chrom, region.start, region.end)
         fasta_header = getHeader(record_count, chrom, region)
         fasta_file.write(fasta_header+'\n')
+
         indiv, idx = 0, 0
         while indiv != -1:
             seq = generateSequence(rec_list, ref_seq, fasta_ref,
                                    region, chrom, indiv, idx, args)
             fasta_file.write(seq+'\n')
             indiv, idx = getNextIdx(rec_list[0], indiv, idx)
+        record_count += 1
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    vcf_to_seq(sys.argv[1:])
