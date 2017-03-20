@@ -37,9 +37,9 @@ def createParser():
 
 
 def logArgs(args):
-    logging.warning('Arguments for vcf_to_seq:')
+    logging.info('Arguments for vcf_to_seq:')
     for k in vars(args):
-        logging.warning('Argument %s: %s' % (k, vars(args)[k]))
+        logging.info('Argument %s: %s' % (k, vars(args)[k]))
 
 def validateFiles(args):
     """Validates that files provided to args all exist on users system"""
@@ -116,7 +116,10 @@ def generateSequence(rec_list, ref_seq, fasta_ref,
         for i in xrange(prev_offset, pos_offset-1):
             seq += ref_seq[i]
         checkRefAlign(vcf_record, fasta_ref, chrom)
-
+        allele = vcf_record.samples[indiv].alleles[idx]
+        if allele is None:
+            raise Exception(("Individual %d at position %d is missing "
+            "data") % (vcf_record.pos,indiv))
         if issnp:
             seq += vcf_record.samples[indiv].alleles[idx]
             prev_offset = pos_offset
@@ -181,7 +184,6 @@ def getVcfReader(args):
 
 
 def vcf_to_seq(sys_args):
-    #formatLogger()
     parser = createParser()
     args = parser.parse_args(sys_args)
     logArgs(args)
@@ -196,6 +198,8 @@ def vcf_to_seq(sys_args):
 
     fasta_ref = pysam.FastaFile(args.refname)
     record_count = 1
+    logging.info('Total individuals: %d' % (len(first_el.samples)))
+    logging.info('Total regions: %d' % (len(region_list.regions)))
     for region in region_list.regions:
         if region.chrom is not None:
             chrom = region.chrom
@@ -213,4 +217,5 @@ def vcf_to_seq(sys_args):
         record_count += 1
 
 if __name__ == "__main__":
+    individualFunctionLogger()
     vcf_to_seq(sys.argv[1:])
