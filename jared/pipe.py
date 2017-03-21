@@ -1,7 +1,7 @@
 import sys
 from ruffus import *
 import logging
-from logging_module import formatLogger, switchLogger
+from logging_module import individualFunctionLogger, pipeSwitchLogger
 from vcf_ref_to_seq import vcf_to_seq
 
 
@@ -24,7 +24,7 @@ sys.excepthook = exp_handler
            ".fasta")
 def run_vcf_to_seq(vcf_in,seq_out):
     pref = vcf_in[0:-1*len(".vcf.gz")]
-    switchLogger(pref)
+    pipeSwitchLogger(pref)
     args = ['--vcf', vcf_in, '--ref', 'example/human_g1k_chr11.fasta',
             '--gr', 'example/snp_region.txt']
     vcf_to_seq(args)
