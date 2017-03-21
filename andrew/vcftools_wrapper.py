@@ -152,16 +152,12 @@ def assign_log_suffix (passed_command):
     elif '--freq' in passed_command or '--freq2' in passed_command:
         return '.frq'
     
-def vcftools_wrapper (passed_arguments = []):
+def run (passed_arguments = []):
     ''' Wrapper code for VCFTools. Commands are assigned using argparse.'''
     
     # Grab VCF arguments from command line
     vcf_args = vcf_argument_parser(passed_arguments)
-    
-    print vcf_args.chr_filter
-    
-    sys.exit()
-     
+         
     # Only allows a single statistic to be run at a time, may update to loop statistics
     if sum(1 for data in (vcf_args.weir_fst_pop, vcf_args.TajimaD, vcf_args.window_pi, vcf_args.het, vcf_args.allele_freq) if data) > 1:
         sys.exit('Statistic limit')
@@ -171,16 +167,16 @@ def vcftools_wrapper (passed_arguments = []):
         sys.exit('Two or more population files requried. Please assign using --weir-fst-pops')
     
     # Assigns the vcftools arguments to a single command line
-    vcftools_command =  [split_arg for arg in vars(vcf_args) for split_arg in getattr(vcf_args, arg)]
+    vcftools_command = [split_arg for arg in vars(vcf_args) for split_arg in getattr(vcf_args, arg)]
     
     # vcftools subprocess call
-    vcftools_Fst_call = subprocess.Popen(['vcftools'] + vcftools_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    vcftools_Fst_out, vcftools_Fst_err = vcftools_Fst_call.communicate()
+    vcftools_call = subprocess.Popen(['vcftools'] + vcftools_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    vcftools_out, vcftools_err = vcftools_call.communicate()
     
     # Check that the log file was created correctly, get the suffix for the log file, and create the file
-    if check_vcftools_for_errors(vcftools_Fst_err):
+    if check_vcftools_for_errors(vcftools_err):
         log_suffix = assign_log_suffix(vcftools_command)
-        produce_vcftools_log(vcftools_Fst_err, vcf_args.out[1], log_suffix)
+        produce_vcftools_log(vcftools_err, vcf_args.out[1], log_suffix)
 
 if __name__ == "__main__":
-    vcftools_wrapper()
+    run()

@@ -8,4 +8,4 @@ cache: pip
 
 script: 
   - sh run_jared_tests.sh
-  - cd andrew && python vcf_tests.py && cd ..
+  - cd andrew && python andrew_tests.py && cd ..
