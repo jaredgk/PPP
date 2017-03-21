@@ -3,7 +3,7 @@ import pysam
 import argparse
 import os.path
 import logging
-from logging_module import formatLogger
+from logging_module import individualFunctionLogger
 from random import sample
 from gene_region import Region, RegionList
 
