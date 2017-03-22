@@ -4,7 +4,6 @@ python:
   - "3.6"
 
 before_install:
-  - pip install --user -r requirements.txt
   - ./install_executables.sh
 
 install:
