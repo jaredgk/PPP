@@ -123,7 +123,7 @@ def vcf_argument_parser(passed_arguments):
 
 def check_vcftools_for_errors (vcftools_output):
     '''Checks the vcftools stderr for reported errors'''
-    if 'Run Time' in vcftools_output:
+    if 'Run Time' in str(vcftools_output):
         return True
     else:
         sys.exit('Error with vcftools')
@@ -132,7 +132,7 @@ def produce_vcftools_log (output, filename, function):
     '''Creates a log file for the vcftools run. Also reports if the log file already exits'''
     if not os.path.isfile(filename + function + '.log'):
         vcftools_log_file = open(filename + function + '.log','w')
-        vcftools_log_file.write(output)
+        vcftools_log_file.write(str(output))
         vcftools_log_file.close()
     else:
         sys.exit('Error: Log file already exits')
