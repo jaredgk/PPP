@@ -213,8 +213,6 @@ def vcf_to_seq(sys_args):
 
         indiv, idx = 0, 0
         while indiv != -1:
-            logging.trace('Individual %d, haplotype %d' %
-                          (indiv,idx))
             seq = generateSequence(rec_list, ref_seq, fasta_ref,
                                    region, chrom, indiv, idx, args)
             fasta_file.write(seq+'\n')
