@@ -7,8 +7,8 @@ class Region:
         self.end = end
         self.chrom = chrom
 
-    def __cmp__(self, other):
-        return self.__dict__ != other.__dict__
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 
 class RegionList:
