@@ -175,7 +175,9 @@ def getVcfReader(args):
     if args.subsamp_num is not None:
         subsamp_list = getSubsampleList(args.vcfname, args.subsamp_num)
     elif args.subsamp_fn is not None:
-        subsamp_list = [l.strip() for l in open(args.subsamp_fn).readlines()]
+        subsamp_file = open(args.subsamp_fn,'r')
+        subsamp_list = [l.strip() for l in subsamp_file.readlines()]
+        subsamp_file.close()
     vcf_reader = pysam.VariantFile(args.vcfname)
     if subsamp_list is not None:
         logging.debug('Subsampling %d individuals from VCF file' %
@@ -218,6 +220,7 @@ def vcf_to_seq(sys_args):
             fasta_file.write(seq+'\n')
             indiv, idx = getNextIdx(rec_list[0], indiv, idx)
         record_count += 1
+    fasta_file.close()
 
 if __name__ == "__main__":
     individualFunctionLogger()
