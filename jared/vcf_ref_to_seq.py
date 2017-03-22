@@ -113,7 +113,7 @@ def generateSequence(rec_list, ref_seq, fasta_ref,
             continue
 
         pos_offset = vcf_record.pos - 1 - region.start
-        for i in xrange(prev_offset, pos_offset-1):
+        for i in range(prev_offset, pos_offset-1):
             seq += ref_seq[i]
         checkRefAlign(vcf_record, fasta_ref, chrom)
         allele = vcf_record.samples[indiv].alleles[idx]
@@ -126,13 +126,13 @@ def generateSequence(rec_list, ref_seq, fasta_ref,
         else:
             max_indel = getMaxAlleleLength(vcf_record.alleles)
             allele = vcf_record.samples[indiv].alleles[idx]
-            for i in xrange(len(allele), max_indel):
+            for i in range(len(allele), max_indel):
                 allele += '_'
             seq += allele
             indel_offset = len(vcf_record.ref)-1
             prev_offset = pos_offset+indel_offset
 
-    for i in xrange(prev_offset, len(ref_seq)):
+    for i in range(prev_offset, len(ref_seq)):
         seq += ref_seq[i]
 
     if args.trim_seq:
