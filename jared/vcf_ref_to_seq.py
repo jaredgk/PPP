@@ -158,7 +158,6 @@ def getFastaFilename(vcfname):
             return vcfname[:-1*len(ext)]+'.fasta', ext
     raise Exception('VCF filename %s has no valid extension' %
                     fasta_filename)
-    #return vcfname,"noext"
 
 
 def getSubsampleList(vcfname, ss_count):
@@ -179,6 +178,8 @@ def getVcfReader(args):
         subsamp_list = [l.strip() for l in open(args.subsamp_fn).readlines()]
     vcf_reader = pysam.VariantFile(args.vcfname)
     if subsamp_list is not None:
+        logging.debug('Subsampling %d individuals from VCF file' %
+        (len(subsamp_list)))
         vcf_reader.subset_samples(subsamp_list)
     return vcf_reader
 
@@ -204,12 +205,16 @@ def vcf_to_seq(sys_args):
         if region.chrom is not None:
             chrom = region.chrom
         rec_list = getRecordList(vcf_reader, region, chrom)
+        logging.debug('Region %d to %d: %d variants' %
+                      (region.start,region.end,len(rec_list)))
         ref_seq = fasta_ref.fetch(chrom, region.start, region.end)
         fasta_header = getHeader(record_count, chrom, region)
         fasta_file.write(fasta_header+'\n')
 
         indiv, idx = 0, 0
         while indiv != -1:
+            logging.trace('Individual %d, haplotype %d' %
+                          (indiv,idx))
             seq = generateSequence(rec_list, ref_seq, fasta_ref,
                                    region, chrom, indiv, idx, args)
             fasta_file.write(seq+'\n')
