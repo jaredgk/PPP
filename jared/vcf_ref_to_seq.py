@@ -104,10 +104,6 @@ def getRecordList(vcf_reader, region, chrom):
 
 def getRecordListUnzipped(vcf_reader, region, chrom, prev_last_rec):
     lst = []
-    if prev_last_rec is not None:
-        print region.start, prev_last_rec.pos,
-    else:
-        print "None"
     if prev_last_rec is not None and region.start <= prev_last_rec.pos < region.end:
         lst.append(prev_last_rec)
     elif prev_last_rec is not None and prev_last_rec.pos >= region.end:
@@ -118,8 +114,6 @@ def getRecordListUnzipped(vcf_reader, region, chrom, prev_last_rec):
             lst.append(rec)
         rec = next(vcf_reader,None)
     prev_last_rec = rec
-    print prev_last_rec.pos
-    print "len: ",len(lst)
     return lst, prev_last_rec
 
 
@@ -237,11 +231,10 @@ def vcf_to_seq(sys_args):
 
     fasta_ref = pysam.FastaFile(args.refname)
     record_count = 1
-    prev_last_rec = None
+    prev_last_rec = first_el
     logging.info('Total individuals: %d' % (len(first_el.samples)))
     logging.info('Total regions: %d' % (len(region_list.regions)))
     for region in region_list.regions:
-        print "start: ",(prev_last_rec is None)
         if region.chrom is not None:
             chrom = region.chrom
         if input_ext != 'vcf':
@@ -249,7 +242,6 @@ def vcf_to_seq(sys_args):
         else:
             rec_list, prev_last_rec = getRecordListUnzipped(vcf_reader,
                                       region, chrom, prev_last_rec)
-            print "in: ",(prev_last_rec is None)
         logging.debug('Region %d to %d: %d variants' %
                       (region.start,region.end,len(rec_list)))
         ref_seq = fasta_ref.fetch(chrom, region.start, region.end)
@@ -263,7 +255,6 @@ def vcf_to_seq(sys_args):
             fasta_file.write(seq+'\n')
             indiv, idx = getNextIdx(first_el, indiv, idx)
         record_count += 1
-        print "end: ",(prev_last_rec is None)
     fasta_file.close()
 
 if __name__ == "__main__":
