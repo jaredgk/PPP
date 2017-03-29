@@ -1,5 +1,6 @@
 import unittest
 import pysam
+import parser
 import filecmp
 import os
 from vcf_ref_to_seq import getMaxAlleleLength, getFastaFilename, \
@@ -15,7 +16,9 @@ class funcTest(unittest.TestCase):
 
     def test_getFastaFilename(self):
         fn = 'test.vcf.gz'
-        self.assertEqual(getFastaFilename(fn), ('test.fasta', '.vcf.gz'))
+        p = createParser()
+        args = p.parse_args(['--vcf', 'test.vcf.gz'])
+        self.assertEqual(getFastaFilename(args), ('test.fasta', 'vcf.gz'))
 
     def testPathValidator(self):
         parser = createParser()
@@ -29,8 +32,8 @@ class funcTest(unittest.TestCase):
 class geneRegionTest(unittest.TestCase):
 
     def test_RL_collist(self):
-        collist = [2, 4, 6]
-        rl = RegionList('example/gr_ex_multicolumn.txt', collist=collist)
+        collist = '2,4,6'
+        rl = RegionList('example/gr_ex_multicolumn.txt', colstr=collist)
         r = rl.regions[0]
         set_r = Region(99999, 100099, '11')
         self.assertEqual(r, set_r)
@@ -73,6 +76,20 @@ class snpTest(unittest.TestCase):
              '--subsamp_list', 'example/subsample_list.txt'])
         self.assertEqual(filecmp.cmp('example/chr11.fasta',
                          'example/chr11.snp.example.fasta'), True)
+
+    def test_generateSequence_unzipped(self):
+        vcf_to_seq(['--vcf', 'example/chr11.unzipped.vcf',
+             '--ref', 'example/human_g1k_chr11.fasta',
+             '--gr', 'example/snp_region.txt'])
+        self.assertEqual(filecmp.cmp('example/chr11.unzipped.fasta',
+                         'example/chr11.snp.example.fasta'), True)
+
+    def test_generateSequence_uz_adj(self):
+        vcf_to_seq(['--vcf', 'example/chr11.unzipped.vcf',
+             '--ref', 'example/human_g1k_chr11.fasta',
+             '--gr', 'example/adj_regions.txt'])
+        self.assertEqual(filecmp.cmp('example/chr11.unzipped.fasta',
+                         'example/chr11.adjacent.fasta'), True)
 
     def tearDown(self):
         try:
