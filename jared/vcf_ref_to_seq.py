@@ -6,6 +6,7 @@ import logging
 from logging_module import individualFunctionLogger
 from random import sample
 from gene_region import Region, RegionList
+from tabix_wrapper import prepVcf
 
 #Input: VCF file, reference sequence, region list (possibly .bed file)
 #Output: Sequences with reference genome overlayed with VCF SNP calls
@@ -27,6 +28,12 @@ def createParser():
                         action="store_true",
                         help=("Trims sequences if indels cause them to be "
                               "longer than reference"))
+    parser.add_argument("--output", dest="output_name", help= (
+                        "Optional name for output other than default"))
+    parser.add_argument("--gene-col", dest="gene_col", help= (
+                        "Comma-separated list of columns for gene region "
+                        " data, format is start/end if no chromosome "
+                        " data, start/end/chrom if so"))
     subsamp_group = parser.add_mutually_exclusive_group()
     subsamp_group.add_argument('--subsamp_list', dest="subsamp_fn",
                                help="List of sample names to be used")
@@ -95,6 +102,27 @@ def getRecordList(vcf_reader, region, chrom):
         lst.append(rec)
     return lst
 
+def getRecordListUnzipped(vcf_reader, region, chrom, prev_last_rec):
+    lst = []
+    if prev_last_rec is not None:
+        print region.start, prev_last_rec.pos,
+    else:
+        print "None"
+    if prev_last_rec is not None and region.start <= prev_last_rec.pos < region.end:
+        lst.append(prev_last_rec)
+    elif prev_last_rec is not None and prev_last_rec.pos >= region.end:
+        return []
+    rec = next(vcf_reader,None)
+    while rec is not None and rec.pos < region.end:
+        if rec.pos >= region.start:
+            lst.append(rec)
+        rec = next(vcf_reader,None)
+    prev_last_rec = rec
+    print prev_last_rec.pos
+    print "len: ",len(lst)
+    return lst, prev_last_rec
+
+
 
 def generateSequence(rec_list, ref_seq, fasta_ref,
                      region, chrom, indiv, idx, args):
@@ -149,15 +177,16 @@ def getHeader(record_count, chrom, region, oneidx=True):
     return '>'+str(record_count)+' '+chrom+' '+str(start)+':'+str(end)
 
 
-def getFastaFilename(vcfname):
-    for ext in ['.vcf.gz', '.vcf', '.bcf', 'vcf.bgz']:
+def getFastaFilename(args):
+    vcfname = args.vcfname
+    for ext in ['vcf.gz', 'vcf', 'bcf', 'vcf.bgz']:
         if ext in vcfname:
-            if ext == '.vcf':
-                raise Exception(('VCF filetype requires compression'
-                                ' with bgzip and indexing with tabix'))
-            return vcfname[:-1*len(ext)]+'.fasta', ext
+            if args.output_name is None:
+                return vcfname[:-1*len(ext)]+'fasta', ext
+            else:
+                return args.output_name, ext
     raise Exception('VCF filename %s has no valid extension' %
-                    fasta_filename)
+                    vcfname)
 
 
 def getSubsampleList(vcfname, ss_count):
@@ -188,11 +217,18 @@ def getVcfReader(args):
 
 def vcf_to_seq(sys_args):
     parser = createParser()
+    if len(sys_args) == 0:
+        parser.print_help()
+        sys.exit(1)
     args = parser.parse_args(sys_args)
     logArgs(args)
     validateFiles(args)
-    region_list = RegionList(args.genename, oneidx=args.gene_idx)
-    fasta_filename, input_ext = getFastaFilename(args.vcfname)
+    col_list = [1,2,0]
+    if args.gene_col is not None:
+        col_list = args.gene_col.split(',')
+    region_list = RegionList(args.genename, oneidx=args.gene_idx,
+                            colstr=args.gene_col)
+    fasta_filename, input_ext = getFastaFilename(args)
     fasta_file = open(fasta_filename, 'w')
 
     vcf_reader = getVcfReader(args)
@@ -201,12 +237,19 @@ def vcf_to_seq(sys_args):
 
     fasta_ref = pysam.FastaFile(args.refname)
     record_count = 1
+    prev_last_rec = None
     logging.info('Total individuals: %d' % (len(first_el.samples)))
     logging.info('Total regions: %d' % (len(region_list.regions)))
     for region in region_list.regions:
+        print "start: ",(prev_last_rec is None)
         if region.chrom is not None:
             chrom = region.chrom
-        rec_list = getRecordList(vcf_reader, region, chrom)
+        if input_ext != 'vcf':
+            rec_list = getRecordList(vcf_reader, region, chrom)
+        else:
+            rec_list, prev_last_rec = getRecordListUnzipped(vcf_reader,
+                                      region, chrom, prev_last_rec)
+            print "in: ",(prev_last_rec is None)
         logging.debug('Region %d to %d: %d variants' %
                       (region.start,region.end,len(rec_list)))
         ref_seq = fasta_ref.fetch(chrom, region.start, region.end)
@@ -218,8 +261,9 @@ def vcf_to_seq(sys_args):
             seq = generateSequence(rec_list, ref_seq, fasta_ref,
                                    region, chrom, indiv, idx, args)
             fasta_file.write(seq+'\n')
-            indiv, idx = getNextIdx(rec_list[0], indiv, idx)
+            indiv, idx = getNextIdx(first_el, indiv, idx)
         record_count += 1
+        print "end: ",(prev_last_rec is None)
     fasta_file.close()
 
 if __name__ == "__main__":
