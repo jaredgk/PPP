@@ -35,7 +35,7 @@ class geneRegionTest(unittest.TestCase):
         collist = '2,4,6'
         rl = RegionList('example/gr_ex_multicolumn.txt', colstr=collist)
         r = rl.regions[0]
-        set_r = Region(99999, 100099, '11')
+        set_r = Region(100000, 100100, '11')
         self.assertEqual(r, set_r)
 
 

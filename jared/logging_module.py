@@ -3,7 +3,7 @@ import logging
 
 
 
-def individualFunctionLogger(rootlevel='INFO'):
+def individualFunctionLogger(rootlevel='INFO',filename='root.log'):
     fmt_def = "%(asctime)s - %(name)s - %(levelname)s: %(message)s"
     fmtr = logging.Formatter(fmt=fmt_def)
 
@@ -11,7 +11,7 @@ def individualFunctionLogger(rootlevel='INFO'):
     s_handler.setFormatter(fmtr)
     s_handler.setLevel(logging.WARNING)
 
-    f_handler = logging.FileHandler('root.log',mode="w")
+    f_handler = logging.FileHandler(filename,mode="w")
     f_handler.setFormatter(fmtr)
 
     rootlogger = logging.getLogger()
