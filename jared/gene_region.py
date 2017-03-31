@@ -1,19 +1,48 @@
 import sys
+from functools import total_ordering
 
+def matchChr(ref_chr,list_chr):
+    """Checks ref_chr for whether "chr" is first chars, then modifies
+    list_chr to match"""
+    if ref_chr is None:
+        return list_chr
+    has_chr = (ref_chr[0:3]=="chr")
+    list_has_chr = (list_chr[0:3]=="chr")
+    if has_chr == list_has_chr:
+        return list_chr
+    elif has_chr:
+        return "chr"+list_chr
+    return list_chr[3:]
 
+@total_ordering
 class Region:
     def __init__(self, start, end, chrom):
         self.start = start
         self.end = end
         self.chrom = chrom
 
+    def chromMod(self):
+        if self.chrom[0:3] == 'chr':
+            c = self.chrom[3:]
+        else:
+            c = self.chrom
+        return c
+
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        c = self.chromMod()
+        oc = other.chromMod()
+        return ((self.start == other.start) and (self.end == other.end)
+                and (c == oc))
+
+    def __lt__(self, other):
+        c = self.chromMod()
+        oc = other.chromMod()
+        return c < oc and self.start < other.start and self.end < other.end
 
 
 class RegionList:
 
-    def __init__(self, filename, oneidx=True, colstr=None,
+    def __init__(self, filename, oneidx=False, colstr=None,
                  defaultchrom=None, halfopen=True):
         if colstr is None:
             self.collist = [1, 2, 0]
@@ -31,7 +60,8 @@ class RegionList:
                     start = int(la[self.collist[0]])
                     end = int(la[self.collist[1]])
                     if len(self.collist) == 3:
-                        chrom = la[self.collist[2]]
+                        c = la[self.collist[2]]
+                        chrom = matchChr(defaultchrom,c)
                     else:
                         chrom = defaultchrom
                 except:
