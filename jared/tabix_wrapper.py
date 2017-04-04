@@ -13,7 +13,7 @@ def bgzipFile(filename,force=False,renameout=None):
     args.append(filename)
     if renameout is not None:
         args.append(['-c','>',renameout])
-    print args
+
     bgzip_call = subprocess.Popen(args, stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
     bgzip_out, bgzip_err = bgzip_call.communicate()
@@ -38,7 +38,7 @@ def tabixFile(filename,filetype='auto',force=True):
         filetype = getFiletype(filename)
     if force:
         args.append('-f')
-    print args
+
     tabix_call = subprocess.Popen(args, stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
     tabix_out, tabix_err = tabix_call.communicate()

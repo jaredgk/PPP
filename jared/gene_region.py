@@ -47,7 +47,7 @@ class Region:
     def getChromKey(self):
         c = self.chromMod()
         convert = lambda text: int(text) if text.isdigit() else text.lower()
-        k = [convert(i) for i in re.split('([0-9]+)',c)]
+        k = [convert(i) for i in re.split('([0-9]+)',c) if len(i) != 0]
         return k
 
 
@@ -60,7 +60,11 @@ class Region:
     def __lt__(self, other):
         k1 = self.getChromKey()
         k2 = other.getChromKey()
-        return k1 < k2 and self.start < other.start and self.end < other.end
+        if k1 != k2:
+            return k1 < k2
+        if self.start != other.start:
+            return self.start < other.start
+        return self.end < other.end
 
 
 class RegionList:
