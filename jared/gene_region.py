@@ -1,4 +1,5 @@
 import sys
+import re
 from functools import total_ordering
 
 def matchChr(ref_chr,list_chr):
@@ -14,6 +15,21 @@ def matchChr(ref_chr,list_chr):
         return "chr"+list_chr
     return list_chr[3:]
 
+
+
+
+def sortChrom(c1,c2):
+    l1 = parseChrom(c1)
+    l2 = parseChrom(c2)
+
+def getChromKey(chrom):
+    c = chrom
+    if chrom[0:3] == 'chr':
+        c = chrom[3:]
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    k = [ convert(i) for i in re.split('([0-9]+)',c)]
+    return k
+
 @total_ordering
 class Region:
     def __init__(self, start, end, chrom):
@@ -28,6 +44,13 @@ class Region:
             c = self.chrom
         return c
 
+    def getChromKey(self):
+        c = self.chromMod()
+        convert = lambda text: int(text) if text.isdigit() else text.lower()
+        k = [convert(i) for i in re.split('([0-9]+)',c)]
+        return k
+
+
     def __eq__(self, other):
         c = self.chromMod()
         oc = other.chromMod()
@@ -35,9 +58,9 @@ class Region:
                 and (c == oc))
 
     def __lt__(self, other):
-        c = self.chromMod()
-        oc = other.chromMod()
-        return c < oc and self.start < other.start and self.end < other.end
+        k1 = self.getChromKey()
+        k2 = other.getChromKey()
+        return k1 < k2 and self.start < other.start and self.end < other.end
 
 
 class RegionList:
@@ -74,7 +97,7 @@ class RegionList:
                 self.regions.append(Region(start, end, chrom))
 
     def parseCols(self,cols):
-        col_list = map(int,cols.split(','))
+        col_list = [int(i) for i in cols.split(',')]
         if len(col_list) < 2 or len(col_list) > 3:
             raise Exception(("Column string %s is either too short or "
                              "too long" % (cols)))
