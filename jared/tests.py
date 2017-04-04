@@ -38,6 +38,12 @@ class geneRegionTest(unittest.TestCase):
         set_r = Region(100000, 100100, '11')
         self.assertEqual(r, set_r)
 
+    def test_RL_sort(self):
+        rl = RegionList('example/unsorted_regions.txt')
+        sl = RegionList('example/sorted_regions.txt')
+        rl.regions.sort()
+        self.assertTrue(rl.regions == sl.regions)
+
 
 class snpTest(unittest.TestCase):
 
