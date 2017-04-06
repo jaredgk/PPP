@@ -73,7 +73,7 @@ class Region:
         k1 = self.getChromKey()
         k2 = other.getChromKey()
         if k1 != k2:
-            return keycomp(k1,k2)
+            return keyComp(k1,k2)
         if self.start != other.start:
             return self.start < other.start
         return self.end < other.end
