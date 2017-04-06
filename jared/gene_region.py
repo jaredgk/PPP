@@ -30,6 +30,18 @@ def getChromKey(chrom):
     k = [ convert(i) for i in re.split('([0-9]+)',c)]
     return k
 
+def keyComp(k1,k2):
+    """Returns True if k1 < k2, False if not. int < str"""
+    for i in xrange(min(len(k1),len(k2))):
+        e1 = k1[i]
+        e2 = k2[i]
+        if isinstance(e1,int) != isinstance(e2,int):
+            return isinstance(e1,int)
+        if e1 != e2:
+            return e1 < e2
+    return len(k1) < len(k2)
+
+
 @total_ordering
 class Region:
     def __init__(self, start, end, chrom):
@@ -61,7 +73,7 @@ class Region:
         k1 = self.getChromKey()
         k2 = other.getChromKey()
         if k1 != k2:
-            return k1 < k2
+            return keycomp(k1,k2)
         if self.start != other.start:
             return self.start < other.start
         return self.end < other.end
