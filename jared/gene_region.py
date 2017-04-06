@@ -32,7 +32,7 @@ def getChromKey(chrom):
 
 def keyComp(k1,k2):
     """Returns True if k1 < k2, False if not. int < str"""
-    for i in xrange(min(len(k1),len(k2))):
+    for i in range(min(len(k1),len(k2))):
         e1 = k1[i]
         e2 = k2[i]
         if isinstance(e1,int) != isinstance(e2,int):
