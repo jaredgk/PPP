@@ -7,6 +7,11 @@ from vcf_ref_to_seq import getMaxAlleleLength, getFastaFilename, \
     vcf_to_seq, createParser, validateFiles
 from gene_region import RegionList, Region
 
+def tryRemove(filename):
+    try:
+        os.remove(filename)
+    except:
+        pass
 
 class funcTest(unittest.TestCase):
 
@@ -98,7 +103,7 @@ class snpTest(unittest.TestCase):
                          'example/chr11.adjacent.fasta'), True)
 
     def test_generateSequence_selfcompress(self):
-        os.remove('example/chr11.unzipped.vcf.gz')
+        tryRemove('example/chr11.unzipped.vcf.gz')
         vcf_to_seq(['--vcf', 'example/chr11.unzipped.vcf',
                 '--ref', 'example/human_g1k_chr11.fasta',
                 '--gr', 'example/snp_region.txt', '--compress-vcf'])
@@ -106,15 +111,9 @@ class snpTest(unittest.TestCase):
                         'example/chr11.snp.example.fasta'))
 
     def tearDown(self):
-        try:
-            os.remove('example/chr11.subsamples.fasta')
-            #figure out how to do this if test fails
-        except:
-            pass
-        try:
-            os.remove('example/chr11.fasta')
-        except:
-            pass
+        tryRemove('example/chr11.subsamples.fasta')
+        tryRemove('example/chr11.fasta')
+
 
 
 if __name__ == "__main__":
