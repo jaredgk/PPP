@@ -2,7 +2,7 @@ import sys
 import pysam
 import logging
 from random import sample
-import os.remove
+import os
 
 
 
