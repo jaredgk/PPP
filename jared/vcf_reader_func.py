@@ -2,6 +2,7 @@ import sys
 import pysam
 import logging
 from random import sample
+import os.remove
 
 
 
@@ -50,17 +51,33 @@ def getSubsampleList(vcfname, ss_count):
     return lst[:int(ss_count)]
 
 
+def compressVcf(vcfname,forceflag=False,remove=False):
+    cvcfname = vcfname+".gz"
+    pysam.tabix_compress(vcfname,cvcfname,force=forceflag)
+    pysam.tabix_index(cvcfname,preset="vcf",force=True)
+    if remove:
+        os.remove(vcfname)
+    return cvcfname
+
+
 def getVcfReader(args):
+    file_uncompressed = ((args.var_ext is not None and args.var_ext == 'vcf')
+                         or args.vcfname[-3:] == 'vcf')
+    reader_uncompressed = (file_uncompressed and not args.compress_flag)
+    if args.compress_flag and file_uncompressed:
+        vcfname = compressVcf(args.vcfname)
+    else:
+        vcfname = args.vcfname
     subsamp_list = None
     if args.subsamp_num is not None:
-        subsamp_list = getSubsampleList(args.vcfname, args.subsamp_num)
+        subsamp_list = getSubsampleList(vcfname, args.subsamp_num)
     elif args.subsamp_fn is not None:
         subsamp_file = open(args.subsamp_fn,'r')
         subsamp_list = [l.strip() for l in subsamp_file.readlines()]
         subsamp_file.close()
-    vcf_reader = pysam.VariantFile(args.vcfname)
+    vcf_reader = pysam.VariantFile(vcfname)
     if subsamp_list is not None:
         logging.debug('Subsampling %d individuals from VCF file' %
         (len(subsamp_list)))
         vcf_reader.subset_samples(subsamp_list)
-    return vcf_reader
+    return vcf_reader, reader_uncompressed

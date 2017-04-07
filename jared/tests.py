@@ -97,6 +97,14 @@ class snpTest(unittest.TestCase):
         self.assertEqual(filecmp.cmp('example/chr11.unzipped.fasta',
                          'example/chr11.adjacent.fasta'), True)
 
+    def test_generateSequence_selfcompress(self):
+        os.remove('example/chr11.unzipped.vcf.gz')
+        vcf_to_seq(['--vcf', 'example/chr11.unzipped.vcf',
+                '--ref', 'example/human_g1k_chr11.fasta',
+                '--gr', 'example/snp_region.txt', '--compress-vcf'])
+        self.assertTrue(filecmp.cmp('example/chr11.unzipped.fasta',
+                        'example/chr11.snp.example.fasta'))
+
     def tearDown(self):
         try:
             os.remove('example/chr11.subsamples.fasta')

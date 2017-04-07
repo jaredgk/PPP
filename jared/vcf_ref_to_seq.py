@@ -38,6 +38,9 @@ def createParser():
     parser.add_argument("--ext", dest="var_ext", help=(
                         "Format for variant file if filename doesn't "
                         "contain extension"))
+    parser.add_argument("--compress-vcf", dest="compress_flag",
+                        action="store_true", help=("If input VCF is not "
+                        "compressed, will compress and use zip search"))
     subsamp_group = parser.add_mutually_exclusive_group()
     subsamp_group.add_argument('--subsamp_list', dest="subsamp_fn",
                                help="List of sample names to be used")
@@ -170,9 +173,10 @@ def vcf_to_seq(sys_args):
     fasta_filename, input_ext = getFastaFilename(args)
     fasta_file = open(fasta_filename, 'w')
 
-    vcf_reader = vf.getVcfReader(args)
+    vcf_reader, uncompressed = vf.getVcfReader(args)
     first_el = next(vcf_reader)
     chrom = first_el.chrom
+    #compressed = (input_ext != 'vcf')
 
     region_list = RegionList(args.genename, oneidx=args.gene_idx,
                             colstr=args.gene_col, defaultchrom=chrom)
@@ -185,7 +189,7 @@ def vcf_to_seq(sys_args):
     for region in region_list.regions:
         if region.chrom is not None:
             chrom = region.chrom
-        if input_ext != 'vcf':
+        if not uncompressed:
             rec_list = vf.getRecordList(vcf_reader, region, chrom)
         else:
             rec_list, prev_last_rec = vf.getRecordListUnzipped(vcf_reader,

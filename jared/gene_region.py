@@ -106,8 +106,8 @@ class RegionList:
                 except:
                     sys.stderr.write("Column is missing")
                 if oneidx:
-                    start -= 1
-                    end -= 1
+                    start += 1
+                    end += 1
                 if not halfopen:
                     end += 1
                 self.regions.append(Region(start, end, chrom))
