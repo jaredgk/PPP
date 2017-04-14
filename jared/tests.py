@@ -85,7 +85,7 @@ class snpTest(unittest.TestCase):
         vcf_to_seq(['--vcf', 'example/chr11.vcf.gz',
              '--ref', 'example/human_g1k_chr11.fasta',
              '--rl', 'example/snp_region.txt',
-             '--subsamp_list', 'example/subsample_list.txt'])
+             '--subsamp-list', 'example/subsample_list.txt'])
         self.assertEqual(filecmp.cmp('example/chr11.fasta',
                          'example/chr11.snp.example.fasta'), True)
 
