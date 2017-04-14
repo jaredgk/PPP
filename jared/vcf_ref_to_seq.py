@@ -230,9 +230,9 @@ def vcf_to_seq(sys_args):
     Output
     ------
     FASTA file
-        Will be named either '--output' value or (vcfinput).fasta. Contains
-        full sequence for given regions and individuals with appropriate
-        SNP/indel data included.
+        Will be named either '--output' value or (vcfinput).fasta.
+        Contains full sequence for given regions and individuals with
+        appropriate SNP/indel data included.
     """
     parser = createParser()
     if len(sys_args) == 0:

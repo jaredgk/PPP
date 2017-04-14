@@ -26,8 +26,8 @@ def createParser():
                               "(chromosome) columns"))
     parser.add_argument("--gr1", dest="gene_idx", action="store_true",
                         help="Gene Region list is 1 index based, not 0")
-    parser.add_argument("--indels", dest="indel_flag", action="store_true",
-                        help="Include indels in ouput VCF file(s)")
+    parser.add_argument("--noindels", dest="indel_flag", action="store_false",
+                        help="Don't include indels in ouput VCF file(s)")
     parser.add_argument("--output", dest="output_name", help= (
                         "Optional name for output other than default"))
     parser.add_argument("--gene-col", dest="gene_col", help= (
@@ -39,7 +39,7 @@ def createParser():
                         "contain extension"))
     parser.add_argument("--compress-vcf", dest="compress_flag",
                         action="store_true", help=("If input VCF is not "
-                        "compressed, will compress and use zip search"))
+                        "compressed, will compress and use fetch search"))
     parser.add_argument("--multi-out", dest="multi_out", action="store_true",
                         help="Produces multiple output VCFs instead of one")
     subsamp_group = parser.add_mutually_exclusive_group()
@@ -76,8 +76,8 @@ def vcf_region_write(sys_args):
     header = vcf_reader.header
     first_el = next(vcf_reader)
     chrom = first_el.chrom
-
-    vcf_out = pysam.VariantFile(args.output_name,'w',header=header)
+    output_name = getOutputName(args)
+    vcf_out = pysam.VariantFile(output_name,'w',header=header)
 
     if args.gene_str is not None:
         region_list = RegionList(genestr=args.gene_str, oneidx=args.gene_idx,

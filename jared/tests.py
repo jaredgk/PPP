@@ -121,12 +121,47 @@ class reduceTest(unittest.TestCase):
     def test_vcf_region_write_simple(self):
         vcf_region_write(['example/chr11.subsamples.vcf.gz',
                          '--rl','example/snp_region.txt',
-                         '--output','example/chr11.temp.vcf.gz'])
+                         '--output','example/chr11.test.vcf.gz'])
         self.assertTrue(filecmp.cmp('example/chr11.snp.sr.vcf.gz',
-                        'example/chr11.temp.vcf.gz'))
+                        'example/chr11.test.vcf.gz'))
+
+    def test_vcf_region_write_unzipped(self):
+        vcf_region_write(['example/chr11.unzipped.vcf',
+                          '--rl','example/snp_region.txt',
+                          '--output','example/chr11.test.vcf'])
+        self.assertTrue(filecmp.cmp('example/chr11.snp.sr.vcf',
+                        'example/chr11.test.vcf'))
+
+    def test_vcf_region_write_first(self):
+        vcf_region_write(['example/chr11.unzipped.vcf',
+                          '--rl','example/first_region.txt',
+                          '--output','example/chr11.test.vcf'])
+        self.assertTrue(filecmp.cmp('example/chr11.first.vcf',
+                        'example/chr11.test.vcf'))
+
+    def test_vcf_region_write_last(self):
+        vcf_region_write(['example/chr11.unzipped.vcf',
+                          '--rl','example/last_region.txt',
+                          '--output','example/chr11.test.vcf'])
+        self.assertTrue(filecmp.cmp('example/chr11.last.vcf',
+                        'example/chr11.test.vcf'))
+
+    def test_vcf_region_write_multi(self):
+        vcf_region_write(['example/chr11.unzipped.vcf',
+                          '--rl','example/multi_big_region.txt',
+                          '--output','example/chr11.test.vcf'])
+        self.assertTrue(filecmp.cmp('example/chr11.multi.big.vcf',
+                        'example/chr11.test.vcf'))
+
+    def test_vcf_region_write_adj(self):
+        vcf_region_write(['example/chr11.unzipped.vcf',
+                          '--rl','example/adj_big_region.txt',
+                          '--output','example/chr11.test.vcf'])
+        self.assertTrue(filecmp.cmp('example/chr11.adj.big.vcf',
+                        'example/chr11.test.vcf'))
 
     def tearDown(self):
-        tryRemove('example/chr11.temp.vcf.gz')
+        tryRemove('example/chr11.test.vcf.gz')
 
 
 
