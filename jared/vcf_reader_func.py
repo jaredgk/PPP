@@ -16,6 +16,16 @@ def getRecordList(vcf_reader, region, chrom):
 
 
 def getRecordListUnzipped(vcf_reader, region, chrom, prev_last_rec):
+    """Method for getting record list from unzipped VCF file.
+
+    This method will sequentially look through a VCF file until it finds
+    the given 'start' position on 'chrom', then add all records to a list
+    until the 'end' position has been reached. Note that 'prev_last_rec'
+    must be kept track of externally to ensure that if consecutive regions
+    are called, the record of the first variant outside the first region
+    is not lost.
+
+    """
     lst = []
     if (prev_last_rec is not None and
         region.start <= prev_last_rec.pos < region.end):
@@ -42,6 +52,11 @@ def checkRecordIsSnp(rec):
 
 
 def getSubsampleList(vcfname, ss_count):
+    """Returns a list of the first 'ss_count' samples in 'vcfname'
+        TODO: Add random sampling?
+
+    """
+
     vcf_o = pysam.VariantFile(vcfname)
     rec = next(vcf_o)
     vcf_o.close()
@@ -52,6 +67,27 @@ def getSubsampleList(vcfname, ss_count):
 
 
 def compressVcf(vcfname,forceflag=False,remove=False):
+    """Runs bgzip and tabix on input VCF file.
+
+    Using the pysam library, this function runs the bgzip and tabix utilities
+    on the given input file. By default, this will not overwrite an existing
+    zipped file, but will overwrite an existing index. "remove" can be set to
+    delete the unzipped file.
+
+    Parameters
+    ----------
+    vcfname : str
+        Name of uncompressed VCF file
+    forceflag : bool (False)
+        If true, will overwrite (vcfname).gz if it exists
+    remove : bool (False)
+        If true, will delete uncompressed source file
+
+    Returns
+    -------
+    cvcfname : str
+        Filepath to compressed VCF file
+    """
     cvcfname = vcfname+".gz"
     pysam.tabix_compress(vcfname,cvcfname,force=forceflag)
     pysam.tabix_index(cvcfname,preset="vcf",force=True)
@@ -61,6 +97,43 @@ def compressVcf(vcfname,forceflag=False,remove=False):
 
 
 def getVcfReader(args):
+    """Returns a reader for a given input VCF file.
+
+    Given a filename, filetype, compression option, and optional Subsampling
+    options, will return a pysam.VariantFile object for iteration and
+    a flag as to whether this file is compressed or uncompressed.
+
+    Parameters
+    ----------
+    vcfname : str
+        Filename for VCF file. The extension of this file will be used to
+        determine whether it is compressed or not unless 'var_ext' is set.
+    var_ext : str (None)
+        Extension for VCF file if it is not included in the filename.
+    compress_flag : bool (False)
+        If filetype is uncompressed and this is set to true, will run
+        compressVcf function.
+    subsamp_num : int (None)
+        If set, will randomly select 'subsamp_num' individuals (not
+        genotypes) from the input VCF file and return a reader with
+        only those data
+    subsamp_list : str (None)
+        If set (mutually exclusive with 'subsamp_num'), will return a
+        reader with only data from the samples listed in the file
+        provided.
+
+    Returns
+    -------
+    vcf_reader : pysam.VariantFile
+        A reader that can be iterated through for variant records. If
+        compressed, it will be able to use the pysam fetch method, otherwise
+        it must be read through sequentially
+    reader_uncompressed : bool
+        If True, VCF reader is uncompressed. This means the fetch method
+        cannot be used and region access must be done using the
+        "getRecordListUnzipped" method.
+
+    """
     file_uncompressed = ((args.var_ext is not None and args.var_ext == 'vcf')
                          or args.vcfname[-3:] == 'vcf')
     reader_uncompressed = (file_uncompressed and not args.compress_flag)

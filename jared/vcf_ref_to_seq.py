@@ -3,7 +3,7 @@ import pysam
 import argparse
 import os.path
 import logging
-from logging_module import individualFunctionLogger
+from logging_module import initLogger
 from random import sample
 from gene_region import Region, RegionList
 import vcf_reader_func as vf
@@ -19,7 +19,7 @@ def createParser():
                                      " genome, and a list of gene regions."))
     parser.add_argument("--vcf", dest="vcfname", help="Input VCF filename")
     parser.add_argument("--ref", dest="refname", help="Reference FASTA file")
-    parser.add_argument("--gr", dest="genename",
+    parser.add_argument("--rl", dest="genename",
                         help="Name of gene region file")
     parser.add_argument("--gr1", dest="gene_idx", action="store_true",
                         help="Gene Region list is 1 index based, not 0")
@@ -135,19 +135,22 @@ def generateSequence(rec_list, ref_seq, fasta_ref,
     return seq
 
 
-def getHeader(record_count, chrom, region, oneidx=False):
+def getHeader(record_count, chrom, region, oneidx=False, halfopen=True):
     start = region.start
     end = region.end
     if oneidx:
         start += 1
         end += 1
+    if not halfopen:
+        start -= 1
     return '>'+str(record_count)+' '+chrom+' '+str(start)+':'+str(end)
 
 
 def getFastaFilename(args):
     vcfname = args.vcfname
     for ext in ['vcf.gz', 'vcf', 'bcf', 'vcf.bgz']:
-        if ext in vcfname:
+        #if ext in vcfname:
+        if ext == vcfname[-1*len(ext):]:
             if args.output_name is None:
                 return vcfname[:-1*len(ext)]+'fasta', ext
             else:
@@ -155,7 +158,9 @@ def getFastaFilename(args):
     if args.var_ext is not None:
         ext = args.var_ext
         if args.output_name is None:
-            return vcfname[:-1*len(ext)]+'fasta', ext
+            raise Exception(("If filetype is not implicit by filename, "
+                    "an output filename must be provided"))
+            #return vcfname[:-1*len(ext)]+'fasta', ext
         else:
             return args.output_name, ext
     raise Exception('VCF filename %s has no valid extension' %
@@ -163,6 +168,72 @@ def getFastaFilename(args):
 
 
 def vcf_to_seq(sys_args):
+    """Returns a FASTA file with seqs from individuals in given gene regions
+
+    Given an input VCF file, a reference FASTA file, and a list of gene
+    regions, will output a FASTA file with sequence data for all individuals
+    in the regions given. The reference FASTA file must be a full file from
+    one or multiple chromosomes, starting at the first base. The gene
+    region file must have start and end coordinates (half-open), with an
+    optional column for chromosome data if the VCF input has multiple
+    chromosomes.
+
+    Parameters
+    ----------
+    --vcf : str
+        Filename for VCF input file. If it does not end with extension
+        'vcf(.gz)', a value for --ext must be provided.
+    --ref : str
+        Filename for FASTA reference file. This file can contain multiple
+        chromosomes but must start from the first base, as there is currently
+        no way to offset the sequences when pulling from a Region
+    --rl : str
+        Filename for gene region file. Requires columns for start and end
+        coordinates, with option for chromosome. Additional data may be
+        included, the columns with relevant data can be specified with the
+        --gene-col option
+    --indels : bool, optional
+        If set, indels will be included in the output sequences
+    --output : str, optional
+        If set, the default output name of (inputprefix).fasta will be
+        replaced with the given string
+    --gene-col : str, optional
+        Comma-separated string with two or three elements (chromosome is
+        optional). If length is 2, elements are the indices for columns
+        in the input gene region file corresponding to the start/end
+        coordinates of a region. If length 3, the third element
+        specifies the index of the chromosome column. Default is "1,2,0",
+        to match column order in a BED file.
+    --ext : str ['vcf','vcf.gz'], optional
+        Required if VCF filename does not end with the typical extension.
+
+
+
+    Other Parameters
+    ----------------
+    --gr1 : bool, optional (False)
+        If set, indicates that the genome coordinate data is in base 1
+    --trim-to-ref-length: bool, optional (False)
+        If set, the sequences output will always match the length of the
+        region they are found in. For example, a sequence with an insertion
+        will cause the sequence to be an additional length of n-1, with n
+        being the length of the insertion.
+    --compress-vcf : bool, optional
+        If set, will use bgzip and tabix to compress and index given VCF
+        file
+    --subsamp_list : str, optional
+        Name of single-column file with names of individuals to subsample
+        from input VCF file.
+    --subsamp_num : int, optional
+        Number of individuals to be randomly subsampled from VCF file
+
+    Output
+    ------
+    FASTA file
+        Will be named either '--output' value or (vcfinput).fasta. Contains
+        full sequence for given regions and individuals with appropriate
+        SNP/indel data included.
+    """
     parser = createParser()
     if len(sys_args) == 0:
         parser.print_help()
@@ -178,7 +249,7 @@ def vcf_to_seq(sys_args):
     chrom = first_el.chrom
     #compressed = (input_ext != 'vcf')
 
-    region_list = RegionList(args.genename, oneidx=args.gene_idx,
+    region_list = RegionList(filename=args.genename, oneidx=args.gene_idx,
                             colstr=args.gene_col, defaultchrom=chrom)
 
     fasta_ref = pysam.FastaFile(args.refname)
@@ -214,5 +285,5 @@ def vcf_to_seq(sys_args):
     fasta_file.close()
 
 if __name__ == "__main__":
-    individualFunctionLogger(filename="/home/jared/workspace/ppp/galaxy.log")
+    initLogger(filename="/home/jared/workspace/ppp/galaxy.log")
     vcf_to_seq(sys.argv[1:])
