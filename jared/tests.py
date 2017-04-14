@@ -162,6 +162,7 @@ class reduceTest(unittest.TestCase):
 
     def tearDown(self):
         tryRemove('example/chr11.test.vcf.gz')
+        tryRemove('example/chr11.test.vcf')
 
 
 
