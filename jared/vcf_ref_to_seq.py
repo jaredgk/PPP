@@ -42,9 +42,9 @@ def createParser():
                         action="store_true", help=("If input VCF is not "
                         "compressed, will compress and use zip search"))
     subsamp_group = parser.add_mutually_exclusive_group()
-    subsamp_group.add_argument('--subsamp_list', dest="subsamp_fn",
+    subsamp_group.add_argument('--subsamp-list', dest="subsamp_fn",
                                help="List of sample names to be used")
-    subsamp_group.add_argument('--subsamp_num', dest="subsamp_num",
+    subsamp_group.add_argument('--subsamp-num', dest="subsamp_num",
                                help=("Number of individuals to be randomly "
                                      "subsampled from VCF file"))
     return parser
@@ -221,10 +221,10 @@ def vcf_to_seq(sys_args):
     --compress-vcf : bool, optional
         If set, will use bgzip and tabix to compress and index given VCF
         file
-    --subsamp_list : str, optional
+    --subsamp-list : str, optional
         Name of single-column file with names of individuals to subsample
         from input VCF file.
-    --subsamp_num : int, optional
+    --subsamp-num : int, optional
         Number of individuals to be randomly subsampled from VCF file
 
     Output
@@ -245,23 +245,22 @@ def vcf_to_seq(sys_args):
     fasta_file = open(fasta_filename, 'w')
 
     vcf_reader, uncompressed = vf.getVcfReader(args)
+    logging.info('VCF file read')
     first_el = next(vcf_reader)
     chrom = first_el.chrom
     #compressed = (input_ext != 'vcf')
 
     region_list = RegionList(filename=args.genename, oneidx=args.gene_idx,
                             colstr=args.gene_col, defaultchrom=chrom)
-
+    logging.info('Region list read')
     fasta_ref = pysam.FastaFile(args.refname)
     record_count = 1
     prev_last_rec = first_el
     logging.info('Total individuals: %d' % (len(first_el.samples)))
     logging.info('Total regions: %d' % (len(region_list.regions)))
     for region in region_list.regions:
-        if region.chrom is not None:
-            chrom = region.chrom
         if not uncompressed:
-            rec_list = vf.getRecordList(vcf_reader, region, chrom)
+            rec_list = vf.getRecordList(vcf_reader, region)
         else:
             rec_list, prev_last_rec = vf.getRecordListUnzipped(vcf_reader,
                                       region, chrom, prev_last_rec)

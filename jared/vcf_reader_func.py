@@ -6,9 +6,9 @@ import os
 
 
 
-def getRecordList(vcf_reader, region, chrom):
+def getRecordList(vcf_reader, region):
     """Returns list for use in subsampling from input file"""
-    var_sites = vcf_reader.fetch(chrom, region.start, region.end)
+    var_sites = vcf_reader.fetch(region.chrom, region.start, region.end)
     lst = []
     for rec in var_sites:
         lst.append(rec)
@@ -28,15 +28,20 @@ def getRecordListUnzipped(vcf_reader, region, chrom, prev_last_rec):
     """
     lst = []
     if (prev_last_rec is not None and
-        region.start <= prev_last_rec.pos < region.end):
+        region.containsRecord(prev_last_rec) == 'in'):
         lst.append(prev_last_rec)
-    elif prev_last_rec is not None and prev_last_rec.pos >= region.end:
+    elif (prev_last_rec is not None and
+         region.containsRecord(prev_last_rec) == 'after'):
         return []
     rec = next(vcf_reader,None)
-    while rec is not None and rec.pos < region.end:
-        if rec.pos >= region.start:
+    place = region.containsRecord(rec)
+    while rec is not None and place != 'after':
+        if place == 'in':
             lst.append(rec)
         rec = next(vcf_reader,None)
+        if rec is None:
+            break
+        place = region.containsRecord(rec)
     prev_last_rec = rec
     return lst, prev_last_rec
 

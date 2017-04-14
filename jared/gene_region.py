@@ -24,7 +24,7 @@ def getChromKey(chrom):
     if chrom[0:3] == 'chr':
         c = chrom[3:]
     convert = lambda text: int(text) if text.isdigit() else text.lower()
-    k = [ convert(i) for i in re.split('([0-9]+)',c)]
+    k = [ convert(i) for i in re.split('([0-9]+)',c) if len(i) != 0]
     return k
 
 def keyComp(k1,k2):
@@ -86,6 +86,19 @@ class Region:
         if self.start != other.start:
             return self.start < other.start
         return self.end < other.end
+
+    def containsRecord(self, rec):
+        k1 = self.getChromKey()
+        kr = getChromKey(rec.chrom)
+        if k1 != kr:
+            if k1 < kr:
+                return 'before'
+            return 'after'
+        if rec.pos < self.start:
+            return 'before'
+        if rec.pos >= self.end:
+            return 'after'
+        return 'in'
 
 
 class RegionList:
