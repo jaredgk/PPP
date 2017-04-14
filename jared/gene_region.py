@@ -190,3 +190,6 @@ class RegionList:
             raise Exception(("Column string %s is either too short or "
                              "too long" % (cols)))
         self.collist = col_list
+
+    #TO do: add check for intersecting regions
+    #Add sort method for strictly text based sorting
