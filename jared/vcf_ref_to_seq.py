@@ -17,10 +17,9 @@ def createParser():
     parser = argparse.ArgumentParser(description=("Generates sequences from"
                                      " samples from a VCF file, a reference"
                                      " genome, and a list of gene regions."))
-    parser.add_argument("--vcf", dest="vcfname", help="Input VCF filename")
-    parser.add_argument("--ref", dest="refname", help="Reference FASTA file")
-    parser.add_argument("--rl", dest="genename",
-                        help="Name of gene region file")
+    parser.add_argument("vcfname", help="Input VCF filename")
+    parser.add_argument("refname", help="Reference FASTA file")
+    parser.add_argument("genename", help="Name of gene region file")
     parser.add_argument("--gr1", dest="gene_idx", action="store_true",
                         help="Gene Region list is 1 index based, not 0")
     parser.add_argument("--indels", dest="indel_flag", action="store_true",
@@ -244,7 +243,11 @@ def vcf_to_seq(sys_args):
     fasta_filename, input_ext = getFastaFilename(args)
     fasta_file = open(fasta_filename, 'w')
 
-    vcf_reader, uncompressed = vf.getVcfReader(args)
+    vcf_reader, uncompressed = vf.getVcfReader(args.vcfname,
+                               var_ext=args.var_ext,
+                               compress_flag=args.compress_flag,
+                               subsamp_num=args.subsamp_num,
+                               subsamp_fn=args.subsamp_fn)
     logging.info('VCF file read')
     first_el = next(vcf_reader)
     chrom = first_el.chrom

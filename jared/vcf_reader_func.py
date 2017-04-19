@@ -101,7 +101,9 @@ def compressVcf(vcfname,forceflag=False,remove=False):
     return cvcfname
 
 
-def getVcfReader(args):
+#def getVcfReader(args):
+def getVcfReader(vcfname, var_ext=None, compress_flag=False,
+                 subsamp_num=None, subsamp_fn=None):
     """Returns a reader for a given input VCF file.
 
     Given a filename, filetype, compression option, and optional Subsampling
@@ -139,18 +141,16 @@ def getVcfReader(args):
         "getRecordListUnzipped" method.
 
     """
-    file_uncompressed = ((args.var_ext is not None and args.var_ext == 'vcf')
-                         or args.vcfname[-3:] == 'vcf')
-    reader_uncompressed = (file_uncompressed and not args.compress_flag)
-    if args.compress_flag and file_uncompressed:
-        vcfname = compressVcf(args.vcfname)
-    else:
-        vcfname = args.vcfname
+    file_uncompressed = ((var_ext is not None and var_ext == 'vcf')
+                         or vcfname[-3:] == 'vcf')
+    reader_uncompressed = (file_uncompressed and not compress_flag)
+    if compress_flag and file_uncompressed:
+        vcfname = compressVcf(vcfname)
     subsamp_list = None
-    if args.subsamp_num is not None:
-        subsamp_list = getSubsampleList(vcfname, args.subsamp_num)
-    elif args.subsamp_fn is not None:
-        subsamp_file = open(args.subsamp_fn,'r')
+    if subsamp_num is not None:
+        subsamp_list = getSubsampleList(vcfname, subsamp_num)
+    elif subsamp_fn is not None:
+        subsamp_file = open(subsamp_fn,'r')
         subsamp_list = [l.strip() for l in subsamp_file.readlines()]
         subsamp_file.close()
     vcf_reader = pysam.VariantFile(vcfname)
