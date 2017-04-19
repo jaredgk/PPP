@@ -135,7 +135,11 @@ def vcf_region_write(sys_args):
         sys.exit(1)
     args = parser.parse_args(sys_args)
     logArgs(args)
-    vcf_reader, uncompressed = vf.getVcfReader(args)
+    vcf_reader, uncompressed = vf.getVcfReader(args.vcfname, 
+                               var_ext=args.var_ext,
+                               compress_flag=args.compress_flag,
+                               subsamp_num=args.subsamp_num,
+                               subsamp_fn=args.subsamp_fn)
     logging.info('VCF file read')
     header = vcf_reader.header
     first_el = next(vcf_reader)

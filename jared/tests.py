@@ -23,14 +23,14 @@ class funcTest(unittest.TestCase):
     def test_getFastaFilename(self):
         fn = 'test.vcf.gz'
         p = createParser()
-        args = p.parse_args(['--vcf', 'test.vcf.gz'])
+        args = p.parse_args(['test.vcf.gz','test.fasta','test.reg'])
         self.assertEqual(getFastaFilename(args), ('test.fasta', 'vcf.gz'))
 
     def testPathValidator(self):
         parser = createParser()
-        args = ['--vcf', 'example/doesntexist.vcf.gz',
-                '--ref', 'example/human_g1k_chr11.fasta',
-                '--rl', 'example/snp_region.txt']
+        args = ['example/doesntexist.vcf.gz',
+                'example/human_g1k_chr11.fasta',
+                'example/snp_region.txt']
         pa = parser.parse_args(args)
         self.assertRaises(ValueError, validateFiles, pa)
 
@@ -54,60 +54,60 @@ class geneRegionTest(unittest.TestCase):
 class snpTest(unittest.TestCase):
 
     def test_generateSequence_snp(self):
-        vcf_to_seq(['--vcf', 'example/chr11.subsamples.vcf.gz',
-             '--ref', 'example/human_g1k_chr11.fasta',
-             '--rl', 'example/snp_region.txt'])
+        vcf_to_seq(['example/chr11.subsamples.vcf.gz',
+             'example/human_g1k_chr11.fasta',
+             'example/snp_region.txt'])
         self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
                          'example/chr11.snp.example.fasta'), True)
 
     def test_generateSequence_insert(self):
-        vcf_to_seq(['--vcf', 'example/chr11.subsamples.vcf.gz',
-             '--ref', 'example/human_g1k_chr11.fasta',
-             '--rl', 'example/insert_region.txt', '--indels'])
+        vcf_to_seq(['example/chr11.subsamples.vcf.gz',
+             'example/human_g1k_chr11.fasta',
+             'example/insert_region.txt', '--indels'])
         self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
                          'example/chr11.insert.example.fasta'), True)
 
     def test_generateSequence_del(self):
-        vcf_to_seq(['--vcf', 'example/chr11.subsamples.vcf.gz',
-             '--ref', 'example/human_g1k_chr11.fasta',
-             '--rl', 'example/del_region.txt', '--indels'])
+        vcf_to_seq(['example/chr11.subsamples.vcf.gz',
+             'example/human_g1k_chr11.fasta',
+             'example/del_region.txt', '--indels'])
         self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
                          'example/chr11.del.example.fasta'), True)
 
     def test_generateSequence_multi(self):
-        vcf_to_seq(['--vcf', 'example/chr11.subsamples.vcf.gz',
-             '--ref', 'example/human_g1k_chr11.fasta',
-             '--rl', 'example/multi_inregion.txt'])
+        vcf_to_seq(['example/chr11.subsamples.vcf.gz',
+             'example/human_g1k_chr11.fasta',
+             'example/multi_inregion.txt'])
         self.assertEqual(filecmp.cmp('example/chr11.subsamples.fasta',
                          'example/chr11.multi.example.fasta'), True)
 
     def test_subsample(self):
-        vcf_to_seq(['--vcf', 'example/chr11.vcf.gz',
-             '--ref', 'example/human_g1k_chr11.fasta',
-             '--rl', 'example/snp_region.txt',
+        vcf_to_seq(['example/chr11.vcf.gz',
+             'example/human_g1k_chr11.fasta',
+             'example/snp_region.txt',
              '--subsamp-list', 'example/subsample_list.txt'])
         self.assertEqual(filecmp.cmp('example/chr11.fasta',
                          'example/chr11.snp.example.fasta'), True)
 
     def test_generateSequence_unzipped(self):
-        vcf_to_seq(['--vcf', 'example/chr11.unzipped.vcf',
-             '--ref', 'example/human_g1k_chr11.fasta',
-             '--rl', 'example/snp_region.txt'])
+        vcf_to_seq(['example/chr11.unzipped.vcf',
+             'example/human_g1k_chr11.fasta',
+             'example/snp_region.txt'])
         self.assertEqual(filecmp.cmp('example/chr11.unzipped.fasta',
                          'example/chr11.snp.example.fasta'), True)
 
     def test_generateSequence_uz_adj(self):
-        vcf_to_seq(['--vcf', 'example/chr11.unzipped.vcf',
-             '--ref', 'example/human_g1k_chr11.fasta',
-             '--rl', 'example/adj_regions.txt'])
+        vcf_to_seq(['example/chr11.unzipped.vcf',
+             'example/human_g1k_chr11.fasta',
+            'example/adj_regions.txt'])
         self.assertEqual(filecmp.cmp('example/chr11.unzipped.fasta',
                          'example/chr11.adjacent.fasta'), True)
 
     def test_generateSequence_selfcompress(self):
         tryRemove('example/chr11.unzipped.vcf.gz')
-        vcf_to_seq(['--vcf', 'example/chr11.unzipped.vcf',
-                '--ref', 'example/human_g1k_chr11.fasta',
-                '--rl', 'example/snp_region.txt', '--compress-vcf'])
+        vcf_to_seq(['example/chr11.unzipped.vcf',
+                'example/human_g1k_chr11.fasta',
+                'example/snp_region.txt', '--compress-vcf'])
         self.assertTrue(filecmp.cmp('example/chr11.unzipped.fasta',
                         'example/chr11.snp.example.fasta'))
 
