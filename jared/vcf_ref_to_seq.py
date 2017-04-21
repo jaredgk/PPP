@@ -107,7 +107,8 @@ def generateSequence(rec_list, ref_seq, fasta_ref,
             continue
 
         pos_offset = vcf_record.pos - 1 - region.start
-        for i in range(prev_offset, pos_offset-1):
+        #for i in range(prev_offset, pos_offset-1):
+        for i in range(prev_offset, pos_offset):
             seq += ref_seq[i]
         checkRefAlign(vcf_record, fasta_ref, chrom)
         allele = vcf_record.samples[indiv].alleles[idx]
@@ -116,14 +117,15 @@ def generateSequence(rec_list, ref_seq, fasta_ref,
             "data") % (vcf_record.pos,indiv))
         if issnp:
             seq += vcf_record.samples[indiv].alleles[idx]
-            prev_offset = pos_offset
+            prev_offset = pos_offset+1
         else:
             max_indel = getMaxAlleleLength(vcf_record.alleles)
             allele = vcf_record.samples[indiv].alleles[idx]
             for i in range(len(allele), max_indel):
                 allele += '_'
             seq += allele
-            indel_offset = len(vcf_record.ref)-1
+            #indel_offset = len(vcf_record.ref)-1
+            indel_offset = len(vcf_record.ref)
             prev_offset = pos_offset+indel_offset
 
     for i in range(prev_offset, len(ref_seq)):
@@ -276,7 +278,7 @@ def vcf_to_seq(sys_args):
         fasta_header = getHeader(record_count, chrom, region,
                                  oneidx = args.gene_idx)
         fasta_file.write(fasta_header+'\n')
-
+        #fasta_file.write(ref_seq+'\n\n')
         indiv, idx = 0, 0
         while indiv != -1:
             seq = generateSequence(rec_list, ref_seq, fasta_ref,

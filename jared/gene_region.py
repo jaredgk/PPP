@@ -163,6 +163,8 @@ class RegionList:
         """
         with open(filename, 'r') as regionfile:
             for line in regionfile:
+                if line[0] == '#':
+                    continue
                 la = line.strip().split()
                 try:
                     start = int(la[self.collist[0]])
