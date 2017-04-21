@@ -1,0 +1,9 @@
+2017-04-18 12:14:06,801 - exp_handler - ERROR: cannot concatenate 'str' and 'NoneType' objects
+Traceback (most recent call last):
+  File "vcftools_wrapper.py", line 206, in <module>
+    run()
+  File "vcftools_wrapper.py", line 202, in run
+    produce_vcftools_log(vcftools_err, vcf_args.out[1], log_suffix)
+  File "vcftools_wrapper.py", line 142, in produce_vcftools_log
+    if not os.path.isfile(filename + function + '.log'):
+TypeError: cannot concatenate 'str' and 'NoneType' objects
