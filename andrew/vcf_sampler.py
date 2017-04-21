@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-def sampler_output_parser():
+def sampler_parser():
     '''Sampler Argument Parser - Assigns arguments from command line.'''
     
     def sampler_argument_file ():
@@ -62,7 +62,7 @@ def uniform_vcftools_sampler (vcftools_samples, uniform_sampling_args):
     '''Uniform Sampler. Seperates the elements of vcftools_samples into
     equal sized bins (number of bins specified by .uniform_bins arg). The
     samples in the bins are then randomly selected (number of selected
-    samples is difned by: .sample_size / .uniform_bins).'''
+    samples is defined by: .sample_size / .uniform_bins).'''
         
     binned_sample_database = defaultdict(list)
        
@@ -115,29 +115,39 @@ def run ():
     sampling is possible, then runs the specified sampling method, and produces the
     output files.'''
     
-    sampler_args = sampler_output_parser()
-    
+    # Get arguments from command line
+    sampler_args = sampler_parser()
+    # Set the random seed
     random.seed(sampler_args.random_seed)
-    
+    # Read in the sample file
     vcftools_samples = pd.read_csv(sampler_args.input, sep = '\t')
-        
-    if len(vcftools_samples) <= sampler_args.sample_size:
-        sys.exit('Too few samples')
-           
+    
+    # Confirm there are enough samples    
+    if len(vcftools_samples) < sampler_args.sample_size:
+        sys.exit('Sample size larger than the number of samples within input')
+    
+    elif len(vcftools_samples) == sampler_args.sample_size:
+        # Update with warning call
+        print 'Sample size equal to number of samples within input'
+    
+    # Run the uniform sampler       
     if sampler_args.sampling == 'uniform':
         if sampler_args.sample_size % sampler_args.uniform_bins != 0:
-            sys.exit('Sample size not divisible by the bins')
+            sys.exit('Sample size not divisible by the bin count')
         selected_samples = sorted(uniform_vcftools_sampler(list(vcftools_samples[sampler_args.sample_type]), sampler_args))
-
-    
+    # Run the random sampler 
     if sampler_args.sampling == 'random':
         selected_samples = sorted(random_vcftools_sampler(range(len(vcftools_samples)), sampler_args.sample_size))
-                
+    
+    # Reduce to only selected samples        
     vcftools_samples = vcftools_samples[vcftools_samples.index.isin(selected_samples)]
     
+    # Create TSV file of the reduced samples
     vcftools_samples.to_csv(sampler_args.input + '.sampled', sep = '\t')
    
+    # If a VCF file is specifed, create a reduced VCF file(s) from the samples
     if sampler_args.vcf_file:
+        # Get the chromosome, start, and end columns
         chr_col, start_col, end_col = assign_sample_columns(list(vcftools_samples))
               
         vcf_input = pysam.VariantFile(sampler_args.vcf_file)

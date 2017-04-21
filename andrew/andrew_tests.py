@@ -8,7 +8,7 @@ class vcftools_tests (unittest.TestCase):
        
     def test_vcf_argument_parser (self):
         vcf_args = vcftools_wrapper.vcf_argument_parser(['--gzvcf', 'example/locus8.vcf.gz'])
-        self.assertEqual(vcf_args.input, ['--gzvcf', 'example/locus8.vcf.gz'])
+        self.assertEqual(vcf_args.gzvcf, ['--gzvcf', 'example/locus8.vcf.gz'])
     
     def test_produce_vcftools_log (self):
         vcftools_wrapper.produce_vcftools_log('Log Test:\n1\n2\n3\n', 'out', '.logTest')
