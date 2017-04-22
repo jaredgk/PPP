@@ -5,9 +5,9 @@ import argparse
 import logging
 
 # Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
+#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
 
-from logging_module import initLogger
+#from logging_module import initLogger
 
 def vcf_argument_parser(passed_arguments):
     '''VCF Argument Parser - Assigns arguments for vcftools from command line.
@@ -31,6 +31,15 @@ def vcf_argument_parser(passed_arguments):
                     raise IOError # File found
                 setattr(args, self.dest, value)
         return customAction
+    
+    def parser_confirm_files ():
+        '''Custom action to confirm multiple file exists'''
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, value, option_string=None):
+                if not os.path.isfile(value):
+                    raise IOError # File not found
+                getattr(args, self.dest).append(value)                
+        return customAction
         
     vcf_parser = argparse.ArgumentParser()
     
@@ -38,37 +47,20 @@ def vcf_argument_parser(passed_arguments):
     vcf_parser.add_argument("vcfname", metavar='VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
     vcf_parser.add_argument("--ext", help = "Format for variant file if filename doesn't contain extension")
     
-    # Other basic arguments. Expand as needed
+    # Other file arguments. Expand as needed
     vcf_parser.add_argument('--out', help = 'Specifies the output filename', type = str, action = parser_confirm_no_file())
+    vcf_parser.add_argument('--pop-file', help = 'Defines the population files for calculating specific statistics', type = str, action='append')
+
     
     # Statistic based arguments.
     statistic_list = ['weir-fst', 'TajimaD', 'pi', 'freq', 'het']
-    vcf_parser.add_argument('--calc-statistic', help = "Specifies the statistic to calculate", type=str, choices = statistic_list)
+    vcf_parser.add_argument('--calc-statistic', metavar = '{{{0}}}'.format(', '.join(statistic_list)) , help = "Specifies the statistic to calculate", type=str, choices = statistic_list, default = 'weir-fst')
     
+    # Statistic window options
     vcf_parser.add_argument('--statistic-window-size', help = 'Specifies the size of window calculations', type = int, default = 10000)
     vcf_parser.add_argument('--statistic-window-step', help = 'Specifies step size between windows', type = int, default = 20000)
-       
-    '''
-    # Fst arguments
-    vcf_parser.add_argument('--weir-fst-pop', help = 'Defines the population (list of individuals) files for calculating Fst', default = [], type = str, action = vcf_argument_append_file('--weir-fst-pop'))
-    vcf_parser.add_argument('--fst-window-size', help = 'Defines the size of the Fst calculation windows (rather than Fst calculations per site)', nargs='?', default = [], type=int, const = 10000, action = vcf_argument_attribute('--fst-window-size'))
-    vcf_parser.add_argument('--fst-window-step', help = 'Defines the step size between Fst windows', nargs='?', default = [], type=int, const = 20000, action = vcf_argument_attribute('--fst-window-step'))
-    
-    # Tajima's D arguments   
-    vcf_parser.add_argument('--TajimaD', help = "Defines the Tajima's D bin size", nargs='?', default = [], const = 10000, type=int, action = vcf_argument_attribute('--TajimaD'))
-    
-    # Nucleotide Diversity (Pi) arguments
-    vcf_parser.add_argument('--window-pi', help = 'Calcualtes nucleotide diversity for the defined window size', nargs='?', default = [], type=int, const = 10000, action = vcf_argument_attribute('--window-pi'))
-    vcf_parser.add_argument('--window-pi-step', help = 'Calcualtes nucleotide diversity by site', nargs='?', default = [], type=int, const = 20000, action = vcf_argument_attribute('--window-pi-step'))
-    
-    # Allele frequency arguments. Currently mutually exclusive to only allow a single allele frequency reporting method
-    vcf_allele_freq = vcf_parser.add_mutually_exclusive_group()
-    vcf_allele_freq.add_argument('--freq', help = 'Outputs the allele frequency', default = [], action = 'store_const', const = ['--freq'])
-    vcf_allele_freq.add_argument('--freq2', help = 'Outputs the allele frequency without information on the alleles', default = [], action = 'store_const', const = ['--freq2']) #vcf_argument_append_attribute
-    
-    # Heterozygosity arguments
-    vcf_parser.add_argument('--het', help = 'Outputs the heterozygosity', default = [], action = 'store_const', const = ['--het'])
-    '''       
+
+          
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)
     else:
@@ -105,6 +97,18 @@ def assign_log_suffix (passed_command):
     elif '--freq' in passed_command or '--freq2' in passed_command:
         return '.frq'
     
+
+def vcftools_subprocess_call (vcfname, vcftools_args):
+    
+    # vcftools subprocess call
+    vcftools_call = subprocess.Popen(['vcftools'] + vcfname + vcftools_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    vcftools_out, vcftools_err = vcftools_call.communicate()
+    
+    # Check that the log file was created correctly, get the suffix for the log file, and create the file
+    if check_vcftools_for_errors(vcftools_err):
+        log_suffix = assign_log_suffix(vcftools_command)
+        produce_vcftools_log(vcftools_err, vcf_args.out[1], log_suffix)
+    
     
 def run (passed_arguments = []):
     '''
@@ -120,24 +124,43 @@ def run (passed_arguments = []):
     # Grab VCF arguments from command line
     vcf_args = vcf_argument_parser(passed_arguments)
     
-    '''
-         
-    # Only allows a single statistic to be run at a time, may update to loop statistics
-    stats_count = sum(1 for data in (vcf_args.weir_fst_pop, vcf_args.TajimaD, vcf_args.window_pi, vcf_args.het, vcf_args.freq, vcf_args.freq2) if data)
-    if not stats_count:
-        sys.exit('No statistic selected')
-    if stats_count > 1:
-        sys.exit('Statistic limit')
+    # Argument container for vcftools
+    vcftools_call_args = []
     
-    # Checks that two or more population files are assigned if calculating Fst 
-    if vcf_args.weir_fst_pop and (len(vcf_args.weir_fst_pop) / 2) < 2:
-        sys.exit('Two or more population files requried. Please assign using --weir-fst-pops')
+    if vcf_args.calc_statistic == 'weir-fst':
+        if not vcf_args.pop_file or len(vcf_args.pop_file) < 2:
+            sys.exit('Two or more population files requried. Please assign using --pop-file')
+        
+        # Assigns specific vcftools arguments for calculating fst
+        vcftools_pop_args = [population_args for population_file in vcf_args.pop_file for population_args in ['--weir-fst-pop', population_file]]
+        vcftools_window_args = ['--fst-window-size', vcf_args.statistic_window_size, '--fst-window-step', vcf_args.statistic_window_step]
+        # Assigns all the vcftools arguments for calculating fst
+        vcftools_call_args = vcftools_pop_args + vcftools_window_args
+        
+    elif vcf_args.calc_statistic == 'TajimaD':
+        # Assigns all the vcftools arguments for calculating TajimaD
+        vcftools_call_args = ['--TajimaD', vcf_args.statistic_window_size]
+        
+    elif vcf_args.calc_statistic == 'pi':
+        # Assigns all the vcftools arguments for calculating pi
+        vcftools_call_args = ['--window-pi', vcf_args.statistic_window_size, '--window-pi-step', vcf_args.statistic_window_step]
+        
+    elif vcf_args.calc_statistic == 'freq':
+        # Assigns all the vcftools arguments for the allele frequency
+        vcftools_call_args = ['--freq']
+        
+    elif vcf_args.calc_statistic == 'het':
+        # Assigns all the vcftools arguments for calculating heterozygosity
+        vcftools_call_args = ['--het']        
     
-    # Assigns the vcftools arguments to a single command line
-    vcftools_command = [split_arg for arg in vars(vcf_args) for split_arg in getattr(vcf_args, arg)]
+    # Temp file assignment
+    vcfname_arg = ['--gzvcf', vcf_args.vcfname]
+    
+    print ['vcftools'] + vcfname_arg + vcftools_call_args
     
     # vcftools subprocess call
-    vcftools_call = subprocess.Popen(['vcftools'] + vcftools_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    '''
+    vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + vcftools_call_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     vcftools_out, vcftools_err = vcftools_call.communicate()
     
     # Check that the log file was created correctly, get the suffix for the log file, and create the file
@@ -145,7 +168,6 @@ def run (passed_arguments = []):
         log_suffix = assign_log_suffix(vcftools_command)
         produce_vcftools_log(vcftools_err, vcf_args.out[1], log_suffix)
     '''
-
 if __name__ == "__main__":
     #initLogger()
     run()
