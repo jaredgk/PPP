@@ -1,6 +1,7 @@
 import sys
 import pysam
 import logging
+import struct
 from random import sample
 import os
 
@@ -23,6 +24,7 @@ def checkFormat(vcfname):
     f.close()
     BGZF_HEADER='\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00BC\x02\x00'
     GZF_HEADER='\x1f\x8b'
+    print l[:len(BGZF_HEADER)]
     if l[:len(BGZF_HEADER)] == BGZF_HEADER:
         return 'bgzip'
     if l[:len(GZF_HEADER)] == GZF_HEADER:
