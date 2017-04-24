@@ -118,7 +118,7 @@ def compressVcf(vcfname,forceflag=False,remove=False):
 
 
 #def getVcfReader(args):
-def getVcfReader(vcfname, var_ext=None, compress_flag=False,
+def getVcfReader(vcfname, compress_flag=False,
                  subsamp_num=None, subsamp_fn=None):
     """Returns a reader for a given input VCF file.
 
@@ -157,8 +157,11 @@ def getVcfReader(vcfname, var_ext=None, compress_flag=False,
         "getRecordListUnzipped" method.
 
     """
-    file_uncompressed = ((var_ext is not None and var_ext == 'vcf')
-                         or vcfname[-3:] == 'vcf')
+    ext = checkFormat(vcfname)
+    if ext == 'gzip':
+        raise Exception(('Input file %s is gzip-formatted, must be either '
+                         'uncompressed or zipped with bgzip' % vcfname))
+    file_uncompressed = (ext == 'nozip')
     reader_uncompressed = (file_uncompressed and not compress_flag)
     if compress_flag and file_uncompressed:
         vcfname = compressVcf(vcfname)

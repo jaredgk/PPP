@@ -246,7 +246,6 @@ def vcf_to_seq(sys_args):
     fasta_file = open(fasta_filename, 'w')
 
     vcf_reader, uncompressed = vf.getVcfReader(args.vcfname,
-                               var_ext=args.var_ext,
                                compress_flag=args.compress_flag,
                                subsamp_num=args.subsamp_num,
                                subsamp_fn=args.subsamp_fn)
