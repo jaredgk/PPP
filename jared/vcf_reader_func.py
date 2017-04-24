@@ -6,6 +6,21 @@ import os
 
 
 
+def checkFormat(vcfname):
+    """Given a filename, opens file and reads first line to check if
+    file has BGZF or GZIP header. May be extended to check for BCF format
+    """
+    f = open(vcfname,'r')
+    l = f.readline()
+    f.close()
+    BGZF_HEADER='\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00BC\x02\x00'
+    GZF_HEADER='\x1f\x8b'
+    if l[:len(BGZF_HEADER)] == BGZF_HEADER:
+        return 'bgzip'
+    if l[:len(GZF_HEADER)] == GZF_HEADER:
+        return 'gzip'
+    return 'nozip'
+
 def getRecordList(vcf_reader, region):
     """Returns list for use in subsampling from input file"""
     var_sites = vcf_reader.fetch(region.chrom, region.start, region.end)

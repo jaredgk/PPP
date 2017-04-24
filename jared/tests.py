@@ -6,6 +6,7 @@ import os
 from vcf_ref_to_seq import getMaxAlleleLength, getFastaFilename, \
     vcf_to_seq, createParser, validateFiles
 from vcf_from_regions import vcf_region_write
+from vcf_reader_func import checkFormat
 from gene_region import RegionList, Region
 
 def tryRemove(filename):
@@ -115,6 +116,20 @@ class snpTest(unittest.TestCase):
         tryRemove('example/chr11.subsamples.fasta')
         tryRemove('example/chr11.fasta')
         tryRemove('example/chr11.unzipped.fasta')
+
+class checkCompressionTest(unittest.TestCase):
+
+    def test_checkFormat_nozip(self):
+        comp = checkFormat('example/chr11.unzipped.vcf')
+        self.assertTrue(comp == 'nozip')
+
+    def test_checkFormat_bgzip(self):
+        comp = checkFormat('example/chr11.subsamples.vcf.gz')
+        self.assertTrue(comp == 'bgzip')
+
+    def test_checkFormat_gzip(self):
+        comp = checkFormat('example/chr11.gzipped.vcf.gz')
+        self.assertTrue(comp=='gzip')
 
 class reduceTest(unittest.TestCase):
 
