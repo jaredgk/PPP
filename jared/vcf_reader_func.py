@@ -14,10 +14,10 @@ def checkFormat(vcfname):
         f = open(vcfname,'r')
     else:
         try:
-            f = open(vcfname,'r')
-            return 'nozip'
-        except:
             f = open(vcfname,'rb')
+        except:
+            return 'nozip'
+            #f = open(vcfname,'rb')
     l = f.readline()
     f.close()
     BGZF_HEADER='\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00BC\x02\x00'
