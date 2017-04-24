@@ -11,20 +11,11 @@ def checkFormat(vcfname):
     """Given a filename, opens file and reads first line to check if
     file has BGZF or GZIP header. May be extended to check for BCF format
     """
-    if sys.version_info[0] < 3:
-        f = open(vcfname,'r')
-    else:
-        try:
-            f = open(vcfname,'rb')
-        except:
-            print('nozip')
-            return 'nozip'
-            #f = open(vcfname,'rb')
+    f = open(vcfname,'rb')
     l = f.readline()
     f.close()
-    BGZF_HEADER='\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00BC\x02\x00'
-    GZF_HEADER='\x1f\x8b'
-    print l[:len(BGZF_HEADER)]
+    BGZF_HEADER=b'\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00BC\x02\x00'
+    GZF_HEADER=b'\x1f\x8b'
     if l[:len(BGZF_HEADER)] == BGZF_HEADER:
         return 'bgzip'
     if l[:len(GZF_HEADER)] == GZF_HEADER:
