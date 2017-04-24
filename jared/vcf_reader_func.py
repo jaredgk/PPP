@@ -16,6 +16,7 @@ def checkFormat(vcfname):
         try:
             f = open(vcfname,'rb')
         except:
+            print('nozip')
             return 'nozip'
             #f = open(vcfname,'rb')
     l = f.readline()
