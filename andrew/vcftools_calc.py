@@ -134,7 +134,7 @@ def run (passed_arguments = []):
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcfname)
     
     # vcftools subprocess call
-    vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + map(str, vcftools_call_args), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     vcftools_out, vcftools_err = vcftools_call.communicate()
 
     # Check that the log file was created correctly, get the suffix for the log file, and create the file
