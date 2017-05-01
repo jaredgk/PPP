@@ -2,8 +2,6 @@ import ConfigParser
 import argparse
 
 
-def getArgsFromParser(parser):
-    for k in vars(parser)
     
 
 def parseOption(val):
@@ -25,8 +23,8 @@ def parseOption(val):
 
 def getConfigFilename(arglist, flag='--conf'):
     if flag in arglist:
-        idx = argslist.index(flag)
-        return argslist[idx+1]
+        idx = arglist.index(flag)
+        return arglist[idx+1]
     return None
         
     
@@ -36,8 +34,8 @@ def defaultsDictForFunction(func_name, config_name):
     d_vars = dict(config.items("DEFAULT"))
     d_hold = dict(config.items(func_name))
     d_func = {}
-    for k in d_vars.keys():
-        if k not in d_func:
+    for k in d_hold.keys():
+        if k not in d_vars:
             val = parseOption(d_hold[k])
             if val is not None:
                 d_func[k] = val
