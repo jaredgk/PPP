@@ -243,6 +243,7 @@ def vcf_to_seq(sys_args):
         parser.print_help()
         sys.exit(1)
         
+    
     config_name = getConfigFilename(sys_args)
     if config_name is not None:
         defaults = defaultsDictForFunction('vcf_ref_to_seq',config_name)
