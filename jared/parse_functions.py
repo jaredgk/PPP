@@ -1,8 +1,13 @@
-import ConfigParser
+try:
+    import ConfigParser
+except:
+    import configparser as ConfigParser
 import argparse
+import sys
+
+is_python3 = (sys.version_info[0] == 3)
 
 
-    
 
 def parseOption(val):
     if val == 'None':
@@ -26,10 +31,13 @@ def getConfigFilename(arglist, flag='--conf'):
         idx = arglist.index(flag)
         return arglist[idx+1]
     return None
-        
-    
+
+
 def defaultsDictForFunction(func_name, config_name):
-    config = ConfigParser.SafeConfigParser()
+    if is_python3:
+        config = ConfigParser.ConfigParser()
+    else:
+        config = ConfigParser.SafeConfigParser()
     config.read(config_name)
     d_vars = dict(config.items("DEFAULT"))
     d_hold = dict(config.items(func_name))
@@ -40,4 +48,3 @@ def defaultsDictForFunction(func_name, config_name):
             if val is not None:
                 d_func[k] = val
     return d_func
-            

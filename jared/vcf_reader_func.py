@@ -73,7 +73,7 @@ def checkRecordIsSnp(rec):
 
 
 def getSubsampleList(vcfname, ss_count):
-    """Returns a list of the first 'ss_count' samples in 'vcfname'
+    """Returns a list of the first 'ss_count' individuals in 'vcfname'
         TODO: Add random sampling?
 
     """
@@ -140,7 +140,7 @@ def getVcfReader(vcfname, compress_flag=False,
         If set, will randomly select 'subsamp_num' individuals (not
         genotypes) from the input VCF file and return a reader with
         only those data
-    subsamp_list : str (None)
+    subsamp_fn : str (None)
         If set (mutually exclusive with 'subsamp_num'), will return a
         reader with only data from the samples listed in the file
         provided.

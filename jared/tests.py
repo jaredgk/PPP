@@ -8,6 +8,7 @@ from vcf_ref_to_seq import getMaxAlleleLength, getFastaFilename, \
 from vcf_from_regions import vcf_region_write
 from vcf_reader_func import checkFormat
 from gene_region import RegionList, Region
+from logging_module import initLogger
 
 def tryRemove(filename):
     try:
@@ -180,6 +181,18 @@ class reduceTest(unittest.TestCase):
         tryRemove('example/chr11.test.vcf')
 
 
+class configTest(unittest.TestCase):
+
+    def test_vcf_to_seq_config(self):
+        vcf_to_seq(['example/chr11.subsamples.vcf.gz',
+                    'example/human_g1k_chr11.fasta',
+                    'example/insert_region.txt',
+                    '--conf','example/config.config'])
+        self.assertTrue(filecmp.cmp('example/chr11.insert.example.fasta',
+                        'example/chr11.subsamples.fasta'))
+
+
 
 if __name__ == "__main__":
+    initLogger()
     unittest.main()
