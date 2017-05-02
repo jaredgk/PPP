@@ -34,14 +34,12 @@ def createParser():
                         "Comma-separated list of columns for gene region "
                         " data, format is start/end if no chromosome "
                         " data, start/end/chrom if so"))
-    parser.add_argument("--ext", dest="var_ext", help=(
-                        "Format for variant file if filename doesn't "
-                        "contain extension"))
     parser.add_argument("--compress-vcf", dest="compress_flag",
                         action="store_true", help=("If input VCF is not "
                         "compressed, will compress and use fetch search"))
     parser.add_argument("--multi-out", dest="multi_out", action="store_true",
                         help="Produces multiple output VCFs instead of one")
+    parser.add_argument("--nocompress", dest="nocompress", action="store_true")
     subsamp_group = parser.add_mutually_exclusive_group()
     subsamp_group.add_argument('--subsamp-list', dest="subsamp_fn",
                                help="List of sample names to be used")
@@ -55,15 +53,41 @@ def logArgs(args):
     for k in vars(args):
         logging.info('Argument %s: %s' % (k, vars(args)[k]))
 
-def getOutputName(args):
+def getOutputName(args, uncompressed):
     vcfname = args.vcfname
+    nocompress = args.nocompress
+    compress_output = not (uncompressed or nocompress)
+    if args.output_name is not None:
+        if compress_output and args.output_name[-3:] != '.gz':
+            return args.output_name+'.gz'
+        return args.output_name
+        #might need check for .gz if shouldnt be compressed
+    end_ext = 'vcf.gz'
+
+    if not compress_output:
+        end_ext = 'vcf'
+    for ext in ['vcf.gz','vcf']:
+        offset = -1*len(ext)
+        if ext == vcfname[offset:]:
+            return args.vcfname[:offset]+'subregions.'+end_ext
+    raise Exception(("Either --output needs a value or the vcf input needs "
+                     "an extension of vcf or vcf.gz"))
+
+def getOutputPrefix(args, uncompressed):
     if args.output_name is not None:
         return args.output_name
     for ext in ['vcf.gz','vcf']:
         offset = -1*len(ext)
         if ext == vcfname[offset:]:
-            return args.vcfname[:offset]+'subregions.'+ext
-    raise Exception(("Either --output needs a value or the vcf "))
+            return args.vcfname[:offset]
+    return args.vcfname
+
+def getMultiFileName(pref, rc, uncompressed, nocompress_flag):
+    oc = (not uncompressed and not nocompress_flag)
+    ext = '.vcf'
+    if oc:
+        ext += '.gz'
+    return pref+'region'+str(rc)+ext
 
 def vcf_region_write(sys_args):
     """Returns a VCF file with variants from regions in a list
@@ -74,7 +98,7 @@ def vcf_region_write(sys_args):
 
     Parameters
     ----------
-    --vcf : str
+    vcfname : str
         Filename for VCF input file. If it does not end with extension
         'vcf(.gz)', a value for --ext must be provided.
     --r : str, optional
@@ -90,8 +114,14 @@ def vcf_region_write(sys_args):
     --noindels : bool, optional
         If set, indels will not be included in the output VCF
     --output : str, optional
-        If set, the default output name of (inputprefix).fasta will be
-        replaced with the given string
+        If set, the default output name of (vcfinput).subregion.vcf(.gz) will
+        be replaced with the given string. If writing multiple files, this
+        value will be the file prefix, with outputs being of form
+        (output).region(k).vcf[.gz]
+    --nocompress
+        If set, output VCF will be uncompressed. This will prevent adding
+        the .gz extension to the output filename, which is how pysam
+        determines what compression to use while writing
     --gene-col : str, optional
         Comma-separated string with two or three elements (chromosome is
         optional). If length is 2, elements are the indices for columns
@@ -99,8 +129,6 @@ def vcf_region_write(sys_args):
         coordinates of a region. If length 3, the third element
         specifies the index of the chromosome column. Default is "1,2,0",
         to match column order in a BED file.
-    --ext : str ['vcf','vcf.gz'], optional
-        Required if VCF filename does not end with the typical extension.
 
 
 
@@ -114,7 +142,7 @@ def vcf_region_write(sys_args):
     --multi-out: bool, optional
         If set, each region will be written to a separate VCF file, tagged
         with (prefix).region[n].vcf(.gz)
-    --subsamp-list : str, optional
+    --subsamp-fn : str, optional
         Name of single-column file with names of individuals to subsample
         from input VCF file.
     --subsamp-num : int, optional
@@ -129,13 +157,14 @@ def vcf_region_write(sys_args):
 
 
     """
+
     parser = createParser()
     if len(sys_args) == 0:
         parser.print_help()
         sys.exit(1)
     args = parser.parse_args(sys_args)
     logArgs(args)
-    vcf_reader, uncompressed = vf.getVcfReader(args.vcfname, 
+    vcf_reader, uncompressed = vf.getVcfReader(args.vcfname,
                                compress_flag=args.compress_flag,
                                subsamp_num=args.subsamp_num,
                                subsamp_fn=args.subsamp_fn)
@@ -143,8 +172,11 @@ def vcf_region_write(sys_args):
     header = vcf_reader.header
     first_el = next(vcf_reader)
     chrom = first_el.chrom
-    output_name = getOutputName(args)
-    vcf_out = pysam.VariantFile(output_name,'w',header=header)
+    if not args.multi_out:
+        output_name = getOutputName(args, uncompressed)
+        vcf_out = pysam.VariantFile(output_name, 'w', header=header)
+    else:
+        out_p = getOutputPrefix(args, uncompressed)
 
     if args.gene_str is not None:
         region_list = RegionList(genestr=args.gene_str, oneidx=args.gene_idx,
@@ -159,7 +191,7 @@ def vcf_region_write(sys_args):
     prev_last_rec = first_el
     logging.info('Total individuals: %d' % (len(first_el.samples)))
     logging.info('Total regions: %d' % (len(region_list.regions)))
-    for region in region_list.regions:
+    for rc,region in enumerate(region_list.regions,start=1):
         if not uncompressed:
             rec_list = vf.getRecordList(vcf_reader, region)
         else:
@@ -168,6 +200,14 @@ def vcf_region_write(sys_args):
         if len(rec_list) == 0:
             logging.warning(("Region from %d to %d has no variants "
                             "in VCF file") % (region.start,region.end))
+        if args.multi_out:
+            try:
+                vcf_out.close()
+            except:
+                pass
+            outname = getMultiFileName(out_p, rc, uncompressed,
+                                       args.nocompress)
+            vcf_out = pysam.VariantFile(outname, 'w', header=header)
         for rec in rec_list:
             issnp = vf.checkRecordIsSnp(rec)
             if not args.indel_flag and not issnp:
