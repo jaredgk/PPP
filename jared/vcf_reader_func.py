@@ -8,8 +8,22 @@ import os
 
 
 def checkFormat(vcfname):
-    """Given a filename, opens file and reads first line to check if
+    """Checks header of given file for compression type
+
+
+    Given a filename, opens file and reads first line to check if
     file has BGZF or GZIP header. May be extended to check for BCF format
+
+    Parameters
+    ----------
+    filename : str
+        Name of file to be checked
+
+    Returns
+    -------
+    extension : str {'bgzip','gzip','nozip'}
+        File extension as indicated by header
+
     """
     f = open(vcfname,'rb')
     l = f.readline()
@@ -35,11 +49,33 @@ def getRecordListUnzipped(vcf_reader, region, chrom, prev_last_rec):
     """Method for getting record list from unzipped VCF file.
 
     This method will sequentially look through a VCF file until it finds
-    the given 'start' position on 'chrom', then add all records to a list
-    until the 'end' position has been reached. Note that 'prev_last_rec'
+    the given `start` position on `chrom`, then add all records to a list
+    until the `end` position has been reached. Note that `prev_last_rec`
     must be kept track of externally to ensure that if consecutive regions
     are called, the record of the first variant outside the first region
     is not lost.
+
+    Parameters
+    ----------
+    vcf_reader : pysam VariantFile object
+        VCF reader initialized from other function
+    region : region object
+        Region object with start and end coordinates of region of interest.
+        Chromosome may be included but will be overwritten by `chrom`
+        parameter.
+    chrom : str
+        Chromosome name of region of interest.
+    prev_last_rec : VariantRecord object
+        Variable with last record read from VcfReader. Stored here so that
+        if two adjacent regions are called, the overflow record from the
+        first region is still included in the next region
+
+    Returns
+    -------
+    lst : list
+        List of records in given gene region
+    prev_last_rec : VariantRecord object
+        First record after target region, for use in next call
 
     """
     lst = []
@@ -73,8 +109,7 @@ def checkRecordIsSnp(rec):
 
 
 def getSubsampleList(vcfname, ss_count):
-    """Returns a list of the first 'ss_count' individuals in 'vcfname'
-        TODO: Add random sampling?
+    """Returns a list of the first `ss_count` individuals in `vcfname`
 
     """
 
@@ -92,7 +127,7 @@ def compressVcf(vcfname,forceflag=False,remove=False):
 
     Using the pysam library, this function runs the bgzip and tabix utilities
     on the given input file. By default, this will not overwrite an existing
-    zipped file, but will overwrite an existing index. "remove" can be set to
+    zipped file, but will overwrite an existing index. `remove` can be set to
     delete the unzipped file.
 
     Parameters
@@ -130,18 +165,18 @@ def getVcfReader(vcfname, compress_flag=False,
     ----------
     vcfname : str
         Filename for VCF file. The extension of this file will be used to
-        determine whether it is compressed or not unless 'var_ext' is set.
+        determine whether it is compressed or not unless `var_ext` is set.
     var_ext : str (None)
         Extension for VCF file if it is not included in the filename.
     compress_flag : bool (False)
         If filetype is uncompressed and this is set to true, will run
         compressVcf function.
     subsamp_num : int (None)
-        If set, will randomly select 'subsamp_num' individuals (not
+        If set, will randomly select `subsamp_num` individuals (not
         genotypes) from the input VCF file and return a reader with
         only those data
     subsamp_fn : str (None)
-        If set (mutually exclusive with 'subsamp_num'), will return a
+        If set (mutually exclusive with `subsamp_num`), will return a
         reader with only data from the samples listed in the file
         provided.
 
