@@ -7,7 +7,7 @@ from logging_module import initLogger
 from random import sample
 from gene_region import Region, RegionList
 import vcf_reader_func as vf
-from parse_functions import defaultsDictForFunction, getConfigFilename
+from parse_functions import defaultsDictForFunction, getConfigFilename, makeRequiredList
 #from tabix_wrapper import prepVcf
 
 #Input: VCF file, reference sequence, region list (possibly .bed file)
@@ -242,13 +242,17 @@ def vcf_to_seq(sys_args):
     if len(sys_args) == 0:
         parser.print_help()
         sys.exit(1)
-        
-    
-    config_name = getConfigFilename(sys_args)
+
+    required_args = ['vcfname','refname','genename']
+    config_name, req_included = getConfigFilename(sys_args)
     if config_name is not None:
         defaults = defaultsDictForFunction('vcf_ref_to_seq',config_name)
         parser.set_defaults(**defaults)
-    args = parser.parse_args(sys_args)
+    if not req_included:
+        args = parser.parse_args(sys_args)
+    else:
+        req_args = makeRequiredList(defaults,required_args)
+        args = parser.parse_args(req_args)
     logArgs(args)
     validateFiles(args)
     fasta_filename, input_ext = getFastaFilename(args)

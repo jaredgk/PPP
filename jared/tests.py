@@ -191,6 +191,11 @@ class configTest(unittest.TestCase):
         self.assertTrue(filecmp.cmp('example/chr11.insert.example.fasta',
                         'example/chr11.subsamples.fasta'))
 
+    def test_vcf_to_seq_config_required(self):
+        vcf_to_seq(['--conf', 'example/withreq.conf'])
+        self.assertTrue(filecmp.cmp('example/chr11.snp.example.fasta',
+                        'example/chr11.subsamples.fasta'))
+
 
 
 if __name__ == "__main__":

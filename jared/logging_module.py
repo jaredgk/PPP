@@ -33,11 +33,11 @@ def initLogger(filename='pipeline.log', filelevel='INFO',
     filename : str ("pipeline.log")
         Name of file that log will be written to
 
-    filelevel : ['DEBUG','INFO','WARNING','ERROR'] ('INFO')
+    filelevel : {'INFO','DEBUG','WARNING','ERROR'}
         Set minimum level of log messages that are written to log file.
         Note that this acts as a de facto minumum for 'streamlevel' as well.
 
-    streamlevel : ['DEBUG','INFO','WARNING','ERROR'] ('WARNING')
+    streamlevel : {'WARNING','DEBUG','INFO','ERROR'}
         Set minimum level of log messages that are output to stream.
 
     resetlog : bool (True)
@@ -48,8 +48,18 @@ def initLogger(filename='pipeline.log', filelevel='INFO',
     -------
     None
 
+    Exceptions
+    ----------
+    If filelevel or streamlevel are not a valid logging level
 
     """
+    log_levels = ['INFO','WARNING','DEBUG','ERROR']
+    if filelevel.upper() not in log_levels:
+        raise Exception('filelevel value %s is not a valid level' %
+                         filelevel)
+    if streamlevel.upper() not in log_levels:
+        raise Exception('streamlevel value %s is not a valid level' %
+                         streamlevel)
     fmt_def = "%(asctime)s - %(funcName)s - %(levelname)s: %(message)s"
     fmtr = logging.Formatter(fmt=fmt_def)
 
