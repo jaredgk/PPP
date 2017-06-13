@@ -1,0 +1,33 @@
+======================
+VCF File Documentation
+======================
+
+Placeholder Text.
+
+
+Functions
+---------
+
+.. only:: html
+
+   .. autosummary::
+
+      vcftools_calc.run
+      vcf_phase.run
+      vcf_sampler.run
+
+.. only:: latexpdf
+
+   .. toctree::
+      :maxdepth: 2
+
+      vcftools_calc.run
+      vcf_phase.run
+      vcf_sampler.run
+
+Modules
+-------
+.. toctree::
+   :maxdepth: 2
+
+   Modules/vcftools
