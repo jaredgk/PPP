@@ -109,29 +109,36 @@ def run ():
         Parameters
         ----------
         VCF_Input : str
-            Input VCF filename, required to produce sampled VCF output
+            Specifies the input VCF filename
         --calc-statistic : str
             Specifies the statistic to calculate. Choices: windowed-weir-fst
-            (default) and TajimaD.
+            (default) and TajimaD
         --statistic-window-size : int
             Specifies the window size of the statistic. Required for Tajima's D
         --sampling-scheme : str
             Specifies the sampling scheme to use. Choices: random (default) and
             uniform
         --uniform-bins : int
-            Specifies the number of bins to use in uniform sampling
+            Specifies the number of bins for the uniform sampler
         --sample-size : int
             Specifies the total sample size. Note: If using the uniform sampling
-            scheme his number must be divisible by number of uniform bins.
+            scheme, this number must be divisible by number of uniform bins
         --random-seed : int
-            Specifies the random seed value for the random number generator.
+            Specifies the random seed value for the random number generator
 
         Returns
         -------
-        file
+        output : file
             Sampled statistic file
-        file
+        samples : file
             Sampled VCF output
+
+        Raises
+        ------
+        IOError
+            Input VCF file does not exist
+        IOError
+            Output file already exists
 
     '''
 

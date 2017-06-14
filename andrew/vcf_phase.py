@@ -4,7 +4,7 @@ import subprocess
 import argparse
 import glob
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
 import vcf_reader_func
 
@@ -41,7 +41,7 @@ def phase_argument_parser(passed_arguments):
 
     # Other basic arguments. Expand as needed
     phase_parser.add_argument('--out', help = 'Defines the output filename', default = 'out', action = parser_confirm_no_file())
-    phase_parser.add_argument('--estimate-file', help = 'Defines the estimated genotype frequency filename. For used if using beagle', default = 'estimated_gt', action = parser_confirm_no_file())
+    phase_parser.add_argument('--estimate-file', help = 'Defines the estimated genotype frequency filename. Required for the beagle algorithm', default = 'estimated_gt', action = parser_confirm_no_file())
 
     if passed_arguments:
         return phase_parser.parse_args(passed_arguments)
@@ -68,7 +68,39 @@ def assign_vcf_extension (filename):
         sys.exit('Unknown file format')
 
 def run (passed_arguments = []):
-    ''' Wrapper code for Phasing. Commands are assigned using argparse.'''
+    '''
+        Phaser for VCF files.
+
+        Automates the phasing process for a specified VCF file. The function
+        allows users to select between multiple phasing algorithms: beagle
+        (default) and shapit.
+
+        Parameters
+        ----------
+        VCF_Input : str
+            Specifies the input VCF filename
+        --phase-algorithm : str
+            Specifies the algorithm to be used. Choices: beagle (default) and
+            shapit
+        --out : str
+            Specifies the output filename
+        --estimate-file : str
+            Defines the estimated genotype frequency filename. Required for the
+            beagle algorithm
+
+        Returns
+        -------
+        output : file
+            Phased VCF file
+
+        Raises
+        ------
+        IOError
+            Input VCF file does not exist
+        IOError
+            Output file already exists
+
+    '''
 
     # Grab VCF arguments from command line
     phase_args = phase_argument_parser(passed_arguments)
