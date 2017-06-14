@@ -7,12 +7,12 @@ import logging
 from vcftools import *
 
 # Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
 #from logging_module import initLogger
 
 def vcf_calc_parser(passed_arguments):
-    '''VCF Argument Parser'''
+    '''VCF Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
@@ -70,14 +70,14 @@ def run (passed_arguments = []):
     '''
     Statistic calculation using VCFTools.
 
-    Automates the calculation of specific statistics (Fst (site/windowed),
-    Tajima's D, Pi, allele frequency, and heterozygosity) using VCFTools. If no
-    statistic is specified, windowed Fst is used by default.
+    Automates the calculation of site/windowed fixation index (Fst), Tajima's D,
+    nucleotide diversity (Pi), allele frequency, and heterozygosity using
+    VCFTools. If no statistic is specified, windowed Fst is used by default.
 
     Parameters
     ----------
     VCF_Input : str
-        Input VCF filename
+        Specifies the input VCF filename
     --out : str
         Specifies the output filename
     --pop-file : str
@@ -87,14 +87,23 @@ def run (passed_arguments = []):
         Specifies the statistic to calculate. Choices: weir-fst,
         windowed-weir-fst (Default), TajimaD, pi, freq, het
     --statistic-window-size : int
-        Specifies the window size of the statistic
+        Specifies the window size for window-based statistics
     --statistic-window-step : int
-        Specifies step size between windows
+        Specifies step size between windows for spcific window-based statistics
 
     Returns
     -------
-    file
+    output : file
         Statistic file output
+    log : file
+        Log file output
+
+    Raises
+    ------
+    IOError
+        Input VCF file does not exist
+    IOError
+        Output file already exists
 
 
     '''
