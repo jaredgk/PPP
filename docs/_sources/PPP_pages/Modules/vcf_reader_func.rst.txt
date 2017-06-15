@@ -1,0 +1,9 @@
+======================
+vcf_reader_func Module
+======================
+
+
+.. automodule:: vcf_reader_func
+      :members:
+      :undoc-members:
+      :show-inheritance:

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>vcftools_calc.run &mdash; PPP 0.0.1 documentation</title>
+  <title>vcf_to_seq &mdash; PPP 0.0.1 documentation</title>
   
 
   
@@ -138,13 +138,13 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-      <li>vcftools_calc.run</li>
+      <li>vcf_to_seq</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../../_sources/PPP_pages/Functions/vcftools_calc_run.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/PPP_pages/Functions/vcf_to_seq.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -157,64 +157,90 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="vcftools-calc-run">
-<h1>vcftools_calc.run<a class="headerlink" href="#vcftools-calc-run" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="vcf-to-seq">
+<h1>vcf_to_seq<a class="headerlink" href="#vcf-to-seq" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
-<dt id="vcftools_calc.run">
-<code class="descclassname">vcftools_calc.</code><code class="descname">run</code><span class="sig-paren">(</span><em>passed_arguments=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#vcftools_calc.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Statistic calculation using VCFTools.</p>
-<p>Automates the calculation of site/windowed fixation index (Fst), Tajima's D,
-nucleotide diversity (Pi), allele frequency, and heterozygosity using
-VCFTools. If no statistic is specified, windowed Fst is used by default.</p>
+<dt id="vcf_ref_to_seq.vcf_to_seq">
+<code class="descclassname">vcf_ref_to_seq.</code><code class="descname">vcf_to_seq</code><span class="sig-paren">(</span><em>sys_args</em><span class="sig-paren">)</span><a class="headerlink" href="#vcf_ref_to_seq.vcf_to_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a FASTA file with seqs from individuals in given gene regions</p>
+<p>Given an input VCF file, a reference FASTA file, and a list of gene
+regions, will output a FASTA file with sequence data for all individuals
+in the regions given. The reference FASTA file must be a full file from
+one or multiple chromosomes, starting at the first base. The gene
+region file must have start and end coordinates (half-open), with an
+optional column for chromosome data if the VCF input has multiple
+chromosomes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>VCF_Input</strong> : str</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>--vcf</strong> : str</p>
 <blockquote>
-<div><p>Specifies the input VCF filename</p>
+<div><p>Filename for VCF input file. If it does not end with extension
+'vcf(.gz)', a value for --ext must be provided.</p>
 </div></blockquote>
-<p><strong>--out</strong> : str</p>
+<p><strong>--ref</strong> : str</p>
 <blockquote>
-<div><p>Specifies the output filename</p>
+<div><p>Filename for FASTA reference file. This file can contain multiple
+chromosomes but must start from the first base, as there is currently
+no way to offset the sequences when pulling from a Region</p>
 </div></blockquote>
-<p><strong>--pop-file</strong> : str</p>
+<p><strong>--rl</strong> : str</p>
 <blockquote>
-<div><p>Defines a population file for calculating Fst-based statistics. May be
-used multple times (i.e. once per file)</p>
+<div><p>Filename for gene region file. Requires columns for start and end
+coordinates, with option for chromosome. Additional data may be
+included, the columns with relevant data can be specified with the
+--gene-col option</p>
 </div></blockquote>
-<p><strong>--calc-statistic</strong> : str</p>
+<p><strong>--indels</strong> : bool, optional</p>
 <blockquote>
-<div><p>Specifies the statistic to calculate. Choices: weir-fst,
-windowed-weir-fst (Default), TajimaD, pi, freq, het</p>
+<div><p>If set, indels will be included in the output sequences</p>
 </div></blockquote>
-<p><strong>--statistic-window-size</strong> : int</p>
+<p><strong>--output</strong> : str, optional</p>
 <blockquote>
-<div><p>Specifies the window size for window-based statistics</p>
+<div><p>If set, the default output name of (inputprefix).fasta will be
+replaced with the given string</p>
 </div></blockquote>
-<p><strong>--statistic-window-step</strong> : int</p>
+<p><strong>--gene-col</strong> : str, optional</p>
 <blockquote>
-<div><p>Specifies step size between windows for spcific window-based statistics</p>
+<div><p>Comma-separated string with two or three elements (chromosome is
+optional). If length is 2, elements are the indices for columns
+in the input gene region file corresponding to the start/end
+coordinates of a region. If length 3, the third element
+specifies the index of the chromosome column. Default is &quot;1,2,0&quot;,
+to match column order in a BED file.</p>
+</div></blockquote>
+<p><strong>--ext</strong> : str ['vcf','vcf.gz'], optional</p>
+<blockquote>
+<div><p>Required if VCF filename does not end with the typical extension.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>output</strong> : file</p>
+<tr class="field-even field"><th class="field-name" colspan="2">Other Parameters:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first"><strong>--gr1</strong> : bool, optional (False)</p>
 <blockquote>
-<div><p>Statistic file output</p>
+<div><p>If set, indicates that the genome coordinate data is in base 1</p>
 </div></blockquote>
-<p><strong>log</strong> : file</p>
+<p><strong>--trim-to-ref-length: bool, optional (False)</strong></p>
 <blockquote>
-<div><p>Log file output</p>
+<div><p>If set, the sequences output will always match the length of the
+region they are found in. For example, a sequence with an insertion
+will cause the sequence to be an additional length of n-1, with n
+being the length of the insertion.</p>
 </div></blockquote>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>IOError</strong></p>
+<p><strong>--compress-vcf</strong> : bool, optional</p>
 <blockquote>
-<div><p>Input VCF file does not exist</p>
+<div><p>If set, will use bgzip and tabix to compress and index given VCF
+file</p>
 </div></blockquote>
-<p><strong>IOError</strong></p>
+<p><strong>--subsamp-list</strong> : str, optional</p>
+<blockquote>
+<div><p>Name of single-column file with names of individuals to subsample
+from input VCF file.</p>
+</div></blockquote>
+<p><strong>--subsamp-num</strong> : int, optional</p>
 <blockquote class="last">
-<div><p>Output file already exists</p>
+<div><p>Number of individuals to be randomly subsampled from VCF file</p>
 </div></blockquote>
 </td>
 </tr>
