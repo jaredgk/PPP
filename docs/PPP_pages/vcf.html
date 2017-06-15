@@ -100,6 +100,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="Modules/vcftools.html">vcftools Module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Modules/vcf_reader_func.html">vcf_reader_func Module</a></li>
 </ul>
 </li>
 </ul>
@@ -188,6 +189,12 @@
 <tr class="row-odd"><td><a class="reference internal" href="Functions/vcf_sampler_run.html#vcf_sampler.run" title="vcf_sampler.run"><code class="xref py py-obj docutils literal"><span class="pre">vcf_sampler.run</span></code></a>()</td>
 <td>Statistics sampler for VCFTools output.</td>
 </tr>
+<tr class="row-even"><td><a class="reference internal" href="Functions/vcf_to_seq.html#vcf_ref_to_seq.vcf_to_seq" title="vcf_ref_to_seq.vcf_to_seq"><code class="xref py py-obj docutils literal"><span class="pre">vcf_ref_to_seq.vcf_to_seq</span></code></a>(sys_args)</td>
+<td>Returns a FASTA file with seqs from individuals in given gene regions</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">vcf_from_regions.vcf_region_write</span></code>(sys_args)</td>
+<td>Returns a VCF file with variants from regions in a list</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -196,6 +203,7 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="Modules/vcftools.html">vcftools Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Modules/vcf_reader_func.html">vcf_reader_func Module</a></li>
 </ul>
 </div>
 </div>
@@ -223,7 +231,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, PPP Development Team.
+        &copy; Copyright 2017, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey).
 
     </p>
   </div>
@@ -270,7 +278,11 @@
           SphinxRtdTheme.StickyNav.enable();
       });
   </script>
-   
+  
+ 
+<br><p>This was made possible by the NSF</p>
+
+
 
 </body>
 </html>

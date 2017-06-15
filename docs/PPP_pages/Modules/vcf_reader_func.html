@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>vcf_reader_func Module &mdash; PPP 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="PPP 0.0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="VCF File Documentation" href="../vcf.html"/>
+        <link rel="next" title="Contact Us" href="../contact.html"/>
+        <link rel="prev" title="vcftools Module" href="vcftools.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../vcf.html">VCF File Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../vcf.html#functions">Functions</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../vcf.html#modules">Modules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="vcftools.html">vcftools Module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">vcf_reader_func Module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../vcf.html">VCF File Documentation</a> &raquo;</li>
+        
+      <li>vcf_reader_func Module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Modules/vcf_reader_func.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-vcf_reader_func">
+<span id="vcf-reader-func-module"></span><h1>vcf_reader_func Module<a class="headerlink" href="#module-vcf_reader_func" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="vcf_reader_func.checkFormat">
+<code class="descclassname">vcf_reader_func.</code><code class="descname">checkFormat</code><span class="sig-paren">(</span><em>vcfname</em><span class="sig-paren">)</span><a class="headerlink" href="#vcf_reader_func.checkFormat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a filename, opens file and reads first line to check if
+file has BGZF or GZIP header. May be extended to check for BCF format</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="vcf_reader_func.checkRecordIsSnp">
+<code class="descclassname">vcf_reader_func.</code><code class="descname">checkRecordIsSnp</code><span class="sig-paren">(</span><em>rec</em><span class="sig-paren">)</span><a class="headerlink" href="#vcf_reader_func.checkRecordIsSnp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if this record is a single nucleotide variant, returns bool.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="vcf_reader_func.compressVcf">
+<code class="descclassname">vcf_reader_func.</code><code class="descname">compressVcf</code><span class="sig-paren">(</span><em>vcfname</em>, <em>forceflag=False</em>, <em>remove=False</em><span class="sig-paren">)</span><a class="headerlink" href="#vcf_reader_func.compressVcf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs bgzip and tabix on input VCF file.</p>
+<p>Using the pysam library, this function runs the bgzip and tabix utilities
+on the given input file. By default, this will not overwrite an existing
+zipped file, but will overwrite an existing index. &quot;remove&quot; can be set to
+delete the unzipped file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>vcfname</strong> : str</p>
+<blockquote>
+<div><p>Name of uncompressed VCF file</p>
+</div></blockquote>
+<p><strong>forceflag</strong> : bool (False)</p>
+<blockquote>
+<div><p>If true, will overwrite (vcfname).gz if it exists</p>
+</div></blockquote>
+<p><strong>remove</strong> : bool (False)</p>
+<blockquote>
+<div><p>If true, will delete uncompressed source file</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cvcfname</strong> : str</p>
+<blockquote class="last">
+<div><p>Filepath to compressed VCF file</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="vcf_reader_func.getRecordList">
+<code class="descclassname">vcf_reader_func.</code><code class="descname">getRecordList</code><span class="sig-paren">(</span><em>vcf_reader</em>, <em>region</em><span class="sig-paren">)</span><a class="headerlink" href="#vcf_reader_func.getRecordList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list for use in subsampling from input file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="vcf_reader_func.getRecordListUnzipped">
+<code class="descclassname">vcf_reader_func.</code><code class="descname">getRecordListUnzipped</code><span class="sig-paren">(</span><em>vcf_reader</em>, <em>region</em>, <em>chrom</em>, <em>prev_last_rec</em><span class="sig-paren">)</span><a class="headerlink" href="#vcf_reader_func.getRecordListUnzipped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for getting record list from unzipped VCF file.</p>
+<p>This method will sequentially look through a VCF file until it finds
+the given 'start' position on 'chrom', then add all records to a list
+until the 'end' position has been reached. Note that 'prev_last_rec'
+must be kept track of externally to ensure that if consecutive regions
+are called, the record of the first variant outside the first region
+is not lost.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="vcf_reader_func.getSubsampleList">
+<code class="descclassname">vcf_reader_func.</code><code class="descname">getSubsampleList</code><span class="sig-paren">(</span><em>vcfname</em>, <em>ss_count</em><span class="sig-paren">)</span><a class="headerlink" href="#vcf_reader_func.getSubsampleList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of the first 'ss_count' individuals in 'vcfname'
+TODO: Add random sampling?</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="vcf_reader_func.getVcfReader">
+<code class="descclassname">vcf_reader_func.</code><code class="descname">getVcfReader</code><span class="sig-paren">(</span><em>vcfname</em>, <em>compress_flag=False</em>, <em>subsamp_num=None</em>, <em>subsamp_fn=None</em><span class="sig-paren">)</span><a class="headerlink" href="#vcf_reader_func.getVcfReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a reader for a given input VCF file.</p>
+<p>Given a filename, filetype, compression option, and optional Subsampling
+options, will return a pysam.VariantFile object for iteration and
+a flag as to whether this file is compressed or uncompressed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>vcfname</strong> : str</p>
+<blockquote>
+<div><p>Filename for VCF file. The extension of this file will be used to
+determine whether it is compressed or not unless 'var_ext' is set.</p>
+</div></blockquote>
+<p><strong>var_ext</strong> : str (None)</p>
+<blockquote>
+<div><p>Extension for VCF file if it is not included in the filename.</p>
+</div></blockquote>
+<p><strong>compress_flag</strong> : bool (False)</p>
+<blockquote>
+<div><p>If filetype is uncompressed and this is set to true, will run
+compressVcf function.</p>
+</div></blockquote>
+<p><strong>subsamp_num</strong> : int (None)</p>
+<blockquote>
+<div><p>If set, will randomly select 'subsamp_num' individuals (not
+genotypes) from the input VCF file and return a reader with
+only those data</p>
+</div></blockquote>
+<p><strong>subsamp_fn</strong> : str (None)</p>
+<blockquote>
+<div><p>If set (mutually exclusive with 'subsamp_num'), will return a
+reader with only data from the samples listed in the file
+provided.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>vcf_reader</strong> : pysam.VariantFile</p>
+<blockquote>
+<div><p>A reader that can be iterated through for variant records. If
+compressed, it will be able to use the pysam fetch method, otherwise
+it must be read through sequentially</p>
+</div></blockquote>
+<p><strong>reader_uncompressed</strong> : bool</p>
+<blockquote class="last">
+<div><p>If True, VCF reader is uncompressed. This means the fetch method
+cannot be used and region access must be done using the
+&quot;getRecordListUnzipped&quot; method.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../contact.html" class="btn btn-neutral float-right" title="Contact Us" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="vcftools.html" class="btn btn-neutral" title="vcftools Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey).
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+  
+ 
+<br><p>This was made possible by the NSF</p>
+
+
+
+</body>
+</html>

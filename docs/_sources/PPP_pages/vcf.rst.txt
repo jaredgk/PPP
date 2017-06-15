@@ -15,6 +15,8 @@ Functions
       vcftools_calc.run
       vcf_phase.run
       vcf_sampler.run
+      vcf_ref_to_seq.vcf_to_seq
+      vcf_from_regions.vcf_region_write
 
 .. only:: latexpdf
 
@@ -24,6 +26,7 @@ Functions
       vcftools_calc.run
       vcf_phase.run
       vcf_sampler.run
+      vcf_ref_to_seq.vcf_to_seq
 
 Modules
 -------
@@ -31,3 +34,4 @@ Modules
    :maxdepth: 2
 
    Modules/vcftools
+   Modules/vcf_reader_func
