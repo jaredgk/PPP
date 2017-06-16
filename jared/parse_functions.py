@@ -160,3 +160,15 @@ def makeRequiredList(argdict, reqlist):
                             % argval)
         req_arglist.append(argdict[arg])
     return req_arglist
+
+
+def getArgsWithConfig(parser, sys_args, required_args, func_name):
+    config_name, req_included = getConfigFilename(sys_args)
+    if config_name is not None:
+        defaults = defaultsDictForFunction(func_name, config_name)
+        parser.set_defaults(**defaults)
+    if not req_included:
+        return parser.parse_args(sys_args)
+    else:
+        req_args = makeRequiredList(defaults, required_args)
+        return parser.parse_args(req_args)
