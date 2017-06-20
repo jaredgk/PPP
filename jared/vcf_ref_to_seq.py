@@ -156,17 +156,9 @@ def getFastaFilename(args):
         #if ext in vcfname:
         if ext == vcfname[-1*len(ext):]:
             if args.output_name is None:
-                return vcfname[:-1*len(ext)]+'fasta', ext
+                return vcfname[:-1*len(ext)]+'fasta'
             else:
-                return args.output_name, ext
-    if args.var_ext is not None:
-        ext = args.var_ext
-        if args.output_name is None:
-            raise Exception(("If filetype is not implicit by filename, "
-                    "an output filename must be provided"))
-            #return vcfname[:-1*len(ext)]+'fasta', ext
-        else:
-            return args.output_name, ext
+                return args.output_name
     raise Exception('VCF filename %s has no valid extension' %
                     vcfname)
 
@@ -245,18 +237,13 @@ def vcf_to_seq(sys_args):
 
     required_args = ['vcfname','refname','genename']
     args = getArgsWithConfig(parser,sys_args,required_args,'vcf_ref_to_seq')
-    #config_name, req_included = getConfigFilename(sys_args)
-    #if config_name is not None:
-#        defaults = defaultsDictForFunction('vcf_ref_to_seq',config_name)
-#        parser.set_defaults(**defaults)
-#    if not req_included:
-#        args = parser.parse_args(sys_args)
-#    else:
-#        req_args = makeRequiredList(defaults,required_args)
-#        args = parser.parse_args(req_args)
+
     logArgs(args)
     validateFiles(args)
-    fasta_filename, input_ext = getFastaFilename(args)
+    if args.output_name is not None:
+        fasta_filename = args.output_name
+    else:
+        fasta_filename = getFastaFilename(args)
     fasta_file = open(fasta_filename, 'w')
 
     vcf_reader, uncompressed = vf.getVcfReader(args.vcfname,
