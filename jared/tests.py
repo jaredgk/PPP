@@ -113,6 +113,13 @@ class snpTest(unittest.TestCase):
         self.assertTrue(filecmp.cmp('example/chr11.unzipped.fasta',
                         'example/chr11.snp.example.fasta'))
 
+    def test_generateSequence_mismatchref(self):
+        args = ['example/chr11.subsamples.vcf.gz',
+             'example/human_g1k_messy.fasta',
+             'example/snp_region.txt']
+
+        self.assertRaises(Exception, vcf_to_seq, args)
+
     def tearDown(self):
         tryRemove('example/chr11.subsamples.fasta')
         tryRemove('example/chr11.fasta')
