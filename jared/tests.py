@@ -26,7 +26,7 @@ class funcTest(unittest.TestCase):
         fn = 'test.vcf.gz'
         p = createParser()
         args = p.parse_args(['test.vcf.gz','test.fasta','test.reg'])
-        self.assertEqual(getFastaFilename(args), ('test.fasta', 'vcf.gz'))
+        self.assertEqual(getFastaFilename(args), 'test.fasta')
 
     def testPathValidator(self):
         parser = createParser()
