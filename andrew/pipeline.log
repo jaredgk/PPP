@@ -1,0 +1,9 @@
+2017-07-20 16:23:37,154 - logArgs - INFO: Arguments for Test:
+2017-07-20 16:23:37,155 - logArgs - INFO: Arguments uniform_bins: 10
+2017-07-20 16:23:37,155 - logArgs - INFO: Arguments vcfname: example/locus8.vcf.gz
+2017-07-20 16:23:37,155 - logArgs - INFO: Arguments random_seed: 83441029
+2017-07-20 16:23:37,155 - logArgs - INFO: Arguments statistic_file: example/locus8.windowed.weir.fst
+2017-07-20 16:23:37,155 - logArgs - INFO: Arguments calc_statistic: windowed-weir-fst
+2017-07-20 16:23:37,155 - logArgs - INFO: Arguments sampling_scheme: random
+2017-07-20 16:23:37,155 - logArgs - INFO: Arguments sample_size: 200
+2017-07-20 16:23:37,155 - logArgs - INFO: Arguments statistic_window_size: 10000

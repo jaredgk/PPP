@@ -9,7 +9,7 @@ from vcftools import *
 # Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
-#from logging_module import initLogger
+from logging_module import initLogger
 
 def vcf_calc_parser(passed_arguments):
     '''VCF Argument Parser - Assigns arguments from command line'''
@@ -65,6 +65,12 @@ def vcf_calc_parser(passed_arguments):
         return vcf_parser.parse_args(passed_arguments)
     else:
         return vcf_parser.parse_args()
+
+def logArgs(args, pipeline_function):
+    ''' Logs arguments from argparse system. Likely should be'''
+    logging.info('Arguments for %s:' % pipeline_function)
+    for k in vars(args):
+        logging.info('Arguments %s: %s' % (k, vars(args)[k]))
 
 def run (passed_arguments = []):
     '''
