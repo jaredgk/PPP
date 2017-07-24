@@ -1,9 +1,13 @@
-2017-07-20 16:23:37,154 - logArgs - INFO: Arguments for Test:
-2017-07-20 16:23:37,155 - logArgs - INFO: Arguments uniform_bins: 10
-2017-07-20 16:23:37,155 - logArgs - INFO: Arguments vcfname: example/locus8.vcf.gz
-2017-07-20 16:23:37,155 - logArgs - INFO: Arguments random_seed: 83441029
-2017-07-20 16:23:37,155 - logArgs - INFO: Arguments statistic_file: example/locus8.windowed.weir.fst
-2017-07-20 16:23:37,155 - logArgs - INFO: Arguments calc_statistic: windowed-weir-fst
-2017-07-20 16:23:37,155 - logArgs - INFO: Arguments sampling_scheme: random
-2017-07-20 16:23:37,155 - logArgs - INFO: Arguments sample_size: 200
-2017-07-20 16:23:37,155 - logArgs - INFO: Arguments statistic_window_size: 10000
+2017-07-24 16:45:46,176 - logArgs - INFO: Arguments for vcf_sampler:
+2017-07-24 16:45:46,176 - logArgs - INFO: Arguments uniform_bins: 10
+2017-07-24 16:45:46,176 - logArgs - INFO: Arguments vcfname: example/locus8.vcf.gz
+2017-07-24 16:45:46,177 - logArgs - INFO: Arguments random_seed: 354674735
+2017-07-24 16:45:46,177 - logArgs - INFO: Arguments statistic_file: example/locus8.Tajima.D
+2017-07-24 16:45:46,177 - logArgs - INFO: Arguments calc_statistic: TajimaD
+2017-07-24 16:45:46,177 - logArgs - INFO: Arguments sampling_scheme: random
+2017-07-24 16:45:46,177 - logArgs - INFO: Arguments sample_size: 2
+2017-07-24 16:45:46,177 - logArgs - INFO: Arguments statistic_window_size: 10000
+2017-07-24 16:45:46,179 - run - INFO: Sample (i.e. statistic) file assigned
+2017-07-24 16:45:46,179 - run - WARNING: Sample size equal to number of samples within sample file
+2017-07-24 16:45:46,179 - run - INFO: Random sampling complete
+2017-07-24 16:45:46,181 - run - INFO: Created selected samples file

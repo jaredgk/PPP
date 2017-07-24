@@ -67,7 +67,7 @@ def vcf_calc_parser(passed_arguments):
         return vcf_parser.parse_args()
 
 def logArgs(args, pipeline_function):
-    ''' Logs arguments from argparse system. Likely should be'''
+    '''Logs arguments from argparse system. May be replaced with a general function in logging_module'''
     logging.info('Arguments for %s:' % pipeline_function)
     for k in vars(args):
         logging.info('Arguments %s: %s' % (k, vars(args)[k]))
@@ -110,12 +110,13 @@ def run (passed_arguments = []):
         Input VCF file does not exist
     IOError
         Output file already exists
-
-
     '''
 
     # Grab VCF arguments from command line
     vcf_args = vcf_calc_parser(passed_arguments)
+
+    # Adds the arguments (i.e. parameters) to the log file
+    logArgs(vcf_args, 'vcf_calc')
 
     # Argument container for vcftools
     vcftools_call_args = ['--out', vcf_args.out]
@@ -178,17 +179,21 @@ def run (passed_arguments = []):
         # Assigns the suffix for the vcftools log file
         vcftools_log_suffix = '.het'
 
+    logging.info('vcftools parameters assigned')
+
     # Assigns the file argument for vcftools
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcfname)
+    logging.info('Input file assigned')
 
     # vcftools subprocess call
     vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     vcftools_out, vcftools_err = vcftools_call.communicate()
+    logging.info('vcftools call complete')
 
     # Check that the log file was created correctly, get the suffix for the log file, and create the file
     if check_vcftools_for_errors(vcftools_err):
         produce_vcftools_log(vcftools_err, vcf_args.out, vcftools_log_suffix)
 
 if __name__ == "__main__":
-    #initLogger()
+    initLogger()
     run()

@@ -9,7 +9,7 @@ from vcftools import *
 # Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
-#from logging_module import initLogger
+from logging_module import initLogger
 
 def vcf_filter_parser(passed_arguments):
     '''VCF Argument Parser - Assigns arguments from command line'''
@@ -91,6 +91,12 @@ def vcf_filter_parser(passed_arguments):
     else:
         return vcf_parser.parse_args()
 
+def logArgs(args, pipeline_function):
+    '''Logs arguments from argparse system. May be replaced with a general function in logging_module'''
+    logging.info('Arguments for %s:' % pipeline_function)
+    for k in vars(args):
+        logging.info('Arguments %s: %s' % (k, vars(args)[k]))
+
 def run (passed_arguments = []):
     '''
     Filter VCF files using VCFTools.
@@ -123,6 +129,9 @@ def run (passed_arguments = []):
 
     # Grab VCF arguments from command line
     vcf_args = vcf_filter_parser(passed_arguments)
+
+    # Adds the arguments (i.e. parameters) to the log file
+    logArgs(vcf_args, 'vcf_filter')
 
     # Argument container for vcftools
     vcftools_call_args = ['--out', vcf_args.out]
@@ -183,12 +192,16 @@ def run (passed_arguments = []):
     if vcf_args.filter_distance:
         vcftools_call_args.extend(['--thin', vcf_args.filter_distance])
 
+    logging.info('vcftools parameters assigned')
+
     # Assigns the file argument for vcftools
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcfname)
+    logging.info('Input file assigned')
 
     # vcftools subprocess call
     vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     vcftools_out, vcftools_err = vcftools_call.communicate()
+    logging.info('vcftools call complete')
 
     # Check that the log file was created correctly, get the suffix for the log file, and create the file
     if check_vcftools_for_errors(vcftools_err):
@@ -196,5 +209,5 @@ def run (passed_arguments = []):
 
 
 if __name__ == "__main__":
-    #initLogger()
+    initLogger()
     run()

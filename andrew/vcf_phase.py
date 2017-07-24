@@ -3,10 +3,12 @@ import sys
 import subprocess
 import argparse
 import glob
+import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
 import vcf_reader_func
+from logging_module import initLogger
 
 def phase_argument_parser(passed_arguments):
     '''Phase Argument Parser - Assigns arguments for vcftools from command line.
@@ -47,6 +49,12 @@ def phase_argument_parser(passed_arguments):
         return phase_parser.parse_args(passed_arguments)
     else:
         return phase_parser.parse_args()
+
+def logArgs(args, pipeline_function):
+    '''Logs arguments from argparse system. May be replaced with a general function in logging_module'''
+    logging.info('Arguments for %s:' % pipeline_function)
+    for k in vars(args):
+        logging.info('Arguments %s: %s' % (k, vars(args)[k]))
 
 def possible_beagle_paths ():
     possible_paths = ['beagle*.jar']
@@ -105,8 +113,13 @@ def run (passed_arguments = []):
     # Grab VCF arguments from command line
     phase_args = phase_argument_parser(passed_arguments)
 
+    # Adds the arguments (i.e. parameters) to the log file
+    logArgs(phase_args, 'vcf_phase')
+
     # Assign file extension for VCF input file
     vcfname_ext = assign_vcf_extension(phase_args.vcfname)
+
+    logging.info('Input file assigned')
 
     # Used to confirm if the VCF input was renamed
     vcfname_renamed = False
@@ -124,21 +137,30 @@ def run (passed_arguments = []):
         # Assign the arguments for the algorithm
         likelihood_call_args = ['gtgl=' + phase_args.vcfname, 'out=' + phase_args.estimate_file]
 
+        logging.info('beagle estimate parameters assigned')
+
         # beagle estimated genotype frequency subprocess call
         likelihood_call = subprocess.Popen(algorithm_call_args + likelihood_call_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         likelihood_out, likelihood_err = likelihood_call.communicate()
 
         # Confirms that beagle finished without error
         if likelihood_err:
+            logging.error('Error creating the estimated genotype frequency file. Please check input file.')
             sys.exit('Error creating the estimated genotype frequency file. Please check input file.')
+
+        logging.info('beagle estimate file created')
 
         # Assigns the arguments for phasing
         phase_call_args = ['gt=' + phase_args.estimate_file + vcfname_ext, 'out=' + phase_args.out]
+
+        logging.info('beagle phasing parameters assigned')
 
         # Phasing subprocess call
         phase_call = subprocess.Popen(algorithm_call_args + phase_call_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         phase_out, phase_err = phase_call.communicate()
         print phase_out, phase_err
+
+        logging.info('beagle phasing complete')
 
     elif phase_args.phase_algorithm == 'shapeit':
         # Assign the algorithm
@@ -147,25 +169,36 @@ def run (passed_arguments = []):
         # Assigns the arguments for phasing
         phase_call_args = ['--input-vcf', phase_args.vcfname, '-O', phase_args.out]
 
+        logging.info('shapeit phasing parameters assigned')
+
         # Phasing subprocess call
         phase_call = subprocess.Popen(algorithm_call_args + phase_call_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         phase_out, phase_err = phase_call.communicate()
 
         # Confirms that shapeit finished without error
         if phase_err:
+            logging.error('Error occured in phasing. Please check input file.')
             sys.exit('Error occured in phasing. Please check input file.')
+
+        logging.info('shapeit phasing complete (non-VCF format)')
 
         # Assigns the arguments for converting the phased output into a vcf file
         convert_call = ['-convert', '--input-haps', phase_args.out, '--output-vcf', phase_args.out + vcfname_ext]
+
+        logging.info('shapeit conversion parameter assigned')
 
         # Convert subprocess call
         convert_call = subprocess.Popen(algorithm_call_args + convert_call, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         convert_out, convert_err = convert_call.communicate()
         print convert_out, convert_err
 
+        logging.info('shapeit conversion complete (non-VCF to VCF)')
+
+
     # Reverts the VCF input file
     if vcfname_renamed:
         os.rename(phase_args.vcfname, phase_args.vcfname[:-len(vcfname_ext)])
 
 if __name__ == "__main__":
+    initLogger()
     run()
