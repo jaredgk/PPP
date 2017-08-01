@@ -19,7 +19,7 @@ def vcf_calc_parser(passed_arguments):
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
                 if not os.path.isfile(value):
-                    raise IOError # File not found
+                    raise IOError('Input not found.') # File not found
                 setattr(args, self.dest, value)
         return customAction
 
@@ -28,7 +28,7 @@ def vcf_calc_parser(passed_arguments):
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
                 if os.path.isfile(value):
-                    raise IOError # File found
+                    raise IOError('Output already exists.') # File found
                 setattr(args, self.dest, value)
         return customAction
 

@@ -14,9 +14,18 @@ def sampler_parser():
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
         class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
+            def __call__(self, parser, args, value, option_string = None):
                 if not os.path.isfile(value):
-                    raise IOError # File not found
+                    raise IOError('Input not found.') # File not found
+                setattr(args, self.dest, value)
+        return customAction
+
+    def parser_confirm_no_file (file_details):
+        '''Custom action to confirm file does not exist'''
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, value, option_string = None):
+                if os.path.isfile(value):
+                    raise IOError(file_details + ' already exists.') # File found
                 setattr(args, self.dest, value)
         return customAction
 
@@ -25,6 +34,10 @@ def sampler_parser():
     # Input arguments
     sampler_parser.add_argument("vcfname", metavar='VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
     sampler_parser.add_argument('--statistic-file', help='Specifies the statistic file for filtering', required = True, type = str, action = parser_confirm_file())
+
+    # Output arguents
+    vcf_parser.add_argument('--out', help = 'Specifies the VCF output filename', type = str, action = parser_confirm_no_file('Output'))
+    vcf_parser.add_argument('--sample-file', help = 'Specifies the sampled (statistic file) output filename', type = str, action = parser_confirm_no_file('Sample file'))
 
     # Statistic based arguments.
     statistic_list = ['windowed-weir-fst', 'TajimaD']
@@ -123,6 +136,8 @@ def run ():
         ----------
         VCF_Input : str
             Specifies the input VCF filename
+        --statistic-file : str
+            Specifies the statistic file for filtering
         --calc-statistic : str
             Specifies the statistic to calculate. Choices: windowed-weir-fst
             (default) and TajimaD
@@ -152,7 +167,14 @@ def run ():
             Input VCF file does not exist
         IOError
             Output file already exists
-
+        ValueError
+            Sample size larger than the number of samples
+        ValueError
+            Sample size not divisible by the bin count
+        ValueError
+            Window size argument conflicts with values
+        TypeError
+            Window size argument not defined (if necessary)
     '''
 
     # Get arguments from command line
@@ -164,6 +186,32 @@ def run ():
     # Set the random seed
     random.seed(sampler_args.random_seed)
 
+    # Check if the sample file is user-defined
+    if not vcf_args.sample_file:
+        # Define the dafult filename of the sampled statistic file
+        sample_filename = sampler_args.statistic_file + '.sampled'
+        # Confirm the file does not exist
+        if os.path.isfile(sample_filename):
+            logging.error(sample_filename + ' already exists.')
+            raise IOError(sample_filename + ' already exists.')
+        else:
+            vcf_args.sample_file = sample_filename
+
+    # Check if the VCF output is user-defined
+    if not vcf_args.out:
+        # Split the input VCF filepath
+        split_vcfname = os.path.basename(sampler_args.vcfname).split(os.extsep, 1)
+        # Define the dafult filename of the VCF output
+        output_filename = split_vcfname[0] + '.sampled.' + split_vcfname[1]
+        # Confirm the file does not exist
+        if os.path.isfile(output_filename):
+            logging.error(output_filename + ' already exists.')
+            raise IOError(output_filename + ' already exists.')
+        else:
+            vcf_args.out = output_filename
+
+    logging.info('Output files assigned')
+
     # Read in the sample file
     vcftools_samples = pd.read_csv(sampler_args.statistic_file, sep = '\t')
 
@@ -172,7 +220,7 @@ def run ():
     # Confirm there are enough samples
     if len(vcftools_samples) < sampler_args.sample_size:
         logging.error('Sample size larger than the number of samples within sample file')
-        sys.exit('Sample size larger than the number of samples within sample file')
+        raise ValueError('Sample size larger than the number of samples within sample file')
 
     # UPDATE Planned
     # Improve from equal to too few samples (i.e. samples = 100, sample_size = 95)
@@ -184,7 +232,7 @@ def run ():
     if sampler_args.sampling_scheme == 'uniform':
         if sampler_args.sample_size % sampler_args.uniform_bins != 0:
             logging.error('Sample size not divisible by the bin count')
-            sys.exit('Sample size not divisible by the bin count')
+            raise ValueError('Sample size not divisible by the bin count')
 
         assigned_statistic = assign_statistic_column (list(vcftools_samples), sampler_args.calc_statistic)
         selected_samples = sorted(uniform_vcftools_sampler(list(vcftools_samples[assigned_statistic]), sampler_args.uniform_bins, sampler_args.sample_size))
@@ -201,8 +249,8 @@ def run ():
     # Reduce to only selected samples
     sampled_samples = vcftools_samples[vcftools_samples.index.isin(selected_samples)]
 
-    # Create TSV file of the reduced samples
-    sampled_samples.to_csv(sampler_args.statistic_file + '.sampled', sep = '\t')
+    # Create TSV file with a user-defined filename
+    sampled_samples.to_csv(vcf_args.sample_file, sep = '\t')
 
     logging.info('Created selected samples file')
 
@@ -214,8 +262,13 @@ def run ():
         # Open the VCF file
         vcf_input = pysam.VariantFile(sampler_args.vcfname)
 
-        # Create the VCF output file
-        vcf_output = pysam.VariantFile(split_vcfname[0] + '.sampled.' + split_vcfname[1], 'w', header = vcf_input.header)
+        # Create the VCF output file, with either the default filename or a user-defined filename
+        if vcf_args.out:
+            # Create the VCF output with a user-defined filename
+            vcf_output = pysam.VariantFile(vcf_args.out, 'w', header = vcf_input.header)
+        else:
+            # Create the VCF output with the default filename
+            vcf_output = pysam.VariantFile(split_vcfname[0] + '.sampled.' + split_vcfname[1], 'w', header = vcf_input.header)
 
         # Get the chromosome, start, and end columns
         chr_col, start_col, end_col = assign_position_columns(list(vcftools_samples))
@@ -225,7 +278,7 @@ def run ():
 
                     if not sampler_args.statistic_window_size:
                         logging.error("--statistic-window-size argument required for the Tajima's D statistic")
-                        sys.argv("--statistic-window-size argument required for the Tajima's D statistic")
+                        raise TypeError("--statistic-window-size argument required for the Tajima's D statistic")
 
                     # Create iterator of all unique bin combinations
                     bin_start_iter = itertools.combinations(list(vcftools_samples['BIN_START']), 2)
@@ -233,7 +286,7 @@ def run ():
                     # Check if the bin combinations are divisible by the window size
                     if not all([abs(bin_1 - bin_2) % sampler_args.statistic_window_size == 0  for bin_1, bin_2 in bin_start_iter]):
                         logging.error("--statistic-window-size argument conflicts with values in sample file")
-                        sys.argv("--statistic-window-size argument conflicts with values in sample file")
+                        raise ValueError("--statistic-window-size argument conflicts with values in sample file")
 
                     for vcf_record in vcf_input.fetch(sampled_row[chr_col], int(sampled_row[start_col]), int(sampled_row[start_col]) + (sampler_args.statistic_window_size - 1)):
                         vcf_output.write(vcf_record)
