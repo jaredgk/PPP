@@ -61,10 +61,12 @@ def initLogger(filename='pipeline.log', filelevel='INFO',
         raise Exception('streamlevel value %s is not a valid level' %
                          streamlevel)
     fmt_def = "%(asctime)s - %(funcName)s - %(levelname)s: %(message)s"
+    fmt_notime = "%(funcName)s - %(levelname)s: %(message)s"
     fmtr = logging.Formatter(fmt=fmt_def)
+    fmtr_notime = logging.Formatter(fmt=fmt_notime)
 
     s_handler = logging.StreamHandler()
-    s_handler.setFormatter(fmtr)
+    s_handler.setFormatter(fmtr_notime)
     s_handler.setLevel(streamlevel)
     logmode = 'a'
     if resetlog:
@@ -82,11 +84,11 @@ def initLogger(filename='pipeline.log', filelevel='INFO',
 
     sys.excepthook = exp_handler
 
-def pipeSwitchLogger(name):
-    filename = name+'.log'
-    fmt_def = "%(asctime)s - %(funcName)s - %(levelname)s: %(message)s"
-    fmtr = logging.Formatter(fmt=fmt_def)
-    f_handler = logging.FileHandler(filename)
-    l = logging.getLogger()
-    f_handler.setFormatter(fmtr)
-    l.addHandler(f_handler)
+
+def logArgs(args, func_name=None):
+    header = "Arguments"
+    if func_name is not None:
+        header+=" for"+func_name
+    for k in vars(args):
+        logging.info('Argument %s: %s' % (k,vars(args)[k]))
+        
