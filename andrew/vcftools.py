@@ -1,9 +1,48 @@
 import os
 import sys
+import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
 
 import vcf_reader_func
+
+def check_for_vcftools_output (output_prefix, output_suffix, log_suffix):
+    '''
+        Checks for the previous vcftools output
+
+        Confirms that neither a previous vcftools log or output file exists.
+
+        Parameters
+        ----------
+        output_prefix : str
+            Specifies the prefix used by vcftools, may be the default value or
+            user-defined
+        output_suffix : str
+            Specifies the standard output suffix used by vcftools.
+        log_suffix : str
+            Specifies the log suffix (PPP-specified) without the log extension
+
+        Raises
+        ------
+        IOError
+            If the vcftools standard output exists
+        IOError
+            If the vcftools log file exists
+
+    '''
+    # Check if output file already exists
+    if os.path.isfile(output_prefix + '.' + output_suffix):
+        logging.error('Output file already exists')
+        raise IOError('Output file already exists')
+
+    logging.info('Output file assigned')
+
+    # Check if log file already exists
+    if os.path.isfile(output_prefix + '.' + log_suffix + '.log'):
+        logging.error('Log file already exists')
+        raise IOError('Log file already exists')
+
+    logging.info('Log file assigned')
 
 def check_vcftools_for_errors (vcftools_output):
     '''
@@ -34,11 +73,13 @@ def check_vcftools_for_errors (vcftools_output):
         # Splits log into list of lines
         vcftools_output_lines = vcftools_output.splitlines()
         # Prints the error(s)
-        sys.exit('\n'.join((output_line for output_line in vcftools_output_lines if output_line.startswith('Error'))))
+        logging.error('\n'.join((output_line for output_line in vcftools_output_lines if output_line.startswith('Error'))))
+        raise Exception('\n'.join((output_line for output_line in vcftools_output_lines if output_line.startswith('Error'))))
 
     # Print output if not completed and no error found. Unlikely to be used, but included.
     else:
-        sys.exit(vcftools_output)
+        logging.error(vcftools_output)
+        raise Exception(vcftools_output)
 
 def produce_vcftools_log (output, filename, function):
     '''
@@ -68,12 +109,9 @@ def produce_vcftools_log (output, filename, function):
             Log file already exists
     '''
 
-    if not os.path.isfile(filename + function + '.log'):
-        vcftools_log_file = open(filename + function + '.log','w')
-        vcftools_log_file.write(str(output))
-        vcftools_log_file.close()
-    else:
-        sys.exit('Error: Log file already exits')
+    vcftools_log_file = open(filename + '.' + function + '.log','w')
+    vcftools_log_file.write(str(output))
+    vcftools_log_file.close()
 
 
 def assign_vcftools_input_arg (filename):
@@ -118,4 +156,5 @@ def assign_vcftools_input_arg (filename):
         elif vcfname_format == 'bgzip':
             return ['--bcf', filename]
         else:
-            sys.exit('Unknown file format')
+            logging.error('Unknown VCF file format')
+            raise Exception('Unknown VCF file format')

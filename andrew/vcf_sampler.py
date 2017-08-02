@@ -29,6 +29,10 @@ def sampler_parser():
                 setattr(args, self.dest, value)
         return customAction
 
+    def metavar_list (var_list):
+        '''Create a formmated metavar list for the help output'''
+        return '{' + ', '.join(var_list) + '}'
+
     sampler_parser = argparse.ArgumentParser()
 
     # Input arguments
@@ -42,14 +46,14 @@ def sampler_parser():
     # Statistic based arguments.
     statistic_list = ['windowed-weir-fst', 'TajimaD']
     statistic_default = 'windowed-weir-fst'
-    sampler_parser.add_argument('--calc-statistic', metavar = '{' + ', '.join(statistic_list) + '}', help = 'Specifies the statistic calculated ', type=str, choices = statistic_list, default = statistic_default)
+    sampler_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'Specifies the statistic calculated ', type=str, choices = statistic_list, default = statistic_default)
 
     sampler_parser.add_argument('--statistic-window-size', help = 'Specifies the size of window calculations', type = int, default = 10000)
 
     # Sampling methods. Currently mutually exclusive to only allow a single sampling method
     sampling_list = ['uniform', 'random']
     sampling_default = 'random'
-    sampler_parser.add_argument('--sampling-scheme', metavar = '{' + ', '.join(sampling_list) + '}', help = 'Specifies the sampling scheme ', type=str, choices = sampling_list, default = sampling_default)
+    sampler_parser.add_argument('--sampling-scheme', metavar = metavar_list(sampling_list), help = 'Specifies the sampling scheme ', type=str, choices = sampling_list, default = sampling_default)
 
     # Sampling options
     sampler_parser.add_argument('--uniform-bins', help="Number of bins in uniform sampling", type = int, default = 10)
@@ -136,6 +140,10 @@ def run ():
         ----------
         VCF_Input : str
             Specifies the input VCF filename
+        --out : str
+            Specifies the VCF output filename
+        --sample-file : str
+            Specifies the sampled (statistic file) tsv output filename
         --statistic-file : str
             Specifies the statistic file for filtering
         --calc-statistic : str
