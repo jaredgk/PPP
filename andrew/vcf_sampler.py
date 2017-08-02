@@ -36,8 +36,8 @@ def sampler_parser():
     sampler_parser.add_argument('--statistic-file', help='Specifies the statistic file for filtering', required = True, type = str, action = parser_confirm_file())
 
     # Output arguents
-    vcf_parser.add_argument('--out', help = 'Specifies the VCF output filename', type = str, action = parser_confirm_no_file('Output'))
-    vcf_parser.add_argument('--sample-file', help = 'Specifies the sampled (statistic file) output filename', type = str, action = parser_confirm_no_file('Sample file'))
+    vcf_parser.add_argument('--out', help = 'Specifies the VCF output filename', type = str, default = 'out.vcf.gz',action = parser_confirm_no_file('Output'))
+    vcf_parser.add_argument('--sample-file', help = 'Specifies the sampled (statistic file) tsv output filename', type = str, default = 'sampled_data.tsv', action = parser_confirm_no_file('Sample file'))
 
     # Statistic based arguments.
     statistic_list = ['windowed-weir-fst', 'TajimaD']
@@ -186,32 +186,6 @@ def run ():
     # Set the random seed
     random.seed(sampler_args.random_seed)
 
-    # Check if the sample file is user-defined
-    if not vcf_args.sample_file:
-        # Define the dafult filename of the sampled statistic file
-        sample_filename = sampler_args.statistic_file + '.sampled'
-        # Confirm the file does not exist
-        if os.path.isfile(sample_filename):
-            logging.error(sample_filename + ' already exists.')
-            raise IOError(sample_filename + ' already exists.')
-        else:
-            vcf_args.sample_file = sample_filename
-
-    # Check if the VCF output is user-defined
-    if not vcf_args.out:
-        # Split the input VCF filepath
-        split_vcfname = os.path.basename(sampler_args.vcfname).split(os.extsep, 1)
-        # Define the dafult filename of the VCF output
-        output_filename = split_vcfname[0] + '.sampled.' + split_vcfname[1]
-        # Confirm the file does not exist
-        if os.path.isfile(output_filename):
-            logging.error(output_filename + ' already exists.')
-            raise IOError(output_filename + ' already exists.')
-        else:
-            vcf_args.out = output_filename
-
-    logging.info('Output files assigned')
-
     # Read in the sample file
     vcftools_samples = pd.read_csv(sampler_args.statistic_file, sep = '\t')
 
@@ -249,7 +223,7 @@ def run ():
     # Reduce to only selected samples
     sampled_samples = vcftools_samples[vcftools_samples.index.isin(selected_samples)]
 
-    # Create TSV file with a user-defined filename
+    # Create selected samples TSV file, with either the default filename or a user-defined filename
     sampled_samples.to_csv(vcf_args.sample_file, sep = '\t')
 
     logging.info('Created selected samples file')
@@ -263,12 +237,7 @@ def run ():
         vcf_input = pysam.VariantFile(sampler_args.vcfname)
 
         # Create the VCF output file, with either the default filename or a user-defined filename
-        if vcf_args.out:
-            # Create the VCF output with a user-defined filename
-            vcf_output = pysam.VariantFile(vcf_args.out, 'w', header = vcf_input.header)
-        else:
-            # Create the VCF output with the default filename
-            vcf_output = pysam.VariantFile(split_vcfname[0] + '.sampled.' + split_vcfname[1], 'w', header = vcf_input.header)
+        vcf_output = pysam.VariantFile(vcf_args.out, 'w', header = vcf_input.header)
 
         # Get the chromosome, start, and end columns
         chr_col, start_col, end_col = assign_position_columns(list(vcftools_samples))
