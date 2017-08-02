@@ -32,6 +32,10 @@ def phase_argument_parser(passed_arguments):
                 setattr(args, self.dest, value)
         return customAction
 
+    def metavar_list (var_list):
+        '''Create a formmated metavar list for the help output'''
+        return '{' + ', '.join(var_list) + '}'
+
     phase_parser = argparse.ArgumentParser()
 
     # Input arguments.
@@ -39,7 +43,7 @@ def phase_argument_parser(passed_arguments):
 
     phasing_list = ['beagle', 'shapeit']
     phasing_default = 'beagle'
-    phase_parser.add_argument('--phase-algorithm', metavar = '{' + ', '.join(phasing_list) + '}', help = 'Specifies the phase algorithm to be used', type = str, choices = phasing_list, default = phasing_default)
+    phase_parser.add_argument('--phase-algorithm', metavar = metavar_list(phasing_list), help = 'Specifies the phase algorithm to be used', type = str, choices = phasing_list, default = phasing_default)
 
     # Other basic arguments. Expand as needed
     phase_parser.add_argument('--out', help = 'Defines the output filename', default = 'out', action = parser_confirm_no_file())

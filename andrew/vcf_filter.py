@@ -32,27 +32,22 @@ def vcf_filter_parser(passed_arguments):
                 setattr(args, self.dest, value)
         return customAction
 
-    def parser_confirm_files ():
-        '''Custom action to confirm multiple file exists'''
-        class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
-                if not os.path.isfile(value):
-                    raise IOError # File not found
-                getattr(args, self.dest).append(value)
-        return customAction
+    def metavar_list (var_list):
+        '''Create a formmated metavar list for the help output'''
+        return '{' + ', '.join(var_list) + '}'
 
     vcf_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments.
-    vcf_parser.add_argument("vcfname", metavar='VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
+    vcf_parser.add_argument("vcfname", metavar = 'VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
 
     # Other file arguments. Expand as needed
-    vcf_parser.add_argument('--out', help = 'Specifies the output filename', type = str,  default = 'out', action = parser_confirm_no_file())
+    vcf_parser.add_argument('--out', help = 'Specifies the filtered VCF output filename', type = str,  default = 'out', action = parser_confirm_no_file())
 
     out_format_list = ['vcf', 'bcf']
     out_format_default = 'bcf'
 
-    vcf_parser.add_argument('--out-format', metavar = '{' + ', '.join(out_format_list) + '}', help = 'Specifies the output format', type = str, choices = out_format_list, default = out_format_default)
+    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Specifies the output format.', type = str, choices = out_format_list, default = out_format_default)
     ### Filters
 
     # Chromosome filters
@@ -109,6 +104,34 @@ def run (passed_arguments = []):
         Specifies the input VCF filename
     --out : str
         Specifies the output filename
+    --out-format : str
+        Specifies the output format {vcf, bcf} (Default: bcf)
+    --filter-include-chr : list or str
+        Specifies the chromosome(s) to include
+    --filter-exclude-chr : list or str
+        Specifies the chromosome(s) to exclude
+    --filter-from-bp : int
+        Specifies the lower bound of sites to include. May only be used with a single chromosome
+    --filter-to-bp : int
+        Specifies the upper bound of sites to include. May only be used with a single chromosome
+    --filter-include-bed : str
+        Specifies a set of sites to include within a BED file
+    --filter-exclude-bed : str
+        Specifies a set of sites to exclude within a BED file
+    --filter-include-passed : bool
+        Specifies that only sites with the filter flag 'PASS' should be included (Default: False)
+    --filter-include-filtered : list or str
+        Specifies that all sites with the given filter flag should be included
+    --filter-exclude-filtered : list or str
+        Specifies that all sites with the given filter flag should be excluded
+    --filter-include-info : list or str
+        Specifies that all sites with the given info flag should be included
+    --filter-exclude-info : list or str
+        Specifies that all sites with the given info flag should be excluded
+    --filter-min-alleles : int
+        Specifies that only sites with a number of allele >= to the number given should be included
+    --filter-min-alleles : int
+        Specifies that only sites with a number of allele <= to the number given should be included
 
     Returns
     -------
@@ -123,7 +146,6 @@ def run (passed_arguments = []):
         Input VCF file does not exist
     IOError
         Output file already exists
-
 
     '''
 
@@ -194,6 +216,9 @@ def run (passed_arguments = []):
 
     logging.info('vcftools parameters assigned')
 
+    # Confirm the vcftools output and log file do not exist
+    check_for_vcftools_output (vcf_args.out, 'recode.' + vcf_args.out_format, '.filter')
+
     # Assigns the file argument for vcftools
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcfname)
     logging.info('Input file assigned')
@@ -205,7 +230,7 @@ def run (passed_arguments = []):
 
     # Check that the log file was created correctly, get the suffix for the log file, and create the file
     if check_vcftools_for_errors(vcftools_err):
-        produce_vcftools_log(vcftools_err, vcf_args.out, '.filter')
+        produce_vcftools_log(vcftools_err, vcf_args.out, 'filter')
 
 
 if __name__ == "__main__":
