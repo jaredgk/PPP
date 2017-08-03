@@ -12,13 +12,13 @@ class vcftools_tests (unittest.TestCase):
         self.assertEqual(input_arg, ['--gzvcf', 'example/locus8.vcf.gz'])
 
     def test_produce_vcftools_log (self):
-        vcftools.produce_vcftools_log('Log Test:\n1\n2\n3\n', 'out', '.logTest')
+        vcftools.produce_vcftools_log('Log Test:\n1\n2\n3\n', 'out', 'logTest')
         self.assertTrue(compare_to_expected('out.logTest.log', 'example/locus8.logTest.log'))
         self.addCleanup(os.remove, 'out.logTest.log')
 
     def test_check_vcftools_for_errors (self):
         self.assertTrue(vcftools.check_vcftools_for_errors('Log Test:\n1\n2\n3\nRun Time'))
-        with self.assertRaises(SystemExit) as cm:
+        with self.assertRaises(Exception) as cm:
             vcftools.check_vcftools_for_errors('Log Test:\n1\n2\n3\nError: No Input')
         self.assertEqual(cm.exception.code, 'Error: No Input')
 
