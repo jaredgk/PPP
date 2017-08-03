@@ -1,6 +1,7 @@
 import unittest, filecmp, sys, os
 import vcftools
 import vcf_calc
+import logging
 
 def compare_to_expected(test_output, expected_output):
     return filecmp.cmp(test_output, expected_output)
@@ -18,9 +19,10 @@ class vcftools_tests (unittest.TestCase):
 
     def test_check_vcftools_for_errors (self):
         self.assertTrue(vcftools.check_vcftools_for_errors('Log Test:\n1\n2\n3\nRun Time'))
+        logging.disable(logging.CRITICAL)
         with self.assertRaises(Exception) as cm:
             vcftools.check_vcftools_for_errors('Log Test:\n1\n2\n3\nError: No Input')
-        self.assertEqual(cm.exception.code, 'Error: No Input')
+        self.assertEqual(str(cm.exception), 'Error: No Input')
 
     def test_Fst_window (self):
         vcf_calc.run(['example/locus8.vcf.gz', '--calc-statistic', 'windowed-weir-fst', '--pop-file', 'example/Paniscus.txt', '--pop-file', 'example/Troglodytes.txt', '--out', 'out'])
