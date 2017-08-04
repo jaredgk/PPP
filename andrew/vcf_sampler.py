@@ -109,9 +109,15 @@ def assign_position_columns (sample_headers):
             return sample_headers.index('CHROM'), sample_headers.index('BIN_START'), None
         else:
             if 'CHROM' in sample_headers:
-                sys.exit('Cannot find BIN_START in file')
+                logging.error('Cannot find BIN_START column in file specified by --statistic-file.')
+                raise ValueError('Cannot find BIN_START column in file specified by --statistic-file.')
+            elif 'BIN_START' in sample_headers:
+                logging.error('Cannot find CHROM column in file specified by --statistic-file.')
+                raise ValueError('Cannot find CHROM column in file specified by --statistic-file.')
             else:
-                sys.exit('Cannot find CHROM and BIN_START in file')
+                logging.error('Cannot find CHROM and BIN_START columns in file specified by --statistic-file.')
+                raise ValueError('Cannot find CHROM and BIN_START columns in file specified by --statistic-file.')
+
     return sample_headers.index('CHROM'), sample_headers.index('BIN_START'), sample_headers.index('BIN_END')
 
 def assign_statistic_column (sample_headers, statistic):
@@ -119,11 +125,11 @@ def assign_statistic_column (sample_headers, statistic):
 
     if not statistic_converter.has_key(statistic):
         logging.critical('Statistic not found. Statistic list needs to be updated. Please contact the PPP Team.')
-        sys.exit('Statistic not found. Statistic list needs to be updated. Please contact the PPP Team.')
+        raise Exception('Statistic not found. Statistic list needs to be updated. Please contact the PPP Team.')
 
     if statistic_converter[statistic] not in sample_headers:
         logging.error('Statistic selected not found in file specified by --statistic-file.')
-        sys.exit('Statistic selected not found in file specified by --statistic-file.')
+        raise ValueError('Statistic selected not found in file specified by --statistic-file.')
 
     return statistic_converter[statistic]
 
