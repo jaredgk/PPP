@@ -75,7 +75,7 @@ def random_vcftools_sampler (vcftools_samples, sample_size):
     vcftools_samples. The length of this list is defined by sample_size.'''
 
     try:
-        return random.sample(vcftools_samples, sample_size)
+        return list(np.random.choice(vcftools_samples, sample_size, replace = False))
     except ValueError:
         return vcftools_samples
 
@@ -198,7 +198,7 @@ def run ():
     logArgs(sampler_args, 'vcf_sampler')
 
     # Set the random seed
-    random.seed(sampler_args.random_seed)
+    np.random.seed(sampler_args.random_seed)
 
     # Read in the sample file
     vcftools_samples = pd.read_csv(sampler_args.statistic_file, sep = '\t')
