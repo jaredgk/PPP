@@ -75,7 +75,7 @@ def random_vcftools_sampler (vcftools_samples, sample_size):
     vcftools_samples. The length of this list is defined by sample_size.'''
 
     try:
-        return list(np.random.choice(vcftools_samples, sample_size, replace = False))
+        return list(np.random.choice(vcftools_samples, int(sample_size), replace = False))
     except ValueError:
         return vcftools_samples
 
