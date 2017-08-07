@@ -3,7 +3,7 @@ import filecmp
 import sys
 import os
 import logging
-import random
+import numpy as np
 
 # Import scripts to test
 import vcftools
@@ -112,32 +112,34 @@ class vcf_sampler_tests (unittest.TestCase):
     # Confirm the random sampler is operating correctly
     def test_random_sampler (self):
         # Expected output (based on seed value)
-        expected_sample = [777, 669,  99, 352, 467,
-                           534, 978, 130, 671, 364,
-                           488, 203, 666, 227, 458,
-                            40, 974, 487, 461, 714,
-                           415, 888,  23, 833, 468]
+        expected_sample = [967, 713, 222, 321, 898,
+                           795, 612, 393, 995, 639,
+                           572, 650, 289, 167, 127,
+                           809, 831, 820, 210, 725,
+                           776, 237, 812, 248, 822]
 
         # Assign random seed
-        random.seed(1000)
+        np.random.seed(1000)
 
         # Confirm that the output is what is expected
         self.assertEqual(vcf_sampler.random_vcftools_sampler(range(0, 1000), 25), expected_sample)
 
+
     # Confirm the uniform sampler is operating correctly
     def test_uniform_sampler (self):
         # Expected output (based on seed value)
-        expected_sample = [155, 133,  19,  70,  93,
-                           306, 395, 226, 334, 272,
-                           497, 440, 533, 445, 491,
-                           608, 794, 697, 692, 742,
-                           883, 977, 804, 966, 893]
+        expected_sample = [118,  70, 163, 161,  73,
+                           285, 204, 392, 255, 209,
+                           480, 513, 419, 443, 593,
+                           731, 620, 627, 605, 723,
+                           875, 900, 907, 867, 874]
 
         # Assign random seed
-        random.seed(1000)
+        np.random.seed(1000)
 
         # Confirm that the output is what is expected
         self.assertEqual(vcf_sampler.uniform_vcftools_sampler(range(0, 1000), 5, 25), expected_sample)
+
 
     # Confirm column assignment is operating correctly
     def test_column_assignment (self):
@@ -160,6 +162,7 @@ class vcf_sampler_tests (unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             vcf_sampler.assign_position_columns(['NULL', 'NULL', 'NULL', 'NULL'])
         self.assertEqual(str(cm.exception), 'Cannot find CHROM and BIN_START columns in file specified by --statistic-file.')
+
     # Need file that is big enough to test (but not too large)
     '''
     # Check that the heterozygosity function is operating correctly
