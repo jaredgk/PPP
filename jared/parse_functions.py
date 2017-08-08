@@ -162,10 +162,20 @@ def makeRequiredList(argdict, reqlist):
     return req_arglist
 
 
+def checkRequired(required_args, defaults):
+    for req in required_args:
+        if req in defaults and req[defaults] is not None:
+            raise Exception(('Required argument %s has value present '
+                            ' in config file (%s) and command line' %
+                            (req, defaults[req])))
+
+
 def getArgsWithConfig(parser, sys_args, required_args, func_name):
     config_name, req_included = getConfigFilename(sys_args)
     if config_name is not None:
         defaults = defaultsDictForFunction(func_name, config_name)
+        if not req_included:
+            checkRequired(required_args, defaults)
         parser.set_defaults(**defaults)
     if not req_included:
         return parser.parse_args(sys_args)
