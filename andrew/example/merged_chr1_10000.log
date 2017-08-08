@@ -1,0 +1,15 @@
+
+VCFtools - 0.1.15
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--gzvcf merged_chr1_10000.vcf.gz
+	--fst-window-size 10000
+	--fst-window-step 20000
+	--weir-fst-pop Paniscus.txt
+	--weir-fst-pop Troglodytes.txt
+	--keep Paniscus.txt
+	--keep Troglodytes.txt
+	--out merged_chr1_10000
+
+Error: Can't determine file type of merged_chr1_10000.vcf.gz

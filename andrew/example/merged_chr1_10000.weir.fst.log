@@ -3,17 +3,19 @@ VCFtools - 0.1.15
 (C) Adam Auton and Anthony Marcketta 2009
 
 Parameters as interpreted:
-	--gzvcf locus8.vcf.gz
+	--gzvcf merged_chr1_10000.vcf.gz
 	--weir-fst-pop Paniscus.txt
 	--weir-fst-pop Troglodytes.txt
 	--keep Paniscus.txt
 	--keep Troglodytes.txt
+	--out merged_chr1_10000
 
 Using zlib version: 1.2.8
 Keeping individuals in 'keep' list
-After filtering, kept 17 out of 17 Individuals
+After filtering, kept 17 out of 38 Individuals
 Outputting Weir and Cockerham Fst estimates.
-Weir and Cockerham mean Fst estimate: -0.058892
-Weir and Cockerham weighted Fst estimate: -0.05799
-After filtering, kept 117 out of a possible 117 Sites
+	Fst: Only using diploid sites.
+Weir and Cockerham mean Fst estimate: 0.18196
+Weir and Cockerham weighted Fst estimate: 0.44026
+After filtering, kept 10000 out of a possible 10000 Sites
 Run Time = 0.00 seconds

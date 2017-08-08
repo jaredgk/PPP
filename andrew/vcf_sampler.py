@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
 from logging_module import initLogger
 
-def sampler_parser():
+def sampler_parser(passed_arguments):
     '''Sampler Argument Parser - Assigns arguments from command line.'''
 
     def parser_confirm_file ():
@@ -33,15 +33,15 @@ def sampler_parser():
         '''Create a formmated metavar list for the help output'''
         return '{' + ', '.join(var_list) + '}'
 
-    sampler_parser = argparse.ArgumentParser()
+    sampler_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments
     sampler_parser.add_argument("vcfname", metavar='VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
     sampler_parser.add_argument('--statistic-file', help='Specifies the statistic file for filtering', required = True, type = str, action = parser_confirm_file())
 
     # Output arguents
-    vcf_parser.add_argument('--out', help = 'Specifies the VCF output filename', type = str, default = 'out.vcf.gz',action = parser_confirm_no_file('Output'))
-    vcf_parser.add_argument('--sample-file', help = 'Specifies the sampled (statistic file) tsv output filename', type = str, default = 'sampled_data.tsv', action = parser_confirm_no_file('Sample file'))
+    sampler_parser.add_argument('--out', help = 'Specifies the VCF output filename', type = str, default = 'out.vcf.gz',action = parser_confirm_no_file('Output'))
+    sampler_parser.add_argument('--sample-file', help = 'Specifies the sampled (statistic file) tsv output filename', type = str, default = 'sampled_data.tsv', action = parser_confirm_no_file('Sample file'))
 
     # Statistic based arguments.
     statistic_list = ['windowed-weir-fst', 'TajimaD']
@@ -62,7 +62,10 @@ def sampler_parser():
     # Other options
     sampler_parser.add_argument('--random-seed', help="Defines the random seed value for the random number generator", type = int, default = random.randint(1, 1000000000))
 
-    return sampler_parser.parse_args()
+    if passed_arguments:
+        return sampler_parser.parse_args(passed_arguments)
+    else:
+        return sampler_parser.parse_args()
 
 def logArgs(args, pipeline_function):
     '''Logs arguments from argparse system. May be replaced with a general function in logging_module'''
@@ -133,7 +136,7 @@ def assign_statistic_column (sample_headers, statistic):
 
     return statistic_converter[statistic]
 
-def run ():
+def run (passed_arguments = []):
     '''
         Statistics sampler for VCFTools output.
 
@@ -192,7 +195,7 @@ def run ():
     '''
 
     # Get arguments from command line
-    sampler_args = sampler_parser()
+    sampler_args = sampler_parser(passed_arguments)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(sampler_args, 'vcf_sampler')
@@ -238,7 +241,7 @@ def run ():
     sampled_samples = vcftools_samples[vcftools_samples.index.isin(selected_samples)]
 
     # Create selected samples TSV file, with either the default filename or a user-defined filename
-    sampled_samples.to_csv(vcf_args.sample_file, sep = '\t')
+    sampled_samples.to_csv(sampler_args.sample_file, sep = '\t')
 
     logging.info('Created selected samples file')
 
@@ -251,7 +254,7 @@ def run ():
         vcf_input = pysam.VariantFile(sampler_args.vcfname)
 
         # Create the VCF output file, with either the default filename or a user-defined filename
-        vcf_output = pysam.VariantFile(vcf_args.out, 'w', header = vcf_input.header)
+        vcf_output = pysam.VariantFile(sampler_args.out, 'w', header = vcf_input.header)
 
         # Get the chromosome, start, and end columns
         chr_col, start_col, end_col = assign_position_columns(list(vcftools_samples))

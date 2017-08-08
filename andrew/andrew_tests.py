@@ -11,7 +11,7 @@ import vcf_calc
 import vcf_sampler
 
 # Used to compare two files, returns bool
-def compare_to_expected(test_output, expected_output):
+def file_comp(test_output, expected_output):
     return filecmp.cmp(test_output, expected_output)
 
 # Run tests for the functions within the vcftools module
@@ -19,16 +19,16 @@ class vcftools_module_tests (unittest.TestCase):
     # Check vcftools input argument assignment function
     def test_vcf_argument_parser (self):
         # Assign the input argument from the function
-        input_arg = vcftools.assign_vcftools_input_arg('example/locus8.vcf.gz')
+        input_arg = vcftools.assign_vcftools_input_arg('example/input/merged_chr1_10000.vcf.gz')
         # Confirm the correct argument has been assigned
-        self.assertEqual(input_arg, ['--gzvcf', 'example/locus8.vcf.gz'])
+        self.assertEqual(input_arg, ['--gzvcf', 'example/input/merged_chr1_10000.vcf.gz'])
 
     # Check vcftools log output creation
     def test_produce_vcftools_log (self):
         # Create the log output using the function
         vcftools.produce_vcftools_log('Log Test:\n1\n2\n3\n', 'out', 'logTest')
         # Confirm the correct log output has been created
-        self.assertTrue(compare_to_expected('out.logTest.log', 'example/locus8.logTest.log'))
+        self.assertTrue(file_comp('out.logTest.log', 'example/out.logTest.log'))
         # Remove log output file
         self.addCleanup(os.remove, 'out.logTest.log')
 
@@ -49,10 +49,15 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that Fst window function is operating correctly
     def test_Fst_window (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/locus8.vcf.gz', '--calc-statistic', 'windowed-weir-fst', '--pop-file', 'example/Paniscus.txt', '--pop-file', 'example/Troglodytes.txt', '--out', 'out'])
+        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+                      '--calc-statistic', 'windowed-weir-fst',
+                      '--pop-file', 'example/input/Paniscus.txt',
+                      '--pop-file', 'example/input/Troglodytes.txt',
+                      '--out', 'out'])
 
         # Confirm that the output is what is expected
-        self.assertTrue(compare_to_expected('out.windowed.weir.fst', 'example/locus8.windowed.weir.fst'))
+        self.assertTrue(file_comp('out.windowed.weir.fst',
+                                  'example/merged_chr1_10000.windowed.weir.fst'))
 
         # Remove the ouput and log files created by the function
         self.addCleanup(os.remove, 'out.windowed.weir.fst')
@@ -61,10 +66,13 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that the Tajima's D function is operating correctly
     def test_tajimasD (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/locus8.vcf.gz', '--calc-statistic', 'TajimaD', '--out', 'out'])
+        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+                      '--calc-statistic', 'TajimaD',
+                      '--out', 'out'])
 
         # Confirm that the output is what is expected
-        self.assertTrue(compare_to_expected('out.Tajima.D', 'example/locus8.Tajima.D'))
+        self.assertTrue(file_comp('out.Tajima.D',
+                                  'example/merged_chr1_10000.Tajima.D'))
 
         # Remove the ouput and log files created by the function
         self.addCleanup(os.remove, 'out.Tajima.D')
@@ -73,10 +81,13 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that the window nucleotide diversity function is operating correctly
     def test_window_pi (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/locus8.vcf.gz', '--calc-statistic', 'pi', '--out', 'out'])
+        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+                      '--calc-statistic', 'pi',
+                      '--out', 'out'])
 
         # Confirm that the output is what is expected
-        self.assertTrue(compare_to_expected('out.windowed.pi', 'example/locus8.windowed.pi'))
+        self.assertTrue(file_comp('out.windowed.pi',
+                                  'example/merged_chr1_10000.windowed.pi'))
 
         # Remove the ouput and log files created by the function
         self.addCleanup(os.remove, 'out.windowed.pi')
@@ -85,10 +96,12 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that the allele frequency function is operating correctly
     def test_freq (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/locus8.vcf.gz', '--calc-statistic', 'freq', '--out', 'out'])
+        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+                      '--calc-statistic', 'freq',
+                      '--out', 'out'])
 
         # Confirm that the output is what is expected
-        self.assertTrue(compare_to_expected('out.frq', 'example/locus8.frq'))
+        self.assertTrue(file_comp('out.frq', 'example/merged_chr1_10000.frq'))
 
         # Remove the ouput and log files created by the function
         self.addCleanup(os.remove, 'out.frq')
@@ -97,10 +110,12 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that the heterozygosity function is operating correctly
     def test_het (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/locus8.vcf.gz', '--calc-statistic', 'het', '--out', 'out'])
+        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+                      '--calc-statistic', 'het',
+                      '--out', 'out'])
 
         # Confirm that the output is what is expected
-        self.assertTrue(compare_to_expected('out.het', 'example/locus8.het'))
+        self.assertTrue(file_comp('out.het', 'example/merged_chr1_10000.het'))
 
         # Remove the ouput and log files created by the function
         self.addCleanup(os.remove, 'out.het')
@@ -163,21 +178,21 @@ class vcf_sampler_tests (unittest.TestCase):
             vcf_sampler.assign_position_columns(['NULL', 'NULL', 'NULL', 'NULL'])
         self.assertEqual(str(cm.exception), 'Cannot find CHROM and BIN_START columns in file specified by --statistic-file.')
 
-    # Need file that is big enough to test (but not too large)
-    '''
-    # Check that the heterozygosity function is operating correctly
+    # Check that the entire sampler function (using random sampler) is operating correctly
     def test_sampler (self):
         # Run the function with the following arguments
-        vcf_sampler.run(['example/locus8.vcf.gz', '--calc-statistic', 'het', '--out', 'out'])
+        vcf_sampler.run(['example/input/merged_chr1_10000.vcf.gz',
+                         '--statistic-file', 'example/merged_chr1_10000.windowed.weir.fst',
+                         '--sample-size', '20',
+                         '--random-seed', '1000'])
 
         # Confirm that the output is what is expected
-        self.assertTrue(compare_to_expected('out.het', 'example/locus8.het'))
+        self.assertTrue(file_comp('sampled_data.tsv', 'example/sampled_data.tsv'))
+        self.assertTrue(file_comp('out.vcf.gz', 'example/sampled_data.vcf.gz'))
 
-        # Remove the ouput and log files created by the function
-        self.addCleanup(os.remove, 'out.het')
-        self.addCleanup(os.remove, 'out.het.log')
-    '''
-
-
+        # Remove the ouput files created by the function
+        self.addCleanup(os.remove, 'sampled_data.tsv')
+        self.addCleanup(os.remove, 'out.vcf.gz')
+        
 if __name__ == "__main__":
     unittest.main()
