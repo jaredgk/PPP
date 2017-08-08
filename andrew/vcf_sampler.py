@@ -239,9 +239,10 @@ def run (passed_arguments = []):
 
     # Reduce to only selected samples
     sampled_samples = vcftools_samples[vcftools_samples.index.isin(selected_samples)]
+    print (sampled_samples)
 
     # Create selected samples TSV file, with either the default filename or a user-defined filename
-    sampled_samples.to_csv(sampler_args.sample_file, sep = '\t')
+    sampled_samples.to_csv(sampler_args.sample_file, sep = '\t', float_format = '%g')
 
     logging.info('Created selected samples file')
 
