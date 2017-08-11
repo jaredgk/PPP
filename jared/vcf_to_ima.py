@@ -16,9 +16,10 @@ from parse_functions import defaultsDictForFunction, getConfigFilename, makeRequ
 
 
 def createParser():
-    parser = argparse.ArgumentParser(description=("Generates sequences from"
-                                     " samples from a VCF file, a reference"
-                                     " genome, and a list of gene regions."))
+    parser = argparse.ArgumentParser(description=("Generates an IMa input "
+                                     "file from a VCF file, a reference"
+                                     " genome, a list of gene regions, "
+                                     "and a population info file."))
     parser.add_argument("vcfname", help="Input VCF filename")
     parser.add_argument("refname", help="Reference FASTA file")
     parser.add_argument("genename", help="Name of gene region file")
@@ -38,9 +39,6 @@ def createParser():
                         "Comma-separated list of columns for gene region "
                         " data, format is start/end if no chromosome "
                         " data, start/end/chrom if so"))
-    parser.add_argument("--ext", dest="var_ext", help=(
-                        "Format for variant file if filename doesn't "
-                        "contain extension"))
     parser.add_argument("--compress-vcf", dest="compress_flag",
                         action="store_true", help=("If input VCF is not "
                         "compressed, will compress and use zip search"))
@@ -64,7 +62,7 @@ def createParser():
 
 def validateFiles(args):
     """Validates that files provided to args all exist on users system"""
-    for var in ['vcfname', 'refname', 'genename']:
+    for var in ['vcfname', 'refname', 'genename','popname']:
         f = vars(args)[var]
         if not os.path.exists(f):
             raise ValueError('Filepath for %s not found at %s' %
@@ -83,8 +81,7 @@ def readSuperPop(pop_fn):
     pop_file = open(pop_fn)
     pop_fns = [l.strip() for l in pop_file.readlines()]
     for pop in pop_fns:
-        popname = pop.strip('.txt')
-        #pop_list.append(pop)
+        popname = os.path.splitext(os.path.basename(pop))[0]
         t_pop = [popname]
         t_sample = []
         popf = open(pop,'r')
@@ -114,15 +111,6 @@ def getMaxAlleleLength(alleles):
     return max([len(r) for r in alleles])
 
 
-def getNextIdx(rec, prev_indiv, prev_idx):
-    """Using record sample array, find individual and haplotype indices for
-    next sample. Will work for any ploidy. Returns -1's when all haplotypes
-    have been iterated through"""
-    if len(rec.samples[prev_indiv].alleles) > prev_idx + 1:
-        return prev_indiv, prev_idx+1
-    if len(rec.samples) > prev_indiv+1:
-        return prev_indiv+1, 0
-    return -1, -1
 
 def getNextIdxName(rec, prev_pop, prev_indiv, prev_idx, pop_data):
 
@@ -265,8 +253,6 @@ def vcf_to_ima(sys_args):
         coordinates of a region. If length 3, the third element
         specifies the index of the chromosome column. Default is "1,2,0",
         to match column order in a BED file.
-    --ext : str ['vcf','vcf.gz'], optional
-        Required if VCF filename does not end with the typical extension.
 
 
 
