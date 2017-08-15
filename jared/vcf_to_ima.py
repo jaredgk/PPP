@@ -184,17 +184,17 @@ def generateSequence(rec_list, ref_seq, fasta_ref,
 
 
 
-def writeHeader(pop_data, gr_len, out_f):
+def writeHeader(pop_data, gr_len, out_f, pop_string="(0,1):2"):
     out_f.write('Test IMa input\n')
     out_f.write(str(len(pop_data))+'\n')
     pops = ''
     for i in range(len(pop_data)):
         pops += (pop_data[i][0]+' ')
     out_f.write(pops+'\n')
-    out_f.write('(0,1):2\n')
+    out_f.write(pop_string+'\n')
     out_f.write(str(gr_len)+'\n')
 
-def getLocusHeader(gener, pop_data, rec_list):
+def getLocusHeader(gener, pop_data, rec_list, mut_model="I0", inhet_sc=1):
     name = gener.chrom+':'+str(gener.start)+':'+str(gener.end)
     gene_len = gener.end-gener.start
     for rec in rec_list:
@@ -203,7 +203,8 @@ def getLocusHeader(gener, pop_data, rec_list):
     for i in range(len(pop_data)):
         lh += ' '+str(len(pop_data[i][1]))
     lh += ' '+str(gene_len)
-    lh += ' I0 1'
+    lh += ' '+mut_model
+    lh += ' '+str(inhet_sc)
     return lh
 
 def getOutputFilename(args):
