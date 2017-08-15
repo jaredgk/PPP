@@ -1,7 +1,7 @@
 sudo: required
 
 language: python
-python: 
+python:
   - "2.7"
   - "3.6"
 
@@ -13,6 +13,6 @@ install:
 
 cache: pip
 
-script: 
+script:
   - sh run_jared_tests.sh
-  - cd andrew && python andrew_tests.py && cd ..
+  - sh run_andrew_tests.sh
