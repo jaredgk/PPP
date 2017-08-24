@@ -12,6 +12,7 @@ Welcome to PPP's documentation
    :caption: Contents:
    
    intro
+   vcf_to_seq
 
 
 ------------------
