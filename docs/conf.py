@@ -27,7 +27,7 @@ import sys
 #    for name in dirs:
 #        sys.path.insert(0, os.path.abspath(os.path.join(root, name)))
 
-#sys.path.insert(0, '../../../PPP/jared/')
+sys.path.insert(0, '../jared/')
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
