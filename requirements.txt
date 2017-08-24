@@ -1,2 +1,3 @@
 pysam
 pandas
+numpydoc
