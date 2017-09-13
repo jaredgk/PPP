@@ -45,7 +45,7 @@ def getRecordList(vcf_reader, region):
     return lst
 
 
-def getRecordListUnzipped(vcf_reader, region, chrom, prev_last_rec):
+def getRecordListUnzipped(vcf_reader, region, prev_last_rec):
     """Method for getting record list from unzipped VCF file.
 
     This method will sequentially look through a VCF file until it finds
@@ -61,10 +61,6 @@ def getRecordListUnzipped(vcf_reader, region, chrom, prev_last_rec):
         VCF reader initialized from other function
     region : region object
         Region object with start and end coordinates of region of interest.
-        Chromosome may be included but will be overwritten by `chrom`
-        parameter.
-    chrom : str
-        Chromosome name of region of interest.
     prev_last_rec : VariantRecord object
         Variable with last record read from VcfReader. Stored here so that
         if two adjacent regions are called, the overflow record from the
