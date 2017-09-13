@@ -1,19 +1,7 @@
 import sys
 import re
+import logging
 from functools import total_ordering
-
-def matchChr(ref_chr,list_chr):
-    """Checks ref_chr for whether "chr" is first chars, then modifies
-    list_chr to match"""
-    if ref_chr is None:
-        return list_chr
-    has_chr = (ref_chr[0:3]=="chr")
-    list_has_chr = (list_chr[0:3]=="chr")
-    if has_chr == list_has_chr:
-        return list_chr
-    elif has_chr:
-        return "chr"+list_chr
-    return list_chr[3:]
 
 
 def getChromKey(chrom):
@@ -41,22 +29,17 @@ def keyComp(k1,k2):
 
 @total_ordering
 class Region:
-    def __init__(self, start, end, chrom):
+    def __init__(self, start, end, chrom, natsort=True):
         """Zero-based, half open coordinates and chromosome info for
         a region in a genome. Coords will be formatted according to
         flags passed to RegionList, then stored in a single format.
         """
         self.start = start
         self.end = end
-        self.chrom = chrom
-
-    def chromMod(self):
-        """Removes 'chr' from front of chromosome. Used for sorting"""
-        if self.chrom[0:3] == 'chr':
-            c = self.chrom[3:]
+        if chrom[0:3] == 'chr':
+            self.chrom = chrom[3:]
         else:
-            c = self.chrom
-        return c
+            self.chrom = chrom
 
     def getChromKey(self):
         """Splits chromosone name for natural sort. Ints and strs are
@@ -64,17 +47,12 @@ class Region:
 
         Example: 'front88place' returns ['front',88,'place']
         """
-        c = self.chromMod()
-        convert = lambda text: int(text) if text.isdigit() else text.lower()
-        k = [convert(i) for i in re.split('([0-9]+)',c) if len(i) != 0]
-        return k
+        return getChromKey(self.chrom)
 
 
     def __eq__(self, other):
-        c = self.chromMod()
-        oc = other.chromMod()
         return ((self.start == other.start) and (self.end == other.end)
-                and (c == oc))
+                and (self.chrom == other.chrom))
 
     def __lt__(self, other):
         """Sort key order: chrom-key, start position, end position
@@ -91,7 +69,7 @@ class Region:
         k1 = self.getChromKey()
         kr = getChromKey(rec.chrom)
         if k1 != kr:
-            if k1 < kr:
+            if keyComp(k1,kr):
                 return 'before'
             return 'after'
         if rec.pos < self.start:
@@ -100,12 +78,22 @@ class Region:
             return 'after'
         return 'in'
 
+    def toStr(self, halfopen=True, oneidx=False, sep=':'):
+        start = self.start
+        end = self.end
+        if not halfopen:
+            end -= 1
+        if oneidx:
+            start += 1
+            end += 1
+        return str(start)+sep+str(end)+sep+str(self.chrom)
+
 
 class RegionList:
 
     def __init__(self, filename=None, genestr=None, oneidx=False,
                  colstr=None, defaultchrom=None, halfopen=True,
-                 sortlist=True):
+                 sortlist=True, checkoverlap=True, natsort=True):
         """Class for storing gene region information
 
         Will either read a file or take a single gene region in a string
@@ -153,12 +141,12 @@ class RegionList:
         self.halfopen = halfopen
         if filename is not None:
             self.initList(filename, oneidx, colstr, defaultchrom,
-                          halfopen, sortlist)
+                          halfopen, sortlist, checkoverlap)
         else:
             self.initStr(genestr, oneidx, colstr, defaultchrom, halfopen)
 
     def initList(self, filename, oneidx, colstr, defaultchrom, halfopen,
-                 sortlist):
+                 sortlist, checkoverlap):
         """Initialize RegionList with a region file
         """
         with open(filename, 'r') as regionfile:
@@ -166,16 +154,14 @@ class RegionList:
                 if line[0] == '#':
                     continue
                 la = line.strip().split()
-                try:
-                    start = int(la[self.collist[0]])
-                    end = int(la[self.collist[1]])
-                    if len(self.collist) == 3:
-                        c = la[self.collist[2]]
-                        chrom = matchChr(defaultchrom,c)
-                    else:
-                        chrom = defaultchrom
-                except:
-                    sys.stderr.write("Column is missing")
+                start = int(la[self.collist[0]])
+                end = int(la[self.collist[1]])
+                if len(self.collist) == 3:
+                    chrom = la[self.collist[2]]
+                elif defaultchrom is not None:
+                    chrom = defaultchrom
+                else:
+                    raise Exception("Chromosome for region is not specified")
                 if oneidx:
                     start -= 1
                     end -= 1
@@ -184,17 +170,23 @@ class RegionList:
                 self.regions.append(Region(start, end, chrom))
         if sortlist:
             self.regions.sort()
+        if checkoverlap:
+            if self.hasOverlap():
+                raise Exception("Region overlap detected")
 
     def initStr(self, genestr, oneidx, colstr, defaultchrom, halfopen):
         la = genestr.split(':')
         start = int(la[0])
         end = int(la[1])
         if len(la) == 3:
-            c = la[2]
-            chrom = matchChr(defaultchrom,c)
+            chrom = la[2]
+        elif defaultchrom is not None:
+            chrom = defaultchrom
+        else:
+            raise Exception("Region has no chromosome provided")
         if oneidx:
-            start += 1
-            end += 1
+            start -= 1
+            end -= 1
         if not halfopen:
             end += 1
         self.regions.append(Region(start,end,chrom))
@@ -205,6 +197,23 @@ class RegionList:
             raise Exception(("Column string %s is either too short or "
                              "too long" % (cols)))
         self.collist = col_list
+
+    def toStr(self, idx, sep=':'):
+        return self.regions[idx].toStr(halfopen=self.halfopen,
+                                       oneidx=self.oneidx,
+                                       sep=sep)
+
+    def hasOverlap(self):
+        region_hold = sorted(self.regions)
+        for i in range(len(region_hold)-1):
+            if region_hold[i].chrom == region_hold[i+1].chrom:
+                if (region_hold[i].start <= region_hold[i+1].start
+                    < region_hold[i].end):
+                    logging.warning("Regions %s and %s overlap" %
+                                    (self.toStr(i),self.toStr(i+1)))
+                    return True
+        return False
+
 
     #TO do: add check for intersecting regions
     #Add sort method for strictly text based sorting

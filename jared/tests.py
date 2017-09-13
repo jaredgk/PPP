@@ -52,6 +52,10 @@ class geneRegionTest(unittest.TestCase):
         rl.regions.sort()
         self.assertTrue(rl.regions == sl.regions)
 
+    def test_RL_overlap(self):
+        rl = RegionList('example/overlap_regions.txt', checkoverlap=False)
+        self.assertTrue(rl.hasOverlap())
+
 
 class snpTest(unittest.TestCase):
 
@@ -206,5 +210,5 @@ class configTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    initLogger()
-    unittest.main()
+    initLogger(filelevel="ERROR",streamlevel="ERROR")
+    unittest.main(verbosity=2)
