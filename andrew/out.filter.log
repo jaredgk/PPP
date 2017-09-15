@@ -1,0 +1,15 @@
+
+VCFtools - 0.1.15
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--gzvcf example/input/merged_chr1_10000.vcf.gz
+	--max-alleles 2
+	--min-alleles 2
+	--removed-sites
+
+Using zlib version: 1.2.8
+After filtering, kept 38 out of 38 Individuals
+Outputting Removed Sites...
+After filtering, kept 19 out of a possible 10000 Sites
+Run Time = 0.00 seconds

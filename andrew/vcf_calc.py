@@ -55,6 +55,10 @@ def vcf_calc_parser(passed_arguments):
     vcf_parser.add_argument('--statistic-window-size', help = 'Specifies the size of window calculations', type = int, default = 10000)
     vcf_parser.add_argument('--statistic-window-step', help = 'Specifies step size between windows', type = int, default = 20000)
 
+    # Position-based position filters
+    vcf_parser.add_argument('--filter-include-positions', help = 'Specifies a set of sites to include within a file (tsv chromosome and position)', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-positions', help = 'Specifies a set of sites to exclude within a file (tsv chromosome and position)', action = parser_confirm_file())
+
 
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)
@@ -91,6 +95,10 @@ def run (passed_arguments = []):
         Specifies the window size for window-based statistics
     --statistic-window-step : int
         Specifies step size between windows for spcific window-based statistics
+    --filter-include-positions : str
+        Specifies a set of sites to include within a tsv file (chromosome and position)
+    --filter-exclude-positions : str
+        Specifies a set of sites to exclude within a tsv file (chromosome and position)
 
     Returns
     -------
@@ -175,6 +183,17 @@ def run (passed_arguments = []):
 
         # Assigns the suffix for the vcftools log file
         vcftools_log_suffix = 'het'
+
+    # Assing the filtered positions
+    if vcf_args.filter_include_positions or vcf_args.filter_exclude_positions:
+
+        # Assigns the sites to keep
+        if vcf_args.filter_include_positions:
+            vcftools_call_args.extend(['--positions', vcf_args.filter_include_positions])
+            
+        # Assigns the sites to remove
+        if vcf_args.filter_exclude_positions:
+            vcftools_call_args.extend(['--exclude-positions', vcf_args.filter_exclude_positions])
 
     logging.info('vcftools parameters assigned')
 
