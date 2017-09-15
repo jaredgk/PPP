@@ -85,10 +85,11 @@ def initLogger(filename='pipeline.log', filelevel='INFO',
     sys.excepthook = exp_handler
 
 
-def logArgs(args, func_name=None):
+def logArgs(args, func_name=None, print_nones=False):
     header = "Arguments"
     if func_name is not None:
         header+=" for"+func_name
-    for k in vars(args):
-        logging.info('Argument %s: %s' % (k,vars(args)[k]))
-        
+    for arg in vars(args):
+        val = vars(args)[arg]
+        if val is not None or print_nones:
+            logging.info('Argument %s: %s' % (arg,val))
