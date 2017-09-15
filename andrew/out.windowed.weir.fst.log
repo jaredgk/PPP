@@ -1,0 +1,23 @@
+
+VCFtools - 0.1.15
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--gzvcf example/input/merged_chr1_10000.vcf.gz
+	--exclude-positions out.removed.sites
+	--fst-window-size 10000
+	--fst-window-step 20000
+	--weir-fst-pop example/input/Troglodytes.txt
+	--weir-fst-pop example/input/Paniscus.txt
+	--keep example/input/Troglodytes.txt
+	--keep example/input/Paniscus.txt
+
+Using zlib version: 1.2.8
+Keeping individuals in 'keep' list
+After filtering, kept 17 out of 38 Individuals
+Outputting Windowed Weir and Cockerham Fst estimates.
+	Fst: Only using diploid sites.
+Weir and Cockerham mean Fst estimate: 0.14725
+Weir and Cockerham weighted Fst estimate: 0.36382
+After filtering, kept 9982 out of a possible 10000 Sites
+Run Time = 0.00 seconds

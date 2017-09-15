@@ -1,0 +1,14 @@
+2017-09-15 14:28:30,690 - logArgs - INFO: Arguments for vcf_calc:
+2017-09-15 14:28:30,690 - logArgs - INFO: Arguments pop_file: ['example/input/Troglodytes.txt', 'example/input/Paniscus.txt']
+2017-09-15 14:28:30,690 - logArgs - INFO: Arguments vcfname: example/input/merged_chr1_10000.vcf.gz
+2017-09-15 14:28:30,690 - logArgs - INFO: Arguments filter_exclude_positions: out.removed.sites
+2017-09-15 14:28:30,690 - logArgs - INFO: Arguments calc_statistic: windowed-weir-fst
+2017-09-15 14:28:30,691 - logArgs - INFO: Arguments filter_include_positions: None
+2017-09-15 14:28:30,691 - logArgs - INFO: Arguments statistic_window_step: 20000
+2017-09-15 14:28:30,691 - logArgs - INFO: Arguments statistic_window_size: 10000
+2017-09-15 14:28:30,691 - logArgs - INFO: Arguments out: out
+2017-09-15 14:28:30,691 - run - INFO: vcftools parameters assigned
+2017-09-15 14:28:30,691 - check_for_vcftools_output - INFO: Output file assigned
+2017-09-15 14:28:30,691 - check_for_vcftools_output - INFO: Log file assigned
+2017-09-15 14:28:30,691 - run - INFO: Input file assigned
+2017-09-15 14:28:30,909 - run - INFO: vcftools call complete
