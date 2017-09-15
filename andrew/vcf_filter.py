@@ -42,10 +42,10 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument("vcfname", metavar = 'VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
 
     # Other file arguments. Expand as needed
-    vcf_parser.add_argument('--out', help = 'Specifies the filtered VCF output filename', type = str,  default = 'out', action = parser_confirm_no_file())
+    vcf_parser.add_argument('--out', help = 'Specifies the output filename', type = str,  default = 'out', action = parser_confirm_no_file())
 
-    out_format_list = ['vcf', 'bcf']
-    out_format_default = 'bcf'
+    out_format_list = ['vcf', 'bcf', 'removed_sites', 'kept_sites']
+    out_format_default = 'removed_sites'
 
     vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Specifies the output format.', type = str, choices = out_format_list, default = out_format_default)
     ### Filters
@@ -57,6 +57,10 @@ def vcf_filter_parser(passed_arguments):
     # Basic position filters
     vcf_parser.add_argument('--filter-from-bp', help = 'Specifies the lower bound of sites to include (May only be used with a single chromosome)', type = int)
     vcf_parser.add_argument('--filter-to-bp', help = 'Specifies the upper bound of sites to include (May only be used with a single chromosome)', type = int)
+
+    # Position-based position filters
+    vcf_parser.add_argument('--filter-include-positions', help = 'Specifies a set of sites to include within a file (tsv chromosome and position)', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-positions', help = 'Specifies a set of sites to exclude within a file (tsv chromosome and position)', action = parser_confirm_file())
 
     # BED-based position filters
     vcf_parser.add_argument('--filter-include-bed', help = 'Specifies a set of sites to include within a BED file', action = parser_confirm_file())
@@ -72,8 +76,8 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument('--filter-exclude-info', help = 'Specifies that all sites with the given info flag should be excluded', nargs = '+', type = str)
 
     # Allele count filters
-    vcf_parser.add_argument('--filter-min-alleles', help = 'Specifies that only sites with a number of allele >= to the number given should be included', type = int)
-    vcf_parser.add_argument('--filter-max-alleles', help = 'Specifies that only sites with a number of allele <= to the number given should be included', type = int)
+    vcf_parser.add_argument('--filter-min-alleles', help = 'Specifies that only sites with a number of allele >= to the number given should be included', type = int,  default = 2)
+    vcf_parser.add_argument('--filter-max-alleles', help = 'Specifies that only sites with a number of allele <= to the number given should be included', type = int,  default = 2)
 
     # Missing data filter
     vcf_parser.add_argument('--filter-max-missing', help = 'Specifies that only sites with more than this number of genotypes among individuals should be included', type = int)
@@ -105,7 +109,7 @@ def run (passed_arguments = []):
     --out : str
         Specifies the output filename
     --out-format : str
-        Specifies the output format {vcf, bcf} (Default: bcf)
+        Specifies the output format {vcf, bcf, removed_sites, kept_sites} (Default: removed_sites)
     --filter-include-chr : list or str
         Specifies the chromosome(s) to include
     --filter-exclude-chr : list or str
@@ -114,6 +118,10 @@ def run (passed_arguments = []):
         Specifies the lower bound of sites to include. May only be used with a single chromosome
     --filter-to-bp : int
         Specifies the upper bound of sites to include. May only be used with a single chromosome
+    --filter-include-positions : str
+        Specifies a set of sites to include within a tsv file (chromosome and position)
+    --filter-exclude-positions : str
+        Specifies a set of sites to exclude within a tsv file (chromosome and position)
     --filter-include-bed : str
         Specifies a set of sites to include within a BED file
     --filter-exclude-bed : str
@@ -129,9 +137,9 @@ def run (passed_arguments = []):
     --filter-exclude-info : list or str
         Specifies that all sites with the given info flag should be excluded
     --filter-min-alleles : int
-        Specifies that only sites with a number of allele >= to the number given should be included
+        Specifies that only sites with a number of allele >= to the number given should be included (Default: 2)
     --filter-min-alleles : int
-        Specifies that only sites with a number of allele <= to the number given should be included
+        Specifies that only sites with a number of allele <= to the number given should be included (Default: 2)
 
     Returns
     -------
@@ -159,7 +167,11 @@ def run (passed_arguments = []):
     vcftools_call_args = ['--out', vcf_args.out]
 
     if vcf_args.out_format:
-        if vcf_args.out_format == 'bcf':
+        if vcf_args.out_format == 'removed_sites':
+            vcftools_call_args.append('--removed-sites')
+        elif vcf_args.out_format == 'kept_sites':
+            vcftools_call_args.append('--kept-sites')
+        elif vcf_args.out_format == 'bcf':
             vcftools_call_args.append('--recode-bcf')
         elif vcf_args.out_format == 'vcf':
             vcftools_call_args.append('--recode')
@@ -177,6 +189,12 @@ def run (passed_arguments = []):
             vcftools_call_args.extend(['--from-bp', vcf_args.filter_from_bp])
         if vcf_args.filter_exclude_chr:
             vcftools_call_args.extend(['--to-bp', vcf_args.filter_to_bp])
+
+    if vcf_args.filter_include_positions or vcf_args.filter_exclude_positions:
+        if vcf_args.filter_include_positions:
+            vcftools_call_args.extend(['--positions', vcf_args.filter_include_positions])
+        if vcf_args.filter_exclude_positions:
+            vcftools_call_args.extend(['--exclude-positions', vcf_args.filter_exclude_positions])
 
     if vcf_args.filter_include_bed or vcf_args.filter_exclude_bed:
         if vcf_args.filter_include_bed:
