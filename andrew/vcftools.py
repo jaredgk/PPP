@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
 
 import vcf_reader_func
 
-def check_for_vcftools_output (output_prefix, output_suffix, log_suffix):
+def check_for_vcftools_output (vcftools_output):
     '''
         Checks for the previous vcftools output
 
@@ -15,12 +15,7 @@ def check_for_vcftools_output (output_prefix, output_suffix, log_suffix):
         Parameters
         ----------
         output_prefix : str
-            Specifies the prefix used by vcftools, may be the default value or
-            user-defined
-        output_suffix : str
-            Specifies the standard output suffix used by vcftools.
-        log_suffix : str
-            Specifies the log suffix (PPP-specified) without the log extension
+            Specifies the output filename to be created
 
         Raises
         ------
@@ -31,32 +26,27 @@ def check_for_vcftools_output (output_prefix, output_suffix, log_suffix):
 
     '''
     # Check if output file already exists
-    if os.path.isfile(output_prefix + '.' + output_suffix):
-        logging.error('Output file already exists')
-        raise IOError('Output file already exists')
+    if os.path.isfile(vcftools_output):
+        logging.error('VCF output file already exists')
+        raise IOError('VCF output file already exists')
 
     logging.info('Output file assigned')
 
     # Check if log file already exists
-    if os.path.isfile(output_prefix + '.' + log_suffix + '.log'):
+    if os.path.isfile(vcftools_output + '.log'):
         logging.error('Log file already exists')
         raise IOError('Log file already exists')
 
     logging.info('Log file assigned')
 
-def check_vcftools_for_errors (vcftools_output):
+def check_vcftools_for_errors (vcftools_stderr):
     '''
         Checks the vcftools stderr for errors
 
         Parameters
         ----------
-        vcftools_output : str
+        vcftools_stderr : str
             vcftools stderr
-
-        Returns
-        -------
-        bool
-            Returns True if there is no errors
 
         Raises
         ------
@@ -65,29 +55,29 @@ def check_vcftools_for_errors (vcftools_output):
     '''
 
     # Returns True if the job completed without error
-    if 'Run Time' in str(vcftools_output):
-        return True
+    if 'Run Time' in str(vcftools_stderr):
+        pass
 
     # Print output for vcftools if error is detected
-    elif 'Error' in str(vcftools_output):
+    elif 'Error' in str(vcftools_stderr):
         # Splits log into list of lines
-        vcftools_output_lines = vcftools_output.splitlines()
+        vcftools_stderr_lines = vcftools_stderr.splitlines()
         # Prints the error(s)
-        logging.error('\n'.join((output_line for output_line in vcftools_output_lines if output_line.startswith('Error'))))
-        raise Exception('\n'.join((output_line for output_line in vcftools_output_lines if output_line.startswith('Error'))))
+        logging.error('\n'.join((output_line for output_line in vcftools_stderr_lines if output_line.startswith('Error'))))
+        raise Exception('\n'.join((output_line for output_line in vcftools_stderr_lines if output_line.startswith('Error'))))
 
     # Print output if not completed and no error found. Unlikely to be used, but included.
     else:
-        logging.error(vcftools_output)
-        raise Exception(vcftools_output)
+        logging.error(vcftools_stderr)
+        raise Exception(vcftools_stderr)
 
-def produce_vcftools_log (output, filename, function):
+def produce_vcftools_log (output, filename):
     '''
         Creates the vcftools log file
 
         This function will create a log file from the vcftools stderr. Please
         run `check_vcftools_for_errors` prior to check that vcftools finished
-        without error. Also reports if the log file already exits.
+        without error.
 
         Parameters
         ----------
@@ -95,21 +85,15 @@ def produce_vcftools_log (output, filename, function):
             vcftools stderr
         filename : str
             Specifies the filename for the log file
-        function : str
-            Specifies the vcftools function suffix (i.e. .weir.fst)
 
         Returns
         -------
         output : file
             vcftools log file
 
-        Raises
-        ------
-        IOError
-            Log file already exists
     '''
 
-    vcftools_log_file = open(filename + '.' + function + '.log','w')
+    vcftools_log_file = open(filename + '.log','w')
     vcftools_log_file.write(str(output))
     vcftools_log_file.close()
 

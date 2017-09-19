@@ -158,6 +158,7 @@ def run (passed_arguments = []):
     '''
 
     # Grab VCF arguments from command line
+    print sys.argv
     vcf_args = vcf_filter_parser(passed_arguments)
 
     # Adds the arguments (i.e. parameters) to the log file
@@ -248,7 +249,7 @@ def run (passed_arguments = []):
 
     # Check that the log file was created correctly, get the suffix for the log file, and create the file
     if check_vcftools_for_errors(vcftools_err):
-        produce_vcftools_log(vcftools_err, vcf_args.out, 'filter')
+        produce_vcftools_log(vcftools_err, vcf_args.out + 'filter')
 
 
 if __name__ == "__main__":

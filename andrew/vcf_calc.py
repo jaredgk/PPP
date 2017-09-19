@@ -42,8 +42,10 @@ def vcf_calc_parser(passed_arguments):
     vcf_parser.add_argument("vcfname", metavar = 'VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
 
     # Other file arguments. Expand as needed
-    vcf_parser.add_argument('--out', help = 'Specifies the output filename', type = str,  default = 'out', action = parser_confirm_no_file())
     vcf_parser.add_argument('--pop-file', help = 'Defines the population files for calculating specific statistics', type = str, action='append')
+    vcf_parser.add_argument('--out', help = 'Specifies the complete output filename. Renames vcftools-named intermediate files', type = str, action = parser_confirm_no_file())
+    vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out', action = parser_confirm_no_file())
+    #vcf_parser.add_argument('--log', help = "Specifies if the vcftools log should be saved", action = 'store_false')
 
     # Statistic based arguments.
     statistic_list = ['weir-fst', 'windowed-weir-fst', 'TajimaD', 'pi', 'freq', 'het']
@@ -58,7 +60,6 @@ def vcf_calc_parser(passed_arguments):
     # Position-based position filters
     vcf_parser.add_argument('--filter-include-positions', help = 'Specifies a set of sites to include within a file (tsv chromosome and position)', action = parser_confirm_file())
     vcf_parser.add_argument('--filter-exclude-positions', help = 'Specifies a set of sites to exclude within a file (tsv chromosome and position)', action = parser_confirm_file())
-
 
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)
@@ -122,7 +123,7 @@ def run (passed_arguments = []):
     logArgs(vcf_args, 'vcf_calc')
 
     # Argument container for vcftools
-    vcftools_call_args = ['--out', vcf_args.out]
+    vcftools_call_args = ['--out', vcf_args.out_prefix]
 
     if vcf_args.calc_statistic == 'windowed-weir-fst':
         # Confirms that at least two population files have been specified
@@ -190,15 +191,18 @@ def run (passed_arguments = []):
         # Assigns the sites to keep
         if vcf_args.filter_include_positions:
             vcftools_call_args.extend(['--positions', vcf_args.filter_include_positions])
-            
+
         # Assigns the sites to remove
         if vcf_args.filter_exclude_positions:
             vcftools_call_args.extend(['--exclude-positions', vcf_args.filter_exclude_positions])
 
     logging.info('vcftools parameters assigned')
 
+    # The filename vcftools assigns to the statistic output
+    statistic_filename = vcf_args.out_prefix + '.' + vcftools_log_suffix
+
     # Confirm the vcftools output and log file do not exist
-    check_for_vcftools_output (vcf_args.out, vcftools_log_suffix, vcftools_log_suffix)
+    check_for_vcftools_output (statistic_filename)
 
     # Assigns the file argument for vcftools
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcfname)
@@ -209,9 +213,15 @@ def run (passed_arguments = []):
     vcftools_out, vcftools_err = vcftools_call.communicate()
     logging.info('vcftools call complete')
 
-    # Check that the log file was created correctly, get the suffix for the log file, and create the file
-    if check_vcftools_for_errors(vcftools_err):
-        produce_vcftools_log(vcftools_err, vcf_args.out, vcftools_log_suffix)
+    # Confirm that vcftools ran correctly using vcftools sterr
+    check_vcftools_for_errors(vcftools_err)
+
+    # Check if the user specifed the complete output filename
+    if vcf_args.out:
+        os.rename(statistic_filename, vcf_args.out)
+        produce_vcftools_log(vcftools_err, vcf_args.out)
+    else:
+        produce_vcftools_log(vcftools_err, statistic_filename)
 
 if __name__ == "__main__":
     initLogger()
