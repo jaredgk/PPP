@@ -118,7 +118,7 @@ def assign_vcftools_input_arg (filename):
             If filename is an unknown file format
     '''
     # True if file extensions is recognized by vcftools
-    if filename.split('.', 1)[-1] in ['vcf', 'vcf.gz', 'bcf']:
+    if os.path.basename(filename).split('.', 1)[-1] in ['vcf', 'vcf.gz', 'bcf']:
 
         if filename.endswith('.vcf'):
             return ['--vcf', filename]
