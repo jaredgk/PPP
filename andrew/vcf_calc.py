@@ -122,6 +122,7 @@ def run (passed_arguments = []):
     if vcf_args.calc_statistic == 'windowed-weir-fst':
         # Confirms that at least two population files have been specified
         if not vcf_args.pop_file or len(vcf_args.pop_file) < 2:
+            print vcf_args.pop_file
             logging.error('Two or more population files requried. Please assign using --pop-file')
             raise IOError('Two or more population files requried. Please assign using --pop-file')
 
@@ -193,7 +194,7 @@ def run (passed_arguments = []):
     logging.info('vcftools parameters assigned')
 
     # The filename vcftools assigns to the statistic output
-    statistic_filename = vcf_args.out_prefix + '.' + vcftools_log_suffix
+    vcftools_output_filename = vcf_args.out_prefix + '.' + vcftools_log_suffix
 
     # Check if previous output should be overwritten
     if not vcf_args.overwrite:
@@ -202,7 +203,7 @@ def run (passed_arguments = []):
             check_for_vcftools_output(vcf_args.out)
         else:
             # Confirm the vcftools output and log file do not exist
-            check_for_vcftools_output(statistic_filename)
+            check_for_vcftools_output(vcftools_output_filename)
 
     # Assigns the file argument for vcftools
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcfname)
@@ -218,10 +219,10 @@ def run (passed_arguments = []):
 
     # Check if the user specifed the complete output filename
     if vcf_args.out:
-        os.rename(statistic_filename, vcf_args.out)
+        os.rename(vcftools_output_filename, vcf_args.out)
         produce_vcftools_log(vcftools_err, vcf_args.out)
     else:
-        produce_vcftools_log(vcftools_err, statistic_filename)
+        produce_vcftools_log(vcftools_err, vcftools_output_filename)
 
 if __name__ == "__main__":
     initLogger()

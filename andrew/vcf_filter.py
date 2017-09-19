@@ -23,15 +23,6 @@ def vcf_filter_parser(passed_arguments):
                 setattr(args, self.dest, value)
         return customAction
 
-    def parser_confirm_no_file ():
-        '''Custom action to confirm file does not exist'''
-        class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
-                if os.path.isfile(value):
-                    raise IOError # File found
-                setattr(args, self.dest, value)
-        return customAction
-
     def metavar_list (var_list):
         '''Create a formmated metavar list for the help output'''
         return '{' + ', '.join(var_list) + '}'
@@ -42,12 +33,18 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument("vcfname", metavar = 'VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
 
     # Other file arguments. Expand as needed
-    vcf_parser.add_argument('--out', help = 'Specifies the output filename', type = str,  default = 'out', action = parser_confirm_no_file())
+    vcf_parser.add_argument('--out', help = 'Specifies the complete output filename. Renames vcftools-named intermediate files', type = str)
+    vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out')
+    #vcf_parser.add_argument('--log', help = "Specifies if the vcftools log should be saved", action = 'store_false')
 
     out_format_list = ['vcf', 'bcf', 'removed_sites', 'kept_sites']
     out_format_default = 'removed_sites'
 
     vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Specifies the output format.', type = str, choices = out_format_list, default = out_format_default)
+
+    # General arguments.
+    vcf_parser.add_argument('--overwrite', help = "Specifies if previous output files should be overwritten", action = 'store_true')
+
     ### Filters
 
     # Chromosome filters
@@ -144,7 +141,7 @@ def run (passed_arguments = []):
     Returns
     -------
     output : file
-        Filtered VCF file output
+        Filtered file output
     log : file
         Log file output
 
@@ -153,29 +150,35 @@ def run (passed_arguments = []):
     IOError
         Input VCF file does not exist
     IOError
-        Output file already exists
+        Output file already exists and --overwrite is not specified
 
     '''
 
     # Grab VCF arguments from command line
-    print sys.argv
     vcf_args = vcf_filter_parser(passed_arguments)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(vcf_args, 'vcf_filter')
 
     # Argument container for vcftools
-    vcftools_call_args = ['--out', vcf_args.out]
+    vcftools_call_args = ['--out', vcf_args.out_prefix]
 
-    if vcf_args.out_format:
-        if vcf_args.out_format == 'removed_sites':
-            vcftools_call_args.append('--removed-sites')
-        elif vcf_args.out_format == 'kept_sites':
-            vcftools_call_args.append('--kept-sites')
-        elif vcf_args.out_format == 'bcf':
-            vcftools_call_args.append('--recode-bcf')
-        elif vcf_args.out_format == 'vcf':
-            vcftools_call_args.append('--recode')
+    # Holds the filename vcftools assigns to the filtered output
+    vcftools_output_filename = None
+
+    # Used to assign the output format to the vcftools call, and assign vcftools output filename
+    if vcf_args.out_format == 'removed_sites':
+        vcftools_call_args.append('--removed-sites')
+        vcftools_output_filename = vcf_args.out_prefix + '.removed.sites'
+    elif vcf_args.out_format == 'kept_sites':
+        vcftools_call_args.append('--kept-sites')
+        vcftools_output_filename = vcf_args.out_prefix + '.kept.sites'
+    elif vcf_args.out_format == 'bcf':
+        vcftools_call_args.append('--recode-bcf')
+        vcftools_output_filename = vcf_args.out_prefix + '.recode.bcf'
+    elif vcf_args.out_format == 'vcf':
+        vcftools_call_args.append('--recode')
+        vcftools_output_filename = vcf_args.out_prefix + '.recode.vcf'
 
     if vcf_args.filter_include_chr or vcf_args.filter_exclude_chr:
         if vcf_args.filter_include_chr:
@@ -235,8 +238,14 @@ def run (passed_arguments = []):
 
     logging.info('vcftools parameters assigned')
 
-    # Confirm the vcftools output and log file do not exist
-    check_for_vcftools_output (vcf_args.out, 'recode.' + vcf_args.out_format, '.filter')
+    # Check if previous output should be overwritten
+    if not vcf_args.overwrite:
+        if vcf_args.out:
+            # Confirm the vcftools-renamed output and log file do not exist
+            check_for_vcftools_output(vcf_args.out)
+        else:
+            # Confirm the vcftools output and log file do not exist
+            check_for_vcftools_output(vcftools_output_filename)
 
     # Assigns the file argument for vcftools
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcfname)
@@ -248,9 +257,14 @@ def run (passed_arguments = []):
     logging.info('vcftools call complete')
 
     # Check that the log file was created correctly, get the suffix for the log file, and create the file
-    if check_vcftools_for_errors(vcftools_err):
-        produce_vcftools_log(vcftools_err, vcf_args.out + 'filter')
+    check_vcftools_for_errors(vcftools_err)
 
+    # Check if the user specifed the complete output filename
+    if vcf_args.out:
+        os.rename(vcftools_output_filename, vcf_args.out)
+        produce_vcftools_log(vcftools_err, vcf_args.out)
+    else:
+        produce_vcftools_log(vcftools_err, vcftools_output_filename)
 
 if __name__ == "__main__":
     initLogger()
