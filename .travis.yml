@@ -15,4 +15,4 @@ cache: pip
 
 script:
   - sh run_jared_tests.sh
-  - sh run_andrew_tests.sh
+#  - sh run_andrew_tests.sh
