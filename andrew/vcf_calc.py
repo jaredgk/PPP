@@ -23,15 +23,6 @@ def vcf_calc_parser(passed_arguments):
                 setattr(args, self.dest, value)
         return customAction
 
-    def parser_confirm_no_file ():
-        '''Custom action to confirm file does not exist'''
-        class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
-                if os.path.isfile(value):
-                    raise IOError('Output already exists.') # File found
-                setattr(args, self.dest, value)
-        return customAction
-
     def metavar_list (var_list):
         '''Create a formmated metavar list for the help output'''
         return '{' + ', '.join(var_list) + '}'
@@ -43,9 +34,12 @@ def vcf_calc_parser(passed_arguments):
 
     # Other file arguments. Expand as needed
     vcf_parser.add_argument('--pop-file', help = 'Defines the population files for calculating specific statistics', type = str, action='append')
-    vcf_parser.add_argument('--out', help = 'Specifies the complete output filename. Renames vcftools-named intermediate files', type = str, action = parser_confirm_no_file())
-    vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out', action = parser_confirm_no_file())
+    vcf_parser.add_argument('--out', help = 'Specifies the complete output filename. Renames vcftools-named intermediate files', type = str)
+    vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out')
     #vcf_parser.add_argument('--log', help = "Specifies if the vcftools log should be saved", action = 'store_false')
+
+    # General arguments.
+    vcf_parser.add_argument('--overwrite', help = "Specifies if previous output files should be overwritten", action = 'store_true')
 
     # Statistic based arguments.
     statistic_list = ['weir-fst', 'windowed-weir-fst', 'TajimaD', 'pi', 'freq', 'het']
@@ -201,8 +195,14 @@ def run (passed_arguments = []):
     # The filename vcftools assigns to the statistic output
     statistic_filename = vcf_args.out_prefix + '.' + vcftools_log_suffix
 
-    # Confirm the vcftools output and log file do not exist
-    check_for_vcftools_output (statistic_filename)
+    # Check if previous output should be overwritten
+    if not vcf_args.overwrite:
+        if vcf_args.out:
+            # Confirm the vcftools-renamed output and log file do not exist
+            check_for_vcftools_output(vcf_args.out)
+        else:
+            # Confirm the vcftools output and log file do not exist
+            check_for_vcftools_output(statistic_filename)
 
     # Assigns the file argument for vcftools
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcfname)
