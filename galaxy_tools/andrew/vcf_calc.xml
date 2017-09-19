@@ -1,0 +1,39 @@
+<tool id="vcf_calc" name="VCF Statistics Calculator" version="0.1b">
+  <description>Automates the calculation of various statistics</description>
+  <command><![CDATA[
+  python $__tool_directory__/vcf_calc.py
+          "$input"
+          #for $pop_file in $pop_files:
+              --pop-file "$pop_file"
+          #end for
+          --calc-statistic "$calc_statistic"
+          --out "$output"
+          --overwrite
+  ]]></command>
+
+  <inputs>
+    <param format="vcf,bcf" name="input" type="data" label="VCF Input" />
+    <param name="out" type="text" label="Output" value="out"/>
+    <param name="calc_statistic" type="select" label="Statistic">
+      <option value="windowed-weir-fst" selected="True" >Windowed Fst</option>
+      <option value="weir-fst">Fst</option>
+      <option value="TajimaD">Tajima's D</option>
+      <option value="pi">Nucleotide Diversity</option>
+      <option value="freq">Allele Frequency</option>
+      <option value="het">Heterozygosity</option>
+    </param>
+    <param name="statistic-window-size" type="integer" value="10000" label="Specifies the size of window calculations" />
+    <param name="statistic-window-step" type="integer" value="20000" label="Specifies step size between windows" />
+    <param format="txt" name="pop_files" type="data" label="Population Files" multiple="True" optional="True"/>
+    <param format="tabular" name="filter-include-positions" type="data" label="Include Positions File" multiple="False" optional="True"/>
+    <param format="tabular" name="filter-exclude-positions" type="data" label="Exclude Positions File" multiple="False" optional="True"/>
+  </inputs>
+
+  <outputs>
+    <data format="tabular" name="output"/>
+  </outputs>
+  <help>
+      VCF Statistics Calculator Help Text
+  </help>
+
+</tool>
