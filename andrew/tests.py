@@ -26,7 +26,7 @@ class vcftools_module_tests (unittest.TestCase):
     # Check vcftools log output creation
     def test_produce_vcftools_log (self):
         # Create the log output using the function
-        vcftools.produce_vcftools_log('Log Test:\n1\n2\n3\n', 'out', 'logTest')
+        vcftools.produce_vcftools_log('Log Test:\n1\n2\n3\n', 'out.logTest')
         # Confirm the correct log output has been created
         self.assertTrue(file_comp('out.logTest.log', 'example/out.logTest.log'))
         # Remove log output file
@@ -35,7 +35,7 @@ class vcftools_module_tests (unittest.TestCase):
     # Check vcftools log for errors
     def test_check_vcftools_for_errors (self):
         # Check the outcome of an output file without errors
-        self.assertTrue(vcftools.check_vcftools_for_errors('Log Test:\n1\n2\n3\nRun Time'))
+        self.assertIsNone(vcftools.check_vcftools_for_errors('Log Test:\n1\n2\n3\nRun Time'))
         # Disable logging module for the following test
         logging.disable(logging.CRITICAL)
         # Check the outcome of an output file with errors
@@ -53,7 +53,7 @@ class vcf_calc_tests (unittest.TestCase):
                       '--calc-statistic', 'windowed-weir-fst',
                       '--pop-file', 'example/input/Paniscus.txt',
                       '--pop-file', 'example/input/Troglodytes.txt',
-                      '--out', 'out'])
+                      '--out-prefix', 'out'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.windowed.weir.fst',
@@ -68,7 +68,7 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'TajimaD',
-                      '--out', 'out'])
+                      '--out-prefix', 'out'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.Tajima.D',
@@ -83,7 +83,7 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'pi',
-                      '--out', 'out'])
+                      '--out-prefix', 'out'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.windowed.pi',
@@ -98,7 +98,7 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'freq',
-                      '--out', 'out'])
+                      '--out-prefix', 'out'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.frq', 'example/merged_chr1_10000.frq'))
@@ -112,7 +112,7 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'het',
-                      '--out', 'out'])
+                      '--out-prefix', 'out'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.het', 'example/merged_chr1_10000.het'))
@@ -193,6 +193,6 @@ class vcf_sampler_tests (unittest.TestCase):
         # Remove the ouput files created by the function
         self.addCleanup(os.remove, 'sampled_data.tsv')
         self.addCleanup(os.remove, 'out.vcf.gz')
-        
+
 if __name__ == "__main__":
     unittest.main()
