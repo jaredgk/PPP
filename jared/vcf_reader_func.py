@@ -36,9 +36,13 @@ def checkFormat(vcfname):
         return 'gzip'
     return 'nozip'
 
-def getRecordList(vcf_reader, region):
+def getRecordList(vcf_reader, region=None, chrom=None, start=None,
+                  end=None):
     """Returns list for use in subsampling from input file"""
-    var_sites = vcf_reader.fetch(region.chrom, region.start, region.end)
+    if region is not None:
+        var_sites = vcf_reader.fetch(region.chrom, region.start, region.end)
+    else:
+        var_sites = vcf_reader.fetch(chrom, start, end)
     lst = []
     for rec in var_sites:
         lst.append(rec)
