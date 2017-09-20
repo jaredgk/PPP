@@ -92,7 +92,7 @@ class Region:
 class RegionList:
 
     def __init__(self, filename=None, genestr=None, oneidx=False,
-                 colstr=None, defaultchrom=None, halfopen=True,
+                 colstr=None, reglist=None, defaultchrom=None, halfopen=True,
                  sortlist=True, checkoverlap=True, natsort=True):
         """Class for storing gene region information
 
@@ -133,19 +133,22 @@ class RegionList:
             self.collist = [1, 2, 0]
         else:
             self.parseCols(colstr)
-        if filename is None and genestr is None:
+        if filename is None and genestr is None and reglist is None:
             raise Exception(("Either a filename or gene region must be "
                             "provided for creating a gene region list"))
         self.regions = []
         self.oneidx = oneidx
         self.halfopen = halfopen
         if filename is not None:
-            self.initList(filename, oneidx, colstr, defaultchrom,
+            self.initFile(filename, oneidx, colstr, defaultchrom,
                           halfopen, sortlist, checkoverlap)
-        else:
+        elif genestr is None:
             self.initStr(genestr, oneidx, colstr, defaultchrom, halfopen)
+        else:
+            self.initList(reglist, oneidx, colstr, defaultchrom,
+                          halfopen, sortlist, checkoverlap)
 
-    def initList(self, filename, oneidx, colstr, defaultchrom, halfopen,
+    def initFile(self, filename, oneidx, colstr, defaultchrom, halfopen,
                  sortlist, checkoverlap):
         """Initialize RegionList with a region file
         """
@@ -191,6 +194,29 @@ class RegionList:
             end += 1
         self.regions.append(Region(start,end,chrom))
 
+    def initList(self, reglist, oneidx, colstr, defaultchrom, halfopen,
+                 sortlist, checkoverlap):
+        for reg in reglist:
+            start = int(reg[self.collist[0]])
+            end = int(reg[self.collist[1]])
+            if len(self.collist) == 3:
+                chrom = reg[self.collist[2]]
+            elif defaultchrom is not None:
+                chrom = defaultchrom
+            else:
+                raise Exception("Chromosome for region is not specified")
+            if oneidx:
+                start -= 1
+                end -= 1
+            if not halfopen:
+                end += 1
+            self.regions.append(Region(start, end, chrom))
+        if sortlist:
+            self.regions.sort()
+        if checkoverlap:
+            if self.hasOverlap():
+                raise Exception("Region overlap detected")
+
     def parseCols(self,cols):
         col_list = [int(i) for i in cols.split(',')]
         if len(col_list) < 2 or len(col_list) > 3:
@@ -214,6 +240,22 @@ class RegionList:
                     return True
         return False
 
+    def printList(self, file_handle=None, file_name=None, delim="\t"):
+        if file_handle is None and file_name is None:
+            raise Exception("Either file_handle or file_name must be set")
+        if file_name is not None:
+            file_handle = open(file_name, 'w')
+        for region in self.regions:
+            start = region.start
+            end = region.end
+            if not self.halfopen:
+                end -= 1
+            if self.oneidx:
+                start += 1
+                end += 1
+            reg_str = region.chrom+delim+str(start)+delim+str(end)+'\n'
+            file_handle.write(reg_str)
 
-    #TO do: add check for intersecting regions
+
+    #TO do:
     #Add sort method for strictly text based sorting
