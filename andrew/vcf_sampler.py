@@ -132,7 +132,7 @@ def assign_position_columns (sample_headers):
 def assign_statistic_column (sample_headers, statistic):
     statistic_converter = {'windowed-weir-fst':'MEAN_FST', 'TajimaD':'TajimaD'}
 
-    if not statistic_converter.has_key(statistic):
+    if statistic not in statistic_converter:
         logging.critical('Statistic not found. Statistic list needs to be updated. Please contact the PPP Team.')
         raise Exception('Statistic not found. Statistic list needs to be updated. Please contact the PPP Team.')
 
