@@ -49,15 +49,73 @@ import random
 from gene_region import Region
 import pysam
 
-def addToParser(parser):
-    parser.add_argument("--lolz", dest="wut")
+
+class BaseData():
+
+    def __init__(self, format, filename, region=None):
+        self.poslist = []
+        self.seqs = []
+        self.format = format
+        if format == 'VCF':
+            self.onlysnps = True
+            vcff = pysam.VariantFile(filename)
+            record_list = getRecordList(vcff, region)
+            self.ploidy, self.seqs, self.poslist =
+            vcfload.checkVcfRegionPysam(record_list)
+            #self.seqcount = len(self.seqs)
+            #self.numbases = listcheckallsamelength(self.seqs)
+        elif format == "FASTA":
+            self.onlysnps = False
+            f = open(filename,"r")
+            seq = ""
+            while True:
+                s = f.readline().strip()
+                if len(s) == 0:
+                    if len(seq) > 0:
+                        self.seqs.append(seq)
+                    break
+                else:
+                    if s[0] == '>':
+                        if len(seq) > 0:
+                            self.seqs.append(seq)
+                        seq = ""
+                    else:
+                        s = s.strip()
+                        if len(s) > 0:
+                            seq += s
+        elif format == "SIT":
+            self.onlysnps = False
+            f = open(filename,"r")
+            f.readline()
+            while True:
+                s = f.readline()
+                if s[0] != '#':
+                    break
+            numseq = int(s.split()[0])
+            seqlen = int(s.split()[1])
+            s = f.readline().split()
+
+            numnoncode = int(s[1])
+            if numnoncode != seqlen:
+                for i in range(numnoncode):
+                    f.readline()
+            s = f.readline()
+            if s.find("All") < 0:
+                numpops = int(s.strip())
+                for i in range(numpops):
+                    f.readline()
+            ## now should be at beginning of data
+            for i in range(numseq):
+                self.seqs.append(f.readline().strip()[10:])
+        self.numbases = listcheckallsamelength(self.seqs)
+        self.seqcount = len(seqs)
+
 
 def createParser():
     parser = argparse.ArgumentParser(description=("Given a file of aligned"
             "sequences or variable sites, will return intervals based"
             " on 4 gamete tests"))
     parser.add_argument("filename", help="Input filename")
-    addToParser(parser)
     filetype_group = parser.add_mutually_exclusive_group(required=True)
     filetype_group.add_argument("--fasta", dest = "fasta",
             nargs="+", help = "fasta file(s) of"
@@ -240,6 +298,8 @@ def getseqlist(filename,format):
             #raise  Exception(("vcf file %s appears to be unphased.  Four gamete-based intervals require phased sequences"%filename))
     numbases = listcheckallsamelength(seqs)
     return len(seqs),numbases,seqs,poslist,ONLYSNPS
+
+def getSeqListFasta()
 
 def buildlistsofsites(filename,format,skipsiteswithmissingdata,skipsiteswith3or4bases) :
     """
@@ -567,7 +627,8 @@ def sampleinterval(picktype,numinf,intervals,infcounts):
     assert False  # should not get here
     return None
 
-def getIntervalList(args):
+def getIntervalList(args, format, filename, region=None):
+    basedata = BaseData(format, filename, region)
     (seqcount, numbases, polysites, informpolysites, cintervals, cmat,
         list_of_positions,ONLYSNPS) = buildlistsofsites(args.filename,
         args.inputfiletype,args.includesnpmissingdata,

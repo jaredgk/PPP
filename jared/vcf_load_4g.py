@@ -99,8 +99,8 @@ def getBaseList(ploidy, la):
             base_list2.append(la[i][2])
     return base_list,base_list2
 
-def checkVcfRegionPysam(vcf_reader, region, fullcheck=False):
-    record_list = getRecordList(vcf_reader, region)
+def checkVcfRegionPysam(record_list):
+    #record_list = getRecordList(vcf_reader, region)
     valid_bases = ['A','C','G','T']
     skiplines = []
     ploidy = -1
