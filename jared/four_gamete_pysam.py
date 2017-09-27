@@ -46,13 +46,15 @@ import logging
 from logging_module import initLogger
 import vcf_load_4g as vcfload
 import random
-from gene_region import Region
+from gene_region import Region, RegionList
 import pysam
+from vcf_reader_func import getRecordList
 
 
 class BaseData():
 
-    def __init__(self, format, filename, region=None):
+    def __init__(self, format, filename, includesnpmissingdata,
+                 only2basesnps, region=None):
         self.poslist = []
         self.seqs = []
         self.format = format
@@ -60,8 +62,7 @@ class BaseData():
             self.onlysnps = True
             vcff = pysam.VariantFile(filename)
             record_list = getRecordList(vcff, region)
-            self.ploidy, self.seqs, self.poslist =
-            vcfload.checkVcfRegionPysam(record_list)
+            self.ploidy, self.seqs, self.poslist = vcfload.checkVcfRegionPysam(record_list)
             #self.seqcount = len(self.seqs)
             #self.numbases = listcheckallsamelength(self.seqs)
         elif format == "FASTA":
@@ -108,21 +109,284 @@ class BaseData():
             for i in range(numseq):
                 self.seqs.append(f.readline().strip()[10:])
         self.numbases = listcheckallsamelength(self.seqs)
-        self.seqcount = len(seqs)
+        self.seqcount = len(self.seqs)
+        #self.polysites, self.informpolysites, self.cintervals, self.cmat =
+        self.buildlistofsites(includesnpmissingdata, only2basesnps)
+
+    def buildlistofsites(self, includesnpmissingdata, only2basesnps):
+        MAXINFORMSNPS = 1000
+        #seqcount,numbases,seqs,list_of_positions,ONLYSNPS = getseqlist(basedata.filename,format)
+        # Find polymorphic sites
+        self.polysites = []
+        self.informpolysites = []
+        informpolyseqs = ['']*self.seqcount ## becomes a list of strings of informative sites,  same length as seqs,  not used as of 8/14/2017
+        baseset = set(['a','c','g','t','A','C','G','T'])
+        linesets = []
+        for j in range(self.numbases):
+            ok = True
+            basecount = [0,0,0,0]
+            for k in range(self.seqcount):
+                if self.seqs[k][j].isalpha() == False:
+                    raise Exception ("non-alphabetic character %s"
+                        " at position %d in sequence %d"%(self.seqs[k][j],k,j))
+                if self.seqs[k][j] not in baseset: ## skip sites with missing data
+                    if not includesnpmissingdata:
+                        ok = False
+                if self.seqs[k][j].upper() == 'A' :
+                    basecount[0] = basecount[0] + 1
+                if self.seqs[k][j].upper() == 'C' :
+                    basecount[1] = basecount[1] + 1
+                if self.seqs[k][j].upper() == 'G' :
+                    basecount[2] = basecount[2] + 1
+                if self.seqs[k][j].upper() == 'T' :
+                    basecount[3] = basecount[3] + 1
+            if ok == False:
+                pass
+                # print ("missing data at position " + str(j))
+            else:
+                polybase = 0
+                twobase = 0
+                for bi in range(4):
+                    if basecount[bi] > 0 :
+                        polybase += 1
+                        if basecount[bi] > 1 :
+                            twobase +=  + 1
+                if  only2basesnps == True and polybase > 2 :
+                    pass
+                    # print ("more than two bases at position " + str(j))
+                elif polybase > 1:
+                    self.polysites.append(j+1) ## use regular (start at 1) count
+                    if (twobase > 1):
+                        self.informpolysites.append(j+1)
+                        for k in range(self.seqcount):
+                            informpolyseqs[k] = informpolyseqs[k] + self.seqs[k][j]
+                        lineset =[set([]),set([]),set([]),set([])]
+                        for k in range(self.seqcount):
+                            if self.seqs[k][j].upper() == 'A' :
+                                lineset[0].add(k)
+                            if self.seqs[k][j].upper() == 'C' :
+                                lineset[1].add(k)
+                            if self.seqs[k][j].upper() == 'G' :
+                                lineset[2].add(k)
+                            if self.seqs[k][j].upper() == 'T' :
+                                lineset[3].add(k)
+                        linesets.append(lineset)
+        if len(self.informpolysites) > MAXINFORMSNPS:
+            raise Exception("the number of informative snps: %d"
+                    " exceeds the maximum: %d"%(len(self.informpolysites,MAXINFORMSNPS)))
+        c = 0
+        sl = len(linesets)
+        if sl > 1 :
+            self.cmat = []
+            self.cintervals = []
+            for i in range(sl):
+                self.cmat.append([])
+                for j in range(sl):
+                    if i < j :
+                        if compat(linesets[i],linesets[j]) == False :
+                            self.cmat[i].append(0)
+                            self.cintervals.append([self.informpolysites[i],self.informpolysites[j]])
+                        else:
+                            self.cmat[i].append(1)
+                    else:
+                        if i==j:
+                            self.cmat[i].append(1)
+                        else:
+                            self.cmat[i].append(-1)
+
+    #def compatibleintervals(cmat,informpolysites,numbases,
+            #list_of_positions,ONLYSNPS):
+    def compatibleintervals(self):
+        """
+         return a list of intervals
+            CONTIG4GPASS, set of most inclusive intervals, such that all the sites
+                in each are fully compatible with each other:
+                each interval is a stretch of bases that contain zero incompatible
+                sites by the 4 gamete criterion
+                on each side,  the left and right,  the next polymorphic site that
+                is not in the interval must be incompatible
+                with one of the polymorphic sites that is in the interval.
+
+                intervals are based only on informative sites
+                it is possible for intervals could be extended to include flanking
+                non-informative polymorphic sites
+                probably would have little effect in most contexts
+        """
+        tempinformpolysites = list(self.informpolysites)
+        cints = []
+        nps = len(self.informpolysites)
+        cintinformlistfull = []
+        p = 0
+        while p < nps:
+            j = p
+            donej = False
+            cintinform = 1
+            while True:
+                j += 1
+                if j >= nps or self.cmat[p][j] != 1:
+                    j -= 1
+                    donej = True
+                    break
+                else:
+                    for i in range(p+1,j+1):
+                        if self.cmat[i][j] != 1:
+                            donej = True
+                            j -= 1
+                            break
+                if donej:
+                    break
+                else:
+                    cintinform += 1
+            # if j > p:
+            cints.append([tempinformpolysites[p],tempinformpolysites[j]])
+            cintinformlistfull.append(cintinform)
+            p += 1
+        ## now remove all intervals that are overlapped by a larger one
+        cintinformremovelist = []
+        c = len(cints)
+        removelist = []
+        for ai in range(c-1) :
+            for bi in range(ai+1,c) :
+                assert (cints[ai][0] <= cints[ai][1])
+                assert (cints[bi][0] <= cints[bi][1])
+                i = cints[ai][0]
+                j = cints[ai][1]
+                m = cints[bi][0]
+                n = cints[bi][1]
+                if (m <= i)  and (j <= n):
+                    if cints[bi] not in removelist:
+                        removelist.append(cints[ai])
+                        cintinformremovelist.append(ai)
+                if (i <= m)  and (n <= j):
+                    if cints[ai] not in removelist:
+                        removelist.append(cints[bi])
+                        cintinformremovelist.append(bi)
+        for interval in removelist:
+            cints.remove(interval)
+        cintinformlist = []
+        for i in range(c):
+            if i not in cintinformremovelist:
+                cintinformlist.append(cintinformlistfull[i])
+        # now pad intervals with sequences to the flanking ones
+        if self.onlysnps:
+            cints = replace_positions(cints,self.poslist)
+        cintspadded = []
+        # if ONLYSNPS don't pad using 1 and numbases
+        for ci in range(len(cints)):
+            temp = [-1,-1]
+            if ci == 0:
+                temp[0] = cints[ci][0] if self.onlysnps else 1
+            else:
+                temp[0] = cints[ci-1][1] + 1
+            if ci == len(cints)-1:
+                temp[1] = cints[ci][1] if self.onlysnps else self.numbases
+            else:
+                temp[1] = cints[ci+1][0] - 1
+            cintspadded.append(temp)
+        return cintspadded,cintinformlist
+
+    #def hudsonkaplan85intervals(cintervals,numbases,list_of_positions) :
+    def hk85intervals(self):
+        """
+            implements the HK algorithm from appendix 2 of Hudson & Kaplan 1985
+
+            Rm is the number of recombination events that can be
+            parsimoniously inferred from a sample of sequences
+            D is a compatibility matrix d[i,j] == 1 if all 4 gametes are present,
+                 0 otherwise
+            consider for convenience only i<j i.e. above the diagonal
+
+            H&K algorithm prunes D to leave the minimum set of intervals
+            necessary to explain the data
+
+            pruning steps:
+                for two intervals (i,j) and (m,n)  if m <= i< j <= n  remove (m,n)
+
+                for remaining intervals do these steps to remove
+                non disjoint intervals
+                    identify an interval that is not disjoint from all
+                    the others (if none can be found we are done)
+                    call this (i1,j1)
+
+                    now scan all intervals (m,n) and delete
+                    all those for which i1 < m < j2
+
+                    now search other intervals to find (i2,j2) such that i2 >= j1
+                    and this interval is not disjoint from all the
+                    remaining intervals
+                    now using (i2,j2) delete all intervals
+                    whose first component is <j2 and >i2
+        """
+        c = len(self.cintervals)
+        removelist = []
+        for ai in range(c-1) :
+            for bi in range(ai+1,c) :
+                assert (self.cintervals[ai][0] < self.cintervals[ai][1])
+                assert (self.cintervals[bi][0] < self.cintervals[bi][1])
+                i = self.cintervals[ai][0]
+                j = self.cintervals[ai][1]
+                m = self.cintervals[bi][0]
+                n = self.cintervals[bi][1]
+                if (m <= i)  and (j <= n):
+                    if self.cintervals[bi] not in removelist:
+                        removelist.append(self.cintervals[bi])
+                if (i <= m)  and (n <= j):
+                    if self.cintervals[ai] not in removelist:
+                        removelist.append(self.cintervals[ai])
+        for interval in removelist:
+            self.cintervals.remove(interval)
+        c = len(self.cintervals)
+        ai = 0
+        while ai < c-1:
+            removelist = []
+            for bi in range(ai+1,c):
+                i1 = self.cintervals[ai][0]
+                j1 = self.cintervals[ai][1]
+                b = self.cintervals[bi][0]
+                e = self.cintervals[bi][1]
+                if  (i1 < b  < j1) or (b < i1 < e):
+                    removelist.append(self.cintervals[bi])
+            for interval in removelist:
+                self.cintervals.remove(interval)
+
+            i1 = self.cintervals[ai][0]
+            j1 = self.cintervals[ai][1]
+            xi = ai + 1
+            c = len(self.cintervals)
+            while xi < c:
+                if self.cintervals[xi][0] >= j1:
+                    removelist = []
+                    for bi in range(xi+1,c):
+                        i2 = self.cintervals[xi][0]
+                        j2 = self.cintervals[xi][1]
+                        b = self.cintervals[bi][0]
+                        e = self.cintervals[bi][1]
+                        if  (i2 < b  < j2):
+                            removelist.append(self.cintervals[bi])
+                for interval in removelist:
+                    self.cintervals.remove(interval)
+                    c = len(self.cintervals)
+                xi += 1
+            c = len(self.cintervals)
+            ai += 1
+        # reset snp positions if needed
+        if len(self.poslist) > 0:
+            self.cintervals = replace_positions(self.cintervals,self.poslist)
+        return self.cintervals
 
 
 def createParser():
     parser = argparse.ArgumentParser(description=("Given a file of aligned"
             "sequences or variable sites, will return intervals based"
             " on 4 gamete tests"))
-    parser.add_argument("filename", help="Input filename")
+    #parser.add_argument("filename", help="Input filename")
     filetype_group = parser.add_mutually_exclusive_group(required=True)
     filetype_group.add_argument("--fasta", dest = "fasta",
             nargs="+", help = "fasta file(s) of"
             " multiple aligned sequences, all the same length")
     filetype_group.add_argument("--sit", dest = "sit",
             nargs="+", help = " SITES format file(s)")
-    filetype_group.add_argument("--vcf", dest = "vcf", nargs=2
+    filetype_group.add_argument("--vcf", dest = "vcf", nargs=2,
             help = "VCF file and region list, in that order")
     filetype_group.add_argument("--vcfs", dest="vcfs", nargs="+")
     output_group = parser.add_mutually_exclusive_group(required=True)
@@ -299,9 +563,9 @@ def getseqlist(filename,format):
     numbases = listcheckallsamelength(seqs)
     return len(seqs),numbases,seqs,poslist,ONLYSNPS
 
-def getSeqListFasta()
+#def getSeqListFasta()
 
-def buildlistsofsites(filename,format,skipsiteswithmissingdata,skipsiteswith3or4bases) :
+def buildlistsofsites(basedata,skipsiteswithmissingdata,skipsiteswith3or4bases) :
     """
         takes a sequence filename and format
         returns:
@@ -313,30 +577,30 @@ def buildlistsofsites(filename,format,skipsiteswithmissingdata,skipsiteswith3or4
              an upper diagonal matrix for all pairs of informative sites, contains a 1 if they are compatible,  0 if not
     """
     MAXINFORMSNPS = 1000
-    seqcount,numbases,seqs,list_of_positions,ONLYSNPS = getseqlist(filename,format)
+    #seqcount,numbases,seqs,list_of_positions,ONLYSNPS = getseqlist(basedata.filename,format)
     # Find polymorphic sites
     polysites = []
     informpolysites = []
-    informpolyseqs = ['']*seqcount ## becomes a list of strings of informative sites,  same length as seqs,  not used as of 8/14/2017
+    informpolyseqs = ['']*basedata.seqcount ## becomes a list of strings of informative sites,  same length as seqs,  not used as of 8/14/2017
     baseset = set(['a','c','g','t','A','C','G','T'])
     linesets = []
-    for j in range(numbases):
+    for j in range(basedata.numbases):
         ok = True
         basecount = [0,0,0,0]
-        for k in range(seqcount):
-            if seqs[k][j].isalpha() == False:
+        for k in range(basedata.seqcount):
+            if basedata.seqs[k][j].isalpha() == False:
                 raise Exception ("non-alphabetic character %s"
                     " at position %d in sequence %d"%(seqs[k][j],k,j))
-            if seqs[k][j] not in baseset: ## skip sites with missing data
+            if basedata.seqs[k][j] not in baseset: ## skip sites with missing data
                 if skipsiteswithmissingdata == True:
                     ok = False
-            if seqs[k][j].upper() == 'A' :
+            if basedata.seqs[k][j].upper() == 'A' :
                 basecount[0] = basecount[0] + 1
-            if seqs[k][j].upper() == 'C' :
+            if basedata.seqs[k][j].upper() == 'C' :
                 basecount[1] = basecount[1] + 1
-            if seqs[k][j].upper() == 'G' :
+            if basedata.seqs[k][j].upper() == 'G' :
                 basecount[2] = basecount[2] + 1
-            if seqs[k][j].upper() == 'T' :
+            if basedata.seqs[k][j].upper() == 'T' :
                 basecount[3] = basecount[3] + 1
         if ok == False:
             pass
@@ -356,17 +620,17 @@ def buildlistsofsites(filename,format,skipsiteswithmissingdata,skipsiteswith3or4
                 polysites.append(j+1) ## use regular (start at 1) counting
                 if (twobase > 1):
                     informpolysites.append(j+1)
-                    for k in range(seqcount):
-                        informpolyseqs[k] = informpolyseqs[k] + seqs[k][j]
+                    for k in range(basedata.seqcount):
+                        informpolyseqs[k] = informpolyseqs[k] + basedata.seqs[k][j]
                     lineset =[set([]),set([]),set([]),set([])]
-                    for k in range(seqcount):
-                        if seqs[k][j].upper() == 'A' :
+                    for k in range(basedata.seqcount):
+                        if basedata.seqs[k][j].upper() == 'A' :
                             lineset[0].add(k)
-                        if seqs[k][j].upper() == 'C' :
+                        if basedata.seqs[k][j].upper() == 'C' :
                             lineset[1].add(k)
-                        if seqs[k][j].upper() == 'G' :
+                        if basedata.seqs[k][j].upper() == 'G' :
                             lineset[2].add(k)
-                        if seqs[k][j].upper() == 'T' :
+                        if basedata.seqs[k][j].upper() == 'T' :
                             lineset[3].add(k)
                     linesets.append(lineset)
     if len(informpolysites) > MAXINFORMSNPS:
@@ -391,8 +655,8 @@ def buildlistsofsites(filename,format,skipsiteswithmissingdata,skipsiteswith3or4
                         cmat[i].append(1)
                     else:
                         cmat[i].append(-1)
-    return (seqcount,numbases,polysites,informpolysites,cintervals,
-        cmat,list_of_positions,ONLYSNPS)
+    return (polysites,informpolysites,cintervals,
+        cmat)
 
 def replace_positions(intervals,list_of_positions):
     """
@@ -627,25 +891,25 @@ def sampleinterval(picktype,numinf,intervals,infcounts):
     assert False  # should not get here
     return None
 
-def getIntervalList(args, format, filename, region=None):
-    basedata = BaseData(format, filename, region)
-    (seqcount, numbases, polysites, informpolysites, cintervals, cmat,
-        list_of_positions,ONLYSNPS) = buildlistsofsites(args.filename,
-        args.inputfiletype,args.includesnpmissingdata,
-        args.only2basesnps)
+def getIntervalList(args, basedata):
+    #basedata = BaseData(format, filename, region)
+    #(polysites, informpolysites, cintervals, cmat) = buildlistsofsites(basedata,args.includesnpmissingdata,
+        #args.only2basesnps)
 
     if args.intervaltype == "HandK85":
-        intervals=hudsonkaplan85intervals(cintervals,
-            numbases,list_of_positions)
+        #intervals=hudsonkaplan85intervals(basedata.cintervals,
+        #    basedata.numbases,basedata.poslist)
         #hk code doesn't return counts of the informatics sites in each interval
+        intervals = basedata.hk85intervals()
         if args.numinformativesites != None:
             raise Exception("--numinf not implemented when using --hk")
         intervalinformativecounts = None # not implemented  for hk
         numinf = None # set to None, hk use of # inform sites not implemented
 
     else: # argdic['intervaltype'] =='CONTIG4GPASS'
-        intervals,intervalinformativecounts= compatibleintervals(cmat,
-            informpolysites, numbases,list_of_positions,ONLYSNPS)
+        #intervals,intervalinformativecounts= compatibleintervals(cmat,
+        #    informpolysites, basedata.numbases,basedata.poslist,basedata.onlysnps)
+        intervals, intervalinformativecounts = basedata.compatibleintervals()
 
     # print (argdic)
     if args.returntype == 'returnlist':
@@ -655,10 +919,6 @@ def getIntervalList(args, format, filename, region=None):
                                   args.numinformativesites,
                                   intervals,intervalinformativecounts)
         return interval
-
-
-def parse_input(args):
-    in_type = ""
 
 
 def sample_fourgametetest_intervals(sys_args):
@@ -721,16 +981,62 @@ def sample_fourgametetest_intervals(sys_args):
     args = parser.parse_args(sys_args)
     logArgs(args)
     #argdic = vars(args)
+    interval_list = []
+    multiple_regions = False
+    region_output = False
     if args.ranseed != None:
         random.seed(int(args.ranseed[0]))
+    filetype = ''
     if args.vcf is not None:
+        filetype = "VCF"
         vcfname = args.vcf[0]
         regname = args.vcf[1]
-        region_list = RegionList(filename=regname)
-        for region in region_list:
+        if regname != '-':
+            region_list = RegionList(filename=regname)
+            #region_output = True
+            multiple_regions = (len(region_list.regions) > 1)
+            if multiple_regions and args.out is not None:
+                raise Exception(("VCF with multiple regions must have "
+                                "--out-prefix or --out-reg"))
+            for region in region_list.regions:
+                basedata = BaseData("VCF",vcfname,args.includesnpmissingdata,args.only2basesnps, region)
+                intervals = getIntervalList(args, basedata)
+                interval_list.append(intervals)
+        else:
+            basedata = BaseData("VCF",vcfname,args.includesnpmissingdata,args.only2basesnps)
+            intervals = getIntervalList(args,basedata)
+            interval_list.append(intervals)
+    elif args.vcfs is not None:
+        filetype="VCF"
+        if len(args.vcfs) > 1 and args.out_prefix is not None:
+            raise Exception(("Multiple VCFs require --out-prefix flag"))
+        for vcfname in args.vcfs:
+            intervals = getIntervalList(args, "VCF", vcfname)
+            interval_list.append(intervals)
+    elif args.fasta is not None:
+        filetype="FASTA"
+        if len(args.fasta) > 1 and args.out_prefix is not None:
+            raise Exception(("Multiple FASTAs require --out-prefix flag"))
+        if args.out_reg is not None:
+            raise Exception(("FASTA files cannot be output to region file"))
+        for fastaname in args.fasta:
+            basedata = BaseData("FASTA", fastaname, args.includesnpmissingdata,args.only2basesnps)
+            intervals = getIntervalList(args, basedata)
+            interval_list.append(intervals)
+    elif args.sit is not None:
+        filetype="SIT"
+        if len(args.sit) > 1 and args.out_prefix is not None:
+            raise Exception(("Multiple SITES files require --out-prefix flag"))
+        if args.out_reg is not None:
+            raise Exception(("SITES files cannot be output to region file"))
+        for sitname in args.sit:
+            intervals = getIntervalList(args, "SIT", sitname)
+            interval_list.append(intervals)
 
-    intervals = getIntervalList(args)
-    return intervals
+
+
+
+    return interval_list
         #
 
 
@@ -741,32 +1047,38 @@ if __name__ == '__main__':
     #sample_fourgametetest_intervals([])
     #exit()
     testlist = []
-    vcf_name = "chr11subsamples4gtest.vcf.gz"
-    testlist.append( ["test #" + str(len(testlist)),vcf_name, "--vcf", "--4gcompat", "--reti", "--ranseed", "123"])
-    testlist.append( ["test #" + str(len(testlist)),vcf_name, "--vcf", "--hk", "--retl"])
-    testlist.append( ["test #" + str(len(testlist)),vcf_name, "--vcf", "--hk",
-            "--reti","--left"])
-    testlist.append( ["test #" + str(len(testlist)),vcf_name, "--vcf", "--4gcompat", "--retl"])
-    testlist.append( ["test #" + str(len(testlist)),vcf_name, "--vcf", "--4gcompat",
-            "--reti","--ranseed","123","--ranb"])
-    testlist.append( ["test #" + str(len(testlist)),"fourgfastatest.fasta", "--fasta", "--4gcompat",
-            "--retl"])
-    testlist.append( ["test #" + str(len(testlist)),"fourgfastatest.fasta", "--fasta", "--4gcompat",
-            "--retl","--incN","--b2"])
-    testlist.append( ["test #" + str(len(testlist)),"fourgfastatest.fasta", "--fasta", "--hk",
-            "--retl"])
-    testlist.append( ["test #" + str(len(testlist)),"fourgfastatest.fasta", "--fasta", "--hk",
-            "--retl","--incN","--b2"])
-    testlist.append( ["test #" + str(len(testlist)),"fourgfastatest.fasta", "--fasta", "--hk",
-            "--reti","--incN","--left"])
-    testlist.append( ["test #" + str(len(testlist)),"fourgfastatest.fasta", "--fasta", "--4gcompat",
-            "--reti","--incN","--numinf","2","--ranb"])
-    testlist.append( ["test #" + str(len(testlist)),"fourgfastatest.fasta", "--fasta", "--4gcompat",
-            "--reti","--incN","--numinf","2","--rani"])
-    testlist.append( ["test #" + str(len(testlist)),"fourgfastatest.fasta", "--fasta", "--4gcompat",
-            "--reti","--incN","--numinf","4","--ranb"])
-    testlist.append( ["test #" + str(len(testlist)),"fourgfastatest.fasta", "--fasta", "--4gcompat",
-            "--reti","--incN","--numinf","100","--ranb"])
+    vcf_name = "example/chr11subsamples4gtest.vcf.gz"
+    fasta_name = "example/fourgfastatest.fasta"
+    testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
+                      "-", "--4gcompat", "--reti", "--ranseed", "123",
+                      "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
+                      "-", "--hk", "--retl", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
+                      "-", "--hk", "--reti","--left", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
+                      "-", "--4gcompat", "--retl", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
+                     "-", "--4gcompat", "--reti","--ranseed","123","--ranb",
+                     "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name,
+                      "--4gcompat", "--retl", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)),"--fasta", fasta_name,
+                      "--4gcompat", "--retl","--incN","--b2", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name,
+                      "--hk","--retl", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--hk",
+            "--retl","--incN","--b2", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--hk",
+            "--reti","--incN","--left", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
+            "--reti","--incN","--numinf","2","--ranb", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
+            "--reti","--incN","--numinf","2","--rani", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
+            "--reti","--incN","--numinf","4","--ranb", "--out", "test.out"])
+    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
+            "--reti","--incN","--numinf","100","--ranb", "--out", "test.out"])
     print ("%d test jobs"%(len(testlist))                   )
     for tl in testlist:
         sys.argv = tl

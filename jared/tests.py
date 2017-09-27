@@ -9,6 +9,7 @@ from vcf_from_regions import vcf_region_write
 from vcf_reader_func import checkFormat
 from gene_region import RegionList, Region
 from logging_module import initLogger
+from four_gamete_pysam import sample_fourgametetest_intervals
 
 def tryRemove(filename):
     try:
@@ -206,6 +207,13 @@ class configTest(unittest.TestCase):
         vcf_to_seq(['--conf', 'example/withreq.conf'])
         self.assertTrue(filecmp.cmp('example/chr11.snp.example.fasta',
                         'example/chr11.subsamples.fasta'))
+
+class fourgameteTest(unittest.TestCase):
+
+    def test_hk(self):
+        region_list = [[[196944, 196944], [199153, 199153], [202565, 202565], [206906, 206906], [207462, 207462], [218141, 218141]]]
+        test_list = sample_fourgametetest_intervals(["--vcf","example/chr11subsamples4gtest.vcf.gz","-","--hk","--retl","--out","test.out"])
+        self.assertEqual(region_list, test_list)
 
 
 
