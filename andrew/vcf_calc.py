@@ -122,7 +122,6 @@ def run (passed_arguments = []):
     if vcf_args.calc_statistic == 'windowed-weir-fst':
         # Confirms that at least two population files have been specified
         if not vcf_args.pop_file or len(vcf_args.pop_file) < 2:
-            print vcf_args.pop_file
             logging.error('Two or more population files requried. Please assign using --pop-file')
             raise IOError('Two or more population files requried. Please assign using --pop-file')
 
