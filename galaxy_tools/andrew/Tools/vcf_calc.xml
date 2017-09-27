@@ -12,7 +12,7 @@
   ]]></command>
 
   <inputs>
-    <param format="vcf,bcf" name="input" type="data" label="VCF Input" />
+    <param format="vcf,vcf.gz,bcf" name="input" type="data" label="VCF Input" />
     <param name="out" type="text" label="Output" value="out"/>
     <param name="calc_statistic" type="select" label="Statistic">
       <option value="windowed-weir-fst" selected="True" >Windowed Fst</option>
@@ -22,11 +22,11 @@
       <option value="freq">Allele Frequency</option>
       <option value="het">Heterozygosity</option>
     </param>
-    <param name="statistic-window-size" type="integer" value="10000" label="Specifies the size of window calculations" />
-    <param name="statistic-window-step" type="integer" value="20000" label="Specifies step size between windows" />
+    <param name="statistic_window_size" type="integer" value="10000" label="Specifies the size of window calculations" />
+    <param name="statistic_window_step" type="integer" value="20000" label="Specifies step size between windows" />
     <param format="txt" name="pop_files" type="data" label="Population Files" multiple="True" optional="True"/>
-    <param format="tabular" name="filter-include-positions" type="data" label="Include Positions File" multiple="False" optional="True"/>
-    <param format="tabular" name="filter-exclude-positions" type="data" label="Exclude Positions File" multiple="False" optional="True"/>
+    <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" multiple="False" optional="True"/>
+    <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" multiple="False" optional="True"/>
   </inputs>
 
   <outputs>

@@ -36,6 +36,7 @@ def sampler_parser(passed_arguments):
     # Input arguments
     sampler_parser.add_argument("vcfname", metavar='VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
     sampler_parser.add_argument('--statistic-file', help='Specifies the statistic file for filtering', required = True, type = str, action = parser_confirm_file())
+    sampler_parser.add_argument("--vcf-index", help = "VCF Index filename", type = str, action = parser_confirm_file())
 
     # Output arguents
     sampler_parser.add_argument('--sample-file', help = 'Specifies the sampled (statistic file) tsv output filename', type = str, default = 'sampled_data.tsv')
@@ -276,7 +277,7 @@ def run (passed_arguments = []):
     logging.info('Created selected samples file')
 
     # Check if user has requested vcf output
-    if not sampler_args.no_vcf:
+    if sampler_args.no_vcf:
 
         # Create the vcf/bcf output directory
         if not os.path.exists(sampler_args.vcf_dir):
@@ -309,7 +310,10 @@ def run (passed_arguments = []):
             sampled_samples['BIN_END'] = pd.Series(bin_end_list, index = sampled_samples.index)
 
         # Open the VCF file
-        vcf_input = pysam.VariantFile(sampler_args.vcfname)
+        if sampler_args.vcf_index:
+            vcf_input = pysam.VariantFile(sampler_args.vcfname, index_filename = sampler_args.vcf_index)
+        else:
+            vcf_input = pysam.VariantFile(sampler_args.vcfname)
 
         # Sites to be included
         include_sites =  pd.DataFrame()
