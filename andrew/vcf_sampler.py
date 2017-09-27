@@ -276,13 +276,15 @@ def run (passed_arguments = []):
     logging.info('Created selected samples file')
 
     # Check if user has requested vcf output
-    if sampler_args.no_vcf:
+    if not sampler_args.no_vcf:
 
         # Create the vcf/bcf output directory
         if not os.path.exists(sampler_args.vcf_dir):
             os.makedirs(sampler_args.vcf_dir)
 
-        # Check if the data was sampled using Tajima's D. Might need to edit to add more statistics
+        # Check if the data was sampled using Tajima's D. Adds BIN_END columns
+        # that is required to fetch intervals from vcf files. Will need to be
+        # edited when we add more statistics.
         if sampler_args.calc_statistic == 'TajimaD':
             # Check that the window size used in vcf_calc has been defined
             if not sampler_args.statistic_window_size:
@@ -328,12 +330,14 @@ def run (passed_arguments = []):
 
         # iterate the selected samples
         for sampled_count, sampled_row in enumerate(sampled_samples.values):
-            # Assign filename for sample
+
+            # Assign filename for sample. Could be improved
             sample_filename =  sampler_args.vcf_prefix + '_%s.' %sampled_count + sampler_args.vcf_format
 
             # Create the VCF output file, with either the default filename or a user-defined filename
             vcf_output = pysam.VariantFile(os.path.join(sampler_args.vcf_dir, sample_filename), 'w', header = vcf_input.header)
 
+            # Fetch positions specified from the vcf input file
             for vcf_record in vcf_input.fetch(sampled_row[chr_col], int(sampled_row[start_col]), int(sampled_row[end_col])):
 
                 # Bool to determine if the record should be saved
