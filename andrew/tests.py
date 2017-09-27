@@ -160,7 +160,6 @@ class vcf_sampler_tests (unittest.TestCase):
     def test_column_assignment (self):
         # Confirm that the output is what is expected (without errors)
         self.assertEqual(vcf_sampler.assign_position_columns(['CHROM', 'NULL', 'BIN_START', 'BIN_END']), (0, 2, 3))
-        self.assertEqual(vcf_sampler.assign_position_columns(['CHROM', 'NULL', 'BIN_START', 'NULL']), (0, 2, None))
 
         # Disable logging module for the following test
         logging.disable(logging.CRITICAL)
@@ -168,15 +167,23 @@ class vcf_sampler_tests (unittest.TestCase):
         # Confirm that the output is what is expected (with errors)
         with self.assertRaises(ValueError) as cm:
             vcf_sampler.assign_position_columns(['CHROM', 'NULL', 'NULL', 'BIN_END'])
-        self.assertEqual(str(cm.exception), 'Cannot find BIN_START column in file specified by --statistic-file.')
+        self.assertEqual(str(cm.exception), 'Cannot find BIN_START column(s) in file specified by --statistic-file.')
+        # Confirm that the output is what is expected (with errors)
+        with self.assertRaises(ValueError) as cm:
+            vcf_sampler.assign_position_columns(['CHROM', 'NULL', 'BIN_START', 'NULL'])
+        self.assertEqual(str(cm.exception), 'Cannot find BIN_END column(s) in file specified by --statistic-file.')
         # Confirm that the output is what is expected (with errors)
         with self.assertRaises(ValueError) as cm:
             vcf_sampler.assign_position_columns(['NULL', 'NULL', 'BIN_START', 'BIN_END'])
-        self.assertEqual(str(cm.exception), 'Cannot find CHROM column in file specified by --statistic-file.')
+        self.assertEqual(str(cm.exception), 'Cannot find CHROM column(s) in file specified by --statistic-file.')
+        # Confirm that the output is what is expected (with errors)
+        with self.assertRaises(ValueError) as cm:
+            vcf_sampler.assign_position_columns(['CHROM', 'NULL', 'NULL', 'NULL'])
+        self.assertEqual(str(cm.exception), 'Cannot find BIN_START, BIN_END column(s) in file specified by --statistic-file.')
         # Confirm that the output is what is expected (with errors)
         with self.assertRaises(ValueError) as cm:
             vcf_sampler.assign_position_columns(['NULL', 'NULL', 'NULL', 'NULL'])
-        self.assertEqual(str(cm.exception), 'Cannot find CHROM and BIN_START columns in file specified by --statistic-file.')
+        self.assertEqual(str(cm.exception), 'Cannot find CHROM, BIN_START, BIN_END column(s) in file specified by --statistic-file.')
 
     # Check that the entire sampler function (using random sampler) is operating correctly
     def test_sampler (self):
@@ -184,15 +191,14 @@ class vcf_sampler_tests (unittest.TestCase):
         vcf_sampler.run(['example/input/merged_chr1_10000.vcf.gz',
                          '--statistic-file', 'example/merged_chr1_10000.windowed.weir.fst',
                          '--sample-size', '20',
-                         '--random-seed', '1000'])
+                         '--random-seed', '1000',
+                         '--no-vcf'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('sampled_data.tsv', 'example/sampled_data.tsv'))
-        self.assertTrue(file_comp('out.vcf.gz', 'example/sampled_data.vcf.gz'))
 
         # Remove the ouput files created by the function
         self.addCleanup(os.remove, 'sampled_data.tsv')
-        self.addCleanup(os.remove, 'out.vcf.gz')
 
 if __name__ == "__main__":
     unittest.main()
