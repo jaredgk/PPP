@@ -187,10 +187,10 @@ if __name__ == '__main__':
     phased, ploidy, alignedsnparray, pos_list = vcfToList("merged_chr1_1000.vcf")
     numseqs = len(alignedsnparray)
     nsnps = len(alignedsnparray[0])
-    print (phased,ploidy)
+    #print (phased,ploidy)
 
-    print (numseqs,nsnps,len(pos_list))
-    for i in range(numseqs):
-        for j in range(nsnps):
-            print (alignedsnparray[i][j],end = '')
-        print ()
+    #print (numseqs,nsnps,len(pos_list))
+    #for i in range(numseqs):
+        #for j in range(nsnps):
+            #print (alignedsnparray[i][j],end = '')
+        #print ()
