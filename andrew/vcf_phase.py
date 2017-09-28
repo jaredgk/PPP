@@ -47,7 +47,6 @@ def phase_argument_parser(passed_arguments):
 
     # Other basic arguments. Expand as needed
     phase_parser.add_argument('--out', help = 'Defines the output filename', default = 'out', action = parser_confirm_no_file())
-    phase_parser.add_argument('--estimate-file', help = 'Defines the estimated genotype frequency filename. Required for the beagle algorithm', default = 'estimated_gt', action = parser_confirm_no_file())
 
     if passed_arguments:
         return phase_parser.parse_args(passed_arguments)
@@ -96,10 +95,6 @@ def run (passed_arguments = []):
             shapit
         --out : str
             Specifies the output filename
-        --estimate-file : str
-            Defines the estimated genotype frequency filename. Required for the
-            beagle algorithm
-
         Returns
         -------
         output : file
