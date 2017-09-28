@@ -47,6 +47,13 @@ def vcf_filter_parser(passed_arguments):
 
     ### Filters
 
+    # Allele count filters
+    vcf_parser.add_argument('--filter-min-alleles', help = 'Specifies that only sites with a number of allele >= to the number given should be included', type = int,  default = 2)
+    vcf_parser.add_argument('--filter-max-alleles', help = 'Specifies that only sites with a number of allele <= to the number given should be included', type = int,  default = 2)
+
+    # Missing data filter
+    vcf_parser.add_argument('--filter-max-missing', help = 'Specifies to exclude sites by the proportion of missing data (0.0: include all, 1.0: no missing data)', type = float)
+
     # Chromosome filters
     vcf_parser.add_argument('--filter-include-chr', help = 'Specifies the chromosome(s) to include', nargs = '+', type = str)
     vcf_parser.add_argument('--filter-exclude-chr', help = 'Specifies the chromosome(s) to exclude', nargs = '+', type = str)
@@ -71,13 +78,6 @@ def vcf_filter_parser(passed_arguments):
     # Info-flag filters
     vcf_parser.add_argument('--filter-include-info', help = 'Specifies that all sites with the given info flag should be included', nargs = '+', type = str)
     vcf_parser.add_argument('--filter-exclude-info', help = 'Specifies that all sites with the given info flag should be excluded', nargs = '+', type = str)
-
-    # Allele count filters
-    vcf_parser.add_argument('--filter-min-alleles', help = 'Specifies that only sites with a number of allele >= to the number given should be included', type = int,  default = 2)
-    vcf_parser.add_argument('--filter-max-alleles', help = 'Specifies that only sites with a number of allele <= to the number given should be included', type = int,  default = 2)
-
-    # Missing data filter
-    vcf_parser.add_argument('--filter-max-missing', help = 'Specifies that only sites with more than this number of genotypes among individuals should be included', type = int)
 
     # Additional Filters
     vcf_parser.add_argument('--filter-distance', help = 'Specifies a distance that no two sites may be within', type = int)
@@ -231,7 +231,7 @@ def run (passed_arguments = []):
             vcftools_call_args.extend(['--max-alleles', vcf_args.filter_max_alleles])
 
     if vcf_args.filter_max_missing:
-        vcftools_call_args.extend(['--max-missing-count', vcf_args.filter_max_missing])
+        vcftools_call_args.extend(['--max-missing', vcf_args.filter_max_missing])
 
     if vcf_args.filter_distance:
         vcftools_call_args.extend(['--thin', vcf_args.filter_distance])

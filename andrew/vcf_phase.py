@@ -138,24 +138,8 @@ def run (passed_arguments = []):
         # Assign the algorithm
         algorithm_call_args = ['java', '-jar', 'bin/beagle.jar']
 
-        # Assign the arguments for the algorithm
-        likelihood_call_args = ['gtgl=' + phase_args.vcfname, 'out=' + phase_args.estimate_file]
-
-        logging.info('beagle estimate parameters assigned')
-
-        # beagle estimated genotype frequency subprocess call
-        likelihood_call = subprocess.Popen(algorithm_call_args + likelihood_call_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        likelihood_out, likelihood_err = likelihood_call.communicate()
-
-        # Confirms that beagle finished without error
-        if likelihood_err:
-            logging.error('Error creating the estimated genotype frequency file. Please check input file.')
-            sys.exit('Error creating the estimated genotype frequency file. Please check input file.')
-
-        logging.info('beagle estimate file created')
-
         # Assigns the arguments for phasing
-        phase_call_args = ['gt=' + phase_args.estimate_file + vcfname_ext, 'out=' + phase_args.out]
+        phase_call_args = ['gt=' + phase_args.vcfname, 'out=' + phase_args.out]
 
         logging.info('beagle phasing parameters assigned')
 
