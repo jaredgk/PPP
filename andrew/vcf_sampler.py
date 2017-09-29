@@ -339,12 +339,8 @@ def run (passed_arguments = []):
         # iterate the selected samples
         for sampled_count, sampled_row in enumerate(sampled_samples.values):
 
-            # Assign filename for sample. If vcf.gz is assigned, the file is
-            # first created as a vcf file then compressed (pysam limitation)
-            if sampler_args.vcf_format == 'vcf.gz':
-                sample_filename =  sampler_args.vcf_prefix + '_%s.vcf' %sampled_count
-            else:
-                sample_filename =  sampler_args.vcf_prefix + '_%s.' %sampled_count + sampler_args.vcf_format
+            # Assign filename for sample.
+            sample_filename =  sampler_args.vcf_prefix + '_%s.' %sampled_count + sampler_args.vcf_format
 
             # Join the output directory and the sample filename paths
             sample_path = os.path.join(sampler_args.vcf_dir, sample_filename)
@@ -375,10 +371,6 @@ def run (passed_arguments = []):
                     vcf_output.write(vcf_record)
 
             vcf_output.close()
-
-            # Compress the output if the selected format is vcf.gz
-            if sampler_args.vcf_format == 'vcf.gz':
-                bgzip_compress_vcf(sample_path)
 
         vcf_input.close()
 
