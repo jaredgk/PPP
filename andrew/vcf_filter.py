@@ -4,6 +4,7 @@ import subprocess
 import argparse
 import logging
 
+# Import basic vcftools functions
 from vcftools import *
 
 # Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
@@ -37,7 +38,7 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out')
     #vcf_parser.add_argument('--log', help = "Specifies if the vcftools log should be saved", action = 'store_false')
 
-    out_format_list = ['vcf', 'bcf', 'removed_sites', 'kept_sites']
+    out_format_list = ['vcf', 'vcf.gz', 'bcf', 'removed_sites', 'kept_sites']
     out_format_default = 'removed_sites'
 
     vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Specifies the output format.', type = str, choices = out_format_list, default = out_format_default)
@@ -179,6 +180,9 @@ def run (passed_arguments = []):
     elif vcf_args.out_format == 'vcf':
         vcftools_call_args.append('--recode')
         vcftools_output_filename = vcf_args.out_prefix + '.recode.vcf'
+    elif vcf_args.out_format == 'vcf.gz':
+        vcftools_call_args.extend(['--recode', '--stdout'])
+        vcftools_output_filename = vcf_args.out_prefix + '.recode.vcf.gz'
 
     if vcf_args.filter_include_chr or vcf_args.filter_exclude_chr:
         if vcf_args.filter_include_chr:
@@ -251,13 +255,15 @@ def run (passed_arguments = []):
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcfname)
     logging.info('Input file assigned')
 
-    # vcftools subprocess call
-    vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    vcftools_out, vcftools_err = vcftools_call.communicate()
-    logging.info('vcftools call complete')
+    # Check if the user has requested vcf.gz, if so send the stdout to bgzip
+    if vcf_args.out_format == 'vcf.gz':
+        # Call both vcftools and bgzip, return stderr
+        vcftools_err = call_vcftools_bgzip(vcfname_arg, vcftools_call_args, vcftools_output_filename)
 
-    # Check that the log file was created correctly, get the suffix for the log file, and create the file
-    check_vcftools_for_errors(vcftools_err)
+    # Run vcftools normally for non vcf.gz output
+    else:
+        # Call only vcftools
+        vcftools_err = call_vcftools(vcfname_arg, vcftools_call_args)
 
     # Check if the user specifed the complete output filename
     if vcf_args.out:
