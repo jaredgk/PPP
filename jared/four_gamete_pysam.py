@@ -48,7 +48,7 @@ import vcf_load_4g as vcfload
 import random
 from gene_region import Region, RegionList
 import pysam
-from vcf_reader_func import getRecordList
+from vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion
 
 
 class BaseData():
@@ -58,11 +58,16 @@ class BaseData():
         self.poslist = []
         self.seqs = []
         self.format = format
+        self.header = None
+        self.records = []
         if format == 'VCF':
             self.onlysnps = True
             vcff = pysam.VariantFile(filename)
-            record_list = getRecordList(vcff, region)
-            self.ploidy, self.seqs, self.poslist = vcfload.checkVcfRegionPysam(record_list)
+            self.records = getRecordList(vcff, region)
+
+            self.ploidy, self.seqs, self.poslist = vcfload.checkVcfRegionPysam(self.records)
+            self.header = vcff.header
+            vcff.close()
             #self.seqcount = len(self.seqs)
             #self.numbases = listcheckallsamelength(self.seqs)
         elif format == "FASTA":
@@ -84,6 +89,7 @@ class BaseData():
                         s = s.strip()
                         if len(s) > 0:
                             seq += s
+            f.close()
         elif format == "SIT":
             self.onlysnps = False
             f = open(filename,"r")
@@ -108,6 +114,7 @@ class BaseData():
             ## now should be at beginning of data
             for i in range(numseq):
                 self.seqs.append(f.readline().strip()[10:])
+            f.close()
         self.numbases = listcheckallsamelength(self.seqs)
         self.seqcount = len(self.seqs)
         #self.polysites, self.informpolysites, self.cintervals, self.cmat =
@@ -193,6 +200,7 @@ class BaseData():
                             self.cmat[i].append(1)
                         else:
                             self.cmat[i].append(-1)
+        #print (self.cintervals)
 
     #def compatibleintervals(cmat,informpolysites,numbases,
             #list_of_positions,ONLYSNPS):
@@ -389,7 +397,7 @@ def createParser():
     filetype_group.add_argument("--vcf", dest = "vcf", nargs=2,
             help = "VCF file and region list, in that order")
     filetype_group.add_argument("--vcfs", dest="vcfs", nargs="+")
-    output_group = parser.add_mutually_exclusive_group(required=True)
+    output_group = parser.add_mutually_exclusive_group()
     output_group.add_argument("--out", dest="out")
     output_group.add_argument("--out-prefix", dest="out_prefix")
     output_group.add_argument("--out-reg", dest="out_reg")
@@ -669,7 +677,7 @@ def replace_positions(intervals,list_of_positions):
     """
     bintervals = []
     for iv in intervals:
-        bintervals.append([list_of_positions[iv[0]],list_of_positions[iv[0]]])
+        bintervals.append([list_of_positions[iv[0]],list_of_positions[iv[1]]])
     return bintervals
 
 def hudsonkaplan85intervals(cintervals,numbases,list_of_positions) :
@@ -921,6 +929,26 @@ def getIntervalList(args, basedata):
         return interval
 
 
+def outputSubregion(args, interval, basedata, region=None):
+    #create new region from interval
+    #find records in range of new interval
+    #open file with prefix and region name
+    #write records, close file
+    if region is None:
+        subregion = Region(interval[0]-1,interval[1],basedata.records[0].chrom)
+    else:
+        subregion = Region(interval[0]-1,interval[1],region.chrom)
+    subrecords = getRecordsInRegion(subregion, basedata.records)
+    subfn = vcfRegionName(args.out_prefix,subregion,"vcf.gz")
+    print (interval)
+    print (subfn)
+    subf = pysam.VariantFile(subfn, 'w', header=basedata.header)
+    for record in subrecords:
+        subf.write(record)
+    subf.close()
+
+
+
 def sample_fourgametetest_intervals(sys_args):
     """Returns interval(s) from aligned sequences or snps.
 
@@ -987,6 +1015,8 @@ def sample_fourgametetest_intervals(sys_args):
     if args.ranseed != None:
         random.seed(int(args.ranseed[0]))
     filetype = ''
+    out_list = (args.out is None and args.out_reg is None and args.out_prefix is None)
+
     if args.vcf is not None:
         filetype = "VCF"
         vcfname = args.vcf[0]
@@ -995,17 +1025,32 @@ def sample_fourgametetest_intervals(sys_args):
             region_list = RegionList(filename=regname)
             #region_output = True
             multiple_regions = (len(region_list.regions) > 1)
-            if multiple_regions and args.out is not None:
-                raise Exception(("VCF with multiple regions must have "
-                                "--out-prefix or --out-reg"))
+            if multiple_regions and not out_list and args.out is not None:
+                raise Exception(("VCF with multiple regions cannot have "
+                                "single output file (--out)"))
             for region in region_list.regions:
                 basedata = BaseData("VCF",vcfname,args.includesnpmissingdata,args.only2basesnps, region)
                 intervals = getIntervalList(args, basedata)
                 interval_list.append(intervals)
+                if args.out_prefix is not None:
+                    outputSubregion(args, intervals[0], basedata, region)
+
         else:
             basedata = BaseData("VCF",vcfname,args.includesnpmissingdata,args.only2basesnps)
             intervals = getIntervalList(args,basedata)
             interval_list.append(intervals)
+            if args.out_prefix is not None:
+                if args.returninterval == 'returnlist':
+                    for iv in intervals:
+                        outputSubregion(args, iv, basedata)
+                else:
+                    outputSubregion(args, intervals, basedata)
+            elif out_list:
+                return interval_list
+            elif args.out is not None:
+                if args.returninterval == 'returnlist':
+                    for iv in intervals:
+                        pass
     elif args.vcfs is not None:
         filetype="VCF"
         if len(args.vcfs) > 1 and args.out_prefix is not None:
@@ -1046,39 +1091,40 @@ if __name__ == '__main__':
     ### some testing command lines
     #sample_fourgametetest_intervals([])
     #exit()
+    if len(sys.argv) > 1:
+        sample_fourgametetest_intervals(sys.argv[1:])
+        exit()
     testlist = []
     vcf_name = "example/chr11subsamples4gtest.vcf.gz"
     fasta_name = "example/fourgfastatest.fasta"
     testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
-                      "-", "--4gcompat", "--reti", "--ranseed", "123",
-                      "--out", "test.out"])
+                      "-", "--4gcompat", "--reti", "--ranseed", "123"])
     testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
-                      "-", "--hk", "--retl", "--out", "test.out"])
+                      "-", "--hk", "--retl"])
     testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
-                      "-", "--hk", "--reti","--left", "--out", "test.out"])
+                      "-", "--hk", "--reti","--left"])
     testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
-                      "-", "--4gcompat", "--retl", "--out", "test.out"])
+                      "-", "--4gcompat", "--retl"])
     testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
-                     "-", "--4gcompat", "--reti","--ranseed","123","--ranb",
-                     "--out", "test.out"])
+                     "-", "--4gcompat", "--reti","--ranseed","123","--ranb"])
     testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name,
-                      "--4gcompat", "--retl", "--out", "test.out"])
+                      "--4gcompat", "--retl"])
     testlist.append( ["test #" + str(len(testlist)),"--fasta", fasta_name,
-                      "--4gcompat", "--retl","--incN","--b2", "--out", "test.out"])
+                      "--4gcompat", "--retl","--incN","--b2"])
     testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name,
-                      "--hk","--retl", "--out", "test.out"])
+                      "--hk","--retl"])
     testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--hk",
-            "--retl","--incN","--b2", "--out", "test.out"])
+            "--retl","--incN","--b2"])
     testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--hk",
-            "--reti","--incN","--left", "--out", "test.out"])
+            "--reti","--incN","--left"])
     testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
-            "--reti","--incN","--numinf","2","--ranb", "--out", "test.out"])
+            "--reti","--incN","--numinf","2","--ranb"])
     testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
-            "--reti","--incN","--numinf","2","--rani", "--out", "test.out"])
+            "--reti","--incN","--numinf","2","--rani"])
     testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
-            "--reti","--incN","--numinf","4","--ranb", "--out", "test.out"])
+            "--reti","--incN","--numinf","4","--ranb"])
     testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
-            "--reti","--incN","--numinf","100","--ranb", "--out", "test.out"])
+            "--reti","--incN","--numinf","100","--ranb"])
     print ("%d test jobs"%(len(testlist))                   )
     for tl in testlist:
         sys.argv = tl
