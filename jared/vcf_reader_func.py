@@ -4,6 +4,7 @@ import logging
 import struct
 from random import sample
 import os
+import gzip
 
 
 
@@ -25,6 +26,15 @@ def checkFormat(vcfname):
         File extension as indicated by header
 
     """
+    try:
+        gf = gzip.open(vcfname)
+        l = gf.read(3)
+        #print (l)
+        gf.close()
+        if l == b'BCF':
+            return 'bcf'
+    except:
+        return 'nozip'
     f = open(vcfname,'rb')
     l = f.readline()
     f.close()
@@ -150,6 +160,23 @@ def compressVcf(vcfname,forceflag=False,remove=False):
     if remove:
         os.remove(vcfname)
     return cvcfname
+
+def vcfRegionName(prefix, region, ext, oneidx=False,
+                  halfopen=True, sep='-'):
+    chrom = region.toStr(halfopen, oneidx, sep)
+    return prefix+'_'+chrom+'.'+ext
+
+def getRecordsInRegion(region, record_list):
+    sub_list = []
+    for i in range(len(record_list)):
+        loc = region.containsRecord(record_list[i])
+        if loc == "in":
+            sub_list.append(record_list[i])
+        elif loc == "after":
+            break
+    return sub_list
+
+
 
 
 #def getVcfReader(args):
