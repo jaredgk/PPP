@@ -144,6 +144,10 @@ class checkCompressionTest(unittest.TestCase):
         comp = checkFormat('example/chr11.gzipped.vcf.gz')
         self.assertTrue(comp=='gzip')
 
+    def test_checkFormat_bcf(self):
+        comp = checkFormat('example/chr11.test.bcf')
+        self.assertTrue(comp=='bcf')
+
 class reduceTest(unittest.TestCase):
 
     def test_vcf_region_write_simple(self):
@@ -211,9 +215,14 @@ class configTest(unittest.TestCase):
 class fourgameteTest(unittest.TestCase):
 
     def test_hk(self):
-        region_list = [[[196944, 196944], [199153, 199153], [202565, 202565], [206906, 206906], [207462, 207462], [218141, 218141]]]
-        test_list = sample_fourgametetest_intervals(["--vcf","example/chr11subsamples4gtest.vcf.gz","-","--hk","--retl","--out","test.out"])
+        region_list = [[[196944, 197337], [199153, 202547], [202565, 202835], [206906, 207462], [207462, 215904], [218141, 219089]]]
+        test_list = sample_fourgametetest_intervals(["--vcf","example/chr11subsamples4gtest.vcf.gz","-","--hk","--retl"])
         self.assertEqual(region_list, test_list)
+
+    def test_comp(self):
+        region_list = [[[196944, 197336], [196945, 199255], [202088, 202016], [202548, 202748], [202813, 207461], [206907, 208212], [215365, 208224], [218142, 218488], [218641, 221585]]]
+        test_list = sample_fourgametetest_intervals(["--vcf","example/chr11subsamples4gtest.vcf.gz","-","--4gcompat","--retl"])
+        self.assertEqual(region_list,test_list)
 
 
 
