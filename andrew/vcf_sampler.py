@@ -13,7 +13,11 @@ from collections import defaultdict
 # Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
+# Import log initializer
 from logging_module import initLogger
+
+# Import basic vcftools functions
+from vcftools import *
 
 def sampler_parser(passed_arguments):
     '''Sampler Argument Parser - Assigns arguments from command line.'''
@@ -36,6 +40,7 @@ def sampler_parser(passed_arguments):
     # Input arguments
     sampler_parser.add_argument("vcfname", metavar='VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
     sampler_parser.add_argument('--statistic-file', help='Specifies the statistic file for filtering', required = True, type = str, action = parser_confirm_file())
+    sampler_parser.add_argument("--vcf-index", help = "VCF Index filename", type = str, action = parser_confirm_file())
 
     # Output arguents
     sampler_parser.add_argument('--sample-file', help = 'Specifies the sampled (statistic file) tsv output filename', type = str, default = 'sampled_data.tsv')
@@ -44,8 +49,8 @@ def sampler_parser(passed_arguments):
     sampler_parser.add_argument('--vcf-dir', help = 'Specifies the VCF output directory', type = str, default = 'Sample_Files')
     sampler_parser.add_argument('--vcf-prefix', help = 'Specifies the VCF output filename prefix', type = str, default = 'Sample')
 
-    out_format_list = ['vcf', 'bcf']
-    out_format_default = 'vcf'
+    out_format_list = ['vcf', 'vcf.gz', 'bcf']
+    out_format_default = 'vcf.gz'
 
     sampler_parser.add_argument('--vcf-format', metavar = metavar_list(out_format_list), help = 'Specifies the output format.', type = str, choices = out_format_list, default = out_format_default)
 
@@ -276,7 +281,7 @@ def run (passed_arguments = []):
     logging.info('Created selected samples file')
 
     # Check if user has requested vcf output
-    if not sampler_args.no_vcf:
+    if sampler_args.no_vcf:
 
         # Create the vcf/bcf output directory
         if not os.path.exists(sampler_args.vcf_dir):
@@ -309,7 +314,10 @@ def run (passed_arguments = []):
             sampled_samples['BIN_END'] = pd.Series(bin_end_list, index = sampled_samples.index)
 
         # Open the VCF file
-        vcf_input = pysam.VariantFile(sampler_args.vcfname)
+        if sampler_args.vcf_index:
+            vcf_input = pysam.VariantFile(sampler_args.vcfname, index_filename = sampler_args.vcf_index)
+        else:
+            vcf_input = pysam.VariantFile(sampler_args.vcfname)
 
         # Sites to be included
         include_sites =  pd.DataFrame()
@@ -331,11 +339,14 @@ def run (passed_arguments = []):
         # iterate the selected samples
         for sampled_count, sampled_row in enumerate(sampled_samples.values):
 
-            # Assign filename for sample. Could be improved
+            # Assign filename for sample.
             sample_filename =  sampler_args.vcf_prefix + '_%s.' %sampled_count + sampler_args.vcf_format
 
+            # Join the output directory and the sample filename paths
+            sample_path = os.path.join(sampler_args.vcf_dir, sample_filename)
+
             # Create the VCF output file, with either the default filename or a user-defined filename
-            vcf_output = pysam.VariantFile(os.path.join(sampler_args.vcf_dir, sample_filename), 'w', header = vcf_input.header)
+            vcf_output = pysam.VariantFile(sample_path, 'w', header = vcf_input.header)
 
             # Fetch positions specified from the vcf input file
             for vcf_record in vcf_input.fetch(sampled_row[chr_col], int(sampled_row[start_col]), int(sampled_row[end_col])):

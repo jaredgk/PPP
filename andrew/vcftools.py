@@ -1,10 +1,129 @@
 import os
 import sys
 import logging
+import subprocess
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
 
 import vcf_reader_func
+
+def check_bgzip_for_errors (bgzip_stderr):
+    '''
+        Checks the bgzip stderr for errors
+
+        Parameters
+        ----------
+        bgzip_stderr : str
+            bgzip stderr
+
+        Raises
+        ------
+        IOError
+            If bgzip stderr returns an error
+    '''
+
+    if bgzip_stderr:
+        logging.error('Error occured while compressing the vcf file')
+        raise IOError('Error occured while compressing the vcf file')
+
+def bgzip_compress_vcf (vcf_filename):
+        '''
+            Converts a vcf to vcf.gz
+
+            The function automates bgzip to compress a vcf file into a vcf.gz
+
+            Parameters
+            ----------
+            vcf_filename : str
+                The file name of the vcf file to be compressed
+
+            Raises
+            ------
+            IOError
+                Error in creating the compressed file
+        '''
+
+        # bgzip subprocess call
+        bgzip_call = subprocess.Popen(['bgzip', vcf_filename], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+        # Save the stdout and stderr from bgzip
+        bgzip_out, bgzip_err = bgzip_call.communicate()
+
+        # Check that output file was compressed correctly
+        check_bgzip_for_errors(bgzip_err)
+
+
+def call_vcftools_bgzip (vcfname_arg, vcftools_call_args, vcf_gz_filename):
+    '''
+        Converts a vcf to vcf.gz
+
+        The function pipes the output of vcftools to bgzip to compress a vcf
+        file into a vcf.gz
+
+        Parameters
+        ----------
+        vcf_call : Popen
+            The vcftools subprocess call
+        vcf_gz_filename : str
+            The output name of the compressed vcf file
+
+        Returns
+        -------
+        vcftools_err : str
+            vcftools log output
+
+        Raises
+        ------
+        IOError
+            If vcftools stderr returns an error
+        IOError
+            If bgzip stderr returns an error
+    '''
+
+    # vcftools subprocess call
+    vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Create bgzip output file
+    bgzip_output = open(vcf_gz_filename, 'wb')
+
+    # bgzip subprocess call
+    bgzip_call = subprocess.Popen(['bgzip'], stdin = vcftools_call.stdout, stdout = bgzip_output, stderr = subprocess.PIPE)
+
+    # Close the vcftools stdout
+    vcftools_call.stdout.close()
+
+    # Save the stderr from bgzip, stdout = None
+    bgzip_out, bgzip_err = bgzip_call.communicate()
+
+    # Close the compressed vcf file
+    bgzip_output.close()
+
+    # Save the stderr from vcftools
+    vcftools_err = vcftools_call.stderr.read()
+
+    logging.info('vcftools and bgzip calls complete')
+
+    # Check that the log file was created correctly
+    check_vcftools_for_errors(vcftools_err)
+
+    # Check that output file was compressed correctly
+    check_bgzip_for_errors(bgzip_err)
+
+    return vcftools_err
+
+def call_vcftools (vcfname_arg, vcftools_call_args):
+
+    # vcftools subprocess call
+    vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Wait for vcftools to finish
+    vcftools_out, vcftools_err = vcftools_call.communicate()
+
+    logging.info('vcftools call complete')
+
+    return vcftools_err
+
+
 
 def check_for_vcftools_output (vcftools_output):
     '''

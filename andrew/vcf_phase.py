@@ -47,7 +47,6 @@ def phase_argument_parser(passed_arguments):
 
     # Other basic arguments. Expand as needed
     phase_parser.add_argument('--out', help = 'Defines the output filename', default = 'out', action = parser_confirm_no_file())
-    phase_parser.add_argument('--estimate-file', help = 'Defines the estimated genotype frequency filename. Required for the beagle algorithm', default = 'estimated_gt', action = parser_confirm_no_file())
 
     if passed_arguments:
         return phase_parser.parse_args(passed_arguments)
@@ -96,10 +95,6 @@ def run (passed_arguments = []):
             shapit
         --out : str
             Specifies the output filename
-        --estimate-file : str
-            Defines the estimated genotype frequency filename. Required for the
-            beagle algorithm
-
         Returns
         -------
         output : file
@@ -138,24 +133,8 @@ def run (passed_arguments = []):
         # Assign the algorithm
         algorithm_call_args = ['java', '-jar', 'bin/beagle.jar']
 
-        # Assign the arguments for the algorithm
-        likelihood_call_args = ['gtgl=' + phase_args.vcfname, 'out=' + phase_args.estimate_file]
-
-        logging.info('beagle estimate parameters assigned')
-
-        # beagle estimated genotype frequency subprocess call
-        likelihood_call = subprocess.Popen(algorithm_call_args + likelihood_call_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        likelihood_out, likelihood_err = likelihood_call.communicate()
-
-        # Confirms that beagle finished without error
-        if likelihood_err:
-            logging.error('Error creating the estimated genotype frequency file. Please check input file.')
-            sys.exit('Error creating the estimated genotype frequency file. Please check input file.')
-
-        logging.info('beagle estimate file created')
-
         # Assigns the arguments for phasing
-        phase_call_args = ['gt=' + phase_args.estimate_file + vcfname_ext, 'out=' + phase_args.out]
+        phase_call_args = ['gt=' + phase_args.vcfname, 'out=' + phase_args.out]
 
         logging.info('beagle phasing parameters assigned')
 
