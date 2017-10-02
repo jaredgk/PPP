@@ -1,0 +1,54 @@
+<tool id="vcf_sampler" name="VCF Sampling Tool" version="0.1b">
+  <requirements>
+      <requirement type="package" version="0.12.0.1">pysam</requirement>
+      <requirement type="package" >numpy</requirement>
+      <requirement type="package" >pandas</requirement>
+  </requirements>
+
+  <description>Automates the sampling of VCF files</description>
+  <command><![CDATA[
+  python $__tool_directory__/vcf_sampler.py
+          "$input"
+          #if $input.is_of_type('vcf.gz')
+              --vcf-index "${input.metadata.vcfgz_index}"
+          #end if
+          #if  $input.is_of_type('bcf')
+              --vcf-index "${input.metadata.bcf_index}"
+          #end if
+          --calc-statistic "$calc_statistic"
+          --statistic-file "$statistic_file"
+          --sample-file "$sample_file"
+          --sample-size "$sample_size"
+          --overwrite
+  ]]></command>
+
+  <inputs>
+    <param format="vcf.gz,bcf" name="input" type="data" label="VCF Input" />
+    <param format="tsv" name="statistic_file" type="data" label="Statistic Input" />
+    <param name="calc_statistic" type="select" label="Statistic">
+      <option value="windowed-weir-fst" selected="True" >Windowed Fst</option>
+      <option value="TajimaD">Tajima's D</option>
+    </param>
+    <param name="sampling_scheme" type="select" label="Sampling Scheme">
+      <option value="random" selected="True" >Random</option>
+      <option value="uniform">Uniform</option>
+    </param>
+    <param name="sample_size" type="integer" value="200" label="Sample Size" />
+    <param name="uniform_bins" type="integer" value="10" label="Uniform Bins" />
+    <param name="vcf_prefix" type="text" label="VCF Prefix" value="Sample"/>
+    <param name="statistic_window_size" type="integer" label="Size of window calculations" optional="True"/>
+    <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True"/>
+    <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True"/>
+    <param name="random_seed" type="integer" label="Random seed value" optional="True"/>
+ </inputs>
+  <outputs>
+    <data format="tabular" name="sample_file"/>
+    <collection type="list" name="vcf_output">
+      <discover_datasets pattern="(?P&lt;name&gt;.*)" directory="Sample_Files" format="vcf"/>
+    </collection>
+  </outputs>
+  <help>
+      VCF Sampler Help Text
+  </help>
+
+</tool>

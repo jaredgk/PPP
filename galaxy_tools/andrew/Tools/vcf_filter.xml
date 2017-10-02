@@ -1,0 +1,43 @@
+<tool id="vcf_filter" name="VCF Filtering Tool" version="0.1b">
+  <description>Automates the filtering of VCF files</description>
+  <command><![CDATA[
+  python $__tool_directory__/vcf_filter.py
+          "$input"
+          --out-format "$out_format"
+          --out "$output"
+          --overwrite
+  ]]></command>
+
+  <inputs>
+    <param format="vcf,vcf.gz,bcf" name="input" type="data" label="VCF Input" />
+    <param name="out" type="text" label="Output" value="out"/>
+    <param name="out_format" type="select" label="Output Format">
+      <option value="removed_sites" selected="True" >Removed Sites File</option>
+      <option value="kept_sites">Kept Sites File</option>
+      <option value="vcf">Recoded VCF File</option>
+      <option value="bcf">Recoded BCF File</option>
+    </param>
+    <param name="filter_min_alleles" type="integer" value="2" label="Min alleles" />
+    <param name="filter_max_alleles" type="integer" value="2" label="Max alleles" />
+    <param name="filter_distance" type="integer" label="Distance no two sites may be within" optional="True"  />
+    <param name="filter_max_missing" type="integer" label="Include only sites with more than this number of genotypes" optional="True" />
+    <param name="filter_include_chr" type="text" label="Chromosome(s) to include" optional="True"/>
+    <param name="filter_exclude_chr" type="text" label="Chromosome(s) to exclude" optional="True"/>
+    <param name="filter_from_bp" type="integer" label="Lower bound of sites to include" optional="True"/>
+    <param name="filter_to_bp" type="integer" label="Upper bound of sites to include" optional="True"/>
+    <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True"/>
+    <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True"/>
+    <param format="bed" name="filter_include_bed" type="data" label="Include Positions in BED File" optional="True"/>
+    <param format="bed" name="filter_exclude_bed" type="data" label="Exclude Positions in BED File" optional="True"/>
+    <param name="filter_include_pass" type="boolean" label="Include only sites with the filter flag 'PASS'" optional="True"/>
+    <param format="tabular" name="filter_include_filtered" type="data" label="Include sites with the given filter flag" optional="True"/>
+    <param format="tabular" name="filter_exclude_filtered" type="data" label="Exclude sites with the given filter flag" optional="True"/>
+ </inputs>
+  <outputs>
+    <data format="tabular" name="output"/>
+  </outputs>
+  <help>
+      VCF Filter Help Text
+  </help>
+
+</tool>
