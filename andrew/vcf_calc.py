@@ -209,12 +209,7 @@ def run (passed_arguments = []):
     logging.info('Input file assigned')
 
     # vcftools subprocess call
-    vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    vcftools_out, vcftools_err = vcftools_call.communicate()
-    logging.info('vcftools call complete')
-
-    # Confirm that vcftools ran correctly using vcftools sterr
-    check_vcftools_for_errors(vcftools_err)
+    vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
 
     # Check if the user specifed the complete output filename
     if vcf_args.out:
