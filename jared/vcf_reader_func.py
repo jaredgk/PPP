@@ -6,7 +6,32 @@ from random import sample
 import os
 import gzip
 
+def checkIfGzip(filename):
+    try:
+        gf = gzip.open(filename)
+        gl = gf.readline()
+        gf.close()
+        vcf_check = b'##fileformat=VCF'
+        if gl[0:3] == b'BCF':
+            return 'bcf'
+        elif gl[:len(vcf_check)] == vcf_check:
+            return checkHeader(filename)
+        else:
+            return 'other'
+    except:
+        return 'nozip'
 
+def checkHeader(filename):
+    f = open(filename,'rb')
+    l = f.readline()
+    f.close()
+    BGZF_HEADER=b'\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00BC\x02\x00'
+    GZF_HEADER=b'\x1f\x8b'
+    if l[:len(BGZF_HEADER)] == BGZF_HEADER:
+        return 'bgzip'
+    if l[:len(GZF_HEADER)] == GZF_HEADER:
+        return 'gzip'
+    return 'nozip'
 
 def checkFormat(vcfname):
     """Checks header of given file for compression type
@@ -26,25 +51,37 @@ def checkFormat(vcfname):
         File extension as indicated by header
 
     """
-    try:
-        gf = gzip.open(vcfname)
-        l = gf.read(3)
-        #print (l)
-        gf.close()
-        if l == b'BCF':
-            return 'bcf'
-    except:
-        return 'nozip'
-    f = open(vcfname,'rb')
+    typ = checkIfGzip(vcfname)
+    if typ != 'nozip':
+        return typ
+    f = open(vcfname)
     l = f.readline()
     f.close()
-    BGZF_HEADER=b'\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00BC\x02\x00'
-    GZF_HEADER=b'\x1f\x8b'
-    if l[:len(BGZF_HEADER)] == BGZF_HEADER:
-        return 'bgzip'
-    if l[:len(GZF_HEADER)] == GZF_HEADER:
-        return 'gzip'
-    return 'nozip'
+    VCF_TAG='##fileformat=VCF'
+    if l[:len(VCF_TAG)] == VCF_TAG:
+        return 'vcf'
+    return 'other'
+
+    #try:
+    #    gf = gzip.open(vcfname)
+    #    gl = gf.readline()
+        #print (l)
+    #    gf.close()
+    #    if gl[0:3] == b'BCF':
+    #        return 'bcf'
+    #    elif
+    #except:
+    #    return 'nozip'
+    #f = open(vcfname,'rb')
+    #l = f.readline()
+    #f.close()
+    #BGZF_HEADER=b'\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00BC\x02\x00'
+    #GZF_HEADER=b'\x1f\x8b'
+    #if l[:len(BGZF_HEADER)] == BGZF_HEADER:
+    #    return 'bgzip'
+    #if l[:len(GZF_HEADER)] == GZF_HEADER:
+    #    return 'gzip'
+    #return 'nozip'
 
 def getRecordList(vcf_reader, region=None, chrom=None, start=None,
                   end=None):
@@ -220,10 +257,10 @@ def getVcfReader(vcfname, compress_flag=False,
 
     """
     ext = checkFormat(vcfname)
-    if ext == 'gzip':
+    if ext in ['gzip','other'] :
         raise Exception(('Input file %s is gzip-formatted, must be either '
                          'uncompressed or zipped with bgzip' % vcfname))
-    file_uncompressed = (ext == 'nozip')
+    file_uncompressed = (ext == 'vcf')
     reader_uncompressed = (file_uncompressed and not compress_flag)
     if compress_flag and file_uncompressed:
         vcfname = compressVcf(vcfname)
