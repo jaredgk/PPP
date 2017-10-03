@@ -699,11 +699,9 @@ class VcfGz( Binary):
         os.symlink( dataset.file_name, dataset_symlink )
 
         stderr_name = tempfile.NamedTemporaryFile( prefix="vcfgz_index_stderr" ).name
-        print (dataset_symlink)
         command = [ 'bcftools', 'index', '-t', dataset_symlink ]
         try:
             subprocess.check_call( args=command, stderr=open( stderr_name, 'wb' ) )
-            print ('Test')
             shutil.move( dataset_symlink + '.tbi', index_file.file_name )
         except Exception as e:
             stderr = open( stderr_name ).read().strip()

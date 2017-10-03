@@ -1,0 +1,38 @@
+<tool id="vcf_phase" name="VCF Phaser" version="0.1b">
+  <description>Automates the phasing of VCF files</description>
+
+  <command><![CDATA[
+  #if $input.is_of_type('vcf.gz')
+    ln -s $input input.vcf.gz &&
+  #end if
+  #if  $input.is_of_type('vcf')
+    ln -s $input input.vcf &&
+  #end if
+  python $__tool_directory__/vcf_phase.py
+          #if $input.is_of_type('vcf.gz')
+            input.vcf.gz
+          #end if
+          #if  $input.is_of_type('vcf')
+            input.vcf
+          #end if
+          --phase-algorithm $phase_algorithm
+  ]]></command>
+
+  <inputs>
+    <param format="vcf, vcf.gz" name="input" type="data" label="VCF Input" />
+    <param name="out" type="text" label="Output" value="out"/>
+    <param name="phase_algorithm" type="select" label="Phase Algorithm">
+      <option value="beagle" selected="True" >Beagle</option>
+      <option value="shapeit">SHAPEIT</option>
+    </param>
+  </inputs>
+
+  <outputs>
+    <data format="vcf.gz" name="phased_file" from_work_dir='out.vcf.gz'/>
+  </outputs>
+
+  <help>
+      VCF Phaser Help Text
+  </help>
+
+</tool>
