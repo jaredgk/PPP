@@ -53,17 +53,18 @@ def bgzip_compress_vcf (vcf_filename):
         check_bgzip_for_errors(bgzip_err)
 
 
-def call_vcftools_bgzip (vcfname_arg, vcftools_call_args, vcf_gz_filename):
+def call_vcftools_bgzip (vcftools_call_args, vcf_gz_filename):
     '''
-        Converts a vcf to vcf.gz
+        Calls vcftools and bgzip in tandem
 
-        The function pipes the output of vcftools to bgzip to compress a vcf
-        file into a vcf.gz
+        The function calls vcftools and pipes the output to bgzip to compress to
+        create a vcf.gz file. Returns the stderr of vcftools to create log file
+        of the call.
 
         Parameters
         ----------
-        vcf_call : Popen
-            The vcftools subprocess call
+        vcftools_call_args : list
+            vcftools arguments
         vcf_gz_filename : str
             The output name of the compressed vcf file
 
@@ -74,14 +75,14 @@ def call_vcftools_bgzip (vcfname_arg, vcftools_call_args, vcf_gz_filename):
 
         Raises
         ------
-        IOError
+        Exception
             If vcftools stderr returns an error
-        IOError
+        Exception
             If bgzip stderr returns an error
     '''
 
     # vcftools subprocess call
-    vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    vcftools_call = subprocess.Popen(['vcftools'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Create bgzip output file
     bgzip_output = open(vcf_gz_filename, 'wb')
@@ -111,18 +112,41 @@ def call_vcftools_bgzip (vcfname_arg, vcftools_call_args, vcf_gz_filename):
 
     return vcftools_err
 
-def call_vcftools (vcfname_arg, vcftools_call_args):
+def call_vcftools (vcftools_call_args):
+    '''
+        Calls vcftools
+
+        The function calls vcftools. Returns the stderr of vcftools to
+        create log file of the call.
+
+        Parameters
+        ----------
+        vcftools_call_args : list
+            vcftools arguments
+
+        Returns
+        -------
+        vcftools_err : str
+            vcftools log output
+
+        Raises
+        ------
+        Exception
+            If vcftools stderr returns an erro
+    '''
 
     # vcftools subprocess call
-    vcftools_call = subprocess.Popen(['vcftools'] + vcfname_arg + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    vcftools_call = subprocess.Popen(['vcftools'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Wait for vcftools to finish
     vcftools_out, vcftools_err = vcftools_call.communicate()
 
     logging.info('vcftools call complete')
 
-    return vcftools_err
+    # Check that the log file was created correctly
+    check_vcftools_for_errors(vcftools_err)
 
+    return vcftools_err
 
 
 def check_for_vcftools_output (vcftools_output):
@@ -254,9 +278,9 @@ def assign_vcftools_input_arg (filename):
 
         if vcfname_format == 'nozip':
             return ['--vcf', filename]
-        elif vcfname_format == 'gzip':
-            return ['--gzvcf', filename]
         elif vcfname_format == 'bgzip':
+            return ['--gzvcf', filename]
+        elif vcfname_format == 'bcf':
             return ['--bcf', filename]
         else:
             logging.error('Unknown VCF file format')

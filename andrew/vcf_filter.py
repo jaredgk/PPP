@@ -258,12 +258,10 @@ def run (passed_arguments = []):
     # Check if the user has requested vcf.gz, if so send the stdout to bgzip
     if vcf_args.out_format == 'vcf.gz':
         # Call both vcftools and bgzip, return stderr
-        vcftools_err = call_vcftools_bgzip(vcfname_arg, vcftools_call_args, vcftools_output_filename)
-
-    # Run vcftools normally for non vcf.gz output
+        vcftools_err = call_vcftools_bgzip(vcfname_arg + vcftools_call_args, vcftools_output_filename)
     else:
         # Call only vcftools
-        vcftools_err = call_vcftools(vcfname_arg, vcftools_call_args)
+        vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
 
     # Check if the user specifed the complete output filename
     if vcf_args.out:

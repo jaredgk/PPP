@@ -147,7 +147,7 @@ def run (passed_arguments = []):
 
     elif phase_args.phase_algorithm == 'shapeit':
         # Assign the algorithm
-        algorithm_call_args = ['./bin/shapeit']
+        algorithm_call_args = ['shapeit']
 
         # Assigns the arguments for phasing
         phase_call_args = ['--input-vcf', phase_args.vcfname, '-O', phase_args.out]
