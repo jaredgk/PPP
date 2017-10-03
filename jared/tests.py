@@ -134,7 +134,7 @@ class checkCompressionTest(unittest.TestCase):
 
     def test_checkFormat_nozip(self):
         comp = checkFormat('example/chr11.unzipped.vcf')
-        self.assertTrue(comp == 'nozip')
+        self.assertTrue(comp == 'vcf')
 
     def test_checkFormat_bgzip(self):
         comp = checkFormat('example/chr11.subsamples.vcf.gz')
@@ -147,6 +147,14 @@ class checkCompressionTest(unittest.TestCase):
     def test_checkFormat_bcf(self):
         comp = checkFormat('example/chr11.test.bcf')
         self.assertTrue(comp=='bcf')
+
+    def test_checkFormat_other(self):
+        comp = checkFormat('example/plain.txt')
+        self.assertTrue(comp=="other")
+
+    def test_checkFormat_otherzip(self):
+        comp = checkFormat('example/plain.txt.gz')
+        self.assertTrue(comp=="other")
 
 class reduceTest(unittest.TestCase):
 
