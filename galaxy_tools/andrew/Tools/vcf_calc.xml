@@ -2,12 +2,12 @@
   <description>Automates the calculation of various statistics</description>
   <command><![CDATA[
   python $__tool_directory__/vcf_calc.py
-          "$input"
+          $input
           #for $pop_file in $pop_files:
-              --pop-file "$pop_file"
+              --pop-file $pop_file
           #end for
-          --calc-statistic "$calc_statistic"
-          --out "$output"
+          --calc-statistic $calc_statistic
+          --out $output
           --overwrite
   ]]></command>
 

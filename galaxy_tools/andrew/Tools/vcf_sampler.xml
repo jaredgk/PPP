@@ -8,23 +8,24 @@
   <description>Automates the sampling of VCF files</description>
   <command><![CDATA[
   python $__tool_directory__/vcf_sampler.py
-          "$input"
+          $input
           #if $input.is_of_type('vcf.gz')
-              --vcf-index "${input.metadata.vcfgz_index}"
+              --vcf-index ${input.metadata.vcfgz_index}
           #end if
           #if  $input.is_of_type('bcf')
-              --vcf-index "${input.metadata.bcf_index}"
+              --vcf-index ${input.metadata.bcf_index}
           #end if
-          --calc-statistic "$calc_statistic"
-          --statistic-file "$statistic_file"
-          --sample-file "$sample_file"
-          --sample-size "$sample_size"
+          --calc-statistic $calc_statistic
+          --statistic-file $statistic_file
+          --sample-file $sample_file
+          --sample-size $sample_size
+          --vcf-format vcf.gz
           --overwrite
   ]]></command>
 
   <inputs>
     <param format="vcf.gz,bcf" name="input" type="data" label="VCF Input" />
-    <param format="tsv" name="statistic_file" type="data" label="Statistic Input" />
+    <param format="tabular" name="statistic_file" type="data" label="Statistic Input" />
     <param name="calc_statistic" type="select" label="Statistic">
       <option value="windowed-weir-fst" selected="True" >Windowed Fst</option>
       <option value="TajimaD">Tajima's D</option>
@@ -44,7 +45,7 @@
   <outputs>
     <data format="tabular" name="sample_file"/>
     <collection type="list" name="vcf_output">
-      <discover_datasets pattern="(?P&lt;name&gt;.*)" directory="Sample_Files" format="vcf"/>
+      <discover_datasets pattern="(?P&lt;name&gt;.*)" directory="Sample_Files" format="vcf.gz"/>
     </collection>
   </outputs>
   <help>
