@@ -340,7 +340,10 @@ def run (passed_arguments = []):
         for sampled_count, sampled_row in enumerate(sampled_samples.values):
 
             # Assign filename for sample.
-            sample_filename =  sampler_args.vcf_prefix + '_%s.' %sampled_count + sampler_args.vcf_format
+            if sampler_args.vcf_format == 'vcf.gz':
+                sample_filename =  sampler_args.vcf_prefix + '_%s.' %sampled_count + 'vcf'
+            else:
+                sample_filename =  sampler_args.vcf_prefix + '_%s.' %sampled_count + sampler_args.vcf_format
 
             # Join the output directory and the sample filename paths
             sample_path = os.path.join(sampler_args.vcf_dir, sample_filename)
@@ -371,6 +374,10 @@ def run (passed_arguments = []):
                     vcf_output.write(vcf_record)
 
             vcf_output.close()
+            
+            # Compress vcf to vcf.gz using bgzip
+            if sampler_args.vcf_format == 'vcf.gz':
+                bgzip_compress_vcf(vcf_output)
 
         vcf_input.close()
 
