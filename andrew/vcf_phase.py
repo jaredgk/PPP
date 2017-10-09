@@ -40,6 +40,7 @@ def phase_argument_parser(passed_arguments):
     # Other basic arguments. Expand as needed
     phase_parser.add_argument('--out', help = 'Defines the output filename')
     phase_parser.add_argument('--out-prefix', help = 'Defines the output prefix (used by phasing algorithms)', default = 'out')
+    phase_parser.add_argument('--log', help = 'Defines the log filename')
 
     if passed_arguments:
         return phase_parser.parse_args(passed_arguments)
@@ -184,7 +185,7 @@ def run (passed_arguments = []):
 
     if phase_args.phase_algorithm == 'beagle':
         # Assign the algorithm
-        algorithm_call_args = ['java', '-jar', 'bin/beagle.jar']
+        algorithm_call_args = ['java', '-jar', '/home/aewebb/Repositories/PPP/andrew/bin/beagle.jar']
 
         # Assigns the arguments for phasing
         phase_call_args = ['gt=' + phase_args.vcfname, 'out=' + phase_args.out_prefix]
@@ -200,9 +201,17 @@ def run (passed_arguments = []):
 
         logging.info('beagle phasing complete')
 
+        # Rename output to phase_args.out, if specified
         if phase_args.out:
             shutil.move(phase_args.out_prefix + vcfname_ext, phase_args.out)
+
+        # Rename log to phase_args.log, if specified
+        if phase_args.log:
+            shutil.move(phase_args.out_prefix + '.log', phase_args.log)
+        # Rename log using phase_args.out, if specified
+        elif phase_args.out:
             shutil.move(phase_args.out_prefix + '.log', phase_args.out + '.log')
+        # Rename log using phase_args.out_prefix
         else:
             shutil.move(phase_args.out_prefix + '.log', phase_args.out_prefix + vcfname_ext + '.log')
 
@@ -240,9 +249,17 @@ def run (passed_arguments = []):
 
         logging.info('shapeit conversion to VCF complete')
 
+        # Rename output to phase_args.out, if specified
         if phase_args.out:
             shutil.move(phase_args.out_prefix + vcfname_ext, phase_args.out)
+
+        # Rename log to phase_args.log, if specified
+        if phase_args.log:
+            combine_shapeit_logs([phase_args.out_prefix + '.p.log', phase_args.out_prefix + '.c.log'],  phase_args.log)
+        # Rename log using phase_args.out, if specified
+        elif phase_args.out:
             combine_shapeit_logs([phase_args.out_prefix + '.p.log', phase_args.out_prefix + '.c.log'],  phase_args.out + '.log')
+        # Rename log using phase_args.out_prefix
         else:
             combine_shapeit_logs([phase_args.out_prefix + '.p.log', phase_args.out_prefix + '.c.log'],  phase_args.out_prefix + vcfname_ext + '.log')
 

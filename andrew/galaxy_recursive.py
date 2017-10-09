@@ -3,6 +3,7 @@ import sys
 import subprocess
 import argparse
 import logging
+import shutil
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
@@ -24,12 +25,18 @@ def galaxy_parser():
     galaxy_parser.add_argument('--input-list', help = "Input List", type = str, action='append', required = True)
     # List of output files
     galaxy_parser.add_argument('--output-list', help = "Output List", type = str, action='append')
+    # List of logs
+    galaxy_parser.add_argument('--log-list', help = "Log List", type = str, action='append')
     # List of links, for creating symlinks of input
     galaxy_parser.add_argument('--link-list', help = "Link List", type = str, action='append')
-    # Output Directory, if option is not in script
-    galaxy_parser.add_argument('--galaxy-out-arg', help = "Output Arg", type = str, default = 'out')
     # Output call, if option if not --out in script
+    galaxy_parser.add_argument('--galaxy-out-arg', help = "Output Arg", type = str, default = 'out')
+    # Output Directory, if option is not in script
     galaxy_parser.add_argument('--galaxy-out-dir', help = "Output Directory", type = str)
+    # Log call, if option if not --log in script
+    galaxy_parser.add_argument('--galaxy-log-arg', help = "Output Arg", type = str, default = 'log')
+    # Log Directory, if option is not in script
+    galaxy_parser.add_argument('--galaxy-log-dir', help = "Output Directory", type = str)
 
     return galaxy_parser.parse_known_args()
 
@@ -39,20 +46,34 @@ def run ():
     # Grab arguments from command line
     galaxy_args, command_args = galaxy_parser()
 
-    # Check that there is an eual number of input and links
+    # Check that there is an equal number of input and links
     if galaxy_args.link_list:
         if len(galaxy_args.link_list) != len(galaxy_args.input_list):
             raise Exception('Link and input number do not match')
 
-    # Check that there is an eual number of input and output
+    # Check that there is an equal number of input and output
     if galaxy_args.output_list:
         if len(galaxy_args.output_list) != len(galaxy_args.input_list):
             raise Exception('Output and input number do not match')
 
+    # Check that there is an equal number of input and log
+    if galaxy_args.log_list:
+        if len(galaxy_args.log_list) != len(galaxy_args.input_list):
+            raise Exception('Log and input number do not match')
+
     # Create the output dir, if required
     if galaxy_args.galaxy_out_dir:
+        if os.path.exists(galaxy_args.galaxy_out_dir):
+            shutil.rmtree(galaxy_args.galaxy_out_dir)
         if not os.path.exists(galaxy_args.galaxy_out_dir):
             os.makedirs(galaxy_args.galaxy_out_dir)
+
+    # Create the output dir, if required
+    if galaxy_args.galaxy_log_dir:
+        if os.path.exists(galaxy_args.galaxy_log_dir):
+            shutil.rmtree(galaxy_args.galaxy_log_dir)
+        if not os.path.exists(galaxy_args.galaxy_log_dir):
+            os.makedirs(galaxy_args.galaxy_log_dir)
 
     for input_pos, input_file in enumerate(galaxy_args.input_list):
 
@@ -73,9 +94,16 @@ def run ():
 
             output_arg.extend(['--' + galaxy_args.galaxy_out_arg, output_path])
 
-        print ['python', galaxy_args.script_to_run, input_arg] + output_arg + command_args
+        log_arg = []
+        if galaxy_args.output_list:
+            if galaxy_args.galaxy_log_dir:
+                log_path = os.path.join(galaxy_args.galaxy_log_dir, galaxy_args.log_list[input_pos])
+            else:
+                log_path = galaxy_args.log_list[input_pos]
 
-        python_call = subprocess.Popen(['python', galaxy_args.script_to_run, input_arg] + output_arg + command_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+            log_arg.extend(['--' + galaxy_args.galaxy_log_arg, log_path])
+
+        python_call = subprocess.Popen(['python', galaxy_args.script_to_run, input_arg] + output_arg + log_arg + command_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         python_out, python_err = python_call.communicate()
 
         if python_err:
@@ -84,6 +112,7 @@ def run ():
 
         if galaxy_args.link_list:
             os.unlink(galaxy_args.link_list[input_pos])
+
 
 
 if __name__ == "__main__":

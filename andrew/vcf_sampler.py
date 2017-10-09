@@ -19,6 +19,9 @@ from logging_module import initLogger
 # Import basic vcftools functions
 from vcftools import *
 
+# Import basic vcf
+from bcftools import check_for_index, create_index
+
 def sampler_parser(passed_arguments):
     '''Sampler Argument Parser - Assigns arguments from command line.'''
 
@@ -282,7 +285,7 @@ def run (passed_arguments = []):
 
     # Check if user has requested vcf output
     if sampler_args.no_vcf:
-
+        
         # Create the vcf/bcf output directory
         if not os.path.exists(sampler_args.vcf_dir):
             os.makedirs(sampler_args.vcf_dir)
@@ -315,8 +318,14 @@ def run (passed_arguments = []):
 
         # Open the VCF file
         if sampler_args.vcf_index:
+            # Read in the file using pysam
             vcf_input = pysam.VariantFile(sampler_args.vcfname, index_filename = sampler_args.vcf_index)
         else:
+            # Check if there is an index file
+            if not check_for_index(sampler_args.vcfname):
+                # Create an index if not found
+                create_index(sampler_args.vcfname)
+            # Read in the file using pysam
             vcf_input = pysam.VariantFile(sampler_args.vcfname)
 
         # Sites to be included
@@ -374,10 +383,10 @@ def run (passed_arguments = []):
                     vcf_output.write(vcf_record)
 
             vcf_output.close()
-            
+
             # Compress vcf to vcf.gz using bgzip
             if sampler_args.vcf_format == 'vcf.gz':
-                bgzip_compress_vcf(vcf_output)
+                bgzip_compress_vcf(sample_path)
 
         vcf_input.close()
 
