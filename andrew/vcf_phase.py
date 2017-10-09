@@ -15,13 +15,21 @@ def phase_argument_parser(passed_arguments):
     '''Phase Argument Parser - Assigns arguments for vcftools from command line.
     Depending on the argument in question, a default value may be specified'''
 
-    def parser_confirm_file ():
+    def parser_confirm_and_append_file ():
         '''Custom action to confirm file exists'''
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
                 if not os.path.isfile(value):
                     raise IOError # File not found
-                setattr(args, self.dest, value)
+                # Check if the argument has been set
+                if getattr(args, self.dest):
+                    # Append the argument with the file
+                    getattr(args, self.dest).append(value)
+
+                else:
+                    # Set the argument with the file (as list)
+                    setattr(args, self.dest, [value])
+
         return customAction
 
     def metavar_list (var_list):
@@ -31,16 +39,22 @@ def phase_argument_parser(passed_arguments):
     phase_parser = argparse.ArgumentParser()
 
     # Input arguments.
-    phase_parser.add_argument("vcfname", metavar='VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
+    phase_parser.add_argument("--vcf", help = "Input VCF filename", type = str, action = parser_confirm_and_append_file())
 
     phasing_list = ['beagle', 'shapeit']
     phasing_default = 'beagle'
     phase_parser.add_argument('--phase-algorithm', metavar = metavar_list(phasing_list), help = 'Specifies the phase algorithm to be used', type = str, choices = phasing_list, default = phasing_default)
 
-    # Other basic arguments. Expand as needed
-    phase_parser.add_argument('--out', help = 'Defines the output filename')
+    # General output
     phase_parser.add_argument('--out-prefix', help = 'Defines the output prefix (used by phasing algorithms)', default = 'out')
-    phase_parser.add_argument('--log', help = 'Defines the log filename')
+
+    # Multiple vcf output options
+    phase_parser.add_argument('--out-dir', help = 'Specifies the output directory when processing multiple files', type = str, default = 'Phased_Files')
+    phase_parser.add_argument('--log-dir', help = 'Specifies the log directory when processing multiple files', type = str, default = 'Phased_Logs')
+
+    # Single vcf output options
+    phase_parser.add_argument('--out', help = 'Defines the output filename. Cannot be used when processing multiple files')
+    phase_parser.add_argument('--log', help = 'Defines the log filename. Cannot be used when processing multiple files')
 
     if passed_arguments:
         return phase_parser.parse_args(passed_arguments)
@@ -132,45 +146,10 @@ def combine_shapeit_logs (shapeit_logs, new_log_filename):
     for shapeit_log in shapeit_logs:
         os.remove(shapeit_log)
 
-def run (passed_arguments = []):
-    '''
-        Phaser for VCF files.
-
-        Automates the phasing process for a specified VCF file. The function
-        allows users to select between multiple phasing algorithms: beagle
-        (default) and shapit.
-
-        Parameters
-        ----------
-        VCF_Input : str
-            Specifies the input VCF filename
-        --phase-algorithm : str
-            Specifies the algorithm to be used. Choices: beagle (default) and
-            shapit
-        --out : str
-            Specifies the output filename
-        Returns
-        -------
-        output : file
-            Phased VCF file
-
-        Raises
-        ------
-        IOError
-            Input VCF file does not exist
-        IOError
-            Output file already exists
-
-    '''
-
-    # Grab VCF arguments from command line
-    phase_args = phase_argument_parser(passed_arguments)
-
-    # Adds the arguments (i.e. parameters) to the log file
-    logArgs(phase_args, 'vcf_phase')
+def phase_file (phase_args):
 
     # Assign file extension for VCF input file
-    vcfname_ext = assign_vcf_extension(phase_args.vcfname)
+    vcfname_ext = assign_vcf_extension(phase_args.vcf)
 
     logging.info('Input file assigned')
 
@@ -178,17 +157,17 @@ def run (passed_arguments = []):
     vcfname_renamed = False
 
     # Confirm input has correct file extension
-    if vcfname_ext not in phase_args.vcfname:
+    if vcfname_ext not in phase_args.vcf:
         vcfname_renamed = True
-        os.rename(phase_args.vcfname, phase_args.vcfname + vcfname_ext)
-        phase_args.vcfname += vcfname_ext
+        os.rename(phase_args.vcf, phase_args.vcf + vcfname_ext)
+        phase_args.vcf += vcfname_ext
 
     if phase_args.phase_algorithm == 'beagle':
         # Assign the algorithm
         algorithm_call_args = ['java', '-jar', '/home/aewebb/Repositories/PPP/andrew/bin/beagle.jar']
 
         # Assigns the arguments for phasing
-        phase_call_args = ['gt=' + phase_args.vcfname, 'out=' + phase_args.out_prefix]
+        phase_call_args = ['gt=' + phase_args.vcf, 'out=' + phase_args.out_prefix]
 
         logging.info('beagle phasing parameters assigned')
 
@@ -222,7 +201,7 @@ def run (passed_arguments = []):
         algorithm_call_args = ['shapeit']
 
         # Assigns the arguments for phasing
-        phase_call_args = ['--input-vcf', phase_args.vcfname, '-O', phase_args.out_prefix, '-L', phase_args.out_prefix + '.p.log']
+        phase_call_args = ['--input-vcf', phase_args.vcf, '-O', phase_args.out_prefix, '-L', phase_args.out_prefix + '.p.log']
 
         logging.info('shapeit phasing parameters assigned')
 
@@ -275,7 +254,100 @@ def run (passed_arguments = []):
 
     # Reverts the VCF input file
     if vcfname_renamed:
-        os.rename(phase_args.vcfname, phase_args.vcfname[:-len(vcfname_ext)])
+        os.rename(phase_args.vcf, phase_args.vcf[:-len(vcfname_ext)])
+
+def run (passed_arguments = []):
+    '''
+        Phaser for VCF files.
+
+        Automates the phasing process for a specified VCF file. The function
+        allows users to select between multiple phasing algorithms: beagle
+        (default) and shapit.
+
+        Parameters
+        ----------
+        VCF_Input : str
+            Specifies the input VCF filename
+        --phase-algorithm : str
+            Specifies the algorithm to be used. Choices: beagle (default) and
+            shapit
+        --out : str
+            Specifies the output filename
+        Returns
+        -------
+        output : file
+            Phased VCF file
+
+        Raises
+        ------
+        IOError
+            Input VCF file does not exist
+        IOError
+            Output file already exists
+
+    '''
+
+    # Grab VCF arguments from command line
+    phase_args = phase_argument_parser(passed_arguments)
+
+    # Adds the arguments (i.e. parameters) to the log file
+    logArgs(phase_args, 'vcf_phase')
+
+    # Confirm that at least once vcf file was assigned as input
+    if not phase_args.vcf:
+        logging.error('No VCF file assigned')
+        raise IOError('No VCF file assigned')
+
+    if len(phase_args.vcf) == 1:
+        phase_args.vcf = phase_args.vcf[0]
+        phase_file(phase_args)
+
+    # Confirm that the options specified are compatible with multiple input files
+    elif len(phase_args.vcf) > 1:
+        # Check if the out argument has been specified
+        if phase_args.out:
+            logging.error('The --out option cannot be used when processing multiple files')
+            raise IOError('The --out option cannot be used when processing multiple files')
+        # Check if the log argument has been specified
+        if phase_args.log:
+            logging.error('The --log option cannot be used when processing multiple files')
+            raise IOError('The --log option cannot be used when processing multiple files')
+
+        # Create the vcf/bcf output directory
+        if not os.path.exists(phase_args.out_dir):
+            os.makedirs(phase_args.out_dir)
+
+        # Create the log output directory
+        if not os.path.exists(phase_args.log_dir):
+            os.makedirs(phase_args.log_dir)
+
+        # Store the input vcf filepaths within a list
+        vcfs_to_process = phase_args.vcf
+
+        # Loop the input vcf filepaths
+        for current_vcf in vcfs_to_process:
+            # Assign the input
+            phase_args.vcf = current_vcf
+
+            # Assign the vcf basename
+            out_basename = os.path.basename(current_vcf)
+            # Remove file extension
+            out_basename_wo_ext = out_basename.split(os.extsep)[0]
+            # Assign the vcf output filepath
+            out_filepath = os.path.join(phase_args.out_dir, out_basename_wo_ext + '.vcf.gz')
+            # Assign the input
+            phase_args.out = out_filepath
+
+            # Assign the vcf basename
+            log_basename = out_basename_wo_ext + '.log'
+            # Assign the vcf output filepath
+            log_filepath = os.path.join(phase_args.log_dir, log_basename)
+            # Assign the log
+            phase_args.log = log_filepath
+
+            # Process the file
+            phase_file(phase_args)
+
 
 if __name__ == "__main__":
     initLogger()
