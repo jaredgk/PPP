@@ -29,6 +29,10 @@ def keyComp(k1,k2):
 
 @total_ordering
 class Region:
+    natsort = True
+    oneidx = False
+    halfopen = True
+
     def __init__(self, start, end, chrom, natsort=True):
         """Zero-based, half open coordinates and chromosome info for
         a region in a genome. Coords will be formatted according to
@@ -40,6 +44,8 @@ class Region:
             self.chrom = chrom[3:]
         else:
             self.chrom = chrom
+        Region.natsort = natsort
+
 
     def getChromKey(self):
         """Splits chromosone name for natural sort. Ints and strs are
@@ -57,13 +63,23 @@ class Region:
     def __lt__(self, other):
         """Sort key order: chrom-key, start position, end position
         """
-        k1 = self.getChromKey()
-        k2 = other.getChromKey()
-        if k1 != k2:
-            return keyComp(k1,k2)
-        if self.start != other.start:
-            return self.start < other.start
-        return self.end < other.end
+        if Region.natsort:
+            k1 = self.getChromKey()
+            k2 = other.getChromKey()
+            if k1 != k2:
+                return keyComp(k1,k2)
+            if self.start != other.start:
+                return self.start < other.start
+            return self.end < other.end
+        else:
+            k1 = self.chrom
+            k2 = other.chrom
+            if k1 != k2:
+                return k1 < k2
+            if self.start != other.start:
+                return self.start < other.start
+            return self.end < other.end
+
 
     def containsRecord(self, rec):
         k1 = self.getChromKey()
@@ -141,15 +157,15 @@ class RegionList:
         self.halfopen = halfopen
         if filename is not None:
             self.initFile(filename, oneidx, colstr, defaultchrom,
-                          halfopen, sortlist, checkoverlap)
+                          halfopen, sortlist, checkoverlap, natsort)
         elif genestr is None:
             self.initStr(genestr, oneidx, colstr, defaultchrom, halfopen)
         else:
             self.initList(reglist, oneidx, colstr, defaultchrom,
-                          halfopen, sortlist, checkoverlap)
+                          halfopen, sortlist, checkoverlap, natsort)
 
     def initFile(self, filename, oneidx, colstr, defaultchrom, halfopen,
-                 sortlist, checkoverlap):
+                 sortlist, checkoverlap, natsort):
         """Initialize RegionList with a region file
         """
         with open(filename, 'r') as regionfile:
@@ -171,6 +187,7 @@ class RegionList:
                 if not halfopen:
                     end += 1
                 self.regions.append(Region(start, end, chrom))
+        Region.natsort = natsort
         if sortlist:
             self.regions.sort()
         if checkoverlap:
@@ -195,7 +212,7 @@ class RegionList:
         self.regions.append(Region(start,end,chrom))
 
     def initList(self, reglist, oneidx, colstr, defaultchrom, halfopen,
-                 sortlist, checkoverlap):
+                 sortlist, checkoverlap, natsort):
         for reg in reglist:
             start = int(reg[self.collist[0]])
             end = int(reg[self.collist[1]])
@@ -211,6 +228,7 @@ class RegionList:
             if not halfopen:
                 end += 1
             self.regions.append(Region(start, end, chrom))
+        Region.natsort = natsort
         if sortlist:
             self.regions.sort()
         if checkoverlap:

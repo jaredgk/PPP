@@ -1,0 +1,27 @@
+<tool id="four_gamete" name="Four Gamete Filtering" version="0.0.1">
+    <requirements>
+        <requirement type="package" version="0.12.0.1">pysam</requirement>
+    </requirements>
+    <description>Identifies regions that pass four-gamete test criteria</description>
+    <command><![CDATA[
+        python $__tool_directory__/four_gamete_pysam.py
+            --vcfname
+            $vcf_input
+            --4gcompat
+            --reti
+            --indexname ${vcf_input.metadata.vcfgz_index}
+            --out $vcf_output".gz";
+
+        mv $vcf_output".gz" $vcf_output;
+    ]]></command>
+    <inputs>
+        <param format="vcf.gz" name="vcf_input" type="data" label="VCF Input" />
+    </inputs>
+
+    <outputs>
+        <data format="vcf.gz" name="vcf_output" />
+    </outputs>
+    <help>
+        Four gamete test
+    </help>
+</tool>

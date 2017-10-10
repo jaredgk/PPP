@@ -62,26 +62,6 @@ def checkFormat(vcfname):
         return 'vcf'
     return 'other'
 
-    #try:
-    #    gf = gzip.open(vcfname)
-    #    gl = gf.readline()
-        #print (l)
-    #    gf.close()
-    #    if gl[0:3] == b'BCF':
-    #        return 'bcf'
-    #    elif
-    #except:
-    #    return 'nozip'
-    #f = open(vcfname,'rb')
-    #l = f.readline()
-    #f.close()
-    #BGZF_HEADER=b'\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00BC\x02\x00'
-    #GZF_HEADER=b'\x1f\x8b'
-    #if l[:len(BGZF_HEADER)] == BGZF_HEADER:
-    #    return 'bgzip'
-    #if l[:len(GZF_HEADER)] == GZF_HEADER:
-    #    return 'gzip'
-    #return 'nozip'
 
 def getRecordList(vcf_reader, region=None, chrom=None, start=None,
                   end=None):
@@ -218,7 +198,7 @@ def getRecordsInRegion(region, record_list):
 
 #def getVcfReader(args):
 def getVcfReader(vcfname, compress_flag=False,
-                 subsamp_num=None, subsamp_fn=None):
+                 subsamp_num=None, subsamp_fn=None, index=None):
     """Returns a reader for a given input VCF file.
 
     Given a filename, filetype, compression option, and optional Subsampling
@@ -271,7 +251,10 @@ def getVcfReader(vcfname, compress_flag=False,
         subsamp_file = open(subsamp_fn,'r')
         subsamp_list = [l.strip() for l in subsamp_file.readlines()]
         subsamp_file.close()
-    vcf_reader = pysam.VariantFile(vcfname)
+    if index is None:
+        vcf_reader = pysam.VariantFile(vcfname)
+    else:
+        vcf_reader = pysam.VariantFile(vcfname, index_filename=index)
     if subsamp_list is not None:
         logging.debug('Subsampling %d individuals from VCF file' %
         (len(subsamp_list)))
