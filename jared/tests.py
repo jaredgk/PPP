@@ -53,6 +53,13 @@ class geneRegionTest(unittest.TestCase):
         rl.regions.sort()
         self.assertTrue(rl.regions == sl.regions)
 
+    def test_RL_charsort(self):
+        rl = RegionList('example/unsorted_regions.txt',natsort=False)
+        sl = RegionList('example/charsorted_regions.txt')
+        rl.regions.sort()
+        self.assertTrue(rl.regions == sl.regions)
+
+
     def test_RL_overlap(self):
         rl = RegionList('example/overlap_regions.txt', checkoverlap=False)
         self.assertTrue(rl.hasOverlap())
@@ -224,12 +231,12 @@ class fourgameteTest(unittest.TestCase):
 
     def test_hk(self):
         region_list = [[[196944, 197337], [199153, 202547], [202565, 202835], [206906, 207462], [207462, 215904], [218141, 219089]]]
-        test_list = sample_fourgametetest_intervals(["--vcf","example/chr11subsamples4gtest.vcf.gz","-","--hk","--retl"])
+        test_list = sample_fourgametetest_intervals(["--vcfname","example/chr11subsamples4gtest.vcf.gz","--hk","--retl"])
         self.assertEqual(region_list, test_list)
 
     def test_comp(self):
         region_list = [[[196944, 197336], [196945, 199255], [202088, 202016], [202548, 202748], [202813, 207461], [206907, 208212], [215365, 208224], [218142, 218488], [218641, 221585]]]
-        test_list = sample_fourgametetest_intervals(["--vcf","example/chr11subsamples4gtest.vcf.gz","-","--4gcompat","--retl"])
+        test_list = sample_fourgametetest_intervals(["--vcfname","example/chr11subsamples4gtest.vcf.gz","--4gcompat","--retl"])
         self.assertEqual(region_list,test_list)
 
 
