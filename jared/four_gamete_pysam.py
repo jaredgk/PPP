@@ -63,9 +63,10 @@ class BaseData():
             self.onlysnps = True
             #vcff = pysam.VariantFile(filename)
             vcff, comp = getVcfReader(filename, index=args.index_name)
-            self.records = getRecordList(vcff, region)
+            self.allrecords = getRecordList(vcff, region)
 
-            self.ploidy, self.seqs, self.poslist = vcfload.checkVcfRegionPysam(self.records)
+            #self.ploidy, self.seqs, self.poslist = vcfload.checkVcfRegionPysam(self.records)
+            self.checkVcfRegion()
             self.header = vcff.header
             vcff.close()
             #self.seqcount = len(self.seqs)
@@ -162,9 +163,9 @@ class BaseData():
                     pass
                     # print ("more than two bases at position " + str(j))
                 elif polybase > 1:
-                    self.polysites.append(j+1) ## use regular (start at 1) count
+                    self.polysites.append(j) ## use regular (start at 1) count
                     if (twobase > 1):
-                        self.informpolysites.append(j+1)
+                        self.informpolysites.append(j)
                         for k in range(self.seqcount):
                             informpolyseqs[k] = informpolyseqs[k] + self.seqs[k][j]
                         lineset =[set([]),set([]),set([]),set([])]
@@ -381,6 +382,44 @@ class BaseData():
         if len(self.poslist) > 0:
             self.cintervals = replace_positions(self.cintervals,self.poslist)
         return self.cintervals
+
+    def checkVcfRegion(self):
+        #record_list = getRecordList(vcf_reader, region)
+        valid_bases = ['A','C','G','T']
+        skiplines = []
+        self.ploidy = -1
+        self.poslist = []
+        base_list = []
+        self.records = []
+        for record in self.allrecords:
+            lineok=True
+            for allele in record.alleles:
+                if allele not in valid_bases:
+                    lineok=False
+                    break
+            if not lineok:
+                continue
+            somedata = False
+            #data_present = 0
+            var_list = []
+            #for indiv in record.samples:
+            for i in range(len(record.samples)):
+                indiv = record.samples[i]
+                if self.ploidy == -1:
+                    self.ploidy = len(indiv.alleles)
+                if not somedata and indiv.alleles.count(None) == 0:
+                    somedata = True
+                for samp_allele in indiv.alleles:
+                    if samp_allele is None:
+                        var_list.append('.')
+                    else:
+                        var_list.append(samp_allele)
+            if somedata:
+                base_list.append(var_list)
+                self.poslist.append(record.pos)
+                self.records.append(record)
+        self.seqs = [[base_list[row][col] for row in range(0, len(base_list))] for col in range(0, len(base_list[0]))]
+        #return ploidy, transposed_bases, pos_list
 
 
 def createParser():
