@@ -97,7 +97,7 @@ def model_creator_parser (passed_arguments):
     #model_parser.add_argument("--vcf", metavar = 'VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
 
     # Other file arguments. Expand as needed
-    model_parser.add_argument('--out', help = 'Specifies the complete output filename. Renames vcftools-named intermediate files', type = str)
+    model_parser.add_argument('--out', help = 'Specifies the complete output filename.', type = str, default = 'out.model')
 
     # General arguments.
     model_parser.add_argument('--overwrite', help = "Specifies if previous output files should be overwritten", action = 'store_true')
@@ -163,7 +163,7 @@ def run (passed_arguments = []):
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(model_args, 'model_creator')
 
-    # Loop each model specified
+    # Loop each model specified to confirm parameters are valid
     for current_model in model_args.model:
 
         # Check that a tree has been assigned to the model
@@ -184,12 +184,18 @@ def run (passed_arguments = []):
                     print 'Number of populations (--npop) assigned to %s does not match the named popultions' % current_model
                     sys.exit()
 
-        print 'MODEL:\t%s' % current_model
-        print '  TREE:\t%s' % model_args.model_tree[current_model]
-        print '  NPOP:\t%s' % len(model_args.pops[current_model])
-
         # Loop each population in the model
         for current_pop in model_args.pops[current_model]:
+            
+            # Check that the population has been assigned to at least one model
+            if current_pop not in set(itertools.chain.from_iterable(model_args.pops.values())):
+                print 'Population (%s) not assigned to any model' % current_pop
+                sys.exit()
+
+            # Check that inds have been assigned to the population
+            if current_pop not in model_args.inds:
+                print 'No individuals assigned to: %s' % current_pop
+                sys.exit()
 
             # Check that inds have been assigned to the population
             if current_pop not in model_args.inds:
@@ -204,11 +210,20 @@ def run (passed_arguments = []):
                         print 'Number of individuals (--nind) assigned to %s does not match the named individuals' % current_pop
                         sys.exit()
 
-            print '  POP:\t%s' % current_pop
-            print '    NIND:\t%s' % len(model_args.inds[current_pop])
-            print '    IND:\t%s' % ', '.join(model_args.inds[current_pop])
+    model_output = open(model_args.out, 'w')
+    # Loop each model specified to generate the output
+    for current_model in model_args.model:
+        model_output.write('MODEL:\t%s\n' % current_model)
+        model_output.write('  TREE:\t%s\n' % model_args.model_tree[current_model])
+        model_output.write('  NPOP:\t%s\n' % len(model_args.pops[current_model]))
 
+        # Loop each population in the model
+        for current_pop in model_args.pops[current_model]:
+            model_output.write('  POP:\t%s\n' % current_pop)
+            model_output.write('    NIND:\t%s\n' % len(model_args.inds[current_pop]))
+            model_output.write('    IND:\t%s\n' % ', '.join(model_args.inds[current_pop]))
 
+    model_output.close()
 
 if __name__ == "__main__":
     run()
