@@ -7,6 +7,9 @@ import logging
 # Import basic vcftools functions
 from vcftools import *
 
+# Model file related functions
+from model import read_model_file
+
 # Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
@@ -32,6 +35,10 @@ def vcf_filter_parser(passed_arguments):
 
     # Input arguments.
     vcf_parser.add_argument("vcfname", metavar = 'VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
+
+    # Model file arguments.
+    vcf_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
+    vcf_parser.add_argument('--model', help = 'Defines the model to analyze', type = str)
 
     # Other file arguments. Expand as needed
     vcf_parser.add_argument('--out', help = 'Specifies the complete output filename. Renames vcftools-named intermediate files', type = str)
@@ -163,6 +170,26 @@ def run (passed_arguments = []):
 
     # Argument container for vcftools
     vcftools_call_args = ['--out', vcf_args.out_prefix]
+
+    # Check if the user has specified a model file
+    if vcf_args.model_file and vcf_args.model:
+        # Read in the models
+        models_in_file = read_model_file(vcf_args.model_file)
+
+        # Check that the selected model was not found in the file
+        if vcf_args.model not in models_in_file:
+            logging.error('Selected model "%s" not found in: %s' % (vcf_args.model, vcf_args.model_file))
+            raise IOError('Selected model "%s" not found in: %s' % (vcf_args.model, vcf_args.model_file))
+
+        # Select model, might change this in future versions
+        selected_model = models_in_file[vcf_args.model]
+
+        # Create individuals file
+        selected_model.create_individuals_file(overwrite = vcf_args.overwrite)
+
+        # Assign the individuals file to vcftools
+        vcftools_call_args.extend(['--keep', selected_model.individuals_file])
+
 
     # Holds the filename vcftools assigns to the filtered output
     vcftools_output_filename = None

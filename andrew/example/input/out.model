@@ -1,9 +1,0 @@
-MODEL:	2Pop
-  TREE:	(A,B)C;
-  NPOP:	2
-  POP:	A
-    NIND:	2
-    IND:	I1, I2
-  POP:	B
-    NIND:	2
-    IND:	I3, I4
