@@ -5,6 +5,7 @@
     <description>Identifies regions that pass four-gamete test criteria</description>
     <command><![CDATA[
         python $__tool_directory__/four_gamete_pysam.py
+            #if $inputType.
             --vcfname
             $vcf_input
             --4gcompat
@@ -15,7 +16,18 @@
         mv $vcf_output".gz" $vcf_output;
     ]]></command>
     <inputs>
-        <param format="vcf.gz" name="vcf_input" type="data" label="VCF Input" />
+        <conditional name="inputType">
+            <param name="inputTypeMenu" type="select" label="Select filetype">
+                <option value="vcf">VCF</option>
+                <option value="fasta">FASTA</option>
+            </param>
+            <when value="vcf">
+                <param format="vcf.gz" name="vcf_input" type="data" label="VCF Input" />
+            </when>
+            <when value="fasta">
+                <param format="fasta" name="fasta_input" type="data" label="FASTA Input" />
+            </when>
+        </conditional>
     </inputs>
 
     <outputs>
