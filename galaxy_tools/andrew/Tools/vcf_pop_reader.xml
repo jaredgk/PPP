@@ -1,0 +1,25 @@
+<tool id="vcf_pop_reader" name="Pop Reader Test" version="0.1b">
+  <description>Automates the calculation of various statistics</description>
+  <command><![CDATA[
+  echo $input > $output
+  ]]></command>
+
+  <inputs>
+    <param format="txt, tsv" name="input" type="data" label="VCF Input" />
+    <param name="model" type="select" size="120" label="Select Model">
+        <options from_dataset="input" startswith="Model:">
+            <column name="name" index="1"/>
+            <column name="value" index="1"/>
+        </options>
+    </param>
+
+  </inputs>
+
+  <outputs>
+    <data format="tabular" name="output"/>
+  </outputs>
+  <help>
+      VCF Statistics Calculator Help Text
+  </help>
+
+</tool>
