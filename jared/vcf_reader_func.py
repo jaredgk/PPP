@@ -197,8 +197,8 @@ def getRecordsInRegion(region, record_list):
 
 
 #def getVcfReader(args):
-def getVcfReader(vcfname, compress_flag=False,
-                 subsamp_num=None, subsamp_fn=None, index=None):
+def getVcfReader(vcfname, compress_flag=False, subsamp_num=None,
+                 subsamp_fn=None, subsamp_list=None, index=None):
     """Returns a reader for a given input VCF file.
 
     Given a filename, filetype, compression option, and optional Subsampling
@@ -218,11 +218,14 @@ def getVcfReader(vcfname, compress_flag=False,
     subsamp_num : int (None)
         If set, will randomly select `subsamp_num` individuals (not
         genotypes) from the input VCF file and return a reader with
-        only those data
+        only those data.
     subsamp_fn : str (None)
-        If set (mutually exclusive with `subsamp_num`), will return a
-        reader with only data from the samples listed in the file
-        provided.
+        If set, will return a reader with only data from the samples listed
+        in the file provided. Cannot be used with other subsampling options.
+    subsamp_list : list (None)
+        If set, will return reader with records containing only
+        individuals named in the list. Cannot be used with other subsampling
+        options.
 
     Returns
     -------
@@ -244,10 +247,14 @@ def getVcfReader(vcfname, compress_flag=False,
     reader_uncompressed = (file_uncompressed and not compress_flag)
     if compress_flag and file_uncompressed:
         vcfname = compressVcf(vcfname)
-    subsamp_list = None
+    #subsamp_list = None
     if subsamp_num is not None:
+        if subsamp_list is not None:
+            raise Exception('Multiple subsampling options called in getVcfReader')
         subsamp_list = getSubsampleList(vcfname, subsamp_num)
     elif subsamp_fn is not None:
+        if subsamp_list is not None:
+            raise Exception('Multiple subsampling options called in getVcfReader')
         subsamp_file = open(subsamp_fn,'r')
         subsamp_list = [l.strip() for l in subsamp_file.readlines()]
         subsamp_file.close()
