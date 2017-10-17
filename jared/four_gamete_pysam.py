@@ -63,7 +63,7 @@ class BaseData():
             self.onlysnps = True
             #vcff = pysam.VariantFile(filename)
             vcff, comp = getVcfReader(filename, index=args.index_name)
-            self.allrecords = getRecordList(vcff, region)
+            self.allrecords = getRecordList(vcff, region=region, chrom=args.chrom)
 
             #self.ploidy, self.seqs, self.poslist = vcfload.checkVcfRegionPysam(self.records)
             self.checkVcfRegion()
@@ -117,7 +117,9 @@ class BaseData():
                 self.seqs.append(f.readline().strip()[10:])
             f.close()
         self.numbases = listcheckallsamelength(self.seqs)
+        logging.info('Sequence length: %d' % self.numbases)
         self.seqcount = len(self.seqs)
+        logging.info('Sequence count: %d' % self.seqcount)
         #self.polysites, self.informpolysites, self.cintervals, self.cmat =
         self.buildlistofsites(args.includesnpmissingdata, args.only2basesnps)
 
@@ -166,8 +168,6 @@ class BaseData():
                     self.polysites.append(j) ## use regular (start at 1) count
                     if (twobase > 1):
                         self.informpolysites.append(j)
-                        for k in range(self.seqcount):
-                            informpolyseqs[k] = informpolyseqs[k] + self.seqs[k][j]
                         lineset =[set([]),set([]),set([]),set([])]
                         for k in range(self.seqcount):
                             if self.seqs[k][j].upper() == 'A' :
@@ -179,6 +179,7 @@ class BaseData():
                             if self.seqs[k][j].upper() == 'T' :
                                 lineset[3].add(k)
                         linesets.append(lineset)
+        logging.info('Informative site count: %d' % len(self.informpolysites))
         if len(self.informpolysites) > MAXINFORMSNPS:
             raise Exception("the number of informative snps: %d"
                     " exceeds the maximum: %d"%(len(self.informpolysites),MAXINFORMSNPS))
@@ -191,7 +192,7 @@ class BaseData():
                 self.cmat.append([])
                 for j in range(sl):
                     if i < j :
-                        if compat(linesets[i],linesets[j]) == False :
+                        if self.records[i].chrom != self.records[j].chrom or compat(linesets[i],linesets[j]) == False :
                             self.cmat[i].append(0)
                             self.cintervals.append([self.informpolysites[i],self.informpolysites[j]])
                         else:
@@ -487,6 +488,8 @@ def createParser():
             " serve as the random number seed "
             "for use with --ranb or --rani, not required but"
             " useful when debugging")
+    parser.add_argument("--chrom", dest="chrom", help="Select variants "
+            "from a single specified chromosome")
     #add checks for correct input type
     parser.add_argument('--indexname', dest="index_name")
     return parser
