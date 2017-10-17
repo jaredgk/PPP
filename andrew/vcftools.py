@@ -214,7 +214,7 @@ def check_vcftools_for_errors (vcftools_stderr):
         logging.error(vcftools_stderr)
         raise Exception(vcftools_stderr)
 
-def produce_vcftools_log (output, filename):
+def produce_vcftools_log (output, filename, append_log = False):
     '''
         Creates the vcftools log file
 
@@ -228,6 +228,8 @@ def produce_vcftools_log (output, filename):
             vcftools stderr
         filename : str
             Specifies the filename for the log file
+        append_log : bool
+            Used to create a single log file from multiple calls
 
         Returns
         -------
@@ -235,8 +237,11 @@ def produce_vcftools_log (output, filename):
             vcftools log file
 
     '''
-
-    vcftools_log_file = open(filename + '.log','w')
+    # Check if single log file is required from multiple calls
+    if append_log:
+        vcftools_log_file = open(filename + '.log','a')
+    else:
+        vcftools_log_file = open(filename + '.log','w')
     vcftools_log_file.write(str(output))
     vcftools_log_file.close()
 
