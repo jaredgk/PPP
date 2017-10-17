@@ -2,7 +2,6 @@ import os
 import sys
 import random
 import argparse
-import pysam
 import itertools
 import logging
 import shutil
@@ -21,9 +20,6 @@ from vcftools import *
 
 # Import basic vcf
 from bcftools import check_for_index, create_index
-
-# Model file related functions
-from model import read_model_file
 
 def sampler_parser(passed_arguments):
     '''Sampler Argument Parser - Assigns arguments from command line.'''
@@ -45,14 +41,7 @@ def sampler_parser(passed_arguments):
 
     # Input arguments
     sampler_parser.add_argument("vcfname", metavar='VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
-
-    # Model file arguments.
-    sampler_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
-    sampler_parser.add_argument('--model', help = 'Defines the model to analyze', type = str)
-
-    # Other input arguments.
     sampler_parser.add_argument('--statistic-file', help='Specifies the statistic file for filtering', required = True, type = str, action = parser_confirm_file())
-    sampler_parser.add_argument("--vcf-index", help = "VCF Index filename", type = str, action = parser_confirm_file())
 
     # Output arguents
     sampler_parser.add_argument('--sample-file', help = 'Specifies the sampled (statistic file) tsv output filename', type = str, default = 'sampled_data.tsv')
@@ -236,10 +225,20 @@ def run (passed_arguments = []):
         if os.path.isfile(sampler_args.sample_file):
             logging.error('Sample file already exists')
             raise IOError('Sample file already exists')
+
+        # Check if output file already exists
+        if os.path.isfile('out.sampler.log'):
+            logging.error('Log file already exists')
+            raise IOError('Log file already exists')
+
     else:
         # If previous output is to be overwritten, the previous output directory needs to be removed
         if os.path.exists(sampler_args.out_dir):
             shutil.rmtree(sampler_args.out_dir)
+
+        # Remove log file
+        if os.path.isfile('out.sampler.log'):
+            os.remove('out.sampler.log')
 
     # Read in the sample file
     vcftools_samples = pd.read_csv(sampler_args.statistic_file, sep = '\t')
@@ -321,96 +320,58 @@ def run (passed_arguments = []):
         # Add bin end positions to sampled_samples
         sampled_samples['BIN_END'] = pd.Series(bin_end_list, index = sampled_samples.index)
 
-    # Open the VCF file
-    if sampler_args.vcf_index:
-        # Read in the file using pysam
-        vcf_input = pysam.VariantFile(sampler_args.vcfname, index_filename = sampler_args.vcf_index)
-    else:
-        # Check if there is an index file
-        if not check_for_index(sampler_args.vcfname):
-            # Create an index if not found
-            create_index(sampler_args.vcfname)
-        # Read in the file using pysam
-        vcf_input = pysam.VariantFile(sampler_args.vcfname)
-
-    # Check if the user has specified a model file
-    if sampler_args.model_file and sampler_args.model:
-
-        # Read in the models
-        models_in_file = read_model_file(sampler_args.model_file)
-
-        # Check that the selected model was not found in the file
-        if sampler_args.model not in models_in_file:
-            logging.error('Selected model "%s" not found in: %s' % (sampler_args.model, sampler_args.model_file))
-            raise IOError('Selected model "%s" not found in: %s' % (sampler_args.model, sampler_args.model_file))
-
-        # Select model, might change this in future versions
-        selected_model = models_in_file[sampler_args.model]
-
-        # Reduce individuals to those in model
-        vcf_input.subset_samples(selected_model.ind_list)
-
-    # Sites to be included
-    include_sites =  pd.DataFrame()
-
-    # Check if the user has specified an include sites file
-    if sampler_args.filter_include_positions:
-        include_sites = pd.read_csv(sampler_args.filter_include_positions, sep = '\t')
-
-    # Sites to be excluded
-    exclude_sites = pd.DataFrame()
-
-    # Check if the user has specified an exclude sites file
-    if sampler_args.filter_exclude_positions:
-        exclude_sites = pd.read_csv(sampler_args.filter_exclude_positions, sep = '\t')
-
     # Get the chromosome, start, and end columns
     chr_col, start_col, end_col = assign_position_columns(list(sampled_samples))
+
+    logging.info('Assigned position columns')
 
     # iterate the selected samples
     for sampled_count, sampled_row in enumerate(sampled_samples.values):
 
+        # Assigns the correct input call
+        vcfname_arg = assign_vcftools_input_arg(sampler_args.vcfname)
+
         # Assign filename for sample.
-        if sampler_args.out_format == 'vcf.gz':
-            sample_filename =  sampler_args.out_prefix + '_%s.' %sampled_count + 'vcf'
-        else:
-            sample_filename =  sampler_args.out_prefix + '_%s.' %sampled_count + sampler_args.out_format
+        sample_prefix = sampler_args.out_prefix + '_%s' %sampled_count
 
         # Join the output directory and the sample filename paths
-        sample_path = os.path.join(sampler_args.out_dir, sample_filename)
+        sample_path = os.path.join(sampler_args.out_dir, sample_prefix)
 
-        # Create the VCF output file, with either the default filename or a user-defined filename
-        vcf_output = pysam.VariantFile(sample_path, 'w', header = vcf_input.header)
+        # Argument container for vcftools
+        vcftools_call_args = ['--out', sample_path]
 
-        # Fetch positions specified from the vcf input file
-        for vcf_record in vcf_input.fetch(sampled_row[chr_col], int(sampled_row[start_col]), int(sampled_row[end_col])):
+        # Used to assign the output format to the vcftools call
+        if sampler_args.out_format == 'bcf':
+            vcftools_call_args.append('--recode-bcf')
+        elif sampler_args.out_format == 'vcf':
+            vcftools_call_args.append('--recode')
+        elif sampler_args.out_format == 'vcf.gz':
+            vcftools_call_args.extend(['--recode', '--stdout'])
 
-            # Bool to determine if the record should be saved
-            save_record = True
+        # Assign the chromosome to sample
+        vcftools_call_args.extend(['--chr', sampled_row[chr_col]])
+        # Assign the start position to sample
+        vcftools_call_args.extend(['--from-bp', int(sampled_row[start_col])])
+        # Assign the end position to sample
+        vcftools_call_args.extend(['--to-bp', int(sampled_row[end_col])])
 
-            # Check if the user has specified an include sites file
-            if sampler_args.filter_include_positions:
-                # Check if the current record is not an included site
-                if not ((include_sites['CHROM'] == vcf_record.chrom) & (include_sites['POS'] == vcf_record.pos)).any():
-                    save_record = False
+        if sampler_args.filter_include_positions:
+            vcftools_call_args.extend(['--positions', sampler_args.filter_include_positions])
+        if sampler_args.filter_exclude_positions:
+            vcftools_call_args.extend(['--exclude-positions', sampler_args.filter_exclude_positions])
 
-            # Check if the user has specified an exclude sites file
-            if sampler_args.filter_exclude_positions:
-                # Check if the current record is an excluded site
-                if ((exclude_sites['CHROM'] == vcf_record.chrom) & (exclude_sites['POS'] == vcf_record.pos)).any():
-                    save_record = False
-
-            # Check if the record is to be saved
-            if save_record:
-                vcf_output.write(vcf_record)
-
-        vcf_output.close()
-
-        # Compress vcf to vcf.gz using bgzip
+        # Check if the user has requested vcf.gz, if so send the stdout to bgzip
         if sampler_args.out_format == 'vcf.gz':
-            bgzip_compress_vcf(sample_path)
+            # Call both vcftools and bgzip, return stderr
+            vcftools_err = call_vcftools_bgzip(vcfname_arg + vcftools_call_args, sample_path + '.recode.vcf.gz')
+        else:
+            # Call only vcftools
+            vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
 
-    vcf_input.close()
+        # Check if the user specifed the complete output filename
+        produce_vcftools_log(vcftools_err, 'out.sampler', append_log = True)
+
+    logging.info('Created VCF from selected samples')
 
 
 if __name__ == "__main__":

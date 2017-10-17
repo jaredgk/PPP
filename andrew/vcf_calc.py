@@ -4,6 +4,7 @@ import subprocess
 import argparse
 import logging
 
+# Import basic vcftools functions
 from vcftools import *
 
 # Model file related functions
@@ -128,6 +129,7 @@ def run (passed_arguments = []):
 
     # Check if the user has specified a model file
     if vcf_args.model_file and vcf_args.model:
+
         # Read in the models
         models_in_file = read_model_file(vcf_args.model_file)
 
