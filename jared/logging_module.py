@@ -53,31 +53,33 @@ def initLogger(filename='pipeline.log', filelevel='INFO',
     If filelevel or streamlevel are not a valid logging level
 
     """
-    log_levels = ['INFO','WARNING','DEBUG','ERROR']
-    if filelevel.upper() not in log_levels:
+    log_levels = ['DEBUG','INFO','WARNING','ERROR']
+    if filelevel is not None and filelevel.upper() not in log_levels:
         raise Exception('filelevel value %s is not a valid level' %
                          filelevel)
-    if streamlevel.upper() not in log_levels:
+    if streamlevel is not None and streamlevel.upper() not in log_levels:
         raise Exception('streamlevel value %s is not a valid level' %
                          streamlevel)
     fmt_def = "%(asctime)s - %(funcName)s - %(levelname)s: %(message)s"
     fmt_notime = "%(funcName)s - %(levelname)s: %(message)s"
     fmtr = logging.Formatter(fmt=fmt_def)
     fmtr_notime = logging.Formatter(fmt=fmt_notime)
-
-    s_handler = logging.StreamHandler()
-    s_handler.setFormatter(fmtr_notime)
-    s_handler.setLevel(streamlevel)
+    filelogger = logging.getLogger()
+    filelogger.setLevel('INFO')
+    if streamlevel is not None:
+        s_handler = logging.StreamHandler()
+        s_handler.setFormatter(fmtr_notime)
+        s_handler.setLevel(streamlevel)
+        filelogger.addHandler(s_handler)
     logmode = 'a'
     if resetlog:
         logmode = 'w'
-    f_handler = logging.FileHandler(filename,mode=logmode)
-    f_handler.setFormatter(fmtr)
-
-    filelogger = logging.getLogger()
-    filelogger.setLevel(filelevel)
-    filelogger.addHandler(s_handler)
-    filelogger.addHandler(f_handler)
+    if filelevel is not None:
+        f_handler = logging.FileHandler(filename,mode=logmode)
+        f_handler.setFormatter(fmtr)
+        f_handler.setLevel(filelevel)
+        #filelogger.setLevel(filelevel)
+        filelogger.addHandler(f_handler)
     #Formats exception messages to be sent to appropriate loggers
     def exp_handler(etype,val,tb):
         logging.error("%s" % (val), exc_info=(etype,val,tb))
