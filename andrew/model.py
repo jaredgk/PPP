@@ -21,7 +21,7 @@ class Model:
         self.pop_list = []
         self.nind = defaultdict(int)
         self.ind_dict = defaultdict(list)
-        self.population_files = []
+        self.pop_files = []
         self.individuals_file = ''
 
     @property
@@ -38,7 +38,7 @@ class Model:
             self.nind[pop] = len(inds)
             self.ind_dict[pop] = inds
 
-    def create_population_files (self, file_ext = '', file_path = '', overwrite = False):
+    def create_pop_files (self, file_ext = '', file_path = '', overwrite = False):
         for pop in self.pop_list:
             # Assign the filename for the population file
             pop_filename = pop + file_ext
@@ -59,7 +59,20 @@ class Model:
             pop_file.close()
 
             # Save the population filename
-            self.population_files.append(pop_filename)
+            self.pop_files.append(pop_filename)
+
+    def delete_pop_files (self):
+        # Check if pop files were created
+        if len(self.pop_files) != 0:
+
+            # Loop the created pop files
+            for pop_file in self.pop_files:
+                # Delete the pop file
+                os.remove(pop_file)
+
+            # Remove the filenames
+            self.pop_files = []
+
 
     def create_individuals_file (self, file_ext = '', file_path = '', overwrite = False):
         # Assign the filename for the population file
@@ -82,6 +95,16 @@ class Model:
 
         # Save the individuals filename
         self.individuals_file = ind_filename
+
+    def delete_individuals_file (self):
+        # Check if an individuals file was created
+        if self.individuals_file:
+
+            # Delete the individuals file
+            os.remove(self.individuals_file)
+            
+            # Remove the filename
+            self.individuals_file = ''
 
 
 def read_model_file (filename):

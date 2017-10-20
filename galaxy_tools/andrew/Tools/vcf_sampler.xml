@@ -21,11 +21,27 @@
           --sample-size $sample_size
           --vcf-format vcf.gz
           --overwrite
+          #if $model_file
+            --model-file $model_file
+            --model $model
+          #end if
   ]]></command>
 
   <inputs>
     <param format="vcf.gz,bcf" name="input" type="data" label="VCF Input" />
+    <param format="txt" name="model_file" type="data" label="Model File" />
+    <param name="model" type="select" size="120" label="Select Model">
+        <options from_dataset="model_file" startswith="MODEL:">
+            <column name="name" index="1"/>
+            <column name="value" index="1"/>
+        </options>
+    </param>
     <param format="tabular" name="statistic_file" type="data" label="Statistic Input" />
+    <param name="out_format" type="select" label="Output Format">
+      <option value="vcf.gz" selected="True" >Recoded VCF.GZ File</option>
+      <option value="vcf">Recoded VCF File</option>
+      <option value="bcf">Recoded BCF File</option>
+    </param>
     <param name="calc_statistic" type="select" label="Statistic">
       <option value="windowed-weir-fst" selected="True" >Windowed Fst</option>
       <option value="TajimaD">Tajima's D</option>
@@ -44,7 +60,11 @@
  </inputs>
   <outputs>
     <data format="tabular" name="sample_file"/>
-    <collection type="list" name="vcf_output">
+    <collection type="list" name="sample_vcfs">
+      <discover_datasets pattern="(?P&lt;name&gt;.*)" directory="Sample_Files" format="vcf.gz"/>
+    </collection>
+    <collection type="list" name="sample_vcfs2">
+      <filter>out_format == "vcf"</filter>
       <discover_datasets pattern="(?P&lt;name&gt;.*)" directory="Sample_Files" format="vcf.gz"/>
     </collection>
   </outputs>

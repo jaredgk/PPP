@@ -9,11 +9,21 @@
           #if $filter_max_missing
               --filter-max-missing $filter_max_missing
           #end if
+          #if $model_file
+            --model-file $model_file
+            --model $model
+          #end if
   ]]></command>
 
   <inputs>
     <param format="vcf,vcf.gz,bcf" name="input" type="data" label="VCF Input" />
-    <param name="out" type="text" label="Output" value="out"/>
+    <param format="txt" name="model_file" type="data" label="Model File" />
+    <param name="model" type="select" size="120" label="Select Model">
+        <options from_dataset="model_file" startswith="MODEL:">
+            <column name="name" index="1"/>
+            <column name="value" index="1"/>
+        </options>
+    </param>
     <param name="out_format" type="select" label="Output Format">
       <option value="removed_sites" selected="True" >Removed Sites File</option>
       <option value="kept_sites">Kept Sites File</option>
