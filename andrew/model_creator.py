@@ -186,7 +186,7 @@ def run (passed_arguments = []):
 
         # Loop each population in the model
         for current_pop in model_args.pops[current_model]:
-            
+
             # Check that the population has been assigned to at least one model
             if current_pop not in set(itertools.chain.from_iterable(model_args.pops.values())):
                 print 'Population (%s) not assigned to any model' % current_pop

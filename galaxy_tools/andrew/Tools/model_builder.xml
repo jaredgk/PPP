@@ -11,16 +11,17 @@
             #for $pop_name in $pop_list:
               --assign-pop $model.name $pop_name
             #end for
-            #for pop in $pops:
-              #if str($pop.name) in pop_list
-                --assign-nind $pop.name $pop.ninds
-                #set ind_list = [ind.strip() for ind in str($pop.inds).split(",")]
-                #for $ind_name in $ind_list:
-                  --assign-ind $pop.name $ind_name
-                #end for
-              #end if
-            #end for
           #end for
+          #for pop in $pops:
+            #if str($pop.name) in pop_list
+              --assign-nind $pop.name $pop.ninds
+              #set ind_list = [ind.strip() for ind in str($pop.inds).split(",")]
+              #for $ind_name in $ind_list:
+                --assign-ind $pop.name $ind_name
+              #end for
+            #end if
+          #end for
+
 
   ]]></command>
 

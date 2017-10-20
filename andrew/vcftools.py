@@ -82,7 +82,7 @@ def call_vcftools_bgzip (vcftools_call_args, vcf_gz_filename):
     '''
 
     # vcftools subprocess call
-    vcftools_call = subprocess.Popen(['vcftools'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Create bgzip output file
     bgzip_output = open(vcf_gz_filename, 'wb')
@@ -146,7 +146,7 @@ def call_vcftools (vcftools_call_args):
     # Check that the log file was created correctly
     check_vcftools_for_errors(vcftools_err)
 
-    return vcftools_err
+    return vcftools_out, vcftools_err
 
 
 def check_for_vcftools_output (vcftools_output):
@@ -157,13 +157,13 @@ def check_for_vcftools_output (vcftools_output):
 
         Parameters
         ----------
-        output_prefix : str
-            Specifies the output filename to be created
+        vcftools_output : str
+            Specifies the output filename to be checked
 
         Raises
         ------
         IOError
-            If the vcftools standard output exists
+            If the vcftools output file exists
         IOError
             If the vcftools log file exists
 
@@ -179,6 +179,47 @@ def check_for_vcftools_output (vcftools_output):
     if os.path.isfile(vcftools_output + '.log'):
         logging.error('Log file already exists')
         raise IOError('Log file already exists')
+
+    logging.info('Log file assigned')
+
+def delete_vcftools_output (vcftools_output):
+    '''
+        Deletes previous vcftools output
+
+        Confirms if previous vcftools output exists, and if so, deletes it
+
+        Parameters
+        ----------
+        vcftools_output : str
+            Specifies the output filename to be deleted
+
+        Raises
+        ------
+        IOError
+            If the vcftools output cannot be deleted
+        IOError
+            If the vcftools log cannot be deleted
+    '''
+    
+    # Check if output file already exists
+    if os.path.isfile(vcftools_output):
+        try:
+            # Delete the output
+            os.remove(vcftools_output)
+        except:
+            logging.error('VCF output file cannot be deleted')
+            raise IOError('VCF output file cannot be deleted')
+
+    logging.info('Output file assigned')
+
+    # Check if log file already exists
+    if os.path.isfile(vcftools_output + '.log'):
+        try:
+            # Delete the output
+            os.remove(vcftools_output + '.log')
+        except:
+            logging.error('Log file cannot be deleted')
+            raise IOError('Log file cannot be deleted')
 
     logging.info('Log file assigned')
 
@@ -214,7 +255,46 @@ def check_vcftools_for_errors (vcftools_stderr):
         logging.error(vcftools_stderr)
         raise Exception(vcftools_stderr)
 
-def produce_vcftools_log (output, filename, append_log = False):
+def produce_vcftools_output (output, filename, append_mode = False, strip_header = False):
+    '''
+        Creates the vcftools output file
+
+        This function will create an output file from the vcftools stdout.
+        Please run `check_vcftools_for_errors` prior to check that vcftools
+        finished without error.
+
+        Parameters
+        ----------
+        output : str
+            vcftools stdout
+        filename : str
+            Specifies the filename for the output file
+        append_mode : bool
+            Used to create a single output file from multiple calls
+        strip_header : bool
+            Used to remove the header if not needed
+
+        Returns
+        -------
+        output : file
+            vcftools output file
+
+    '''
+
+    # Check if the header should be stripped
+    if strip_header:
+        output = ''.join(output.splitlines(True)[1:])
+
+    # Check if single log file is required from multiple calls
+    if append_mode:
+        vcftools_log_file = open(filename,'a')
+    else:
+        vcftools_log_file = open(filename,'w')
+
+    vcftools_log_file.write(str(output))
+    vcftools_log_file.close()
+
+def produce_vcftools_log (output, filename, append_mode = False):
     '''
         Creates the vcftools log file
 
@@ -228,7 +308,7 @@ def produce_vcftools_log (output, filename, append_log = False):
             vcftools stderr
         filename : str
             Specifies the filename for the log file
-        append_log : bool
+        append_mode : bool
             Used to create a single log file from multiple calls
 
         Returns
@@ -238,10 +318,11 @@ def produce_vcftools_log (output, filename, append_log = False):
 
     '''
     # Check if single log file is required from multiple calls
-    if append_log:
+    if append_mode:
         vcftools_log_file = open(filename + '.log','a')
     else:
         vcftools_log_file = open(filename + '.log','w')
+
     vcftools_log_file.write(str(output))
     vcftools_log_file.close()
 

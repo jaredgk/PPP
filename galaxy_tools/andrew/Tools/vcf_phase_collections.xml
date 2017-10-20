@@ -1,0 +1,69 @@
+<tool id="vcf_phase" name="VCF Phaser" version="0.1b">
+  <description>Automates the phasing of VCF files</description>
+
+  <command><![CDATA[
+  #if $input.input_selector == "individual"
+    #set filename = "basename $input.ind"
+    #if $input.ind.is_of_type('vcf.gz')
+      ln -fs $input.ind "$input.ind".vcf.gz &&
+    #end if
+    #if $input.ind.is_of_type('vcf')
+      ln -fs $input.ind "$input.ind".vcf &&
+    #end if
+    python $__tool_directory__/vcf_phase.py
+            #if $input.ind.is_of_type('vcf.gz')
+               "$input.ind".vcf.gz
+            #end if
+            #if $input.ind.is_of_type('vcf')
+               "$input.ind".vcf
+            #end if
+            --phase-algorithm $phase_algorithm
+            --out $output
+  #end if
+  #if $input.input_selector == "collection"
+    #for $col_member in $input.col:
+      ln -fs $col_member $col_member.element_identifier &&
+    #end for
+    python $__tool_directory__/vcf_phase.py
+            #for $col_member in $input.col:
+               --vcf $col_member.element_identifier
+            #end for
+           --phase-algorithm $phase_algorithm
+  #end if
+  ]]></command>
+
+  <inputs>
+    <conditional name="input">
+      <param name="input_selector" type="select" label="Individual File(s) or Collection" help="Select between phasing an individual file(s) or collection of files">
+        <option value="individual">Individual File(s)</option>
+        <option value="collection">Collection</option>
+      </param>
+      <when value="individual">
+        <param format="vcf, vcf.gz" name="ind" type="data" label="VCF Input" />
+      </when>
+      <when value="collection">
+        <param format="vcf, vcf.gz" name="col" type="data_collection" collection_type="list" label="VCF Input"/>
+      </when>
+    </conditional>
+    <param name="phase_algorithm" type="select" label="Phase Algorithm">
+      <option value="beagle" selected="True" >Beagle</option>
+      <option value="shapeit">SHAPEIT</option>
+    </param>
+  </inputs>
+
+  <outputs>
+    <data format="vcf.gz" name="output">
+      <filter>input["input_selector"] == "individual"</filter>
+    </data>
+    <collection type="list" name="sample_vcfs">
+      <filter>input["input_selector"]  == "collection"</filter>
+      <discover_datasets pattern="(?P&lt;name&gt;.*)" directory="Phased_Files" format="vcf.gz"/>
+    </collection>
+
+  </outputs>
+
+  <help>
+      VCF Phaser Help Text
+  </help>
+
+</tool>

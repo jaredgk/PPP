@@ -41,7 +41,7 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument('--model', help = 'Defines the model to analyze', type = str)
 
     # Other file arguments. Expand as needed
-    vcf_parser.add_argument('--out', help = 'Specifies the complete output filename. Renames vcftools-named intermediate files', type = str)
+    vcf_parser.add_argument('--out', help = 'Specifies the complete output filename', type = str)
     vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out')
     #vcf_parser.add_argument('--log', help = "Specifies if the vcftools log should be saved", action = 'store_false')
 
@@ -190,7 +190,6 @@ def run (passed_arguments = []):
         # Assign the individuals file to vcftools
         vcftools_call_args.extend(['--keep', selected_model.individuals_file])
 
-
     # Holds the filename vcftools assigns to the filtered output
     vcftools_output_filename = None
 
@@ -208,7 +207,7 @@ def run (passed_arguments = []):
         vcftools_call_args.append('--recode')
         vcftools_output_filename = vcf_args.out_prefix + '.recode.vcf'
     elif vcf_args.out_format == 'vcf.gz':
-        vcftools_call_args.extend(['--recode', '--stdout'])
+        vcftools_call_args.append('--recode')
         vcftools_output_filename = vcf_args.out_prefix + '.recode.vcf.gz'
 
     if vcf_args.filter_include_chr or vcf_args.filter_exclude_chr:
@@ -287,8 +286,8 @@ def run (passed_arguments = []):
         # Call both vcftools and bgzip, return stderr
         vcftools_err = call_vcftools_bgzip(vcfname_arg + vcftools_call_args, vcftools_output_filename)
     else:
-        # Call only vcftools
-        vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
+        # Call only vcftools. Note: vcftools_out will be empty
+        vcftools_out, vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
 
     # Check if the user specifed the complete output filename
     if vcf_args.out:
@@ -296,6 +295,10 @@ def run (passed_arguments = []):
         produce_vcftools_log(vcftools_err, vcf_args.out)
     else:
         produce_vcftools_log(vcftools_err, vcftools_output_filename)
+
+    # Delete any files that were created for vcftools
+    if vcf_args.model_file:
+        selected_model.delete_individuals_file()
 
 if __name__ == "__main__":
     initLogger()
