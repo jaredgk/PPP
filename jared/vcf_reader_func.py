@@ -63,6 +63,51 @@ def checkFormat(vcfname):
     return 'other'
 
 
+class VcfReader(pysam.libcbcf.VariantFile):
+    def __init__(self, vcfname, compress_flag=False, subsamp_num=None,
+                 subsamp_fn=None, subsamp_list=None, index=None):
+
+        ext = checkFormat(vcfname)
+        if ext in ['gzip','other'] :
+            raise Exception(('Input file %s is gzip-formatted, must be either '
+                             'uncompressed or zipped with bgzip' % vcfname))
+        self.file_uncompressed = (ext == 'vcf')
+        self.reader_uncompressed = (self.file_uncompressed and not compress_flag)
+        if compress_flag and file_uncompressed:
+            vcfname = compressVcf(vcfname)
+        if subsamp_num is not None:
+            if subsamp_list is not None:
+                raise Exception('Multiple subsampling options called in getVcfReader')
+            subsamp_list = getSubsampleList(vcfname, subsamp_num)
+        elif subsamp_fn is not None:
+            if subsamp_list is not None:
+                raise Exception('Multiple subsampling options called in getVcfReader')
+            subsamp_file = open(subsamp_fn,'r')
+            subsamp_list = [l.strip() for l in subsamp_file.readlines()]
+            subsamp_file.close()
+        if index is None:
+            self.reader = pysam.VariantFile(vcfname)
+        else:
+            self.reader = pysam.VariantFile(vcfname, index_filename=index)
+        if subsamp_list is not None:
+            logging.debug('Subsampling %d individuals from VCF file' %
+            (len(subsamp_list)))
+            vcf_reader.subset_samples(subsamp_list)
+        self.prev_last_rec = None
+
+        def fetch(self, chrom=None, start=None, end=None):
+            return self.reader.fetch(chrom, start, end)
+
+        def getRecordList(self, region=None, chrom=None, start=None,
+                          end=None):
+            if self.reader_uncompressed:
+                ret, self.prev_last_rec = getRecordListUnzipped(self.reader, region, self.prev_last_rec)
+                return ret
+            else:
+                return getRecordList(self.reader, region, chrom, start, end)
+
+
+
 def getRecordList(vcf_reader, region=None, chrom=None, start=None,
                   end=None):
     """Returns list for use in subsampling from input file"""
@@ -76,7 +121,8 @@ def getRecordList(vcf_reader, region=None, chrom=None, start=None,
     return lst
 
 
-def getRecordListUnzipped(vcf_reader, region, prev_last_rec):
+def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
+                          start=None, end=None):
     """Method for getting record list from unzipped VCF file.
 
     This method will sequentially look through a VCF file until it finds
