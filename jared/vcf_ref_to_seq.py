@@ -283,7 +283,7 @@ def vcf_to_seq(sys_args):
             rec_list = vf.getRecordList(vcf_reader, region)
         else:
             rec_list, prev_last_rec = vf.getRecordListUnzipped(vcf_reader,
-                                      region, prev_last_rec)
+                                      prev_last_rec, region)
         if len(rec_list) == 0:
             logging.warning(("Region from %d to %d has no variants "
                             "in VCF file") % (region.start,region.end))
