@@ -164,16 +164,20 @@ def vcf_region_write(sys_args):
         sys.exit(1)
     args = parser.parse_args(sys_args)
     logArgs(args)
-    vcf_reader, uncompressed = vf.getVcfReader(args.vcfname,
-                               compress_flag=args.compress_flag,
-                               subsamp_num=args.subsamp_num,
-                               subsamp_fn=args.subsamp_fn)
+    #vcf_reader, uncompressed = vf.getVcfReader(args.vcfname,
+    #                           compress_flag=args.compress_flag,
+    #                           subsamp_num=args.subsamp_num,
+    #                           subsamp_fn=args.subsamp_fn)
+    vcf_reader = vf.VcfReader(args.vcfname,
+                              compress_flag=args.compress_flag,
+                              subsamp_num=args.subsamp_num,
+                              subsamp_fn=args.subsamp_fn)
     logging.info('VCF file read')
-    header = vcf_reader.header
-    first_el = next(vcf_reader)
+    header = vcf_reader.reader.header
+    first_el = next(vcf_reader.reader)
     chrom = first_el.chrom
     if not args.multi_out:
-        output_name = getOutputName(args, uncompressed)
+        output_name = getOutputName(args, vcf_reader.file_uncompressed)
         vcf_out = pysam.VariantFile(output_name, 'w', header=header)
     else:
         out_p = getOutputPrefix(args, uncompressed)
@@ -188,15 +192,16 @@ def vcf_region_write(sys_args):
         raise Exception(("No value provided for region filename or "
                          "single region"))
     logging.info('Region read')
-    prev_last_rec = first_el
+    vcf_reader.prev_last_rec = first_el
     logging.info('Total individuals: %d' % (len(first_el.samples)))
     logging.info('Total regions: %d' % (len(region_list.regions)))
     for rc,region in enumerate(region_list.regions,start=1):
-        if not uncompressed:
-            rec_list = vf.getRecordList(vcf_reader, region)
-        else:
-            rec_list, prev_last_rec = vf.getRecordListUnzipped(vcf_reader,
-                            prev_last_rec, region)
+        rec_list = vcf_reader.getRecordList(region)
+        #if not uncompressed:
+        #    rec_list = vf.getRecordList(vcf_reader, region)
+        #else:
+        #    rec_list, prev_last_rec = vf.getRecordListUnzipped(vcf_reader,
+        #                    prev_last_rec, region)
         if len(rec_list) == 0:
             logging.warning(("Region from %d to %d has no variants "
                             "in VCF file") % (region.start,region.end))
@@ -205,7 +210,7 @@ def vcf_region_write(sys_args):
                 vcf_out.close()
             except:
                 pass
-            outname = getMultiFileName(out_p, rc, uncompressed,
+            outname = getMultiFileName(out_p, rc, vcf_reader.file_uncompressed,
                                        args.nocompress)
             vcf_out = pysam.VariantFile(outname, 'w', header=header)
         for rec in rec_list:

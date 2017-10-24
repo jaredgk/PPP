@@ -95,16 +95,16 @@ class VcfReader(pysam.libcbcf.VariantFile):
             vcf_reader.subset_samples(subsamp_list)
         self.prev_last_rec = None
 
-        def fetch(self, chrom=None, start=None, end=None):
-            return self.reader.fetch(chrom, start, end)
+    def fetch(self, chrom=None, start=None, end=None):
+        return self.reader.fetch(chrom, start, end)
 
-        def getRecordList(self, region=None, chrom=None, start=None,
-                          end=None):
-            if self.reader_uncompressed:
-                ret, self.prev_last_rec = getRecordListUnzipped(self.reader, region, self.prev_last_rec)
-                return ret
-            else:
-                return getRecordList(self.reader, region, chrom, start, end)
+    def getRecordList(self, region=None, chrom=None, start=None,
+                      end=None):
+        if self.reader_uncompressed:
+            ret, self.prev_last_rec = getRecordListUnzipped(self.reader, self.prev_last_rec, region)
+            return ret
+        else:
+            return getRecordList(self.reader, region, chrom, start, end)
 
 
 
