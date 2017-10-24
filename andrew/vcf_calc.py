@@ -50,7 +50,7 @@ def vcf_calc_parser(passed_arguments):
     vcf_parser.add_argument('--overwrite', help = "Specifies if previous output files should be overwritten", action = 'store_true')
 
     # Statistic based arguments.
-    statistic_list = ['weir-fst', 'windowed-weir-fst', 'TajimaD', 'pi', 'freq', 'het-fit', 'het-fis']
+    statistic_list = ['weir-fst', 'windowed-weir-fst', 'TajimaD', 'site-pi', 'window-pi', 'freq', 'het-fit', 'het-fis']
     statistic_default = 'windowed-weir-fst'
 
     vcf_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'Specifies the statistic to calculate', type = str, choices = statistic_list, default = statistic_default)
@@ -229,7 +229,15 @@ def run (passed_arguments = []):
         # Assigns the suffix for the vcftools log file
         vcftools_out_suffix = '.Tajima.D'
 
-    elif vcf_args.calc_statistic == 'pi':
+    elif vcf_args.calc_statistic == 'site-pi':
+
+        # Assigns all the vcftools arguments for calculating pi
+        vcftools_call_args.append('--site-pi')
+
+        # Assigns the suffix for the vcftools log file
+        vcftools_out_suffix = '.sites.pi'
+
+    elif vcf_args.calc_statistic == 'windowed-pi':
 
         # Assigns all the vcftools arguments for calculating pi
         vcftools_call_args.extend(['--window-pi', vcf_args.statistic_window_size, '--window-pi-step', vcf_args.statistic_window_step])
@@ -354,14 +362,10 @@ def run (passed_arguments = []):
         else:
             produce_vcftools_log(vcftools_err, vcftools_output_filename)
 
-
     # Delete any files that were created for vcftools
     if vcf_args.model_file:
         selected_model.delete_pop_files()
         selected_model.delete_individuals_file()
-
-
-
 
 if __name__ == "__main__":
     initLogger()

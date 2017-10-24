@@ -82,7 +82,7 @@ class vcf_calc_tests (unittest.TestCase):
     def test_window_pi (self):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
-                      '--calc-statistic', 'pi',
+                      '--calc-statistic', 'window-pi',
                       '--out-prefix', 'out'])
 
         # Confirm that the output is what is expected
