@@ -78,6 +78,10 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument('--filter-include-bed', help = 'Specifies a set of sites to include within a BED file', action = parser_confirm_file())
     vcf_parser.add_argument('--filter-exclude-bed', help = 'Specifies a set of sites to exclude within a BED file', action = parser_confirm_file())
 
+    # Individual filters
+    vcf_parser.add_argument('--filter-keep', help = 'Specifies a file of individuals to keep', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-remove', help = 'Specifies a file of individuals to remove', action = parser_confirm_file())
+
     # Filter-flag filters
     vcf_parser.add_argument('--filter-include-passed', help = "Specifies that only sites with the filter flag 'PASS' should be included", action = 'store_true')
     vcf_parser.add_argument('--filter-include-filtered', help = 'Specifies that all sites with the given filter flag should be included', nargs = '+', type = str)
@@ -210,6 +214,17 @@ def run (passed_arguments = []):
         vcftools_call_args.append('--recode')
         vcftools_output_filename = vcf_args.out_prefix + '.recode.vcf.gz'
 
+    # Individual-based filters
+    if vcf_args.filter_keep or vcf_args.filter_remove:
+        # Used to include a file of individuals to keep
+        if vcf_args.filter_keep:
+            vcftools_call_args.extend(['--keep', vcf_args.filter_keep])
+
+        # Used to include a file of individuals to remove
+        if vcf_args.filter_remove:
+            vcftools_call_args.extend(['--remove', vcf_args.filter_remove])
+
+    # Chromosome-based filters
     if vcf_args.filter_include_chr or vcf_args.filter_exclude_chr:
         if vcf_args.filter_include_chr:
             for chr_to_include in vcf_args.filter_include_chr:
@@ -218,24 +233,28 @@ def run (passed_arguments = []):
             for chr_to_exclude in vcf_args.filter_exclude_chr:
                 vcftools_call_args.extend(['--not-chr', chr_to_exclude])
 
+    # Site (i.e. basepair) filters
     if vcf_args.filter_from_bp or vcf_args.filter_to_bp:
         if vcf_args.filter_include_chr:
             vcftools_call_args.extend(['--from-bp', vcf_args.filter_from_bp])
         if vcf_args.filter_exclude_chr:
             vcftools_call_args.extend(['--to-bp', vcf_args.filter_to_bp])
 
+    # Position (vcftools output file) filters
     if vcf_args.filter_include_positions or vcf_args.filter_exclude_positions:
         if vcf_args.filter_include_positions:
             vcftools_call_args.extend(['--positions', vcf_args.filter_include_positions])
         if vcf_args.filter_exclude_positions:
             vcftools_call_args.extend(['--exclude-positions', vcf_args.filter_exclude_positions])
 
+    # Position (BED format file) filters
     if vcf_args.filter_include_bed or vcf_args.filter_exclude_bed:
         if vcf_args.filter_include_bed:
             vcftools_call_args.extend(['--bed', vcf_args.filter_include_bed])
         if vcf_args.filter_exclude_bed:
             vcftools_call_args.extend(['--exclude-bed', vcf_args.filter_exclude_bed])
 
+    # Flag-based Filters
     if vcf_args.filter_include_passed or vcf_args.filter_include_filtered or vcf_args.filter_exclude_filtered:
         if vcf_args.filter_include_passed:
             vcftools_call_args.append('--remove-filtered-all')
@@ -246,6 +265,7 @@ def run (passed_arguments = []):
             for filtered_to_exclude in vcf_args.filter_exclude_filtered:
                 vcftools_call_args.extend(['--remove-filtered', filtered_to_exclude])
 
+    # Infor-based filters
     if vcf_args.filter_include_info or vcf_args.filter_exclude_info:
         if vcf_args.filter_include_info:
             for info_to_include in vcf_args.filter_include_info:
@@ -254,15 +274,18 @@ def run (passed_arguments = []):
             for info_to_exclude in vcf_args.filter_exclude_info:
                 vcftools_call_args.extend(['--remove-INFO', info_to_exclude])
 
+    # Allele-based filters
     if vcf_args.filter_min_alleles or vcf_args.filter_max_alleles:
         if vcf_args.filter_min_alleles:
             vcftools_call_args.extend(['--min-alleles', vcf_args.filter_min_alleles])
         if vcf_args.filter_max_alleles:
             vcftools_call_args.extend(['--max-alleles', vcf_args.filter_max_alleles])
 
+    # Missing data filters
     if vcf_args.filter_max_missing:
         vcftools_call_args.extend(['--max-missing', vcf_args.filter_max_missing])
 
+    # Distance (between sites) filters
     if vcf_args.filter_distance:
         vcftools_call_args.extend(['--thin', vcf_args.filter_distance])
 

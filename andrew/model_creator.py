@@ -181,6 +181,7 @@ def run (passed_arguments = []):
             # Check if the number of populations has been assigned for the current model
             if model_args.assign_npop[current_model]:
                 if len(model_args.pops[current_model]) != model_args.assign_npop[current_model]:
+                    print  len(model_args.pops[current_model]),  model_args.assign_npop[current_model]
                     print 'Number of populations (--npop) assigned to %s does not match the named popultions' % current_model
                     sys.exit()
 
@@ -221,7 +222,7 @@ def run (passed_arguments = []):
         for current_pop in model_args.pops[current_model]:
             model_output.write('  POP:\t%s\n' % current_pop)
             model_output.write('    NIND:\t%s\n' % len(model_args.inds[current_pop]))
-            model_output.write('    IND:\t%s\n' % ', '.join(model_args.inds[current_pop]))
+            model_output.write('    INDS:\t%s\n' % ', '.join(model_args.inds[current_pop]))
 
     model_output.close()
 

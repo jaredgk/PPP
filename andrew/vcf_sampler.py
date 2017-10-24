@@ -6,6 +6,7 @@ import pysam
 import itertools
 import logging
 import shutil
+import copy
 import numpy as np
 import pandas as pd
 from collections import defaultdict
@@ -69,7 +70,7 @@ def sampler_parser(passed_arguments):
     sampler_parser.add_argument('--overwrite', help = "Specifies if previous output files should be overwritten", action = 'store_true')
 
     # Statistic based arguments.
-    statistic_list = ['windowed-weir-fst', 'TajimaD']
+    statistic_list = ['windowed-weir-fst', 'TajimaD', 'window-pi']
     statistic_default = 'windowed-weir-fst'
     sampler_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'Specifies the statistic calculated ', type=str, choices = statistic_list, default = statistic_default)
 
@@ -86,6 +87,10 @@ def sampler_parser(passed_arguments):
 
     # Random options
     sampler_parser.add_argument('--random-seed', help="Defines the random seed value for the random number generator", type = int, default = random.randint(1, 1000000000))
+
+    # Individual filters
+    sampler_parser.add_argument('--filter-keep', help = 'Specifies a file of individuals to keep', action = parser_confirm_file())
+    sampler_parser.add_argument('--filter-remove', help = 'Specifies a file of individuals to remove', action = parser_confirm_file())
 
     # Position-based position filters
     sampler_parser.add_argument('--filter-include-positions', help = 'Specifies a set of sites to include within a file (tsv chromosome and position)', action = parser_confirm_file())
@@ -146,7 +151,7 @@ def assign_position_columns (sample_headers):
     return sample_headers.index('CHROM'), sample_headers.index('BIN_START'), sample_headers.index('BIN_END')
 
 def assign_statistic_column (sample_headers, statistic):
-    statistic_converter = {'windowed-weir-fst':'MEAN_FST', 'TajimaD':'TajimaD'}
+    statistic_converter = {'windowed-weir-fst':'MEAN_FST', 'TajimaD':'TajimaD', 'window-pi':'PI'}
 
     if statistic not in statistic_converter:
         logging.critical('Statistic not found. Statistic list needs to be updated. Please contact the PPP Team.')
@@ -347,8 +352,56 @@ def run (passed_arguments = []):
         # Select model, might change this in future versions
         selected_model = models_in_file[sampler_args.model]
 
+        # List of the individuals within the vcf
+        individuals_in_file = list(vcf_input.header.samples)
+
+        if not set(selected_model.ind_list).issubset(set(individuals_in_file)):
+            logging.error('Individuals differ between model "%s" and input.' % sampler_args.model)
+            raise IOError('Individuals differ between model "%s" and input.' % sampler_args.model)
+
         # Reduce individuals to those in model
         vcf_input.subset_samples(selected_model.ind_list)
+
+    # If no model was specifed, check if a keep or remove file was specifed
+    elif sampler_args.filter_keep or sampler_args.filter_remove:
+
+        # List of the individuals within the vcf
+        individuals_in_file = list(vcf_input.header.samples)
+
+        # Check if a keep file was specifed
+        if sampler_args.filter_keep:
+
+            # List of the individuals to keep
+            selected_individuals = []
+
+            # Read in the individuals within the keep file
+            with open(sampler_args.filter_keep, 'rU') as keep_file:
+                for keep_line in keep_file:
+
+                    if keep_line.strip() not in individuals_in_file:
+                        logging.error('Individuals differ between --keep-file and input.')
+                        raise IOError('Individuals differ between --keep-file and input.')
+
+                    selected_individuals.append(keep_line.strip())
+
+        # Check if a remove file was specifed
+        elif sampler_args.filter_remove:
+
+            # List of the individuals to keep
+            selected_individuals = copy.deepcopy(individuals_in_file)
+
+            # Read in the individuals within the keep file
+            with open(sampler_args.filter_remove, 'rU') as remove_file:
+                for remove_line in remove_file:
+
+                    if remove_line.strip() not in individuals_in_file:
+                        logging.error('Individuals differ between --remove-file and input.')
+                        raise IOError('Individuals differ between --remove-file and input.')
+
+                    selected_individuals.remove(remove_line.strip())
+
+        # Reduce individuals to those in model
+        vcf_input.subset_samples(selected_individuals)
 
     # Sites to be included
     include_sites =  pd.DataFrame()

@@ -102,7 +102,7 @@ class Model:
 
             # Delete the individuals file
             os.remove(self.individuals_file)
-            
+
             # Remove the filename
             self.individuals_file = ''
 
@@ -133,7 +133,7 @@ def read_model_file (filename):
 
                     # Make sure the population counts match
                     if current_model.npop != model_npop:
-                        print 'Number of populations found in %s does not match NPOP' % current_model.name
+                        print ('Number of populations found in %s does not match NPOP' % current_model.name)
                         sys.exit()
 
                     # Store model
@@ -164,7 +164,7 @@ def read_model_file (filename):
                 ind_list = [ind.strip() for ind in model_line.split(':')[1].split(',')]
                 # Make sure the individual counts match
                 if pop_nind != len(ind_list):
-                    print 'Number of individuals specified in INDS does not match NIND'
+                    print ('Number of individuals specified in INDS does not match NIND')
                     sys.exit()
 
                 # Assign the current population
@@ -176,7 +176,7 @@ def read_model_file (filename):
 
     # Make sure the population counts match
     if current_model.npop != model_npop:
-        print 'Number of populations found in %s does not match NPOP' % current_model.name
+        print ('Number of populations found in %s does not match NPOP' % current_model.name)
         sys.exit()
 
     # Store model
