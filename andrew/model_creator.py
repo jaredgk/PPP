@@ -1,13 +1,12 @@
 import os
 import sys
-import subprocess
+import json
 import argparse
 import logging
 import itertools
 
 from collections import defaultdict
-
-from vcftools import *
+from collections import OrderedDict
 
 # Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
@@ -211,20 +210,46 @@ def run (passed_arguments = []):
                         print 'Number of individuals (--nind) assigned to %s does not match the named individuals' % current_pop
                         sys.exit()
 
-    model_output = open(model_args.out, 'w')
+    # List to store the models
+    models_dict = []
+
     # Loop each model specified to generate the output
     for current_model in model_args.model:
-        model_output.write('MODEL:\t%s\n' % current_model)
-        model_output.write('  TREE:\t%s\n' % model_args.model_tree[current_model])
-        model_output.write('  NPOP:\t%s\n' % len(model_args.pops[current_model]))
+
+        # Create an ordered container for model information
+        model_dict = OrderedDict()
+
+        # Save the name of the model
+        model_dict['name'] = current_model
+
+        # Check if the model isn't a single population
+        if len(model_args.pops[current_model]) > 1:
+
+            # Assign the tree to the population
+            model_dict['tree'] = model_args.model_tree[current_model]
+
+        # Create container for population information
+        pop_dict = defaultdict(lambda: defaultdict(list))
 
         # Loop each population in the model
         for current_pop in model_args.pops[current_model]:
-            model_output.write('  POP:\t%s\n' % current_pop)
-            model_output.write('    NIND:\t%s\n' % len(model_args.inds[current_pop]))
-            model_output.write('    INDS:\t%s\n' % ', '.join(model_args.inds[current_pop]))
+            # Assign the individuals to the population
+            pop_dict[current_pop]['inds'] = model_args.inds[current_pop]
 
-    model_output.close()
+        # Append the pop_dict
+        model_dict['pops'] = pop_dict
+
+        # Append the model_dict
+        models_dict.append(model_dict)
+
+    # Open the output file
+    output_file = open(model_args.out, 'w')
+
+    # Write the json-formmated data to the output file
+    output_file.write(json.dumps(models_dict, indent = 4))
+
+    output_file.close()
+
 
 if __name__ == "__main__":
     run()

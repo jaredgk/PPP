@@ -3,43 +3,87 @@
   <command><![CDATA[
   python $__tool_directory__/vcf_calc.py
           $input
-          #for $pop_file in $pop_files:
-            #if $pop_file
-              --pop-file $pop_file
-            #end if
-          #end for
-          --calc-statistic $calc_statistic
           --out $output
           --overwrite
+          --calc-statistic $selected.calc_statistic
           #if $model_file
             --model-file $model_file
             --model $model
+          #end if
+          #if $selected.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis']
+            #for $pop_file in $selected.pop_files:
+              #if $pop_file
+                --pop-file $pop_file
+              #end if
+            #end for
+          #end if
+          #if $selected.calc_statistic in ['windowed-weir-fst', 'window-pi', 'TajimaD']
+            --statistic-window-size $selected.statistic_window_size
+          #end if
+          #if $selected.calc_statistic in ['windowed-weir-fst', 'window-pi']
+            --statistic-window-step $selected.statistic_window_step
+          #end if
+          #if $filter.filter_include_positions
+            --filter-include-positions $filter.filter_include_positions
+          #end if
+          #if $filter.filter_exclude_positions
+            --filter-exclude-positions $filter.filter_exclude_positions
+          #end if
+          #if $filter.filter_keep
+            --filter-keep $filter.filter_keep
+          #end if
+          #if $filter.filter_remove
+            --filter-remove $filter.filter_remove
           #end if
   ]]></command>
 
   <inputs>
     <param format="vcf,vcf.gz,bcf" name="input" type="data" label="VCF Input" />
-    <param format="txt" name="model_file" type="data" label="Model File" />
-    <param name="model" type="select" size="120" label="Select Model">
-        <options from_dataset="model_file" startswith="MODEL:">
-            <column name="name" index="1"/>
-            <column name="value" index="1"/>
-        </options>
+
+    <param format="model" name="model_file" type="data" label="Model Input"/>
+    <param name="model" type="select" label="Select Model" help="Used to specify the individuals and/or populations to assess">
+      <options>
+        <filter type="data_meta" ref="model_file" key="models"/>
+      </options>
     </param>
-    <param name="calc_statistic" type="select" label="Statistic">
-      <option value="windowed-weir-fst" selected="True" >Windowed Fst</option>
-      <option value="weir-fst">Fst</option>
-      <option value="TajimaD">Tajima's D</option>
-      <option value="pi">Nucleotide Diversity</option>
-      <option value="freq">Allele Frequency</option>
-      <option value="het-fit">Heterozygosity (Fit)</option>
-      <option value="het-fis">Heterozygosity (Fis)</option>
-    </param>
-    <param name="statistic_window_size" type="integer" value="10000" label="Specifies the size of window calculations" />
-    <param name="statistic_window_step" type="integer" value="20000" label="Specifies step size between windows" />
-    <param format="txt" name="pop_files" type="data" label="Population Files" multiple="True" optional="True"/>
-    <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" multiple="False" optional="True"/>
-    <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" multiple="False" optional="True"/>
+
+    <conditional name="selected">
+      <param name="calc_statistic" type="select" label="Statistic">
+        <option value="windowed-weir-fst" selected="True" >Windowed Fst</option>
+        <option value="weir-fst">Fst</option>
+        <option value="TajimaD">Tajima's D</option>
+        <option value="window-pi">Windowed Nucleotide Diversity</option>
+        <option value="site-pi">Nucleotide Diversity</option>
+        <option value="freq">Allele Frequency</option>
+        <option value="het-fit">Heterozygosity (Fit)</option>
+        <option value="het-fis">Heterozygosity (Fis)</option>
+      </param>
+      <when value="windowed-weir-fst">
+        <param name="statistic_window_size" type="integer" value="10000" label="Specifies the size of window calculations"/>
+        <param name="statistic_window_step" type="integer" value="20000" label="Specifies step size between windows"/>
+        <param format="txt" name="pop_files" type="data" label="Population Files" multiple="True" optional="True" help="Not required if a model is specified"/>
+      </when>
+      <when value="weir-fst">
+        <param format="txt" name="pop_files" type="data" label="Population Files" multiple="True" optional="True" help="Not required if a model is specified"/>
+      </when>
+      <when value="het-fis">
+        <param format="txt" name="pop_files" type="data" label="Population Files" multiple="True" optional="True" help="Not required if a model is specified"/>
+      </when>
+      <when value="window-pi">
+        <param name="statistic_window_size" type="integer" value="10000" label="Specifies the size of window calculations"/>
+        <param name="statistic_window_step" type="integer" value="20000" label="Specifies step size between windows"/>
+      </when>
+      <when value="TajimaD">
+        <param name="statistic_window_size" type="integer" value="10000" label="Specifies the size of window calculations"/>
+      </when>
+    </conditional>
+
+    <section name="filter" title="Filters" expanded="False">
+      <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" multiple="False" optional="True"/>
+      <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" multiple="False" optional="True"/>
+      <param format="tabular" name="filter_keep" type="data" label="Individuals to keep" optional="True"/>
+      <param format="tabular" name="filter_remove" type="data" label="Individuals to remove" optional="True"/>
+    </section>
   </inputs>
 
   <outputs>

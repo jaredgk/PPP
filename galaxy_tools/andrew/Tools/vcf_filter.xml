@@ -6,24 +6,72 @@
           --out-format $out_format
           --out $output
           --overwrite
-          #if $filter_max_missing
-              --filter-max-missing $filter_max_missing
-          #end if
           #if $model_file
             --model-file $model_file
             --model $model
           #end if
+          #if $filter_max_missing
+              --filter-max-missing $filter_max_missing
+          #end if
+          --filter-min-alleles $filter_min_alleles
+          --filter-max-alleles $filter_max_alleles
+          #if $pos.filter_include_chr
+            #set include_chrs = [include_chr.strip() for include_chr in str($pos.filter_include_chr).split(",")]
+            --filter-include-chr $include_chrs
+          #end if
+          #if $pos.filter_exclude_chr
+            #set exclude_chrs = [exclude_chr.strip() for exclude_chr in str($pos.filter_exclude_chr).split(",")]
+            --filter-exclude-chr $exclude_chrs
+          #end if
+          #if $pos.filter_from_bp
+            --filter-from-bp $pos.filter_from_bp
+          #end if
+          #if $pos.filter_to_bp
+            --filter-to-bp $filter_to_bp
+          #end if
+          #if $pos.filter_distance
+            --filter-distance $pos.filter_distance
+          #end if
+          #if $pos_file.filter_include_positions
+            --filter-include-positions $pos_file.filter_include_positions
+          #end if
+          #if $pos_file.filter_exclude_positions
+            --filter-exclude-positions $pos_file.filter_exclude_positions
+          #end if
+          #if $pos_file.filter_include_bed
+            --filter-include-bed $pos_file.filter_include_bed
+          #end if
+          #if $pos_file.filter_exclude_bed
+            --filter-exclude-bed $pos_file.filter_exclude_bed
+          #end if
+          #if $ind.filter_keep
+            --filter-keep $ind.filter_keep
+          #end if
+          #if $ind.filter_remove
+            --filter-remove $ind.filter_remove
+          #end if
+          #if $flag.filter_include_pass
+            --filter-include-pass $flag.filter_include_pass
+          #end if
+          #if $flag.filter_include_filtered
+            --filter-include-filtered $flag.filter_include_filtered
+          #end if
+          #if $flag.filter_exclude_filtered
+            --filter-exclude-filtered $flag.filter_exclude_filtered
+          #end if
   ]]></command>
 
   <inputs>
+
     <param format="vcf,vcf.gz,bcf" name="input" type="data" label="VCF Input" />
-    <param format="txt" name="model_file" type="data" label="Model File" />
-    <param name="model" type="select" size="120" label="Select Model">
-        <options from_dataset="model_file" startswith="MODEL:">
-            <column name="name" index="1"/>
-            <column name="value" index="1"/>
-        </options>
+
+    <param format="model" name="model_file" type="data" label="Model Input"/>
+    <param name="model" type="select" label="Select Model" refresh_on_change="True">
+      <options>
+        <filter type="data_meta" ref="model_file" key="models"/>
+      </options>
     </param>
+
     <param name="out_format" type="select" label="Output Format">
       <option value="removed_sites" selected="True" >Removed Sites File</option>
       <option value="kept_sites">Kept Sites File</option>
@@ -31,30 +79,64 @@
       <option value="vcf.gz">Recoded VCF.GZ File</option>
       <option value="bcf">Recoded BCF File</option>
     </param>
-    <param name="filter_min_alleles" type="integer" value="2" label="Min alleles" />
-    <param name="filter_max_alleles" type="integer" value="2" label="Max alleles" />
-    <param name="filter_max_missing" type="float" label="Exclude sites by the proportion of missing data (0.0: include all, 1.0: no missing data)" optional="True" />
-    <param name="filter_include_chr" type="text" label="Chromosome(s) to include" optional="True"/>
-    <param name="filter_exclude_chr" type="text" label="Chromosome(s) to exclude" optional="True"/>
-    <param name="filter_from_bp" type="integer" label="Lower bound of sites to include" optional="True"/>
-    <param name="filter_to_bp" type="integer" label="Upper bound of sites to include" optional="True"/>
-    <param name="filter_distance" type="integer" label="Distance no two sites may be within" optional="True"  />
-    <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True"/>
-    <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True"/>
-    <param format="bed" name="filter_include_bed" type="data" label="Include Positions in BED File" optional="True"/>
-    <param format="bed" name="filter_exclude_bed" type="data" label="Exclude Positions in BED File" optional="True"/>
-    <param name="filter_include_pass" type="boolean" label="Include only sites with the filter flag 'PASS'" optional="True"/>
-    <param format="tabular" name="filter_include_filtered" type="data" label="Include sites with the given filter flag" optional="True"/>
-    <param format="tabular" name="filter_exclude_filtered" type="data" label="Exclude sites with the given filter flag" optional="True"/>
+
+    <param name="filter_min_alleles" type="integer" value="2" label="Min alleles per site"/>
+    <param name="filter_max_alleles" type="integer" value="2" label="Max alleles per site"/>
+    <param name="filter_max_missing" type="float" value="1.0" label="Max Missing Proportion" help="Exclude sites by the proportion of missing data. 0.0 include all missing data, 1.0 excludes all missing data"/>
+
+    <section name="pos" title="Position Filters" expanded="False">
+      <param name="filter_include_chr" type="text" label="Chromosome(s) to include" optional="True" area="True">
+        <sanitizer>
+          <valid initial="string.printable">
+            <remove value="&#10;"/>
+          </valid>
+          <mapping initial="none">
+            <add source="&#10;" target=","/>
+          </mapping>
+        </sanitizer>
+      </param>
+      <param name="filter_exclude_chr" type="text" label="Chromosome(s) to exclude" optional="True" area="True">
+        <sanitizer>
+          <valid initial="string.printable">
+            <remove value="&#10;"/>
+          </valid>
+          <mapping initial="none">
+            <add source="&#10;" target=","/>
+          </mapping>
+        </sanitizer>
+      </param>
+      <param name="filter_from_bp" type="integer" label="Lower bound of sites to include" optional="True" help="Should only be used with single chromosome selected"/>
+      <param name="filter_to_bp" type="integer" label="Upper bound of sites to include" optional="True" help="Should only be used with single chromosome selected"/>
+      <param name="filter_distance" type="integer" label="Distance no two sites may be within" optional="True"/>
+    </section>
+
+    <section name="pos_file" title="Position Filters (File-based)" expanded="False">
+      <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True"/>
+      <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True"/>
+      <param format="bed" name="filter_include_bed" type="data" label="Include Positions File (BED format)" optional="True"/>
+      <param format="bed" name="filter_exclude_bed" type="data" label="Exclude Positions File (BED format)" optional="True"/>
+    </section>
+
+    <section name="ind" title="Individual Filters" expanded="False">
+      <param format="tabular" name="filter_keep" type="data" label="Individuals to keep" optional="True"/>
+      <param format="tabular" name="filter_remove" type="data" label="Individuals to remove" optional="True"/>
+    </section>
+
+    <section name="flag" title="Flag Filters" expanded="False">
+      <param name="filter_include_pass" type="boolean" label="Include only sites with the filter flag 'PASS'" optional="True"/>
+      <param format="tabular" name="filter_include_filtered" type="data" label="Include sites with the given filter flag" optional="True"/>
+      <param format="tabular" name="filter_exclude_filtered" type="data" label="Exclude sites with the given filter flag" optional="True"/>
+    </section>
+
  </inputs>
   <outputs>
     <data name="output" format="tabular">
-            <change_format>
-                <when input="out_format" value="vcf" format="vcf" />
-                <when input="out_format" value="vcf.gz" format="vcf.gz" />
-                <when input="out_format" value="bcf" format="bcf" />
-            </change_format>
-        </data>
+      <change_format>
+        <when input="out_format" value="vcf" format="vcf" />
+        <when input="out_format" value="vcf.gz" format="vcf.gz" />
+        <when input="out_format" value="bcf" format="bcf" />
+      </change_format>
+    </data>
   </outputs>
   <help>
       VCF Filter Help Text

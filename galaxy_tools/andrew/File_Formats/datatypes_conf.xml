@@ -326,7 +326,8 @@
       <display file="igv/vcf.xml" />
       <converter file="vcf_bgzip_to_tabix_converter.xml" target_datatype="tabix"/>
     </datatype>
-    <datatype extension="vcf.gz" type="galaxy.datatypes.binary:VcfGz" mimetype="application/octet-stream" display_in_upload="true" />
+    <datatype extension="vcf.gz" type="galaxy.datatypes.ppp:VcfGz" mimetype="application/octet-stream" display_in_upload="true" />
+    <datatype extension="model" type="galaxy.datatypes.ppp:Model" mimetype="application/octet-stream" display_in_upload="true" />
     <!-- Phylogenetic tree datatypes -->
     <datatype extension="phyloxml" type="galaxy.datatypes.xml:Phyloxml" display_in_upload="true" />
     <datatype extension="nhx" type="galaxy.datatypes.data:Newick" display_in_upload="true" />
