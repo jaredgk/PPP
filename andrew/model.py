@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import subprocess
 import argparse
 import logging
@@ -26,7 +27,7 @@ class Model:
 
     @property
     def ind_list(self):
-        return itertools.chain.from_iterable(self.ind_dict.values())
+        return list(itertools.chain.from_iterable(self.ind_dict.values()))
 
     def assign_tree (self, tree):
         self.tree = tree
@@ -106,80 +107,35 @@ class Model:
             # Remove the filename
             self.individuals_file = ''
 
-
 def read_model_file (filename):
+
+    # Check that the file exists
+    if not os.path.isfile(filename):
+        raise IOError
+
+    # Open the model file
+    model_file = open(filename, 'rU')
+
+    # Parse the model file using the json reader
+    models_dict = json.load(model_file)
 
     # Used to store each model within the file
     models_in_file = {}
 
-    # Used to store the current model
-    current_model = None
-    # Used to store the expected number of populations in a model.
-    model_npop = 0
-    # Used to store the current population name
-    pop_name = ''
-    # Used to store the expected number of individuals in a population.
-    pop_nind = 0
+    # Loop the parsed models
+    for model_dict in models_dict:
 
-    with open(filename, 'r') as model_file:
-        for model_line in model_file:
-            # Remove whitespace
-            model_line = model_line.strip()
+        # Create the model
+        model = Model(model_dict['name'])
 
-            if 'MODEL:' in model_line:
+        # Loop the populations in the model
+        for pop, pop_dict in model_dict['pops'].items():
 
-                # Check if previous model is stored
-                if current_model != None:
+            # Assign the population ans it's individuals to the model
+            model.assign_pop(pop, pop_dict['inds'])
 
-                    # Make sure the population counts match
-                    if current_model.npop != model_npop:
-                        print ('Number of populations found in %s does not match NPOP' % current_model.name)
-                        sys.exit()
+        # Save the model
+        models_in_file[model.name] = model
 
-                    # Store model
-                    models_in_file[current_model.name] = current_model
-
-                    # Clear variables before next model
-                    current_model = None
-                    model_npop = 0
-
-                # Create the model
-                current_model = Model(model_line.split(':')[1].strip())
-
-            elif 'TREE:' in model_line:
-                # Assign the tree to the model
-                current_model.assign_tree(model_line.split(':')[1].strip())
-
-            elif 'NPOP:' in model_line:
-                model_npop = int(model_line.split(':')[1].strip())
-
-            elif 'POP:' in model_line:
-                pop_name = model_line.split(':')[1].strip()
-
-            elif 'NIND:' in model_line:
-                pop_nind = int(model_line.split(':')[1].strip())
-
-            elif 'INDS:' in model_line:
-                # Get the list of individuals
-                ind_list = [ind.strip() for ind in model_line.split(':')[1].split(',')]
-                # Make sure the individual counts match
-                if pop_nind != len(ind_list):
-                    print ('Number of individuals specified in INDS does not match NIND')
-                    sys.exit()
-
-                # Assign the current population
-                current_model.assign_pop(pop_name, ind_list)
-
-                # Clear variables before next population/model
-                pop_name = ''
-                pop_nind = None
-
-    # Make sure the population counts match
-    if current_model.npop != model_npop:
-        print ('Number of populations found in %s does not match NPOP' % current_model.name)
-        sys.exit()
-
-    # Store model
-    models_in_file[current_model.name] = current_model
-
+    # Return the models
     return models_in_file
