@@ -39,14 +39,12 @@ def vcf_calc_parser(passed_arguments):
     # Input arguments.
     vcf_parser.add_argument("vcfname", metavar = 'VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
 
-    population_group = vcf_parser.add_mutually_exclusive_group(required=False)
-
     # Model file arguments.
-    population_group.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
+    vcf_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
     vcf_parser.add_argument('--model', help = 'Defines the model to analyze', type = str)
 
     # Other file arguments. Expand as needed
-    population_group.add_argument('--pop-file', help = 'Defines the population files for calculating specific statistics', type = str, action='append')
+    vcf_parser.add_argument('--pop-file', help = 'Defines the population files for calculating specific statistics', type = str, action='append')
     vcf_parser.add_argument('--out', help = 'Specifies the complete output filename. Cannot be used if multiple output files are created', type = str)
     vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out')
     vcf_parser.add_argument('--out-dir', help = "Specifies the output directory. Only used if multiple output files are created", default = 'Statistic_Files')
@@ -139,9 +137,9 @@ def run (passed_arguments = []):
     if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis']:
 
         # Check if population assignment is possible
-        if not vcf_args.model_file and not vcf_args.pop_file:
-            logging.error('%s requires either: --model-file or --pop-file' % vcf_args.calc_statistic)
-            raise IOError('%s requires either: --model-file or --pop-file' % vcf_args.calc_statistic)
+        if not vcf_args.model_file:
+            logging.error('%s requires a model file to operate. Please use --model-file to select a file' % vcf_args.calc_statistic)
+            raise IOError('%s requires a model file to operate. Please use --model-file to select a file' % vcf_args.calc_statistic)
 
     # Performs actions related to --model-file argument
     if vcf_args.model_file:
@@ -176,21 +174,12 @@ def run (passed_arguments = []):
 
             # Store the population files
             vcftools_pop_files = selected_model.pop_files
-            '''
-            # Assign the population files
-            vcftools_call_args.extend([pop_args for pop_file in selected_model.pop_files for pop_args in ['--weir-fst-pop', pop_file]])
 
-        # Check if the specified statistic requires the creation of model files
-        elif  vcf_args.calc_statistic == 'het-fis':
+            # Check if either Fst statistic is specified
+            if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) == 2:
 
-            # Check if there are enough populations
-            if selected_model.npop < 2:
-                logging.error('Two or more populations requried. Please check selected model')
-                raise IOError('Two or more populations requried. Please check selected model')
-
-            # Create the population files
-            selected_model.create_pop_files(file_ext = '.txt', overwrite = vcf_args.overwrite)
-            '''
+                # Assigns the population files to the vcftools call
+                vcftools_call_args.extend([pop_args for pop_file in vcftools_pop_files for pop_args in ['--weir-fst-pop', pop_file]])
 
         else:
 
@@ -200,44 +189,6 @@ def run (passed_arguments = []):
             # Assign the individuals file to vcftools
             vcftools_call_args.extend(['--keep', selected_model.individuals_file])
 
-    # Performs actions related to --pop-file argument
-    if vcf_args.pop_file:
-
-        # Check if the specified statistic requires population information
-        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis']:
-
-            # Confirms that at least two population files have been specified
-            if len(vcf_args.pop_file) < 2:
-                logging.error('Two or more population files requried. Please assign using --pop-file')
-                raise IOError('Two or more population files requried. Please assign using --pop-file')
-
-            # Check that the population files exist
-            for pop_file in vcf_args.pop_file:
-                if not os.path.isfile(pop_file):
-                    logging.error('Population file: %s. Not found.' % pop_file)
-                    raise IOError('Population file: %s. Not found.' % pop_file)
-
-            # Store the population files
-            vcftools_pop_files = vcf_args.pop_file
-
-        '''
-
-        # Check if either Fst statistic has been specified
-        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst']:
-
-            # Assigns the population files
-            vcftools_call_args.extend([pop_args for pop_file in vcf_args.pop_file for pop_args in ['--weir-fst-pop', pop_file]])
-
-        '''
-
-    # Check if either Fst statistic is specified
-    if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst']:
-
-        # Check if only two populations have been specified
-        if len(vcftools_pop_files) == 2:
-
-            # Assigns the population files to the vcftools call
-            vcftools_call_args.extend([pop_args for pop_file in vcftools_pop_files for pop_args in ['--weir-fst-pop', pop_file]])
 
     # Check if windowed Fst is specified
     if vcf_args.calc_statistic == 'windowed-weir-fst':
