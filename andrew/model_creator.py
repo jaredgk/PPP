@@ -86,6 +86,26 @@ def model_creator_parser (passed_arguments):
                     setattr(args, self.dest, arg_dict)
         return customAction
 
+    def parser_dict_file ():
+        '''Custom action to house data as defaultdict int'''
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, value, option_string=None):
+
+                if not os.path.isfile(value[1]):
+                    raise IOError('Input not found.') # File not found
+
+                # Assign the passed value
+                if getattr(args, self.dest):
+                    # Append the argument with the file
+                    getattr(args, self.dest)[value[0]] = value[1]
+
+                else:
+                    # Set the argument with the file (as list)
+                    arg_dict = defaultdict(str)
+                    arg_dict[value[0]] = value[1]
+                    setattr(args, self.dest, arg_dict)
+        return customAction
+
     def metavar_list (var_list):
         '''Create a formmated metavar list for the help output'''
         return '{' + ', '.join(var_list) + '}'
@@ -121,15 +141,7 @@ def model_creator_parser (passed_arguments):
     ind_group = model_parser.add_mutually_exclusive_group(required=True)
     ind_group.add_argument('--assign-ind', dest = 'inds', help = 'Assigns an individual name to a population.', type = str, nargs = 2, action = parser_dict_list_append())
     ind_group.add_argument('--assign-inds', dest = 'inds', help = 'Assigns multiple individual names to a population.', type = str, nargs = '+', action = parser_dict_list_extend())
-
-    #model_parser.add_argument('--ninds', help = 'Defines the number pf individuals within a population.', type = str, nargs='+', action = 'append')
-    #model_parser.add_argument('--inds-names', help = 'Defines the individuals names within a population. ', type = str, nargs='+', action = 'append')
-
-    # Statistic based arguments.
-    #statistic_list = ['weir-fst', 'windowed-weir-fst', 'TajimaD', 'pi', 'freq', 'het']
-    #statistic_default = 'windowed-weir-fst'
-
-    #model_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'Specifies the statistic to calculate', type = str, choices = statistic_list, default = statistic_default)
+    ind_group.add_argument('--assign-ind-file', help = 'Assigns multiple individual names to a population using a file.', type = str, nargs = 2, action = parser_dict_file())
 
     if passed_arguments:
         return model_parser.parse_args(passed_arguments)
@@ -141,6 +153,19 @@ def logArgs(args, pipeline_function):
     logging.info('Arguments for %s:' % pipeline_function)
     for k in vars(args):
         logging.info('Arguments %s: %s' % (k, vars(args)[k]))
+
+def read_population_file (filename):
+    # List of store individuals
+    inds = []
+
+    # Read the individuals from the file
+    with open(filename, 'rU') as pop_file:
+        for pop_line in pop_file:
+            # Store the individuals
+            inds.append(pop_line.strip())
+
+    # Return individuals
+    return inds
 
 def run (passed_arguments = []):
     '''
@@ -161,6 +186,17 @@ def run (passed_arguments = []):
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(model_args, 'model_creator')
+
+    # Dict to store lists of individuals
+    ind_dict = defaultdict(list)
+
+    # Check if ind_files were specified by the user
+    if model_args.assign_ind_file:
+        for pop, ind_file in model_args.assign_ind_file.items():
+            ind_dict[pop] = read_population_file(ind_file)
+
+    else:
+        ind_dict = model_args.inds
 
     # Loop each model specified to confirm parameters are valid
     for current_model in model_args.model:
@@ -193,22 +229,17 @@ def run (passed_arguments = []):
                 sys.exit()
 
             # Check that inds have been assigned to the population
-            if current_pop not in model_args.inds:
+            if current_pop not in ind_dict:
                 print 'No individuals assigned to: %s' % current_pop
                 sys.exit()
 
-            # Check that inds have been assigned to the population
-            if current_pop not in model_args.inds:
-                print 'No individuals assigned to: %s' % current_pop
-                sys.exit()
-
-            # Check if the number of inds has been assigned
-            if model_args.assign_nind:
-                # Check if the number of inds has been assigned for the current pop
-                if model_args.assign_nind[current_pop]:
-                    if len(model_args.inds[current_pop]) != model_args.assign_nind[current_pop]:
-                        print 'Number of individuals (--nind) assigned to %s does not match the named individuals' % current_pop
-                        sys.exit()
+                # Check if the number of inds has been assigned
+                if model_args.assign_nind:
+                    # Check if the number of inds has been assigned for the current pop
+                    if model_args.assign_nind[current_pop]:
+                        if len(ind_dict[current_pop]) != model_args.assign_nind[current_pop]:
+                            print 'Number of individuals (--nind) assigned to %s does not match the named individuals' % current_pop
+                            sys.exit()
 
     # List to store the models
     models_dict = []
@@ -234,7 +265,7 @@ def run (passed_arguments = []):
         # Loop each population in the model
         for current_pop in model_args.pops[current_model]:
             # Assign the individuals to the population
-            pop_dict[current_pop]['inds'] = model_args.inds[current_pop]
+            pop_dict[current_pop]['inds'] = ind_dict[current_pop]
 
         # Append the pop_dict
         model_dict['pops'] = pop_dict
