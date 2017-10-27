@@ -63,7 +63,7 @@ def checkFormat(vcfname):
     return 'other'
 
 
-class VcfReader(pysam.libcbcf.VariantFile):
+class VcfReader():
     def __init__(self, vcfname, compress_flag=False, subsamp_num=None,
                  subsamp_fn=None, subsamp_list=None, index=None):
 
