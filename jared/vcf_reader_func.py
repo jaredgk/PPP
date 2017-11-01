@@ -65,7 +65,7 @@ def checkFormat(vcfname):
 
 class VcfReader():
     def __init__(self, vcfname, compress_flag=False, subsamp_num=None,
-                 subsamp_fn=None, subsamp_list=None, index=None):
+                 subsamp_fn=None, subsamp_list=None, index=None, popmodel=None):
 
         ext = checkFormat(vcfname)
         if ext in ['gzip','other'] :
@@ -73,6 +73,8 @@ class VcfReader():
                              'uncompressed or zipped with bgzip' % vcfname))
         self.file_uncompressed = (ext == 'vcf')
         self.reader_uncompressed = (self.file_uncompressed and not compress_flag)
+        self.popmodel = None
+        self.popkeys = None
         if compress_flag and file_uncompressed:
             vcfname = compressVcf(vcfname)
         if subsamp_num is not None:
@@ -85,15 +87,21 @@ class VcfReader():
             subsamp_file = open(subsamp_fn,'r')
             subsamp_list = [l.strip() for l in subsamp_file.readlines()]
             subsamp_file.close()
+
         if index is None:
             self.reader = pysam.VariantFile(vcfname)
         else:
             self.reader = pysam.VariantFile(vcfname, index_filename=index)
+        if popmodel is not None:
+            self.popmodel = popmodel
+            popsamp_list = popmodel.ind_list
+            self.reader.subset_samples(popsamp_list)
+            self.setPopIdx()
         if subsamp_list is not None:
             logging.debug('Subsampling %d individuals from VCF file' %
             (len(subsamp_list)))
-            vcf_reader.subset_samples(subsamp_list)
-        self.prev_last_rec = None
+            self.reader.subset_samples(subsamp_list)
+        self.prev_last_rec = next(self.reader)
 
     def fetch(self, chrom=None, start=None, end=None):
         return self.reader.fetch(chrom, start, end)
@@ -105,6 +113,17 @@ class VcfReader():
             return ret
         else:
             return getRecordList(self.reader, region, chrom, start, end)
+
+    def setPopIdx(self):
+        self.popkeys = {}
+        sample_names = [l for l in self.reader.header.samples]
+        for p in self.popmodel.pop_list:
+            self.popkeys[p] = []
+            for ind in self.popmodel.ind_dict[p]:
+                self.popkeys[p].append(sample_names.index(ind))
+
+    def close(self):
+        self.reader.close()
 
 
 

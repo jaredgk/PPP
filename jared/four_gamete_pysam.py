@@ -48,7 +48,7 @@ import vcf_load_4g as vcfload
 import random
 from gene_region import Region, RegionList
 import pysam
-from vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, getVcfReader
+from vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, getVcfReader, VcfReader
 
 
 class BaseData():
@@ -62,12 +62,13 @@ class BaseData():
         if format == 'VCF':
             self.onlysnps = True
             #vcff = pysam.VariantFile(filename)
-            vcff, comp = getVcfReader(filename, index=args.index_name)
-            self.allrecords = getRecordList(vcff, region=region, chrom=args.chrom)
-
+            #vcff, comp = getVcfReader(filename, index=args.index_name)
+            #self.allrecords = getRecordList(vcff, region=region, chrom=args.chrom)
+            vcff = VcfReader(filename,index=args.index_name)
+            self.allrecords = vcff.getRecordList(region=region, chrom=args.chrom)
             #self.ploidy, self.seqs, self.poslist = vcfload.checkVcfRegionPysam(self.records)
             self.checkVcfRegion()
-            self.header = vcff.header
+            self.header = vcff.reader.header
             vcff.close()
             #self.seqcount = len(self.seqs)
             #self.numbases = listcheckallsamelength(self.seqs)
