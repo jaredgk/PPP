@@ -174,7 +174,8 @@ def vcf_region_write(sys_args):
                               subsamp_fn=args.subsamp_fn)
     logging.info('VCF file read')
     header = vcf_reader.reader.header
-    first_el = next(vcf_reader.reader)
+    #first_el = next(vcf_reader.reader)
+    first_el = vcf_reader.prev_last_rec
     chrom = first_el.chrom
     if not args.multi_out:
         output_name = getOutputName(args, vcf_reader.file_uncompressed)
