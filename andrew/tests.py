@@ -3,6 +3,7 @@ import filecmp
 import sys
 import os
 import logging
+import shutil
 import numpy as np
 
 # Import scripts to test
@@ -51,8 +52,8 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'windowed-weir-fst',
-                      '--pop-file', 'example/input/Paniscus.txt',
-                      '--pop-file', 'example/input/Troglodytes.txt',
+                      '--model-file', 'example/input/input.model',
+                      '--model', '2Pop',
                       '--out-prefix', 'out'])
 
         # Confirm that the output is what is expected
@@ -93,6 +94,21 @@ class vcf_calc_tests (unittest.TestCase):
         self.addCleanup(os.remove, 'out.windowed.pi')
         self.addCleanup(os.remove, 'out.windowed.pi.log')
 
+    # Check that the window nucleotide diversity function is operating correctly
+    def test_site_pi (self):
+        # Run the function with the following arguments
+        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+                      '--calc-statistic', 'site-pi',
+                      '--out-prefix', 'out'])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(file_comp('out.sites.pi',
+                                  'example/merged_chr1_10000.sites.pi'))
+
+        # Remove the ouput and log files created by the function
+        self.addCleanup(os.remove, 'out.sites.pi')
+        self.addCleanup(os.remove, 'out.sites.pi.log')
+
     # Check that the allele frequency function is operating correctly
     def test_freq (self):
         # Run the function with the following arguments
@@ -108,14 +124,30 @@ class vcf_calc_tests (unittest.TestCase):
         self.addCleanup(os.remove, 'out.frq.log')
 
     # Check that the heterozygosity function is operating correctly
-    def test_het (self):
+    def test_het_fit (self):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
-                      '--calc-statistic', 'het',
+                      '--calc-statistic', 'het-fit',
                       '--out-prefix', 'out'])
 
         # Confirm that the output is what is expected
-        self.assertTrue(file_comp('out.het', 'example/merged_chr1_10000.het'))
+        self.assertTrue(file_comp('out.het', 'example/merged_chr1_10000.het.fit'))
+
+        # Remove the ouput and log files created by the function
+        self.addCleanup(os.remove, 'out.het')
+        self.addCleanup(os.remove, 'out.het.log')
+
+    # Check that the heterozygosity function is operating correctly
+    def test_het_fis (self):
+        # Run the function with the following arguments
+        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+                      '--model-file', 'example/input/input.model',
+                      '--model', '2Pop',
+                      '--calc-statistic', 'het-fis',
+                      '--out-prefix', 'out'])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(file_comp('out.het', 'example/merged_chr1_10000.het.fis'))
 
         # Remove the ouput and log files created by the function
         self.addCleanup(os.remove, 'out.het')
@@ -155,7 +187,6 @@ class vcf_sampler_tests (unittest.TestCase):
         # Confirm that the output is what is expected
         self.assertEqual(vcf_sampler.uniform_vcftools_sampler(range(0, 1000), 5, 25), expected_sample)
 
-
     # Confirm column assignment is operating correctly
     def test_column_assignment (self):
         # Confirm that the output is what is expected (without errors)
@@ -192,13 +223,14 @@ class vcf_sampler_tests (unittest.TestCase):
                          '--statistic-file', 'example/merged_chr1_10000.windowed.weir.fst',
                          '--sample-size', '20',
                          '--random-seed', '1000',
-                         '--no-vcf'])
+                         '--overwrite'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('sampled_data.tsv', 'example/sampled_data.tsv'))
 
         # Remove the ouput files created by the function
         self.addCleanup(os.remove, 'sampled_data.tsv')
+        self.addCleanup(shutil.rmtree, 'Sample_Files')
 
 if __name__ == "__main__":
     unittest.main()

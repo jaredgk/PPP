@@ -220,7 +220,7 @@ def run (passed_arguments = []):
         # Assigns the suffix for the vcftools log file
         vcftools_out_suffix = '.sites.pi'
 
-    elif vcf_args.calc_statistic == 'windowed-pi':
+    elif vcf_args.calc_statistic == 'window-pi':
 
         # Assigns all the vcftools arguments for calculating pi
         vcftools_call_args.extend(['--window-pi', vcf_args.statistic_window_size, '--window-pi-step', vcf_args.statistic_window_step])
@@ -355,7 +355,7 @@ def run (passed_arguments = []):
         for vcftools_pop_file in vcftools_pop_files:
 
             # Create the population-specific call
-            pop_call_args = vcftools_call_args + ['--keep', vcftools_pop_file]
+            pop_call_args = vcftools_call_args + ['--keep', str(vcftools_pop_file)]
 
             # vcftools subprocess call, with stdout
             vcftools_out, vcftools_err = call_vcftools(vcfname_arg + pop_call_args)
