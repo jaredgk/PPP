@@ -157,8 +157,8 @@ class vcf_calc_tests (unittest.TestCase):
         self.assertTrue(file_comp('out.het', 'example/merged_chr1_10000.het.fis'))
 
         # Remove the ouput and log files created by the function
-        #self.addCleanup(os.remove, 'out.het')
-        #self.addCleanup(os.remove, 'out.het.log')
+        self.addCleanup(os.remove, 'out.het')
+        self.addCleanup(os.remove, 'out.het.log')
 
 # Run tests for the vcf sampler function
 class vcf_sampler_tests (unittest.TestCase):
