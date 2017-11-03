@@ -114,7 +114,7 @@ def read_model_file (filename):
         raise IOError
 
     # Open the model file
-    model_file = open(filename, 'rU')
+    model_file = open(filename, 'r')
 
     # Parse the model file using the json reader
     models_dict = json.load(model_file)
@@ -136,6 +136,8 @@ def read_model_file (filename):
 
         # Save the model
         models_in_file[model.name] = model
+
+    model_file.close()
 
     # Return the models
     return models_in_file
