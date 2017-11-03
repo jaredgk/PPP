@@ -352,9 +352,10 @@ def assign_vcftools_input_arg (filename):
         IOError
             If filename is an unknown file format
     '''
+    
     # True if file extensions is recognized by vcftools
-    if os.path.basename(filename).split('.', 1)[-1] in ['vcf', 'vcf.gz', 'bcf']:
-
+    if filename.endswith('.vcf') or filename.endswith('.vcf.gz') or filename.endswith('.bcf'):
+        # Assign the associated input command
         if filename.endswith('.vcf'):
             return ['--vcf', filename]
         elif filename.endswith('.vcf.gz'):
@@ -368,6 +369,7 @@ def assign_vcftools_input_arg (filename):
         # Checks if the file is unzipped, bgzipped, or gzipped
         vcfname_format = vcf_reader_func.checkFormat(filename)
 
+        # Assign the associated input command, or return an error.
         if vcfname_format == 'nozip':
             return ['--vcf', filename]
         elif vcfname_format == 'bgzip':
