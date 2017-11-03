@@ -54,7 +54,8 @@ class vcf_calc_tests (unittest.TestCase):
                       '--calc-statistic', 'windowed-weir-fst',
                       '--model-file', 'example/input/input.model',
                       '--model', '2Pop',
-                      '--out-prefix', 'out'])
+                      '--out-prefix', 'out',
+                      '--overwrite'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.windowed.weir.fst',
@@ -69,7 +70,8 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'TajimaD',
-                      '--out-prefix', 'out'])
+                      '--out-prefix', 'out',
+                      '--overwrite'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.Tajima.D',
@@ -84,7 +86,8 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'window-pi',
-                      '--out-prefix', 'out'])
+                      '--out-prefix', 'out',
+                      '--overwrite'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.windowed.pi',
@@ -99,7 +102,8 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'site-pi',
-                      '--out-prefix', 'out'])
+                      '--out-prefix', 'out',
+                      '--overwrite'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.sites.pi',
@@ -114,7 +118,8 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'freq',
-                      '--out-prefix', 'out'])
+                      '--out-prefix', 'out',
+                      '--overwrite'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.frq', 'example/merged_chr1_10000.frq'))
@@ -128,7 +133,8 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'het-fit',
-                      '--out-prefix', 'out'])
+                      '--out-prefix', 'out',
+                      '--overwrite'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.het', 'example/merged_chr1_10000.het.fit'))
@@ -144,14 +150,15 @@ class vcf_calc_tests (unittest.TestCase):
                       '--model-file', 'example/input/input.model',
                       '--model', '2Pop',
                       '--calc-statistic', 'het-fis',
-                      '--out-prefix', 'out'])
+                      '--out-prefix', 'out',
+                      '--overwrite'])
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp('out.het', 'example/merged_chr1_10000.het.fis'))
 
         # Remove the ouput and log files created by the function
-        self.addCleanup(os.remove, 'out.het')
-        self.addCleanup(os.remove, 'out.het.log')
+        #self.addCleanup(os.remove, 'out.het')
+        #self.addCleanup(os.remove, 'out.het.log')
 
 # Run tests for the vcf sampler function
 class vcf_sampler_tests (unittest.TestCase):
@@ -233,4 +240,4 @@ class vcf_sampler_tests (unittest.TestCase):
         self.addCleanup(shutil.rmtree, 'Sample_Files')
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity = 2)

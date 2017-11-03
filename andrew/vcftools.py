@@ -141,6 +141,12 @@ def call_vcftools (vcftools_call_args):
     # Wait for vcftools to finish
     vcftools_out, vcftools_err = vcftools_call.communicate()
 
+    # Check if code is running in python 3
+    if sys.version_info[0] == 3:
+        # Convert bytes to string
+        vcftools_out = vcftools_out.decode()
+        vcftools_err = vcftools_err.decode()
+
     logging.info('vcftools call complete')
 
     # Check that the log file was created correctly
@@ -200,7 +206,7 @@ def delete_vcftools_output (vcftools_output):
         IOError
             If the vcftools log cannot be deleted
     '''
-    
+
     # Check if output file already exists
     if os.path.isfile(vcftools_output):
         try:
