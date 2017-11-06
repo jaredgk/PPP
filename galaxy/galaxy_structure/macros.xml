@@ -1,0 +1,25 @@
+<macros>
+  <token name="@HELP_CITATIONS@">
+------
+
+**Citation**
+
+If you use this tool, please cite `Pritchard, J.K., Stephens, M. and Donnelly, P., 2000. Inference of population structure using multilocus genotype data. Genetics, 155(2), pp.945-959. &lt;http://pritchardlab.stanford.edu/structure_software/release_versions/v2.3.4/html/structure.html&gt;`_
+
+
+  </token>
+  <xml name="citations">
+    <citations>
+      <citation type="bibtex">@article{pritchard2000inference,
+  title={Inference of population structure using multilocus genotype data},
+  author={Pritchard, Jonathan K and Stephens, Matthew and Donnelly, Peter},
+  journal={Genetics},
+  volume={155},
+  number={2},
+  pages={945--959},
+  year={2000},
+  publisher={Genetics Soc America}
+}</citation>
+    </citations>
+  </xml>
+</macros>
