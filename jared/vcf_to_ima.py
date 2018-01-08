@@ -247,7 +247,7 @@ def writeSequencesForRegion(region,rec_list,popkeys,popmodel,first_el,chrom,ima_
             indiv += 1
         popnum += 1
         indiv = 0
-    record_count += 1
+
 
 
 def vcf_to_ima(sys_args):
@@ -354,7 +354,6 @@ def vcf_to_ima(sys_args):
                             colstr=args.gene_col, defaultchrom=chrom)
     logging.info('Region list read')
     fasta_ref = pysam.FastaFile(args.refname)
-    record_count = 1
     first_el = vcf_reader.prev_last_rec
 
     logging.info('Total individuals: %d' % (len(vcf_reader.prev_last_rec.samples)))
