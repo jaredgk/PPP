@@ -24,11 +24,11 @@ def createParser():
                                      "file from a VCF file, a reference"
                                      " genome, a list of gene regions, "
                                      "and a population info file."))
-    parser.add_argument("vcfname", help="Input VCF filename")
-    parser.add_argument("refname", help="Reference FASTA file")
-    parser.add_argument("genename", help="Name of gene region file")
-    parser.add_argument("popname", help=("File with filenames of files "
-                        "with population labels"))
+    parser.add_argument("--vcf", dest="vcfname", help="Input VCF filename")
+    parser.add_argument("--ref", dest="refname", help="Reference FASTA file")
+    parser.add_argument("--gr", dest="genename", help="Name of gene region file")
+    parser.add_argument("--pop", dest="popname", help=("Filename of pop "
+                        "model file"))
     parser.add_argument("--gr1", dest="gene_idx", action="store_true",
                         help="Gene Region list is 1 index based, not 0")
     parser.add_argument("--indels", dest="indel_flag", action="store_true",
@@ -327,20 +327,11 @@ def vcf_to_ima(sys_args):
     fasta_ref = pysam.FastaFile(args.refname)
     record_count = 1
     first_el = vcf_reader.prev_last_rec
-    #prev_last_rec = first_el
-
-    #pop_data = readSuperPop(args.popname)
-    #getIndexForSamples(pop_data, vcf_reader)
 
     logging.info('Total individuals: %d' % (len(vcf_reader.prev_last_rec.samples)))
     logging.info('Total regions: %d' % (len(region_list.regions)))
     writeHeader(popmodel, len(region_list.regions), ima_file)
     for region in region_list.regions:
-        #if not uncompressed:
-        #    rec_list = vf.getRecordList(vcf_reader, region)
-        #else:
-        #    rec_list, prev_last_rec = vf.getRecordListUnzipped(vcf_reader,
-        #                              prev_last_rec, region)
         rec_list = vcf_reader.getRecordList(region)
         if len(rec_list) == 0:
             logging.warning(("Region from %d to %d has no variants "
