@@ -221,6 +221,35 @@ def getOutputFilename(args):
     return '.'.join(va[:ext_cut])+'.u'
 
 
+def writeSequencesForRegion(region,rec_list,popkeys,popmodel,first_el,chrom,ima_file,fasta_ref,args):
+    if len(rec_list) == 0:
+        logging.warning(("Region from %d to %d has no variants "
+                        "in VCF file") % (region.start,region.end))
+    logging.debug('Region %d to %d: %d variants' %
+                  (region.start,region.end,len(rec_list)))
+    ref_seq = fasta_ref.fetch(chrom, region.start, region.end)
+    checkRefAlign(rec_list, fasta_ref, chrom, args.ref_check)
+    reg_header = getLocusHeader(region, popmodel, rec_list)
+    ima_file.write(reg_header+'\n')
+    popnum, indiv = 0, 0
+    #while popnum != -1:
+        #indiv_idx = pop_data[popnum][1][indiv][1]
+    for p in popmodel.pop_list:
+        #for indiv in popmodel.ind_dict[p]:
+        #    indiv_idx = vcf_reader.popkeys[p][indiv]
+        for indiv_idx in popkeys[p]:
+            for hap in range(len(first_el.samples[indiv_idx].alleles)):
+                seq = generateSequence(rec_list, ref_seq, fasta_ref,
+                               region, chrom, indiv_idx, hap, args)
+                seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
+                seq_name += ''.join([' ' for i in range(len(seq_name),10)])
+                ima_file.write(seq_name+seq+'\n')
+            indiv += 1
+        popnum += 1
+        indiv = 0
+    record_count += 1
+
+
 def vcf_to_ima(sys_args):
     """Returns a FASTA file with seqs from individuals in given gene regions
 
@@ -333,32 +362,7 @@ def vcf_to_ima(sys_args):
     writeHeader(popmodel, len(region_list.regions), ima_file)
     for region in region_list.regions:
         rec_list = vcf_reader.getRecordList(region)
-        if len(rec_list) == 0:
-            logging.warning(("Region from %d to %d has no variants "
-                            "in VCF file") % (region.start,region.end))
-        logging.debug('Region %d to %d: %d variants' %
-                      (region.start,region.end,len(rec_list)))
-        ref_seq = fasta_ref.fetch(chrom, region.start, region.end)
-        checkRefAlign(rec_list, fasta_ref, chrom, args.ref_check)
-        reg_header = getLocusHeader(region, popmodel, rec_list)
-        ima_file.write(reg_header+'\n')
-        popnum, indiv = 0, 0
-        #while popnum != -1:
-            #indiv_idx = pop_data[popnum][1][indiv][1]
-        for p in popmodel.pop_list:
-            #for indiv in popmodel.ind_dict[p]:
-            #    indiv_idx = vcf_reader.popkeys[p][indiv]
-            for indiv_idx in vcf_reader.popkeys[p]:
-                for hap in range(len(first_el.samples[indiv_idx].alleles)):
-                    seq = generateSequence(rec_list, ref_seq, fasta_ref,
-                                   region, chrom, indiv_idx, hap, args)
-                    seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
-                    seq_name += ''.join([' ' for i in range(len(seq_name),10)])
-                    ima_file.write(seq_name+seq+'\n')
-                indiv += 1
-            popnum += 1
-            indiv = 0
-        record_count += 1
+        writeSequencesForRegion(region,rec_list,vcf_reader.popkeys,popmodel,first_el,chrom,ima_file,fasta_ref,args)
     ima_file.close()
 
 if __name__ == "__main__":
