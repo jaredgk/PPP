@@ -212,7 +212,7 @@ def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=1, mut_rat
     lh += ' '+mut_model
     lh += ' '+str(inhet_sc)
     mutlocus = mut_rate * gene_len
-    lh += ' '+str(mutlocus)
+    lh += ' '+str("%.14f" % (mutlocus))
     return lh
 
 def getOutputFilename(args):
