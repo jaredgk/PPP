@@ -166,9 +166,9 @@ class BaseData():
                     pass
                     # print ("more than two bases at position " + str(j))
                 elif polybase > 1:
-                    self.polysites.append(j) ## use regular (start at 1) count
+                    self.polysites.append(j+1) ## use regular (start at 1) count
                     if (twobase > 1):
-                        self.informpolysites.append(j)
+                        self.informpolysites.append(j+1)
                         lineset =[set([]),set([]),set([]),set([])]
                         for k in range(self.seqcount):
                             if self.seqs[k][j].upper() == 'A' :
@@ -255,6 +255,8 @@ class BaseData():
         ## now remove all intervals that are overlapped by a larger one
         cintinformremovelist = []
         c = len(cints)
+        print (cints)
+        print (cintinformlistfull)
         removelist = []
         for ai in range(c-1) :
             for bi in range(ai+1,c) :
@@ -279,22 +281,43 @@ class BaseData():
             if i not in cintinformremovelist:
                 cintinformlist.append(cintinformlistfull[i])
         # now pad intervals with sequences to the flanking ones
-        if self.onlysnps:
-            cints = replace_positions(cints,self.poslist)
+        print (len(cints),cints)
+        print (cintinformlist)
+        print (len(self.poslist),self.poslist)
+        print (len(self.informpolysites),self.informpolysites)
+        print (' '.join([str(self.poslist[i-1]) for i in self.informpolysites]))
         cintspadded = []
-        # if ONLYSNPS don't pad using 1 and numbases
-        for ci in range(len(cints)):
-            temp = [-1,-1]
-            if ci == 0:
-                temp[0] = cints[ci][0] if self.onlysnps else 1
-            else:
-                temp[0] = cints[ci-1][1] + 1
-            if ci == len(cints)-1:
-                temp[1] = cints[ci][1] if self.onlysnps else self.numbases
-            else:
-                temp[1] = cints[ci+1][0] - 1
-            cintspadded.append(temp)
+        if False:
+            cints = replace_positions(cints,self.poslist)
+            return cints,cintinformlist
+        if self.onlysnps:
+        ## using a vcf file,  intervals are 1-based  but positions in list_of_positions are 0-based
+            for ci in range(len(cints)):
+                temp = [-1,-1]
+                if ci == 0:
+                    assert cints[ci][0] > 0
+                    temp[0] = self.poslist[cints[ci][0] - 1]  ## -1 because list_of_positions is 0-based
+                else:
+                    temp[0] = self.poslist[self.informpolysites[self.informpolysites.index(cints[ci][0]) -1] -1] + 1  ## position of previous informative snp + 1
+                if ci == len(cints)-1:
+                    temp[1] = self.poslist[cints[ci][1] -1]
+                else:
+                    temp[1] = self.poslist[self.informpolysites[self.informpolysites.index(cints[ci][1]) + 1] -1] -1   ## position of next informative snp -1
+                cintspadded.append(temp)
+        else:
+            for ci in range(len(cints)):
+                temp = [-1,-1]
+                if ci == 0:
+                    temp[0] = 1
+                else:
+                    temp[0] = self.informpolysites[self.informpolysites.index(cints[ci][0]) -1] + 1   ## position of previous informative snp + 1
+                if ci == len(cints)-1:
+                    temp[1] = numbases
+                else:
+                    temp[1] = self.informpolysites[self.informpolysites.index(cints[ci][1]) + 1] -1    ## position of next informative snp -1
+                cintspadded.append(temp)
         return cintspadded,cintinformlist
+        #return cints,cintinformlist
 
     #def hudsonkaplan85intervals(cintervals,numbases,list_of_positions) :
     def hk85intervals(self):
@@ -565,7 +588,7 @@ def replace_positions(intervals,list_of_positions):
     for iv in intervals:
         logging.info('Index: %d %d' % (iv[0],iv[1]))
         logging.info('Length: %d' % len(list_of_positions))
-        bintervals.append([list_of_positions[iv[0]],list_of_positions[iv[1]]])
+        bintervals.append([list_of_positions[iv[0]],list_of_positions[iv[1]]+1])
     return bintervals
 
 
@@ -578,16 +601,21 @@ def sampleinterval(picktype,numinf,intervals,infcounts):
     """
     if len(intervals) == 0:
         return None
-    if picktype == "leftinterval":
-        return intervals[0]
-    if picktype == "rightinterval":
-        return intervals[-1]
+
+    #if picktype == "leftinterval":
+    #    return intervals[0]
+    #if picktype == "rightinterval":
+    #    return intervals[-1]
     if numinf != None:
         numinf = numinf[0]
     if numinf != None and infcounts != None:
         okints = [i for i in range(len(infcounts)) if infcounts[i] >= numinf ]
     else:
         okints = [i for i in range(len(intervals))]
+    if picktype == "leftinterval":
+        return intervals[okints[0]]
+    if picktype == "rightinterval":
+        return intervals[okints[-1]]
     n = len(okints)
     if n == 0: # no intervals with that many informative sites
         return None
@@ -645,9 +673,9 @@ def outputSubregion(args, interval, basedata, region=None, filename=None):
     #open file with prefix and region name
     #write records, close file
     if region is None:
-        subregion = Region(interval[0]-1,interval[1],basedata.records[0].chrom)
+        subregion = Region(interval[0],interval[1]+1,basedata.records[0].chrom)
     else:
-        subregion = Region(interval[0]-1,interval[1],region.chrom)
+        subregion = Region(interval[0],interval[1]+1,region.chrom)
     subrecords = getRecordsInRegion(subregion, basedata.records)
     if filename is None:
         subfn = vcfRegionName(args.out_prefix,subregion,"vcf.gz")

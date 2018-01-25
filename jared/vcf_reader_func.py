@@ -47,7 +47,7 @@ def checkFormat(vcfname):
 
     Returns
     -------
-    extension : str {'bgzip','gzip','nozip'}
+    extension : str {'bgzip','gzip','vcf','other'}
         File extension as indicated by header
 
     """
@@ -61,6 +61,28 @@ def checkFormat(vcfname):
     if l[:len(VCF_TAG)] == VCF_TAG:
         return 'vcf'
     return 'other'
+
+def checkIfCpG(record,fasta_ref,offset=0):
+    dr = None
+    pos = record.pos
+    if record.ref == 'C' and 'T' in record.alts:
+        seq = fasta_ref.fetch(record.chrom,pos-1,pos+1)
+        if seq[0] != 'C':
+            logging.warning('%s %d has bad base %s' % (record.chrom,record.pos,seq[0]))
+            #raise Exception("checkIfCpG function not lining up properly")
+        if seq[1] == 'G':
+            return True
+        return False
+    elif record.ref == 'G' and 'A' in record.alts:
+        seq = fasta_ref.fetch(record.chrom,pos-2,pos)
+        if seq[1] != 'G':
+            logging.warning('%s %d has bad base %s' % (record.chrom,record.pos,seq[1]))
+            #raise Exception("checkIfCpg function not lining up on negative strand")
+        if seq[0] == 'C':
+            return True
+        return False
+    return False
+
 
 
 class VcfReader():
@@ -171,6 +193,12 @@ def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
 
     """
     lst = []
+    if region is None:
+        lst.append(prev_last_rec)
+        for rec in vcf_reader:
+            lst.append(rec)
+        return lst, lst[-1]
+
     if (prev_last_rec is not None and
         region.containsRecord(prev_last_rec) == 'in'):
         lst.append(prev_last_rec)
@@ -178,6 +206,8 @@ def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
          region.containsRecord(prev_last_rec) == 'after'):
         return []
     rec = next(vcf_reader,None)
+    if rec is None:
+        return lst,None
     place = region.containsRecord(rec)
     while rec is not None and place != 'after':
         if place == 'in':

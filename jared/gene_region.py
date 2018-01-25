@@ -40,6 +40,7 @@ class Region:
         """
         self.start = start
         self.end = end
+        #sys.stderr.write("region\t"+str(start)+'\t'+str(end)+'\t'+str(chrom)+'\n')
         if chrom[0:3] == 'chr':
             self.chrom = chrom[3:]
         else:
@@ -102,7 +103,11 @@ class Region:
         if oneidx:
             start += 1
             end += 1
-        return str(start)+sep+str(end)+sep+str(self.chrom)
+        return str(self.chrom)+sep+str(start)+sep+str(end)
+        #return str(start)+sep+str(end)+sep+str(self.chrom)
+
+    def getReference(self, refseq):
+        return refseq.fetch(self.chrom,self.start,self.end)
 
 
 class RegionList:
@@ -158,7 +163,7 @@ class RegionList:
         if filename is not None:
             self.initFile(filename, oneidx, colstr, defaultchrom,
                           halfopen, sortlist, checkoverlap, natsort)
-        elif genestr is None:
+        elif genestr is not None:
             self.initStr(genestr, oneidx, colstr, defaultchrom, halfopen)
         else:
             self.initList(reglist, oneidx, colstr, defaultchrom,
@@ -192,7 +197,9 @@ class RegionList:
             self.regions.sort()
         if checkoverlap:
             if self.hasOverlap():
-                raise Exception("Region overlap detected")
+                #raise Exception("Region overlap detected")
+                #UNCOMMENT THIS LATER ^
+                self.fixOverlap()
 
     def initStr(self, genestr, oneidx, colstr, defaultchrom, halfopen):
         la = genestr.split(':')
@@ -233,7 +240,9 @@ class RegionList:
             self.regions.sort()
         if checkoverlap:
             if self.hasOverlap():
-                raise Exception("Region overlap detected")
+                #raise Exception("Region overlap detected")
+                #UNCOMMENT THIS LATER ^
+                self.fixOverlap()
 
     def parseCols(self,cols):
         col_list = [int(i) for i in cols.split(',')]
@@ -258,9 +267,34 @@ class RegionList:
                     return True
         return False
 
+    def fixOverlap(self):
+        region_hold = []
+        self.regions.sort()
+        i = 0
+        #print ("Fixing overlap")
+        while i < len(self.regions)-1:
+            r1 = self.regions[i]
+            r2 = self.regions[i+1]
+            if r1.chrom == r2.chrom:
+                if (r1.start <= r2.start
+                    < r1.end):
+                    tr = Region(min(r1.start,r2.start),
+                                max(r1.end,r2.end),
+                                r1.chrom)
+                    region_hold.append(tr)
+                    i += 2
+                else:
+                    region_hold.append(r1)
+                    i += 1
+            else:
+                region_hold.append(r1)
+                i += 1
+        self.regions = region_hold
+
     def printList(self, file_handle=None, file_name=None, delim="\t"):
         if file_handle is None and file_name is None:
-            raise Exception("Either file_handle or file_name must be set")
+            file_handle = sys.stdout
+            #raise Exception("Either file_handle or file_name must be set")
         if file_name is not None:
             file_handle = open(file_name, 'w')
         for region in self.regions:
