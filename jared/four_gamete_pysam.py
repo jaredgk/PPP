@@ -255,8 +255,6 @@ class BaseData():
         ## now remove all intervals that are overlapped by a larger one
         cintinformremovelist = []
         c = len(cints)
-        print (cints)
-        print (cintinformlistfull)
         removelist = []
         for ai in range(c-1) :
             for bi in range(ai+1,c) :
@@ -281,11 +279,6 @@ class BaseData():
             if i not in cintinformremovelist:
                 cintinformlist.append(cintinformlistfull[i])
         # now pad intervals with sequences to the flanking ones
-        print (len(cints),cints)
-        print (cintinformlist)
-        print (len(self.poslist),self.poslist)
-        print (len(self.informpolysites),self.informpolysites)
-        print (' '.join([str(self.poslist[i-1]) for i in self.informpolysites]))
         cintspadded = []
         if False:
             cints = replace_positions(cints,self.poslist)
@@ -588,7 +581,7 @@ def replace_positions(intervals,list_of_positions):
     for iv in intervals:
         logging.info('Index: %d %d' % (iv[0],iv[1]))
         logging.info('Length: %d' % len(list_of_positions))
-        bintervals.append([list_of_positions[iv[0]],list_of_positions[iv[1]]+1])
+        bintervals.append([list_of_positions[iv[0]-1],list_of_positions[iv[1]-1]+1])
     return bintervals
 
 
