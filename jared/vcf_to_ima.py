@@ -23,12 +23,14 @@ def createParser():
     parser = argparse.ArgumentParser(description=("Generates an IMa input "
                                      "file from a VCF file, a reference"
                                      " genome, a list of gene regions, "
-                                     "and a population info file."))
-    parser.add_argument("vcfname", help="Input VCF filename")
-    parser.add_argument("refname", help="Reference FASTA file")
-    parser.add_argument("genename", help="Name of gene region file")
-    parser.add_argument("popname", help=("File with filenames of files "
-                        "with population labels"))
+                                     "and a population info file."),
+                                     fromfile_prefix_chars="@")
+    parser.add_argument("--vcf", dest="vcfname", help="Input VCF filename")
+    parser.add_argument("--vcfs", dest="vcflist", nargs="+")
+    parser.add_argument("--ref", dest="refname", help="Reference FASTA file")
+    parser.add_argument("--gr", dest="genename", help="Name of gene region file")
+    parser.add_argument("--pop", dest="popname", help=("Filename of pop "
+                        "model file"))
     parser.add_argument("--gr1", dest="gene_idx", action="store_true",
                         help="Gene Region list is 1 index based, not 0")
     parser.add_argument("--indels", dest="indel_flag", action="store_true",
@@ -132,7 +134,7 @@ def checkRefAlign(vcf_recs, fasta_ref, chrom, ref_check):
         vcf_seq = vcf_r.ref
         pos = vcf_r.pos-1
         fasta_seq = fasta_ref.fetch(chrom, pos, pos+len(vcf_seq))
-        if vcf_seq != fasta_seq:
+        if vcf_seq.upper() != fasta_seq.upper():
             if ref_check:
                 raise Exception(("VCF bases and reference bases do not match."
                         "\nVCF reference: %s\nFASTA reference: "
@@ -193,10 +195,10 @@ def writeHeader(popmodel, gr_len, out_f, pop_string="(0,1):2"):
     for p in popmodel.pop_list:
         pops += (p+' ')
     out_f.write(pops+'\n')
-    out_f.write(pop_string+'\n')
+    #out_f.write(pop_string+'\n')
     out_f.write(str(gr_len)+'\n')
 
-def getLocusHeader(gener, popmodel, rec_list, mut_model="I0", inhet_sc=1):
+def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=1, mut_rate=1e-9):
     name = gener.chrom+':'+str(gener.start)+':'+str(gener.end)
     gene_len = gener.end-gener.start
     for rec in rec_list:
@@ -205,10 +207,12 @@ def getLocusHeader(gener, popmodel, rec_list, mut_model="I0", inhet_sc=1):
     #for i in range(len(pop_data)):
     #    lh += ' '+str(len(pop_data[i][1]))
     for p in popmodel.pop_list:
-        lh += ' '+str(popmodel.nind[p])
+        lh += ' '+str(2*popmodel.nind[p])
     lh += ' '+str(gene_len)
     lh += ' '+mut_model
     lh += ' '+str(inhet_sc)
+    mutlocus = mut_rate * gene_len
+    lh += ' '+str("%.14f" % (mutlocus))
     return lh
 
 def getOutputFilename(args):
@@ -295,7 +299,7 @@ def vcf_to_ima(sys_args):
     args = getArgsWithConfig(parser,sys_args,required_args,'vcf_to_ima')
 
     logArgs(args)
-    validateFiles(args)
+    #validateFiles(args)
     if args.output_name is not None:
         ima_filename = args.output_name
     else:
@@ -309,46 +313,54 @@ def vcf_to_ima(sys_args):
         pp = list(popmodels.keys())
         popmodel = popmodels[pp[0]]
 
-    #vcf_reader, uncompressed = vf.getVcfReader(args.vcfname,
-    #                           compress_flag=args.compress_flag,
-    #                           subsamp_num=args.subsamp_num,
-    #                           subsamp_fn=args.subsamp_fn)
-    vcf_reader = vf.VcfReader(args.vcfname,
+    if args.vcfname is not None:
+        single_file = True
+    elif args.vcflist is not None:
+        single_file = False
+    else:
+        raise Exception("VCF tag must be specified")
+    if single_file:
+        vn = args.vcfname
+    else:
+        vn = args.vcflist[0]
+    vcf_reader = vf.VcfReader(vn,
                               compress_flag=args.compress_flag,
                               popmodel=popmodel)
     logging.info('VCF file read')
     #first_el = next(vcf_reader)
-    chrom = vcf_reader.prev_last_rec.chrom
+    #chrom = vcf_reader.prev_last_rec.chrom
     #compressed = (input_ext != 'vcf')
 
     region_list = RegionList(filename=args.genename, oneidx=args.gene_idx,
-                            colstr=args.gene_col, defaultchrom=chrom)
+                            colstr=args.gene_col)
     logging.info('Region list read')
     fasta_ref = pysam.FastaFile(args.refname)
     record_count = 1
     first_el = vcf_reader.prev_last_rec
-    #prev_last_rec = first_el
-
-    #pop_data = readSuperPop(args.popname)
-    #getIndexForSamples(pop_data, vcf_reader)
 
     logging.info('Total individuals: %d' % (len(vcf_reader.prev_last_rec.samples)))
     logging.info('Total regions: %d' % (len(region_list.regions)))
     writeHeader(popmodel, len(region_list.regions), ima_file)
-    for region in region_list.regions:
-        #if not uncompressed:
-        #    rec_list = vf.getRecordList(vcf_reader, region)
-        #else:
-        #    rec_list, prev_last_rec = vf.getRecordListUnzipped(vcf_reader,
-        #                              prev_last_rec, region)
-        rec_list = vcf_reader.getRecordList(region)
+    if not single_file:
+        vcf_reader.reader.close()
+    #for region in region_list.regions:
+    for i in range(len(region_list.regions)):
+        region = region_list.regions[i]
+        if single_file:
+            rec_list = vcf_reader.getRecordList(region)
+        else:
+            vcf_reader = vf.VcfReader(args.vcflist[i],
+                                      compress_flag=args.compress_flag,
+                                      popmodel=popmodel)
+            rec_list = vcf_reader.getRecordList(region)
+            vcf_reader.reader.close()
         if len(rec_list) == 0:
-            logging.warning(("Region from %d to %d has no variants "
-                            "in VCF file") % (region.start,region.end))
+            logging.warning(("Region %s has no variants "
+                            "in VCF file") % (region.toStr()))
         logging.debug('Region %d to %d: %d variants' %
                       (region.start,region.end,len(rec_list)))
-        ref_seq = fasta_ref.fetch(chrom, region.start, region.end)
-        checkRefAlign(rec_list, fasta_ref, chrom, args.ref_check)
+        ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
+        checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
         reg_header = getLocusHeader(region, popmodel, rec_list)
         ima_file.write(reg_header+'\n')
         popnum, indiv = 0, 0
@@ -360,7 +372,7 @@ def vcf_to_ima(sys_args):
             for indiv_idx in vcf_reader.popkeys[p]:
                 for hap in range(len(first_el.samples[indiv_idx].alleles)):
                     seq = generateSequence(rec_list, ref_seq, fasta_ref,
-                                   region, chrom, indiv_idx, hap, args)
+                                   region, region.chrom, indiv_idx, hap, args)
                     seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
                     seq_name += ''.join([' ' for i in range(len(seq_name),10)])
                     ima_file.write(seq_name+seq+'\n')
@@ -371,4 +383,5 @@ def vcf_to_ima(sys_args):
     ima_file.close()
 
 if __name__ == "__main__":
+    initLogger()
     vcf_to_ima(sys.argv[1:])
