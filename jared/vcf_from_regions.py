@@ -28,6 +28,7 @@ def createParser():
                         help="Gene Region list is 1 index based, not 0")
     parser.add_argument("--noindels", dest="indel_flag", action="store_false",
                         help="Don't include indels in ouput VCF file(s)")
+
     parser.add_argument("--output", dest="output_name", help= (
                         "Optional name for output other than default"))
     parser.add_argument("--gene-col", dest="gene_col", help= (
@@ -39,6 +40,7 @@ def createParser():
                         "compressed, will compress and use fetch search"))
     parser.add_argument("--multi-out", dest="multi_out", action="store_true",
                         help="Produces multiple output VCFs instead of one")
+    parser.add_argument("--parsecpg", dest="refname")
     parser.add_argument("--nocompress", dest="nocompress", action="store_true")
     subsamp_group = parser.add_mutually_exclusive_group()
     subsamp_group.add_argument('--subsamp-list', dest="subsamp_fn",
@@ -181,7 +183,7 @@ def vcf_region_write(sys_args):
         output_name = getOutputName(args, vcf_reader.file_uncompressed)
         vcf_out = pysam.VariantFile(output_name, 'w', header=header)
     else:
-        out_p = getOutputPrefix(args, uncompressed)
+        out_p = getOutputPrefix(args, vcf_reader.file_uncompressed)
 
     if args.gene_str is not None:
         region_list = RegionList(genestr=args.gene_str, oneidx=args.gene_idx,
@@ -194,6 +196,10 @@ def vcf_region_write(sys_args):
                          "single region"))
     logging.info('Region read')
     vcf_reader.prev_last_rec = first_el
+    fasta_ref = None
+    if args.refname is not None:
+        fasta_ref = pysam.FastaFile(args.refname)
+
     logging.info('Total individuals: %d' % (len(first_el.samples)))
     logging.info('Total regions: %d' % (len(region_list.regions)))
     for rc,region in enumerate(region_list.regions,start=1):
@@ -217,6 +223,8 @@ def vcf_region_write(sys_args):
         for rec in rec_list:
             issnp = vf.checkRecordIsSnp(rec)
             if not args.indel_flag and not issnp:
+                continue
+            if args.refname is not None and vf.checkIfCpG(rec,fasta_ref):
                 continue
             vcf_out.write(rec)
 
