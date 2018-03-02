@@ -1,0 +1,93 @@
+RepeatMasker Configuration Program
+
+This program assists with the configuration of the
+RepeatMasker program.  The next set of screens will ask
+you to enter information pertaining to your system
+configuration.  At the end of the program your RepeatMasker
+installation will be ready to use.
+
+
+
+<PRESS ENTER TO CONTINUE>
+
+**PERL PROGRAM**
+
+  This is the full path to the Perl interpreter.
+  e.g. /usr/local/bin/perl or enter "env" if you prefer to use
+  the "/usr/bin/env perl" mechanism to locate perl.
+
+
+
+
+
+
+
+
+
+
+Enter path [ /usr/bin/perl ]:
+
+**REPEATMASKER INSTALLATION DIRECTORY**
+
+  This is the path to the directory where
+  the RepeatMasker program has been installed.
+
+
+
+
+
+
+
+
+
+
+
+Enter path [ /home/aewebb/Downloads/RepeatMasker-open-4-0-7/RepeatMasker ]:
+
+**TRF PROGRAM**
+
+  This is the full path to the TRF program.
+ This is now used by RepeatMasker to mask simple repeats.
+
+
+
+
+
+
+
+
+
+
+
+Enter path [ /usr/local/bin/trf ]:
+
+Add a Search Engine:
+   1. CrossMatch: [ Un-configured ]
+   2. RMBlast - NCBI Blast with RepeatMasker extensions: [ Un-configured ]
+   3. WUBlast/ABBlast (required by DupMasker): [ Un-configured ]
+   4. HMMER3.1 & DFAM: [ Un-configured ]
+
+   5. Done
+
+
+Enter Selection:
+
+**RMBlast (rmblastn) INSTALLATION PATH**
+
+  This is the path to the location where
+  the rmblastn and makeblastdb programs can be found.
+
+
+
+
+
+
+
+
+
+
+
+Enter path [  ]:
+
+Do you want RMBlast to be your default
+search engine for Repeatmasker? (Y/N)  [ Y ]:
