@@ -26,7 +26,58 @@ def check_bgzip_for_errors (bgzip_stderr):
         logging.error('Error occured while compressing the vcf file')
         raise IOError('Error occured while compressing the vcf file')
 
-def bgzip_compress_vcf (vcf_filename):
+
+def bgzip_decompress_vcfgz (vcfgz_filename, keep_original = False):
+        '''
+            Converts a vcf.gz to vcf
+
+            The function automates bgzip to decompress a vcf.gz file into a vcf
+
+            Parameters
+            ----------
+            vcfgz_filename : str
+                The file name of the vcf.gz file to be decompressed
+            keep_original : bool
+                Specifies if the original file should be kept
+
+            Raises
+            ------
+            IOError
+                Error in creating the compressed file
+        '''
+
+        # Compress and keep the original file
+        if keep_original:
+
+            # Seperate into path and filename
+            split_path, split_filename = os.path.split(vcfgz_filename)
+
+            # Remove any file extensions
+            bgzip_filename = split_filename.split(os.extsep)[0] + '.vcf'
+
+            # Join path and filename
+            joined_bgzip_filename = os.path.join(split_path, bgzip_filename)
+
+            # Create the output file
+            bgzip_file = open(joined_bgzip_filename, 'w')
+
+            # bgzip subprocess call
+            bgzip_call = subprocess.Popen(['bgzip', '-dc', vcfgz_filename], stdout = bgzip_file, stderr = subprocess.PIPE)
+
+        # Compress and do not keep the original file
+        else:
+
+            # bgzip subprocess call
+            bgzip_call = subprocess.Popen(['bgzip', '-d', vcfgz_filename], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+        # Save the stdout and stderr from bgzip
+        bgzip_out, bgzip_err = bgzip_call.communicate()
+
+        # Check that output file was compressed correctly
+        check_bgzip_for_errors(bgzip_err)
+
+
+def bgzip_compress_vcf (vcf_filename, keep_original = False):
         '''
             Converts a vcf to vcf.gz
 
@@ -36,6 +87,8 @@ def bgzip_compress_vcf (vcf_filename):
             ----------
             vcf_filename : str
                 The file name of the vcf file to be compressed
+            keep_original : bool
+                Specifies if the original file should be kept
 
             Raises
             ------
@@ -43,8 +96,20 @@ def bgzip_compress_vcf (vcf_filename):
                 Error in creating the compressed file
         '''
 
-        # bgzip subprocess call
-        bgzip_call = subprocess.Popen(['bgzip', vcf_filename], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        # Compress and keep the original file
+        if keep_original:
+
+            # Create the output file
+            bgzip_output = open(vcf_filename + '.gz', 'w')
+
+            # bgzip subprocess call
+            bgzip_call = subprocess.Popen(['bgzip', '-c', vcf_filename], stdout = bgzip_output, stderr = subprocess.PIPE)
+
+        # Compress and do not keep the original file
+        else:
+
+            # bgzip subprocess call
+            bgzip_call = subprocess.Popen(['bgzip', vcf_filename], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
         # Save the stdout and stderr from bgzip
         bgzip_out, bgzip_err = bgzip_call.communicate()
@@ -352,7 +417,7 @@ def assign_vcftools_input_arg (filename):
         IOError
             If filename is an unknown file format
     '''
-    
+
     # True if file extensions is recognized by vcftools
     if filename.endswith('.vcf') or filename.endswith('.vcf.gz') or filename.endswith('.bcf'):
         # Assign the associated input command
@@ -370,7 +435,7 @@ def assign_vcftools_input_arg (filename):
         vcfname_format = vcf_reader_func.checkFormat(filename)
 
         # Assign the associated input command, or return an error.
-        if vcfname_format == 'nozip':
+        if vcfname_format == 'vcf':
             return ['--vcf', filename]
         elif vcfname_format == 'bgzip':
             return ['--gzvcf', filename]

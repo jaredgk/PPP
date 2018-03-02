@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
 import vcf_reader_func
 from logging_module import initLogger
+from vcftools import bgzip_decompress_vcfgz
 
 def phase_argument_parser(passed_arguments):
     '''Phase Argument Parser - Assigns arguments for vcftools from command line.
@@ -56,12 +57,19 @@ def assign_vcf_extension (filename):
     # Checks if the file is unzipped, bgzipped, or gzipped
     vcfname_format = vcf_reader_func.checkFormat(filename)
 
-    if vcfname_format == 'nozip':
+    if vcfname_format == 'vcf':
         return '.vcf'
+
     elif vcfname_format == 'gzip' or vcfname_format == 'bgzip':
         return '.vcf.gz'
+
+    elif vcfname_format == 'bcf':
+        logging.error('BCF not supported in current version')
+        raise Exception('BCF not supported in current version')
+        
     else:
-        sys.exit('Unknown file format')
+        logging.error('Unknown file format')
+        raise Exception('Unknown file format')
 
 def check_beagle_for_errors (beagle_stdout):
     '''
@@ -200,10 +208,15 @@ def run (passed_arguments = []):
 
         logging.info('beagle phasing complete')
 
+        # Beagle output is vcf.gz, convert to vcf if
+        if vcfname_ext == '.vcf':
+            bgzip_decompress_vcfgz(phase_args.out_prefix + '.vcf.gz')
+
         # Rename output to phase_args.out, if specified
         if phase_args.out:
             shutil.move(phase_args.out_prefix + vcfname_ext, phase_args.out)
             shutil.move(phase_args.out_prefix + '.log', phase_args.out + '.log')
+
         # Rename log using phase_args.out_prefix
         else:
             shutil.move(phase_args.out_prefix + '.log', phase_args.out_prefix + vcfname_ext + '.log')
