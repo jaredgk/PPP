@@ -1,0 +1,23 @@
+PLINK v1.90b5.3 64-bit (21 Feb 2018)
+Options in effect:
+  --bfile binary_fileset2
+  --out test
+  --recode vcf bgz
+
+Hostname: CST-BIOLB060L
+Working directory: /home/aewebb/Repositories/PPP/andrew
+Start time: Tue Mar  6 16:21:01 2018
+
+Random number seed: 1520371261
+16040 MB RAM detected; reserving 8020 MB for main workspace.
+201492 variants loaded from .bim file.
+20 people (0 males, 0 females, 20 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to test.nosex .
+Using up to 8 threads (change this with --threads).
+Before main variant filters, 20 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+201492 variants and 20 people pass filters and QC.
+Note: No phenotypes present.
+--recode vcf bgz to test.vcf.gz ... done.
+
+End time: Tue Mar  6 16:21:02 2018

@@ -1,0 +1,26 @@
+PLINK v1.90b5.3 64-bit (21 Feb 2018)
+Options in effect:
+  --make-bed
+  --out binary_fileset2
+  --vcf chr22_uk10k_10s_pop.vcf.gz
+
+Hostname: CST-BIOLB060L
+Working directory: /home/aewebb/Repositories/PPP/andrew
+Start time: Mon Mar  5 14:40:19 2018
+
+Random number seed: 1520278819
+16040 MB RAM detected; reserving 8020 MB for main workspace.
+--vcf: binary_fileset2-temporary.bed + binary_fileset2-temporary.bim +
+binary_fileset2-temporary.fam written.
+201492 variants loaded from .bim file.
+20 people (0 males, 0 females, 20 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to binary_fileset2.nosex .
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 20 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+201492 variants and 20 people pass filters and QC.
+Note: No phenotypes present.
+--make-bed to binary_fileset2.bed + binary_fileset2.bim + binary_fileset2.fam
+... done.
+
+End time: Mon Mar  5 14:40:20 2018

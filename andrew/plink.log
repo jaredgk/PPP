@@ -1,0 +1,14 @@
+PLINK v1.90b5.3 64-bit (21 Feb 2018)
+Options in effect:
+  --file nonbinary_fileset
+  --recode
+  --vcf chr10_uk10k_biallele.vcf.gz
+
+Hostname: CST-BIOLB060L
+Working directory: /home/aewebb/Repositories/PPP/andrew
+Start time: Fri Mar  2 14:33:18 2018
+
+Error: --vcf conflicts with another input flag.
+For more information, try 'plink --help [flag name]' or 'plink --help | more'.
+
+End time: Fri Mar  2 14:33:18 2018
