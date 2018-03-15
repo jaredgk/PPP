@@ -28,6 +28,7 @@ def createParser():
     argparse_sets.addRegionArgs(parser)
     parser.add_argument('--pad', dest="pad_count", default=0,
                         help="Extend input regions by provided value")
+    parser.add_argument('--addchr', dest="add_chr", action="store_true")
     parser.add_argument('--out', dest="output_name",
                         help="Output filename, default is stdout")
     return parser
@@ -40,7 +41,7 @@ def main(sysargs):
     reg_list = RegionList(filename=args.region_name, colstr=args.colstr,
                             oneidx=args.region_idx, halfopen=args.halfopen)
     out_list = getIntervalsBetween(reg_list, int(args.pad_count))
-    out_list.printList()
+    out_list.printList(file_name=args.output_name, add_chr=args.add_chr)
 
 if __name__ == "__main__":
     #initLogger()

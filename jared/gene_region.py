@@ -291,7 +291,8 @@ class RegionList:
                 i += 1
         self.regions = region_hold
 
-    def printList(self, file_handle=None, file_name=None, delim="\t"):
+    def printList(self, file_handle=None, file_name=None, delim="\t",
+                  add_chr=False):
         if file_handle is None and file_name is None:
             file_handle = sys.stdout
             #raise Exception("Either file_handle or file_name must be set")
@@ -305,7 +306,10 @@ class RegionList:
             if self.oneidx:
                 start += 1
                 end += 1
-            reg_str = region.chrom+delim+str(start)+delim+str(end)+'\n'
+            chrom = region.chrom
+            if add_chr:
+                chrom = "chr"+region.chrom
+            reg_str = chrom+delim+str(start)+delim+str(end)+'\n'
             file_handle.write(reg_str)
 
 
