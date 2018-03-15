@@ -197,8 +197,11 @@ def vcf_region_write(sys_args):
     logging.info('Region read')
     vcf_reader.prev_last_rec = first_el
     fasta_ref = None
+    remove_cpg = False
+    filter_sites = False
     if args.refname is not None:
         fasta_ref = pysam.FastaFile(args.refname)
+        remove_cpg = True
 
     logging.info('Total individuals: %d' % (len(first_el.samples)))
     logging.info('Total regions: %d' % (len(region_list.regions)))
@@ -220,13 +223,12 @@ def vcf_region_write(sys_args):
             outname = getMultiFileName(out_p, rc, vcf_reader.file_uncompressed,
                                        args.nocompress)
             vcf_out = pysam.VariantFile(outname, 'w', header=header)
-        for rec in rec_list:
-            issnp = vf.checkRecordIsSnp(rec)
-            if not args.indel_flag and not issnp:
-                continue
-            if args.refname is not None and vf.checkIfCpG(rec,fasta_ref):
-                continue
-            vcf_out.write(rec)
+        pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg, fasta_ref=fasta_ref)
+        for i in range(len(rec_list)):
+            #make filter_sites an option
+            if (not filter_sites) or pass_list[i]:
+                vcf_out.write(rec_list[i])
+
 
 if __name__ == '__main__':
     initLogger()

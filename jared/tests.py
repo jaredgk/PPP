@@ -208,9 +208,10 @@ class reduceTest(unittest.TestCase):
         self.assertTrue(filecmp.cmp('example/chr11.adj.big.vcf',
                         'example/chr11.test.vcf'))
 
-    def tearDown(self):
-        tryRemove('example/chr11.test.vcf.gz')
-        tryRemove('example/chr11.test.vcf')
+    #def tearDown(self):
+        #tryRemove('example/chr11.test.vcf.gz')
+        #tryRemove('example/chr11.test.vcf')
+
 
 
 class configTest(unittest.TestCase):
