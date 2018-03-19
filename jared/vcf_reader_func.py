@@ -107,26 +107,29 @@ def checkForMultiallele(rec_list,pass_list):
 def getAlleleCountDict(rec):
     alleles = defaultdict(int)
     total_sites = 0
+    missing_inds = 0
     for j in range(len(rec.samples)):
         samp = rec.samples[j]
+        if None in samp.alleles:
+            missing_inds += 1
         for k in range(len(samp.alleles)):
             b = samp.alleles[k]
             if b is not None:
                 alleles[b] += 1
             total_sites+=1
-    return alleles, total_sites
+    return alleles, total_sites, missing_inds
 
 def isInformative(rec, mincount=2, alleles=None):
     count = 0
     if alleles is None:
-        alleles, total_sites = getAlleleCountDict(rec)
+        alleles, total_sites, missing_inds = getAlleleCountDict(rec)
     if len(alleles) != 2:
         return False
     i1,i2 = alleles.keys()
     return (alleles[i1] >= mincount and alleles[i2] >= mincount)
 
 def getPassSites(record_list, remove_cpg=False, remove_indels=True,
-                 remove_multiallele=True, remove_missing=True,
+                 remove_multiallele=True, remove_missing=0,
                  inform_level=2, fasta_ref=None):
     pass_list = [True for r in record_list]
     if remove_cpg == True and fasta_ref is None:
@@ -140,19 +143,16 @@ def getPassSites(record_list, remove_cpg=False, remove_indels=True,
         logging.info(rec.pos)
         if remove_indels and not checkRecordIsSnp(rec):
             pass_list[i] = False
-            logging.info('indel')
         if remove_cpg and checkIfCpG(rec,fasta_ref):
             pass_list[i] = False
-        alleles,total_sites = getAlleleCountDict(rec)
-        if remove_missing and sum([alleles[k] for k in alleles]) != total_sites:
+        alleles,total_sites,missing_inds = getAlleleCountDict(rec)
+        if remove_missing != -1 and missing_inds > remove_missing:
             pass_list[i] = False
-            logging.info('missing')
         if inform_level != 0 and not isInformative(rec,mincount=inform_level,alleles=alleles):
             pass_list[i] = False
-            logging.info('not informative')
-    pp = zip([r.pos for r in record_list],pass_list)
-    for ppp in pp:
-        logging.info(ppp)
+    #pp = zip([r.pos for r in record_list],pass_list)
+    #for ppp in pp:
+    #    logging.info(ppp)
     return pass_list
 
 

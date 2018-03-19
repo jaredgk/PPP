@@ -42,6 +42,10 @@ def createParser():
                         help="Produces multiple output VCFs instead of one")
     parser.add_argument("--parsecpg", dest="refname")
     parser.add_argument("--nocompress", dest="nocompress", action="store_true")
+    parser.add_argument("--remove-indels", dest="remove_indels", action="store_true", help=("Removes indels from output VCF files"))
+    parser.add_argument("--remove-multi", dest="remove_multiallele", action="store_true")
+    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
+    parser.add_argument("--informative-count", dest="informative_count", default=0)
     subsamp_group = parser.add_mutually_exclusive_group()
     subsamp_group.add_argument('--subsamp-list', dest="subsamp_fn",
                                help="List of sample names to be used")
@@ -166,17 +170,12 @@ def vcf_region_write(sys_args):
         sys.exit(1)
     args = parser.parse_args(sys_args)
     logArgs(args)
-    #vcf_reader, uncompressed = vf.getVcfReader(args.vcfname,
-    #                           compress_flag=args.compress_flag,
-    #                           subsamp_num=args.subsamp_num,
-    #                           subsamp_fn=args.subsamp_fn)
     vcf_reader = vf.VcfReader(args.vcfname,
                               compress_flag=args.compress_flag,
                               subsamp_num=args.subsamp_num,
                               subsamp_fn=args.subsamp_fn)
     logging.info('VCF file read')
     header = vcf_reader.reader.header
-    #first_el = next(vcf_reader.reader)
     first_el = vcf_reader.prev_last_rec
     chrom = first_el.chrom
     if not args.multi_out:
@@ -197,8 +196,12 @@ def vcf_region_write(sys_args):
     logging.info('Region read')
     vcf_reader.prev_last_rec = first_el
     fasta_ref = None
-    remove_cpg = False
-    filter_sites = False
+    remove_cpg = (args.refname is not None)
+    filter_sites = ((args.refname is not None)
+                   or args.remove_indels
+                   or args.remove_multiallele
+                   or (args.remove_missing != -1)
+                   or (args.informative_count != 0))
     if args.refname is not None:
         fasta_ref = pysam.FastaFile(args.refname)
         remove_cpg = True
@@ -223,7 +226,8 @@ def vcf_region_write(sys_args):
             outname = getMultiFileName(out_p, rc, vcf_reader.file_uncompressed,
                                        args.nocompress)
             vcf_out = pysam.VariantFile(outname, 'w', header=header)
-        pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg, fasta_ref=fasta_ref)
+        if filter_sites:
+            pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg, remove_indels=args.remove_indels, remove_multiallele=args.remove_multi,remove_missing=args.remove_missing, inform_level=args.informative_count, fasta_ref=fasta_ref)
         for i in range(len(rec_list)):
             #make filter_sites an option
             if (not filter_sites) or pass_list[i]:
