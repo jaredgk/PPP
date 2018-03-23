@@ -31,8 +31,8 @@ def createParser():
     parser.add_argument("--gr", dest="genename", help="Name of gene region file")
     parser.add_argument("--pop", dest="popname", help=("Filename of pop "
                         "model file"))
-    parser.add_argument("--gr1", dest="gene_idx", action="store_true",
-                        help="Gene Region list is 1 index based, not 0")
+    parser.add_argument("--zero-ho", dest="zeroho", action="store_true")
+    parser.add_argument("--zero-closed", dest="zeroclosed", action="store_true")
     parser.add_argument("--indels", dest="indel_flag", action="store_true",
                         help="Include indels when reporting sequences")
     parser.add_argument("--trim-to-ref-length", dest="trim_seq",
@@ -330,7 +330,8 @@ def vcf_to_ima(sys_args):
     #chrom = vcf_reader.prev_last_rec.chrom
     #compressed = (input_ext != 'vcf')
 
-    region_list = RegionList(filename=args.genename, oneidx=args.gene_idx,
+    region_list = RegionList(filename=args.genename, zeroho=args.zeroho,
+                            zeroclosed=args.zeroclosed,
                             colstr=args.gene_col)
     logging.info('Region list read')
     fasta_ref = None
