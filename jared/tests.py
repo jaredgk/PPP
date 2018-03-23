@@ -43,7 +43,7 @@ class geneRegionTest(unittest.TestCase):
 
     def test_RL_collist(self):
         collist = '2,4,6'
-        rl = RegionList('example/gr_ex_multicolumn.txt', colstr=collist)
+        rl = RegionList('example/gr_ex_multicolumn.txt', colstr=collist, zeroho=True)
         r = rl.regions[0]
         set_r = Region(100000, 100100, '11')
         self.assertEqual(r, set_r)
@@ -133,10 +133,10 @@ class snpTest(unittest.TestCase):
 
         self.assertRaises(Exception, vcf_to_seq, args)
 
-    def tearDown(self):
-        tryRemove('example/chr11.subsamples.fasta')
-        tryRemove('example/chr11.fasta')
-        tryRemove('example/chr11.unzipped.fasta')
+    #def tearDown(self):
+        #tryRemove('example/chr11.subsamples.fasta')
+        #tryRemove('example/chr11.fasta')
+        #tryRemove('example/chr11.unzipped.fasta')
 
 class checkCompressionTest(unittest.TestCase):
 
@@ -252,7 +252,8 @@ class imaTest(unittest.TestCase):
         vcf_to_ima(['--vcf','example/chr11.subsamples.vcf.gz',
                     '--ref','example/human_g1k_chr11.fasta',
                     '--gr','example/snp_region.txt',
-                    '--pop','example/testmodel.model'])
+                    '--pop','example/testmodel.model',
+                    '--zero-ho'])
         self.assertTrue(filecmp.cmp('example/chr11.ima.u',
                         'example/chr11.subsamples.u'))
 
