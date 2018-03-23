@@ -133,10 +133,10 @@ class snpTest(unittest.TestCase):
 
         self.assertRaises(Exception, vcf_to_seq, args)
 
-    #def tearDown(self):
-        #tryRemove('example/chr11.subsamples.fasta')
-        #tryRemove('example/chr11.fasta')
-        #tryRemove('example/chr11.unzipped.fasta')
+    def tearDown(self):
+        tryRemove('example/chr11.subsamples.fasta')
+        tryRemove('example/chr11.fasta')
+        tryRemove('example/chr11.unzipped.fasta')
 
 class checkCompressionTest(unittest.TestCase):
 
@@ -208,9 +208,9 @@ class reduceTest(unittest.TestCase):
         self.assertTrue(filecmp.cmp('example/chr11.adj.big.vcf',
                         'example/chr11.test.vcf'))
 
-    #def tearDown(self):
-        #tryRemove('example/chr11.test.vcf.gz')
-        #tryRemove('example/chr11.test.vcf')
+    def tearDown(self):
+        tryRemove('example/chr11.test.vcf.gz')
+        tryRemove('example/chr11.test.vcf')
 
 
 
