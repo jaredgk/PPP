@@ -30,8 +30,6 @@ def keyComp(k1,k2):
 @total_ordering
 class Region:
     natsort = True
-    oneidx = False
-    halfopen = True
 
     def __init__(self, start, end, chrom, natsort=True):
         """Zero-based, half open coordinates and chromosome info for
@@ -40,12 +38,14 @@ class Region:
         """
         self.start = start
         self.end = end
-        #sys.stderr.write("region\t"+str(start)+'\t'+str(end)+'\t'+str(chrom)+'\n')
         if chrom[0:3] == 'chr':
             self.chrom = chrom[3:]
         else:
             self.chrom = chrom
         Region.natsort = natsort
+
+    def cloneRegion(self):
+        return Region(self.start,self.end,self.chrom)
 
 
     def getChromKey(self):
@@ -114,7 +114,7 @@ class RegionList:
     def __init__(self, filename=None, genestr=None, reglist=None,
                  zeroclosed=False, zeroho=False, defaultchrom=None,
                  colstr=None, sortlist=True, checkoverlap=True,
-                 natsort=True):
+                 natsort=True, region_template=None):
         """Class for storing gene region information
 
         Will either read a file or take a single gene region in a string
@@ -150,13 +150,27 @@ class RegionList:
         colstr has less than 2 or more than 3 values
 
         """
-        if colstr is None:
-            self.collist = [1, 2, 0]
-        else:
-            self.parseCols(colstr)
+        self.collist = None
+        if region_template is not None:
+            zeroho = region_template.zeroho
+            zeroclosed = region_template.zeroclosed
+            defaultchrom = region_template.defaultchrom
+            self.collist = region_template.collist
+            sortlist = region_template.sortlist
+            checkoverlap = region_template.checkoverlap
+            natsort = region_template.natsort
+
+        if self.collist is None:
+            if colstr is None:
+                self.collist = [1, 2, 0]
+            else:
+                self.parseCols(colstr)
         if filename is None and genestr is None and reglist is None:
             raise Exception(("Either a filename or gene region must be "
                             "provided for creating a gene region list"))
+        if zeroho and zeroclosed:
+            raise Exception(("Zero-halfopen and zero-closed options cannot "
+                             "be invoked at the same time"))
         self.regions = []
         self.zeroho = zeroho
         self.zeroclosed = zeroclosed
@@ -269,32 +283,30 @@ class RegionList:
         self.regions.sort()
         i = 0
         #print ("Fixing overlap")
-        while i < len(self.regions)-1:
-            r1 = self.regions[i]
-            r2 = self.regions[i+1]
-            if r1.chrom == r2.chrom:
-                if (r1.start <= r2.start
-                    < r1.end):
-                    tr = Region(min(r1.start,r2.start),
-                                max(r1.end,r2.end),
-                                r1.chrom)
-                    region_hold.append(tr)
-                    i += 2
-                else:
-                    region_hold.append(r1)
-                    i += 1
+        temp_reg = None
+        #while i < len(self.regions):
+        for i in range(len(self.regions)):
+            if temp_reg is None:
+                temp_reg = self.regions[i].cloneRegion()
+                continue
+            cur_reg = self.regions[i].cloneRegion()
+            if cur_reg.start < temp_reg.end and cur_reg.chrom == temp_reg.chrom:
+                temp_reg.end = max(temp_reg.end,cur_reg.end)
             else:
-                region_hold.append(r1)
-                i += 1
+                region_hold.append(temp_reg)
+                temp_reg = cur_reg
+        region_hold.append(temp_reg)
         self.regions = region_hold
 
-    def printList(self, file_handle=None, file_name=None, delim="\t",
-                  add_chr=False):
+    def printList(self, file_handle=None, file_name=None,
+                  return_str=False, delim="\t", add_chr=False):
         if file_handle is None and file_name is None:
             file_handle = sys.stdout
             #raise Exception("Either file_handle or file_name must be set")
         if file_name is not None:
             file_handle = open(file_name, 'w')
+        if return_str:
+            out_str = ''
         for region in self.regions:
             start = region.start
             end = region.end
@@ -306,8 +318,12 @@ class RegionList:
             if add_chr:
                 chrom = "chr"+region.chrom
             reg_str = chrom+delim+str(start)+delim+str(end)+'\n'
-            file_handle.write(reg_str)
-
+            if return_str:
+                out_str += reg_str
+            else:
+                file_handle.write(reg_str)
+        if return_str:
+            return out_str
 
     #TO do:
     #Add sort method for strictly text based sorting
