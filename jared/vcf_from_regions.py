@@ -39,7 +39,7 @@ def createParser():
     parser.add_argument("--multi-out", dest="multi_out", action="store_true",
                         help="Produces multiple output VCFs instead of one")
     parser.add_argument("--parsecpg", dest="refname")
-    parser.add_argument("--compress", dest="compress", action="store_true")
+    parser.add_argument("--compress-out", dest="compress", action="store_true")
     parser.add_argument("--remove-indels", dest="remove_indels", action="store_true", help=("Removes indels from output VCF files"))
     parser.add_argument("--remove-multi", dest="remove_multiallele", action="store_true")
     parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
@@ -183,7 +183,8 @@ def vcf_region_write(sys_args):
         out_p = getOutputPrefix(args)
 
     if args.gene_str is not None:
-        region_list = RegionList(genestr=args.gene_str, oneidx=args.gene_idx,
+        region_list = RegionList(genestr=args.gene_str,zeroho=args.zeroho,
+                                 zeroclosed=args.zeroclosed,
                                  defaultchrom=chrom)
     elif args.genename is not None:
         region_list = RegionList(filename=args.genename,zeroho=args.zeroho,
