@@ -15,7 +15,7 @@ from collections import defaultdict
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
 # Import log initializer
-from logging_module import initLogger
+from logging_module import initLogger, logArgs
 
 # Import basic vcftools functions
 from vcftools import *
@@ -34,7 +34,7 @@ def sampler_parser(passed_arguments):
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string = None):
                 if not os.path.isfile(value):
-                    raise IOError('Input not found.') # File not found
+                    raise IOError('%s not found' % value)
                 setattr(args, self.dest, value)
         return customAction
 
@@ -45,7 +45,7 @@ def sampler_parser(passed_arguments):
     sampler_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments
-    sampler_parser.add_argument("vcfname", metavar='VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
+    sampler_parser.add_argument('--vcf', help = "Input VCF filename", type = str, required = True, action = parser_confirm_file())
 
     # Model file arguments.
     sampler_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
@@ -101,12 +101,6 @@ def sampler_parser(passed_arguments):
     else:
         return sampler_parser.parse_args()
 
-def logArgs(args, pipeline_function):
-    '''Logs arguments from argparse system. May be replaced with a general function in logging_module'''
-    logging.info('Arguments for %s:' % pipeline_function)
-    for k in vars(args):
-        logging.info('Arguments %s: %s' % (k, vars(args)[k]))
-
 def random_vcftools_sampler (vcftools_samples, sample_size):
     '''Random Sampler. Returns a list of randomly selected elements from
     vcftools_samples. The length of this list is defined by sample_size.'''
@@ -145,7 +139,6 @@ def assign_position_columns (sample_headers):
         # Assign missing headers
         missing_headers = [pos_header for pos_header in ['CHROM', 'BIN_START', 'BIN_END'] if pos_header not in sample_headers]
         # Print error message with missing headers
-        logging.error('Cannot find %s column(s) in file specified by --statistic-file.' % ', '.join(missing_headers))
         raise ValueError('Cannot find %s column(s) in file specified by --statistic-file.' % ', '.join(missing_headers))
 
     return sample_headers.index('CHROM'), sample_headers.index('BIN_START'), sample_headers.index('BIN_END')
@@ -154,11 +147,9 @@ def assign_statistic_column (sample_headers, statistic):
     statistic_converter = {'windowed-weir-fst':'MEAN_FST', 'TajimaD':'TajimaD', 'window-pi':'PI'}
 
     if statistic not in statistic_converter:
-        logging.critical('Statistic not found. Statistic list needs to be updated. Please contact the PPP Team.')
         raise Exception('Statistic not found. Statistic list needs to be updated. Please contact the PPP Team.')
 
     if statistic_converter[statistic] not in sample_headers:
-        logging.error('Statistic selected not found in file specified by --statistic-file.')
         raise ValueError('Statistic selected not found in file specified by --statistic-file.')
 
     return statistic_converter[statistic]
@@ -174,7 +165,7 @@ def run (passed_arguments = []):
 
         Parameters
         ----------
-        VCF_Input : str
+        --vcf : str
             Specifies the input VCF filename
         --out : str
             Specifies the VCF output filename
@@ -225,7 +216,7 @@ def run (passed_arguments = []):
     sampler_args = sampler_parser(passed_arguments)
 
     # Adds the arguments (i.e. parameters) to the log file
-    logArgs(sampler_args, 'vcf_sampler')
+    logArgs(sampler_args, func_name = 'vcf_sampler')
 
     # Set the random seed
     np.random.seed(sampler_args.random_seed)
@@ -234,12 +225,10 @@ def run (passed_arguments = []):
     if not sampler_args.overwrite:
         # Check if output dir already exists
         if os.path.exists(sampler_args.out_dir):
-            logging.error('Sample Directory already exists')
             raise IOError('Sample Directory already exists')
 
         # Check if output file already exists
         if os.path.isfile(sampler_args.sample_file):
-            logging.error('Sample file already exists')
             raise IOError('Sample file already exists')
     else:
         # If previous output is to be overwritten, the previous output directory needs to be removed
@@ -259,7 +248,6 @@ def run (passed_arguments = []):
 
     # Confirm there are enough samples
     if len(vcftools_samples) < sampler_args.sample_size:
-        logging.error('Sample size larger than the number of samples within sample file')
         raise ValueError('Sample size larger than the number of samples within sample file')
 
     # UPDATE Planned
@@ -271,7 +259,6 @@ def run (passed_arguments = []):
     # Run the uniform sampler
     if sampler_args.sampling_scheme == 'uniform':
         if sampler_args.sample_size % sampler_args.uniform_bins != 0:
-            logging.error('Sample size not divisible by the bin count')
             raise ValueError('Sample size not divisible by the bin count')
 
         selected_samples = sorted(uniform_vcftools_sampler(list(vcftools_samples[assigned_statistic]), sampler_args.uniform_bins, sampler_args.sample_size))
@@ -306,7 +293,6 @@ def run (passed_arguments = []):
     if sampler_args.calc_statistic == 'TajimaD':
         # Check that the window size used in vcf_calc has been defined
         if not sampler_args.statistic_window_size:
-            logging.error("--statistic-window-size argument required for the Tajima's D statistic")
             raise TypeError("--statistic-window-size argument required for the Tajima's D statistic")
 
         # Create iterator of all unique bin combinations
@@ -314,7 +300,6 @@ def run (passed_arguments = []):
 
         # Check if the bin combinations are divisible by the window size (to check if the window size is likely correct)
         if not all([abs(bin_1 - bin_2) % sampler_args.statistic_window_size == 0  for bin_1, bin_2 in bin_start_iter]):
-            logging.error("--statistic-window-size argument conflicts with values in sample file")
             raise ValueError("--statistic-window-size argument conflicts with values in sample file")
 
         # Create list of bin start positions
@@ -329,14 +314,14 @@ def run (passed_arguments = []):
     # Open the VCF file
     if sampler_args.vcf_index:
         # Read in the file using pysam
-        vcf_input = pysam.VariantFile(sampler_args.vcfname, index_filename = sampler_args.vcf_index)
+        vcf_input = pysam.VariantFile(sampler_args.vcf, index_filename = sampler_args.vcf_index)
     else:
         # Check if there is an index file
-        if not check_for_index(sampler_args.vcfname):
+        if not check_for_index(sampler_args.vcf):
             # Create an index if not found
-            create_index(sampler_args.vcfname)
+            create_index(sampler_args.vcf)
         # Read in the file using pysam
-        vcf_input = pysam.VariantFile(sampler_args.vcfname)
+        vcf_input = pysam.VariantFile(sampler_args.vcf)
 
     # Check if the user has specified a model file
     if sampler_args.model_file and sampler_args.model:
@@ -346,7 +331,6 @@ def run (passed_arguments = []):
 
         # Check that the selected model was not found in the file
         if sampler_args.model not in models_in_file:
-            logging.error('Selected model "%s" not found in: %s' % (sampler_args.model, sampler_args.model_file))
             raise IOError('Selected model "%s" not found in: %s' % (sampler_args.model, sampler_args.model_file))
 
         # Select model, might change this in future versions
@@ -356,7 +340,6 @@ def run (passed_arguments = []):
         individuals_in_file = list(vcf_input.header.samples)
 
         if not set(selected_model.ind_list).issubset(set(individuals_in_file)):
-            logging.error('Individuals differ between model "%s" and input.' % sampler_args.model)
             raise IOError('Individuals differ between model "%s" and input.' % sampler_args.model)
 
         # Reduce individuals to those in model
@@ -379,7 +362,6 @@ def run (passed_arguments = []):
                 for keep_line in keep_file:
 
                     if keep_line.strip() not in individuals_in_file:
-                        logging.error('Individuals differ between --keep-file and input.')
                         raise IOError('Individuals differ between --keep-file and input.')
 
                     selected_individuals.append(keep_line.strip())
@@ -395,7 +377,6 @@ def run (passed_arguments = []):
                 for remove_line in remove_file:
 
                     if remove_line.strip() not in individuals_in_file:
-                        logging.error('Individuals differ between --remove-file and input.')
                         raise IOError('Individuals differ between --remove-file and input.')
 
                     selected_individuals.remove(remove_line.strip())

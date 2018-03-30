@@ -50,7 +50,7 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that Fst window function is operating correctly
     def test_Fst_window (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+        vcf_calc.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'windowed-weir-fst',
                       '--model-file', 'example/input/input.model',
                       '--model', '2Pop',
@@ -68,7 +68,7 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that the Tajima's D function is operating correctly
     def test_tajimasD (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+        vcf_calc.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'TajimaD',
                       '--out-prefix', 'out',
                       '--overwrite'])
@@ -84,7 +84,7 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that the window nucleotide diversity function is operating correctly
     def test_window_pi (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+        vcf_calc.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'window-pi',
                       '--out-prefix', 'out',
                       '--overwrite'])
@@ -100,7 +100,7 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that the window nucleotide diversity function is operating correctly
     def test_site_pi (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+        vcf_calc.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'site-pi',
                       '--out-prefix', 'out',
                       '--overwrite'])
@@ -116,7 +116,7 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that the allele frequency function is operating correctly
     def test_freq (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+        vcf_calc.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'freq',
                       '--out-prefix', 'out',
                       '--overwrite'])
@@ -131,7 +131,7 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that the heterozygosity function is operating correctly
     def test_het_fit (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+        vcf_calc.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'het-fit',
                       '--out-prefix', 'out',
                       '--overwrite'])
@@ -146,7 +146,7 @@ class vcf_calc_tests (unittest.TestCase):
     # Check that the heterozygosity function is operating correctly
     def test_het_fis (self):
         # Run the function with the following arguments
-        vcf_calc.run(['example/input/merged_chr1_10000.vcf.gz',
+        vcf_calc.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                       '--model-file', 'example/input/input.model',
                       '--model', '2Pop',
                       '--calc-statistic', 'het-fis',
@@ -226,7 +226,7 @@ class vcf_sampler_tests (unittest.TestCase):
     # Check that the entire sampler function (using random sampler) is operating correctly
     def test_sampler (self):
         # Run the function with the following arguments
-        vcf_sampler.run(['example/input/merged_chr1_10000.vcf.gz',
+        vcf_sampler.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                          '--statistic-file', 'example/merged_chr1_10000.windowed.weir.fst',
                          '--sample-size', '20',
                          '--random-seed', '1000',

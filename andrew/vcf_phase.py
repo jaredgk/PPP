@@ -8,8 +8,8 @@ import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
-import vcf_reader_func
-from logging_module import initLogger
+from vcf_reader_func import checkFormat
+from logging_module import initLogger, logArgs
 from vcftools import bgzip_decompress_vcfgz
 
 def phase_argument_parser(passed_arguments):
@@ -21,7 +21,7 @@ def phase_argument_parser(passed_arguments):
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
                 if not os.path.isfile(value):
-                    raise IOError # File not found
+                    raise IOError('%s not found' % value)
                 setattr(args, self.dest, value)
         return customAction
 
@@ -32,7 +32,7 @@ def phase_argument_parser(passed_arguments):
     phase_parser = argparse.ArgumentParser()
 
     # Input arguments.
-    phase_parser.add_argument("vcfname", metavar='VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
+    phase_parser.add_argument('--vcf', help = "Input VCF filename", type = str, required = True, action = parser_confirm_file())
 
     phasing_list = ['beagle', 'shapeit']
     phasing_default = 'beagle'
@@ -47,15 +47,9 @@ def phase_argument_parser(passed_arguments):
     else:
         return phase_parser.parse_args()
 
-def logArgs(args, pipeline_function):
-    '''Logs arguments from argparse system. May be replaced with a general function in logging_module'''
-    logging.info('Arguments for %s:' % pipeline_function)
-    for k in vars(args):
-        logging.info('Arguments %s: %s' % (k, vars(args)[k]))
-
 def assign_vcf_extension (filename):
     # Checks if the file is unzipped, bgzipped, or gzipped
-    vcfname_format = vcf_reader_func.checkFormat(filename)
+    vcfname_format = checkFormat(filename)
 
     if vcfname_format == 'vcf':
         return '.vcf'
@@ -64,11 +58,9 @@ def assign_vcf_extension (filename):
         return '.vcf.gz'
 
     elif vcfname_format == 'bcf':
-        logging.error('BCF not supported in current version')
         raise Exception('BCF not supported in current version')
-        
+
     else:
-        logging.error('Unknown file format')
         raise Exception('Unknown file format')
 
 def check_beagle_for_errors (beagle_stdout):
@@ -95,12 +87,10 @@ def check_beagle_for_errors (beagle_stdout):
         # Splits log into list of lines
         beagle_stdout_lines = beagle_stdout.splitlines()
         # Prints the error(s)
-        logging.error('\n'.join((output_line for output_line in beagle_stdout_lines if output_line.startswith('ERROR:'))))
         raise Exception('\n'.join((output_line for output_line in beagle_stdout_lines if output_line.startswith('ERROR:'))))
 
     # Print output if not completed and no error found. Unlikely to be used, but included.
     else:
-        logging.error(beagle_stdout)
         raise Exception(beagle_stdout)
 
 def check_shapeit_for_errors (shapeit_stdout):
@@ -124,7 +114,6 @@ def check_shapeit_for_errors (shapeit_stdout):
 
     # Print output if not completed and no error found. Unlikely to be used, but included.
     else:
-        logging.error(shapeit_stdout)
         raise Exception(shapeit_stdout)
 
 def combine_shapeit_logs (shapeit_logs, new_log_filename):
@@ -132,7 +121,7 @@ def combine_shapeit_logs (shapeit_logs, new_log_filename):
     with open(new_log_filename, 'wb') as out_file:
         for shapeit_log in shapeit_logs:
             if not os.path.isfile(shapeit_log):
-                raise IOError # File not found
+                raise IOError('%s not found' % shapeit_log)
             with open(shapeit_log, 'rb') as in_file:
                 shutil.copyfileobj(in_file, out_file)
     # Remove old log files
@@ -149,7 +138,7 @@ def run (passed_arguments = []):
 
         Parameters
         ----------
-        VCF_Input : str
+        --vcf : str
             Specifies the input VCF filename
         --phase-algorithm : str
             Specifies the algorithm to be used. Choices: beagle (default) and
@@ -174,10 +163,10 @@ def run (passed_arguments = []):
     phase_args = phase_argument_parser(passed_arguments)
 
     # Adds the arguments (i.e. parameters) to the log file
-    logArgs(phase_args, 'vcf_phase')
+    logArgs(phase_args, func_name = 'vcf_phase')
 
     # Assign file extension for VCF input file
-    vcfname_ext = assign_vcf_extension(phase_args.vcfname)
+    vcfname_ext = assign_vcf_extension(phase_args.vcf)
 
     logging.info('Input file assigned')
 
@@ -185,17 +174,17 @@ def run (passed_arguments = []):
     vcfname_renamed = False
 
     # Confirm input has correct file extension
-    if vcfname_ext not in phase_args.vcfname:
+    if vcfname_ext not in phase_args.vcf:
         vcfname_renamed = True
-        os.rename(phase_args.vcfname, phase_args.vcfname + vcfname_ext)
-        phase_args.vcfname += vcfname_ext
+        os.rename(phase_args.vcf, phase_args.vcf + vcfname_ext)
+        phase_args.vcf += vcfname_ext
 
     if phase_args.phase_algorithm == 'beagle':
         # Assign the algorithm
         algorithm_call_args = ['java', '-jar', '/home/aewebb/Repositories/PPP/andrew/bin/beagle.jar']
 
         # Assigns the arguments for phasing
-        phase_call_args = ['gt=' + phase_args.vcfname, 'out=' + phase_args.out_prefix]
+        phase_call_args = ['gt=' + phase_args.vcf, 'out=' + phase_args.out_prefix]
 
         logging.info('beagle phasing parameters assigned')
 
@@ -228,7 +217,7 @@ def run (passed_arguments = []):
         algorithm_call_args = ['shapeit']
 
         # Assigns the arguments for phasing
-        phase_call_args = ['--input-vcf', phase_args.vcfname, '-O', phase_args.out_prefix, '-L', phase_args.out_prefix + '.p.log']
+        phase_call_args = ['--input-vcf', phase_args.vcf, '-O', phase_args.out_prefix, '-L', phase_args.out_prefix + '.p.log']
 
         logging.info('shapeit phasing parameters assigned')
 
@@ -275,7 +264,7 @@ def run (passed_arguments = []):
 
     # Reverts the VCF input file
     if vcfname_renamed:
-        os.rename(phase_args.vcfname, phase_args.vcfname[:-len(vcfname_ext)])
+        os.rename(phase_args.vcf, phase_args.vcf[:-len(vcfname_ext)])
 
 if __name__ == "__main__":
     initLogger()

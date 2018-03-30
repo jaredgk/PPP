@@ -13,7 +13,7 @@ from model import read_model_file
 # Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
-from logging_module import initLogger
+from logging_module import initLogger, logArgs
 
 def vcf_filter_parser(passed_arguments):
     '''VCF Argument Parser - Assigns arguments from command line'''
@@ -23,7 +23,7 @@ def vcf_filter_parser(passed_arguments):
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
                 if not os.path.isfile(value):
-                    raise IOError # File not found
+                    raise IOError('%s not found' % value)
                 setattr(args, self.dest, value)
         return customAction
 
@@ -34,7 +34,7 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments.
-    vcf_parser.add_argument("vcfname", metavar = 'VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
+    vcf_parser.add_argument('--vcf', help = "Input VCF filename", type = str, required = True, action = parser_confirm_file())
 
     # Model file arguments.
     vcf_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
@@ -99,12 +99,6 @@ def vcf_filter_parser(passed_arguments):
     else:
         return vcf_parser.parse_args()
 
-def logArgs(args, pipeline_function):
-    '''Logs arguments from argparse system. May be replaced with a general function in logging_module'''
-    logging.info('Arguments for %s:' % pipeline_function)
-    for k in vars(args):
-        logging.info('Arguments %s: %s' % (k, vars(args)[k]))
-
 def run (passed_arguments = []):
     '''
     Filter VCF files using VCFTools.
@@ -113,7 +107,7 @@ def run (passed_arguments = []):
 
     Parameters
     ----------
-    VCF_Input : str
+    --vcf : str
         Specifies the input VCF filename
     --out : str
         Specifies the output filename
@@ -170,7 +164,7 @@ def run (passed_arguments = []):
     vcf_args = vcf_filter_parser(passed_arguments)
 
     # Adds the arguments (i.e. parameters) to the log file
-    logArgs(vcf_args, 'vcf_filter')
+    logArgs(vcf_args, func_name = 'vcf_filter')
 
     # Argument container for vcftools
     vcftools_call_args = ['--out', vcf_args.out_prefix]
@@ -182,7 +176,6 @@ def run (passed_arguments = []):
 
         # Check that the selected model was not found in the file
         if vcf_args.model not in models_in_file:
-            logging.error('Selected model "%s" not found in: %s' % (vcf_args.model, vcf_args.model_file))
             raise IOError('Selected model "%s" not found in: %s' % (vcf_args.model, vcf_args.model_file))
 
         # Select model, might change this in future versions
@@ -301,7 +294,7 @@ def run (passed_arguments = []):
             check_for_vcftools_output(vcftools_output_filename)
 
     # Assigns the file argument for vcftools
-    vcfname_arg = assign_vcftools_input_arg(vcf_args.vcfname)
+    vcfname_arg = assign_vcftools_input_arg(vcf_args.vcf)
     logging.info('Input file assigned')
 
     # Check if the user has requested vcf.gz, if so send the stdout to bgzip

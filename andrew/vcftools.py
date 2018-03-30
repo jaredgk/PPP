@@ -5,7 +5,7 @@ import subprocess
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
 
-import vcf_reader_func
+from vcf_reader_func import checkFormat
 
 def check_bgzip_for_errors (bgzip_stderr):
     '''
@@ -23,11 +23,10 @@ def check_bgzip_for_errors (bgzip_stderr):
     '''
 
     if bgzip_stderr:
-        logging.error('Error occured while compressing the vcf file')
         raise IOError('Error occured while compressing the vcf file')
 
 
-def bgzip_decompress_vcfgz (vcfgz_filename, keep_original = False):
+def bgzip_decompress_vcfgz (vcfgz_filename, out_prefix = '', keep_original = False):
         '''
             Converts a vcf.gz to vcf
 
@@ -47,22 +46,29 @@ def bgzip_decompress_vcfgz (vcfgz_filename, keep_original = False):
         '''
 
         # Compress and keep the original file
-        if keep_original:
+        if keep_original or out_prefix:
 
-            # Seperate into path and filename
-            split_path, split_filename = os.path.split(vcfgz_filename)
+            if out_prefix:
 
-            # Remove any file extensions
-            bgzip_filename = split_filename.split(os.extsep)[0] + '.vcf'
+                # Assign the bgzip filename
+                vcf_filename = split_filename.split(os.extsep)[0] + '.vcf'
 
-            # Join path and filename
-            joined_bgzip_filename = os.path.join(split_path, bgzip_filename)
+            else:
+
+                # Seperate into path and filename
+                split_path, split_filename = os.path.split(vcfgz_filename)
+
+                # Remove any file extensions
+                vcf_basename = split_filename.split(os.extsep)[0] + '.vcf'
+
+                # Join path and filename
+                vcf_filename = os.path.join(split_path, vcf_basename)
 
             # Create the output file
-            bgzip_file = open(joined_bgzip_filename, 'w')
+            vcf_file = open(vcf_filename, 'w')
 
             # bgzip subprocess call
-            bgzip_call = subprocess.Popen(['bgzip', '-dc', vcfgz_filename], stdout = bgzip_file, stderr = subprocess.PIPE)
+            bgzip_call = subprocess.Popen(['bgzip', '-dc', vcfgz_filename], stdout = vcf_file, stderr = subprocess.PIPE)
 
         # Compress and do not keep the original file
         else:
@@ -77,7 +83,7 @@ def bgzip_decompress_vcfgz (vcfgz_filename, keep_original = False):
         check_bgzip_for_errors(bgzip_err)
 
 
-def bgzip_compress_vcf (vcf_filename, keep_original = False):
+def bgzip_compress_vcf (vcf_filename, out_prefix = '', keep_original = False):
         '''
             Converts a vcf to vcf.gz
 
@@ -97,13 +103,30 @@ def bgzip_compress_vcf (vcf_filename, keep_original = False):
         '''
 
         # Compress and keep the original file
-        if keep_original:
+        if keep_original or out_prefix:
+
+            if out_prefix:
+
+                # Assign the filename
+                vcfgz_filename = out_prefix + '.vcf.gz'
+
+            else:
+
+                # Seperate into path and filename
+                split_path, split_filename = os.path.split(vcfgz_filename)
+
+                # Remove any file extensions
+                vcfgz_basename = split_filename.split(os.extsep)[0] + '.vcf.gz'
+
+                # Join path and filename
+                vcfgz_filename = os.path.join(split_path, vcfgz_basename)
+
 
             # Create the output file
-            bgzip_output = open(vcf_filename + '.gz', 'w')
+            vcfgz_file = open(vcfgz_filename, 'w')
 
             # bgzip subprocess call
-            bgzip_call = subprocess.Popen(['bgzip', '-c', vcf_filename], stdout = bgzip_output, stderr = subprocess.PIPE)
+            bgzip_call = subprocess.Popen(['bgzip', '-c', vcf_filename], stdout = vcfgz_file, stderr = subprocess.PIPE)
 
         # Compress and do not keep the original file
         else:
@@ -241,14 +264,12 @@ def check_for_vcftools_output (vcftools_output):
     '''
     # Check if output file already exists
     if os.path.isfile(vcftools_output):
-        logging.error('VCF output file already exists')
         raise IOError('VCF output file already exists')
 
     logging.info('Output file assigned')
 
     # Check if log file already exists
     if os.path.isfile(vcftools_output + '.log'):
-        logging.error('Log file already exists')
         raise IOError('Log file already exists')
 
     logging.info('Log file assigned')
@@ -278,7 +299,6 @@ def delete_vcftools_output (vcftools_output):
             # Delete the output
             os.remove(vcftools_output)
         except:
-            logging.error('VCF output file cannot be deleted')
             raise IOError('VCF output file cannot be deleted')
 
     logging.info('Output file assigned')
@@ -289,7 +309,6 @@ def delete_vcftools_output (vcftools_output):
             # Delete the output
             os.remove(vcftools_output + '.log')
         except:
-            logging.error('Log file cannot be deleted')
             raise IOError('Log file cannot be deleted')
 
     logging.info('Log file assigned')
@@ -318,12 +337,10 @@ def check_vcftools_for_errors (vcftools_stderr):
         # Splits log into list of lines
         vcftools_stderr_lines = vcftools_stderr.splitlines()
         # Prints the error(s)
-        logging.error('\n'.join((output_line for output_line in vcftools_stderr_lines if output_line.startswith('Error'))))
         raise Exception('\n'.join((output_line for output_line in vcftools_stderr_lines if output_line.startswith('Error'))))
 
     # Print output if not completed and no error found. Unlikely to be used, but included.
     else:
-        logging.error(vcftools_stderr)
         raise Exception(vcftools_stderr)
 
 def produce_vcftools_output (output, filename, append_mode = False, strip_header = False):
@@ -432,7 +449,7 @@ def assign_vcftools_input_arg (filename):
     else:
 
         # Checks if the file is unzipped, bgzipped, or gzipped
-        vcfname_format = vcf_reader_func.checkFormat(filename)
+        vcfname_format = checkFormat(filename)
 
         # Assign the associated input command, or return an error.
         if vcfname_format == 'vcf':
@@ -442,5 +459,4 @@ def assign_vcftools_input_arg (filename):
         elif vcfname_format == 'bcf':
             return ['--bcf', filename]
         else:
-            logging.error('Unknown VCF file format')
             raise Exception('Unknown VCF file format')

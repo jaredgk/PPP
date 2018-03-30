@@ -7,6 +7,26 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
 
 from vcf_reader_func import checkFormat
 
+def check_bcftools_for_errors (bcftools_stderr):
+    '''
+        Checks the bgzip stderr for errors
+
+        Parameters
+        ----------
+        bcftools_stderr : str
+            bcftools stderr
+
+        Raises
+        ------
+        IOError
+            If bcftools stderr returns an error
+    '''
+
+    # Expand as errors are discovered
+    if bcftools_stderr:
+        logging.error(vcftools_stderr)
+        raise Exception(vcftools_stderr)
+
 def call_bcftools (bcftools_call_args):
 
     # bcftools subprocess call
@@ -15,9 +35,11 @@ def call_bcftools (bcftools_call_args):
     # Wait for bcftools to finish
     bcftools_out, bcftools_err = bcftools_call.communicate()
 
+    check_bcftools_for_errors(bcftools_err)
+
     logging.info('bcftools call complete')
 
-    return bcftools_out, bcftools_err
+    return bcftools_out
 
 def check_for_index (filename):
 
@@ -62,8 +84,54 @@ def create_index (filename):
     if index_out or index_err:
         print (index_out, index_err)
 
-def convert_to_bcf (filename):
-    pass
+def convert_to_bcf (filename, output_prefix):
 
-def convert_from_bcf (filename, format):
-    pass
+    # Holds the arguments to convert to BCF format
+    convert_args = ['convert', '-O', 'b']
+
+    # Stores the specified output_prefix to the BCF file
+    bcf_output = '%s.bcf' % output_prefix
+
+    # Assigns the output file to the arguments
+    convert_args.extend(['-o', bcf_output])
+
+    # Assigns the specified input to the arguments
+    convert_args.append(filename)
+
+    # Call bcftools
+    call_bcftools(convert_args)
+
+
+def convert_to_vcf (filename, output_prefix):
+
+    # Holds the arguments to convert to VCF format
+    convert_args = ['view', '-O', 'v']
+
+    # Stores the specified output_prefix to the VCF file
+    vcf_output = '%s.vcf' % output_prefix
+
+    # Assigns the output file to the arguments
+    convert_args.extend(['-o', vcf_output])
+
+    # Assigns the specified input to the arguments
+    convert_args.append(filename)
+
+    # Call bcftools
+    call_bcftools(convert_args)
+
+def convert_to_vcfgz (filename, output_prefix):
+
+    # Holds the arguments to convert to VCFGZ format
+    convert_args = ['view', '-O', 'z']
+
+    # Stores the specified output_prefix to the VCFGZ file
+    vcfgz_output = '%s.vcf.gz' % output_prefix
+
+    # Assigns the output file to the arguments
+    convert_args.extend(['-o', vcfgz_output])
+
+    # Assigns the specified input to the arguments
+    convert_args.append(filename)
+
+    # Call bcftools
+    call_bcftools(convert_args)
