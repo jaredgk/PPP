@@ -24,10 +24,8 @@ def createParser():
     region_group.add_argument("--rl", dest="genename", help=("Tab-delimited"
                               " file with two (start-end) or three "
                               "(chromosome) columns"))
-    parser.add_argument("--gr1", dest="gene_idx", action="store_true",
-                        help="Gene Region list is 1 index based, not 0")
-    parser.add_argument("--noindels", dest="indel_flag", action="store_false",
-                        help="Don't include indels in ouput VCF file(s)")
+    parser.add_argument('--zero-ho', dest="zeroho", action="store_true")
+    parser.add_argument('--zero-closed', dest="zeroclosed", action="store_true")
 
     parser.add_argument("--output", dest="output_name", help= (
                         "Optional name for output other than default"))
@@ -41,7 +39,11 @@ def createParser():
     parser.add_argument("--multi-out", dest="multi_out", action="store_true",
                         help="Produces multiple output VCFs instead of one")
     parser.add_argument("--parsecpg", dest="refname")
-    parser.add_argument("--nocompress", dest="nocompress", action="store_true")
+    parser.add_argument("--compress-out", dest="compress", action="store_true")
+    parser.add_argument("--remove-indels", dest="remove_indels", action="store_true", help=("Removes indels from output VCF files"))
+    parser.add_argument("--remove-multi", dest="remove_multiallele", action="store_true")
+    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
+    parser.add_argument("--informative-count", dest="informative_count", default=0)
     subsamp_group = parser.add_mutually_exclusive_group()
     subsamp_group.add_argument('--subsamp-list', dest="subsamp_fn",
                                help="List of sample names to be used")
@@ -55,10 +57,10 @@ def logArgs(args):
     for k in vars(args):
         logging.info('Argument %s: %s' % (k, vars(args)[k]))
 
-def getOutputName(args, uncompressed):
+def getOutputName(args):
     vcfname = args.vcfname
-    nocompress = args.nocompress
-    compress_output = not (uncompressed or nocompress)
+    #nocompress = args.nocompress
+    compress_output = args.compress
     if args.output_name is not None:
         if compress_output and args.output_name[-3:] != '.gz':
             return args.output_name+'.gz'
@@ -75,7 +77,7 @@ def getOutputName(args, uncompressed):
     raise Exception(("Either --output needs a value or the vcf input needs "
                      "an extension of vcf or vcf.gz"))
 
-def getOutputPrefix(args, uncompressed):
+def getOutputPrefix(args):
     if args.output_name is not None:
         return args.output_name
     for ext in ['vcf.gz','vcf']:
@@ -84,10 +86,10 @@ def getOutputPrefix(args, uncompressed):
             return args.vcfname[:offset]
     return args.vcfname
 
-def getMultiFileName(pref, rc, uncompressed, nocompress_flag):
-    oc = (not uncompressed and not nocompress_flag)
+def getMultiFileName(pref, rc, compress):
+    #oc = (not uncompressed and not nocompress_flag)
     ext = '.vcf'
-    if oc:
+    if compress:
         ext += '.gz'
     return pref+'region'+str(rc)+ext
 
@@ -166,49 +168,49 @@ def vcf_region_write(sys_args):
         sys.exit(1)
     args = parser.parse_args(sys_args)
     logArgs(args)
-    #vcf_reader, uncompressed = vf.getVcfReader(args.vcfname,
-    #                           compress_flag=args.compress_flag,
-    #                           subsamp_num=args.subsamp_num,
-    #                           subsamp_fn=args.subsamp_fn)
     vcf_reader = vf.VcfReader(args.vcfname,
                               compress_flag=args.compress_flag,
                               subsamp_num=args.subsamp_num,
                               subsamp_fn=args.subsamp_fn)
     logging.info('VCF file read')
     header = vcf_reader.reader.header
-    #first_el = next(vcf_reader.reader)
     first_el = vcf_reader.prev_last_rec
     chrom = first_el.chrom
     if not args.multi_out:
-        output_name = getOutputName(args, vcf_reader.file_uncompressed)
+        output_name = getOutputName(args)
         vcf_out = pysam.VariantFile(output_name, 'w', header=header)
     else:
-        out_p = getOutputPrefix(args, vcf_reader.file_uncompressed)
+        out_p = getOutputPrefix(args)
 
     if args.gene_str is not None:
-        region_list = RegionList(genestr=args.gene_str, oneidx=args.gene_idx,
+        region_list = RegionList(genestr=args.gene_str,zeroho=args.zeroho,
+                                 zeroclosed=args.zeroclosed,
                                  defaultchrom=chrom)
     elif args.genename is not None:
-        region_list = RegionList(filename=args.genename,oneidx=args.gene_idx,
-                                colstr=args.gene_col, defaultchrom=chrom)
+        region_list = RegionList(filename=args.genename,zeroho=args.zeroho,
+                                 zeroclosed=args.zeroclosed,
+                                 colstr=args.gene_col,
+                                 defaultchrom=chrom)
     else:
         raise Exception(("No value provided for region filename or "
                          "single region"))
     logging.info('Region read')
     vcf_reader.prev_last_rec = first_el
     fasta_ref = None
+    remove_cpg = (args.refname is not None)
+    filter_sites = ((args.refname is not None)
+                   or args.remove_indels
+                   or args.remove_multiallele
+                   or (args.remove_missing != -1)
+                   or (args.informative_count != 0))
     if args.refname is not None:
         fasta_ref = pysam.FastaFile(args.refname)
+        remove_cpg = True
 
     logging.info('Total individuals: %d' % (len(first_el.samples)))
     logging.info('Total regions: %d' % (len(region_list.regions)))
     for rc,region in enumerate(region_list.regions,start=1):
         rec_list = vcf_reader.getRecordList(region)
-        #if not uncompressed:
-        #    rec_list = vf.getRecordList(vcf_reader, region)
-        #else:
-        #    rec_list, prev_last_rec = vf.getRecordListUnzipped(vcf_reader,
-        #                    prev_last_rec, region)
         if len(rec_list) == 0:
             logging.warning(("Region from %d to %d has no variants "
                             "in VCF file") % (region.start,region.end))
@@ -217,16 +219,15 @@ def vcf_region_write(sys_args):
                 vcf_out.close()
             except:
                 pass
-            outname = getMultiFileName(out_p, rc, vcf_reader.file_uncompressed,
-                                       args.nocompress)
+            outname = getMultiFileName(out_p, rc, args.compress)
             vcf_out = pysam.VariantFile(outname, 'w', header=header)
-        for rec in rec_list:
-            issnp = vf.checkRecordIsSnp(rec)
-            if not args.indel_flag and not issnp:
-                continue
-            if args.refname is not None and vf.checkIfCpG(rec,fasta_ref):
-                continue
-            vcf_out.write(rec)
+        if filter_sites:
+            pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg, remove_indels=args.remove_indels, remove_multiallele=args.remove_multi,remove_missing=args.remove_missing, inform_level=args.informative_count, fasta_ref=fasta_ref)
+        for i in range(len(rec_list)):
+            #make filter_sites an option
+            if (not filter_sites) or pass_list[i]:
+                vcf_out.write(rec_list[i])
+
 
 if __name__ == '__main__':
     initLogger()

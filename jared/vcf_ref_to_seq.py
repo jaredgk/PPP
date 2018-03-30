@@ -21,8 +21,8 @@ def createParser():
     parser.add_argument("vcfname", help="Input VCF filename")
     parser.add_argument("refname", help="Reference FASTA file")
     parser.add_argument("genename", help="Name of gene region file")
-    parser.add_argument("--gr1", dest="gene_idx", action="store_true",
-                        help="Gene Region list is 1 index based, not 0")
+    parser.add_argument("--zero-ho", dest="zeroho", action="store_true")
+    parser.add_argument("--zero-closed", dest="zeroclosed", action="store_true")
     parser.add_argument("--indels", dest="indel_flag", action="store_true",
                         help="Include indels when reporting sequences")
     parser.add_argument("--trim-to-ref-length", dest="trim_seq",
@@ -139,33 +139,14 @@ def generateSequence(rec_list, ref_seq, fasta_ref,
         return seq[:len(ref_seq)]
     return seq
 
-def getHeader(record_count, chrom, region, oneidx=False, halfopen=True):
+def getHeader(record_count, chrom, region, zeroho=False, zeroclosed=False):
     start = region.start
     end = region.end
-    if oneidx:
+    if not zeroho:
         start += 1
-        end += 1
-    if not halfopen:
-        start -= 1
+    elif zeroclosed:
+        end -= 1
     return '>'+str(record_count)+' '+chrom+' '+str(start)+':'+str(end)
-
-#def getHeader(record_count, chrom, region, oneidx=False, halfopen=True,
-#              pop=None, indiv=None):
-#    start = region.start
-#    end = region.end
-#    if oneidx:
-#        start += 1
-#        end += 1
-#    if not halfopen:
-#        start -= 1
-#    coords = chrom+':'+str(start)+':'+str(end)
-#    header = '>'+str(record_count)+' '+coords+'|'
-#    if pop is not None:
-#        header+=str(pop)
-#    header += '|'
-#    if indiv is not None:
-#        header+=str(indiv)
-#    return header
 
 
 def getFastaFilename(args):
@@ -270,7 +251,8 @@ def vcf_to_seq(sys_args):
     chrom = first_el.chrom
     #compressed = (input_ext != 'vcf')
 
-    region_list = RegionList(filename=args.genename, oneidx=args.gene_idx,
+    region_list = RegionList(filename=args.genename, zeroho=args.zeroho,
+                            zeroclosed=args.zeroclosed,
                             colstr=args.gene_col, defaultchrom=chrom)
     logging.info('Region list read')
     fasta_ref = pysam.FastaFile(args.refname)
@@ -292,7 +274,7 @@ def vcf_to_seq(sys_args):
         ref_seq = fasta_ref.fetch(chrom, region.start, region.end)
         checkRefAlign(rec_list, fasta_ref, chrom, args.ref_check)
         fasta_header = getHeader(record_count, chrom, region,
-                                 oneidx = args.gene_idx)
+                                 zeroho=args.zeroho, zeroclosed=args.zeroclosed)
         fasta_file.write(fasta_header+'\n')
         indiv, idx = 0, 0
         while indiv != -1:

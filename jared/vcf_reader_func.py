@@ -3,6 +3,7 @@ import pysam
 import logging
 import struct
 from random import sample
+from collections import defaultdict
 import os
 import gzip
 
@@ -25,7 +26,8 @@ def checkHeader(filename):
     f = open(filename,'rb')
     l = f.readline()
     f.close()
-    BGZF_HEADER=b'\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00BC\x02\x00'
+    BGZF_HEADER=b'\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff\x06\x00\x42\x43\x02\x00'
+    #BGZF_HEADER=b'\x1f\x8b\x08\x04\x00\x00\x00\x00\x00\xff'
     GZF_HEADER=b'\x1f\x8b'
     if l[:len(BGZF_HEADER)] == BGZF_HEADER:
         return 'bgzip'
@@ -62,26 +64,99 @@ def checkFormat(vcfname):
         return 'vcf'
     return 'other'
 
-def checkIfCpG(record,fasta_ref,offset=0):
+def checkIfCpG(record,fasta_ref,offset=0,add_chr=False):
     dr = None
     pos = record.pos
+    c = record.chrom
+    if record.alts is None:
+        return False
+    if add_chr:
+        c = 'chr'+record.chrom
     if record.ref == 'C' and 'T' in record.alts:
-        seq = fasta_ref.fetch(record.chrom,pos-1,pos+1)
-        if seq[0] != 'C':
+        seq = fasta_ref.fetch(c,pos-1,pos+1)
+        if seq[0].upper() != 'C':
             logging.warning('%s %d has bad base %s' % (record.chrom,record.pos,seq[0]))
             #raise Exception("checkIfCpG function not lining up properly")
-        if seq[1] == 'G':
+        if seq[1].upper() == 'G':
             return True
         return False
     elif record.ref == 'G' and 'A' in record.alts:
-        seq = fasta_ref.fetch(record.chrom,pos-2,pos)
-        if seq[1] != 'G':
+        seq = fasta_ref.fetch(c,pos-2,pos)
+        if seq[1].upper() != 'G':
             logging.warning('%s %d has bad base %s' % (record.chrom,record.pos,seq[1]))
             #raise Exception("checkIfCpg function not lining up on negative strand")
-        if seq[0] == 'C':
+        if seq[0].upper() == 'C':
             return True
         return False
     return False
+
+def checkForDuplicates(rec_list,pass_list):
+    for i in range(len(rec_list)-1):
+        if rec_list[i].pos == rec_list[i+1].pos:
+            pass_list[i] = False
+            pass_list[i+1] = False
+
+def checkForMultiallele(rec_list,pass_list):
+    for i in range(len(rec_list)):
+        if i != len(rec_list)-1 and rec_list[i].pos == rec_list[i+1].pos:
+            pass_list[i] = False
+            pass_list[i+1] = False
+        if len(rec_list[i].alleles) > 2:
+            pass_list[i] = False
+
+def getAlleleCountDict(rec):
+    alleles = defaultdict(int)
+    total_sites = 0
+    missing_inds = 0
+    for j in range(len(rec.samples)):
+        samp = rec.samples[j]
+        if None in samp.alleles:
+            missing_inds += 1
+        for k in range(len(samp.alleles)):
+            b = samp.alleles[k]
+            if b is not None:
+                alleles[b] += 1
+            total_sites+=1
+    return alleles, total_sites, missing_inds
+
+def isInformative(rec, mincount=2, alleles=None):
+    count = 0
+    if alleles is None:
+        alleles, total_sites, missing_inds = getAlleleCountDict(rec)
+    if len(alleles) != 2:
+        return False
+    i1,i2 = alleles.keys()
+    return (alleles[i1] >= mincount and alleles[i2] >= mincount)
+
+def getPassSites(record_list, remove_cpg=False, remove_indels=True,
+                 remove_multiallele=True, remove_missing=0,
+                 inform_level=2, fasta_ref=None):
+    pass_list = [True for r in record_list]
+    if remove_cpg == True and fasta_ref is None:
+        raise Exception("CpG removal requires a reference")
+    if inform_level > 2 or inform_level < 0:
+        raise Exception("Inform level %d must be between 0 and 2" % inform_level)
+    if remove_multiallele:
+        checkForMultiallele(record_list,pass_list)
+    for i in range(len(record_list)):
+        rec = record_list[i]
+        logging.info(rec.pos)
+        if remove_indels and not checkRecordIsSnp(rec):
+            pass_list[i] = False
+        if remove_cpg and checkIfCpG(rec,fasta_ref):
+            pass_list[i] = False
+        alleles,total_sites,missing_inds = getAlleleCountDict(rec)
+        if remove_missing != -1 and missing_inds > remove_missing:
+            pass_list[i] = False
+        if inform_level != 0 and not isInformative(rec,mincount=inform_level,alleles=alleles):
+            pass_list[i] = False
+    #pp = zip([r.pos for r in record_list],pass_list)
+    #for ppp in pp:
+    #    logging.info(ppp)
+    return pass_list
+
+
+
 
 
 
@@ -124,6 +199,7 @@ class VcfReader():
             (len(subsamp_list)))
             self.reader.subset_samples(subsamp_list)
         self.prev_last_rec = next(self.reader)
+        self.chr_in_chrom = (self.prev_last_rec.chrom[0:3] == 'chr')
 
     def fetch(self, chrom=None, start=None, end=None):
         return self.reader.fetch(chrom, start, end)
@@ -131,10 +207,10 @@ class VcfReader():
     def getRecordList(self, region=None, chrom=None, start=None,
                       end=None):
         if self.reader_uncompressed:
-            ret, self.prev_last_rec = getRecordListUnzipped(self.reader, self.prev_last_rec, region)
+            ret, self.prev_last_rec = getRecordListUnzipped(self.reader, self.prev_last_rec, region, add_chr=self.chr_in_chrom)
             return ret
         else:
-            return getRecordList(self.reader, region, chrom, start, end)
+            return getRecordList(self.reader, region, chrom, start, end, self.chr_in_chrom)
 
     def setPopIdx(self):
         self.popkeys = {}
@@ -150,12 +226,18 @@ class VcfReader():
 
 
 def getRecordList(vcf_reader, region=None, chrom=None, start=None,
-                  end=None):
+                  end=None, add_chr=False):
     """Returns list for use in subsampling from input file"""
     if region is not None:
-        var_sites = vcf_reader.fetch(region.chrom, region.start, region.end)
+        c = region.chrom
+        if add_chr:
+            c = 'chr'+region.chrom
+        var_sites = vcf_reader.fetch(c, region.start, region.end)
     else:
-        var_sites = vcf_reader.fetch(chrom, start, end)
+        c = chrom
+        if add_chr:
+            c = 'chr'+chrom
+        var_sites = vcf_reader.fetch(c, start, end)
     lst = []
     for rec in var_sites:
         lst.append(rec)
@@ -163,7 +245,7 @@ def getRecordList(vcf_reader, region=None, chrom=None, start=None,
 
 
 def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
-                          start=None, end=None):
+                          start=None, end=None, add_chr=False):
     """Method for getting record list from unzipped VCF file.
 
     This method will sequentially look through a VCF file until it finds
@@ -223,6 +305,8 @@ def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
 def checkRecordIsSnp(rec):
     """Checks if this record is a single nucleotide variant, returns bool."""
     if len(rec.ref) != 1:
+        return False
+    if rec.alts is None:
         return False
     for allele in rec.alts:
         if len(allele) != 1:
@@ -287,6 +371,7 @@ def getRecordsInRegion(region, record_list):
         elif loc == "after":
             break
     return sub_list
+
 
 
 

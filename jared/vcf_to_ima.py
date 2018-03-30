@@ -31,8 +31,8 @@ def createParser():
     parser.add_argument("--gr", dest="genename", help="Name of gene region file")
     parser.add_argument("--pop", dest="popname", help=("Filename of pop "
                         "model file"))
-    parser.add_argument("--gr1", dest="gene_idx", action="store_true",
-                        help="Gene Region list is 1 index based, not 0")
+    parser.add_argument("--zero-ho", dest="zeroho", action="store_true")
+    parser.add_argument("--zero-closed", dest="zeroclosed", action="store_true")
     parser.add_argument("--indels", dest="indel_flag", action="store_true",
                         help="Include indels when reporting sequences")
     parser.add_argument("--trim-to-ref-length", dest="trim_seq",
@@ -144,8 +144,7 @@ def checkRefAlign(vcf_recs, fasta_ref, chrom, ref_check):
                             str(pos))
 
 
-def generateSequence(rec_list, ref_seq, fasta_ref,
-                     region, chrom, indiv, idx, args):
+def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
     """Fetches variant sites from a given region, then outputs sequences
     from each individual with their correct variants. Will print sequence
     up to the variant site, then print correct variant. After last site,
@@ -161,8 +160,9 @@ def generateSequence(rec_list, ref_seq, fasta_ref,
             continue
 
         pos_offset = vcf_record.pos - 1 - region.start
-        for i in range(prev_offset, pos_offset):
-            seq += ref_seq[i]
+        if ref_seq is not None:
+            for i in range(prev_offset, pos_offset):
+                seq += ref_seq[i]
         allele = vcf_record.samples[indiv].alleles[idx]
         if allele is None:
             raise Exception(("Individual %d at position %d is missing "
@@ -178,12 +178,11 @@ def generateSequence(rec_list, ref_seq, fasta_ref,
             seq += allele
             indel_offset = len(vcf_record.ref)
             prev_offset = pos_offset+indel_offset
-
-    for i in range(prev_offset, len(ref_seq)):
-        seq += ref_seq[i]
-
-    if args.trim_seq:
-        return seq[:len(ref_seq)]
+    if ref_seq is not None:
+        for i in range(prev_offset, len(ref_seq)):
+            seq += ref_seq[i]
+        if args.trim_seq:
+            return seq[:len(ref_seq)]
     return seq
 
 
@@ -331,10 +330,13 @@ def vcf_to_ima(sys_args):
     #chrom = vcf_reader.prev_last_rec.chrom
     #compressed = (input_ext != 'vcf')
 
-    region_list = RegionList(filename=args.genename, oneidx=args.gene_idx,
+    region_list = RegionList(filename=args.genename, zeroho=args.zeroho,
+                            zeroclosed=args.zeroclosed,
                             colstr=args.gene_col)
     logging.info('Region list read')
-    fasta_ref = pysam.FastaFile(args.refname)
+    fasta_ref = None
+    if args.refname is not None:
+        fasta_ref = pysam.FastaFile(args.refname)
     record_count = 1
     first_el = vcf_reader.prev_last_rec
 
@@ -359,8 +361,11 @@ def vcf_to_ima(sys_args):
                             "in VCF file") % (region.toStr()))
         logging.debug('Region %d to %d: %d variants' %
                       (region.start,region.end,len(rec_list)))
-        ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
-        checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
+        ref_seq = None
+        if fasta_ref is not None:
+            print (region.chrom)
+            ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
+            #checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
         reg_header = getLocusHeader(region, popmodel, rec_list)
         ima_file.write(reg_header+'\n')
         popnum, indiv = 0, 0
@@ -371,7 +376,7 @@ def vcf_to_ima(sys_args):
             #    indiv_idx = vcf_reader.popkeys[p][indiv]
             for indiv_idx in vcf_reader.popkeys[p]:
                 for hap in range(len(first_el.samples[indiv_idx].alleles)):
-                    seq = generateSequence(rec_list, ref_seq, fasta_ref,
+                    seq = generateSequence(rec_list, ref_seq,
                                    region, region.chrom, indiv_idx, hap, args)
                     seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
                     seq_name += ''.join([' ' for i in range(len(seq_name),10)])
