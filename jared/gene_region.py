@@ -26,12 +26,29 @@ def keyComp(k1,k2):
             return e1 < e2
     return len(k1) < len(k2)
 
+def setRegionSort(sorttype,sortlist=None):
+    valid_types = ['natural','string','list']
+    if sorttype not in valid_types:
+        raise Exception("Sorting type %s is not valid" % (sorttype))
+    Region.sort_method = sorttype
+    if sorttype == 'list' and sortlist is not None:
+        setSortOrder(sortlist)
+
+def setSortOrder(sortlist,trimchrom=True):
+    hold_list = []
+    for c in sortlist:
+        if trimchrom and c[0:3] == 'chr':
+            hold_list.append(c[3:])
+        else:
+            hold_list.append(c)
+    Region.sort_order = hold_list
 
 @total_ordering
 class Region:
-    natsort = True
+    sort_method = "natural"
+    sort_order = None
 
-    def __init__(self, start, end, chrom, natsort=True):
+    def __init__(self, start, end, chrom):
         """Zero-based, half open coordinates and chromosome info for
         a region in a genome. Coords will be formatted according to
         flags passed to RegionList, then stored in a single format.
@@ -42,7 +59,6 @@ class Region:
             self.chrom = chrom[3:]
         else:
             self.chrom = chrom
-        Region.natsort = natsort
 
     def cloneRegion(self):
         return Region(self.start,self.end,self.chrom)
@@ -64,23 +80,30 @@ class Region:
     def __lt__(self, other):
         """Sort key order: chrom-key, start position, end position
         """
-        if Region.natsort:
+        if Region.sort_method == 'natural':
             k1 = self.getChromKey()
             k2 = other.getChromKey()
             if k1 != k2:
                 return keyComp(k1,k2)
-            if self.start != other.start:
-                return self.start < other.start
-            return self.end < other.end
-        else:
+        elif Region.sort_method == "string":
             k1 = self.chrom
             k2 = other.chrom
             if k1 != k2:
                 return k1 < k2
-            if self.start != other.start:
-                return self.start < other.start
-            return self.end < other.end
-
+        else:
+            if Region.sort_order is None:
+                raise Exception("Sorting by list requires calling setSortOrder() and providing a list for the order")
+            k1 = self.chrom
+            k2 = other.chrom
+            if k1 not in Region.sort_order:
+                raise Exception("Key %s is not in sort order list" % (k1))
+            if k2 not in Region.sort_order:
+                raise Exception("Key %s is not in sort order list" % (k2))
+            if k1 != k2:
+                return Region.sort_order.index(k1) < Region.sort_order.index(k2)
+        if self.start != other.start:
+            return self.start < other.start
+        return self.end < other.end
 
     def containsRecord(self, rec):
         k1 = self.getChromKey()
@@ -109,12 +132,14 @@ class Region:
         return refseq.fetch(self.chrom,self.start,self.end)
 
 
+
+
 class RegionList:
 
     def __init__(self, filename=None, genestr=None, reglist=None,
                  zeroclosed=False, zeroho=False, defaultchrom=None,
                  colstr=None, sortlist=True, checkoverlap=True,
-                 natsort=True, region_template=None):
+                 sortmethod=None, sortorder=None, chromfilter=None, region_template=None):
         """Class for storing gene region information
 
         Will either read a file or take a single gene region in a string
@@ -158,7 +183,6 @@ class RegionList:
             self.collist = region_template.collist
             sortlist = region_template.sortlist
             checkoverlap = region_template.checkoverlap
-            natsort = region_template.natsort
 
         if self.collist is None:
             if colstr is None:
@@ -174,17 +198,27 @@ class RegionList:
         self.regions = []
         self.zeroho = zeroho
         self.zeroclosed = zeroclosed
+        self.chromfilter = None
+        if chromfilter is not None:
+            self.chromfilter = (chromfilter[3:] if chromfilter[0:3] == 'chr' else chromfilter)
+        if sortmethod is not None:
+            setRegionSort(sortmethod,sortlist=sortorder)
         if filename is not None:
-            self.initFile(filename, zeroho, zeroclosed, colstr, defaultchrom,
-                          sortlist, checkoverlap, natsort)
+            self.initFile(filename, zeroho, zeroclosed, colstr, defaultchrom)
         elif genestr is not None:
             self.initStr(genestr, zeroho, zeroclosed, colstr, defaultchrom)
         else:
-            self.initList(reglist, zeroho, zeroclosed, colstr, defaultchrom,
-                          sortlist, checkoverlap, natsort)
+            self.initList(reglist, zeroho, zeroclosed, colstr, defaultchrom)
 
-    def initFile(self, filename, zeroho, zeroclosed, colstr, defaultchrom,
-                 sortlist, checkoverlap, natsort):
+        if sortlist:
+            self.regions.sort()
+        if checkoverlap:
+            if self.hasOverlap():
+                #raise Exception("Region overlap detected")
+                #UNCOMMENT THIS LATER ^
+                self.fixOverlap()
+
+    def initFile(self, filename, zeroho, zeroclosed, colstr, defaultchrom):
         """Initialize RegionList with a region file
         """
         with open(filename, 'r') as regionfile:
@@ -192,68 +226,37 @@ class RegionList:
                 if line[0] == '#':
                     continue
                 la = line.strip().split()
-                start = int(la[self.collist[0]])
-                end = int(la[self.collist[1]])
-                if len(self.collist) == 3:
-                    chrom = la[self.collist[2]]
-                elif defaultchrom is not None:
-                    chrom = defaultchrom
-                else:
-                    raise Exception("Chromosome for region is not specified")
-                if not zeroho:
-                    start -= 1
-                elif zeroclosed:
-                    end += 1
-                self.regions.append(Region(start, end, chrom))
-        Region.natsort = natsort
-        if sortlist:
-            self.regions.sort()
-        if checkoverlap:
-            if self.hasOverlap():
-                #raise Exception("Region overlap detected")
-                #UNCOMMENT THIS LATER ^
-                self.fixOverlap()
+                self.initRegion(la,defaultchrom)
+
 
     def initStr(self, genestr, zeroho, zeroclosed, colstr, defaultchrom):
         la = genestr.split(':')
-        start = int(la[0])
-        end = int(la[1])
-        if len(la) == 3:
-            chrom = la[2]
+        self.initRegion(la,defaultchrom)
+
+
+    def initList(self, reglist, zeroho, zeroclosed, colstr, defaultchrom):
+        for reg in reglist:
+            self.initRegion(reg,defaultchrom)
+
+
+
+    def initRegion(self,la,defaultchrom):
+        start = int(la[self.collist[0]])
+        end = int(la[self.collist[1]])
+        if len(self.collist) == 3:
+            chrom = la[self.collist[2]]
         elif defaultchrom is not None:
             chrom = defaultchrom
         else:
-            raise Exception("Region has no chromosome provided")
-        if not zeroho:
+            raise Exception("Chromosome for region is not specified")
+        if self.chromfilter is not None and chrom != self.chromfilter:
+            return
+        if not self.zeroho:
             start -= 1
-        elif zeroclosed:
+        elif self.zeroclosed:
             end += 1
         self.regions.append(Region(start,end,chrom))
 
-    def initList(self, reglist, zeroho, zeroclosed, colstr, defaultchrom,
-                 sortlist, checkoverlap, natsort):
-        for reg in reglist:
-            start = int(reg[self.collist[0]])
-            end = int(reg[self.collist[1]])
-            if len(self.collist) == 3:
-                chrom = reg[self.collist[2]]
-            elif defaultchrom is not None:
-                chrom = defaultchrom
-            else:
-                raise Exception("Chromosome for region is not specified")
-            if not zeroho:
-                start -= 1
-            elif zeroclosed:
-                end += 1
-            self.regions.append(Region(start, end, chrom))
-        Region.natsort = natsort
-        if sortlist:
-            self.regions.sort()
-        if checkoverlap:
-            if self.hasOverlap():
-                #raise Exception("Region overlap detected")
-                #UNCOMMENT THIS LATER ^
-                self.fixOverlap()
 
     def parseCols(self,cols):
         col_list = [int(i) for i in cols.split(',')]
@@ -282,9 +285,7 @@ class RegionList:
         region_hold = []
         self.regions.sort()
         i = 0
-        #print ("Fixing overlap")
         temp_reg = None
-        #while i < len(self.regions):
         for i in range(len(self.regions)):
             if temp_reg is None:
                 temp_reg = self.regions[i].cloneRegion()
@@ -327,3 +328,25 @@ class RegionList:
 
     #TO do:
     #Add sort method for strictly text based sorting
+
+def getIntervalsBetween(region_list, padding=0, firstline=True):
+    region_hold = []
+    if len(region_list.regions) < 2:
+        raise Exception("Region list for complement requires at least two regions")
+    if firstline:
+        r1 = region_list.regions[0]
+        if r1.start - padding > 0:
+            region_hold.append([str(r1.chrom),0,r1.start-padding])
+    for i in range(len(region_list.regions)-1):
+        r1 = region_list.regions[i]
+        rn = region_list.regions[i+1]
+        if r1.chrom != rn.chrom:
+            continue
+        new_start = r1.end+padding
+        new_end = rn.start-padding
+        if new_start < new_end:
+            region_hold.append([str(r1.chrom),new_start,new_end])
+    out_list = RegionList(reglist=region_hold, zeroho=True)
+    out_list.zeroho = region_list.zeroho
+    out_list.zeroclosed = region_list.zeroclosed
+    return out_list

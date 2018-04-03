@@ -55,7 +55,7 @@ class geneRegionTest(unittest.TestCase):
         self.assertTrue(rl.regions == sl.regions)
 
     def test_RL_charsort(self):
-        rl = RegionList('example/unsorted_regions.txt',natsort=False)
+        rl = RegionList('example/unsorted_regions.txt',sortmethod="string")
         sl = RegionList('example/charsorted_regions.txt')
         rl.regions.sort()
         self.assertTrue(rl.regions == sl.regions)
