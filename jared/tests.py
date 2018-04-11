@@ -251,7 +251,7 @@ class imaTest(unittest.TestCase):
     def test_ima(self):
         vcf_to_ima(['--vcf','example/chr11.subsamples.vcf.gz',
                     '--ref','example/human_g1k_chr11.fasta',
-                    '--gr','example/snp_region.txt',
+                    '--bed','example/snp_region.txt',
                     '--pop','example/testmodel.model',
                     '--zero-ho'])
         self.assertTrue(filecmp.cmp('example/chr11.ima.u',

@@ -28,7 +28,7 @@ def createParser():
     parser.add_argument("--vcf", dest="vcfname", help="Input VCF filename")
     parser.add_argument("--vcfs", dest="vcflist", nargs="+")
     parser.add_argument("--ref", dest="refname", help="Reference FASTA file")
-    parser.add_argument("--gr", dest="genename", help="Name of gene region file")
+    parser.add_argument("--bed", dest="genename", help="Name of gene region file")
     parser.add_argument("--pop", dest="popname", help=("Filename of pop "
                         "model file"))
     parser.add_argument("--zero-ho", dest="zeroho", action="store_true")
