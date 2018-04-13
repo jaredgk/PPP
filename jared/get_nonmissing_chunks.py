@@ -22,7 +22,6 @@ for line in sys.stdin:
     la = line.strip().split()
     missing_for_site = False
     for i in range(9,len(la)):
-        i
         geno = la[i]
         if '.' in geno:
             missing_for_site = True
