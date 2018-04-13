@@ -222,7 +222,7 @@ def vcf_region_write(sys_args):
             outname = getMultiFileName(out_p, rc, args.compress)
             vcf_out = pysam.VariantFile(outname, 'w', header=header)
         if filter_sites:
-            pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg, remove_indels=args.remove_indels, remove_multiallele=args.remove_multi,remove_missing=args.remove_missing, inform_level=args.informative_count, fasta_ref=fasta_ref)
+            pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg, remove_indels=args.remove_indels, remove_multiallele=args.remove_multiallele,remove_missing=args.remove_missing, inform_level=args.informative_count, fasta_ref=fasta_ref)
         for i in range(len(rec_list)):
             #make filter_sites an option
             if (not filter_sites) or pass_list[i]:

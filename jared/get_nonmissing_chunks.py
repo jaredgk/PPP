@@ -2,12 +2,12 @@ import sys
 
 
 
-sample_count = 20
-missing_data_count = [0 for i in range(sample_count+1)]
-
+#sample_count = 20
+#missing_data_count = [0 for i in range(sample_count+1)]
+sample_count = 0
 indel_count = 0
 
-missing_data_per_indiv = [0 for i in range(sample_count)]
+#missing_data_per_indiv = [0 for i in range(sample_count)]
 
 prev_miss_pos = 0
 prev_full_pos = 0
@@ -21,9 +21,9 @@ for line in sys.stdin:
         continue
     la = line.strip().split()
     missing_for_site = False
-    for i in range(sample_count):
-        b_i = 9+i
-        geno = la[b_i]
+    for i in range(9,len(la)):
+        i
+        geno = la[i]
         if '.' in geno:
             missing_for_site = True
             break

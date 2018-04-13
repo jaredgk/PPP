@@ -6,8 +6,8 @@ import argparse
 
 def createParser():
     parser = argparse.ArgumentParser(description="Given a VCF file and a list of intervals (BED style), will output regions that have over a certain number of qualifying variants in the region")
-    parser.add_argument("--vcfname", dest="vcfname")
-    parser.add_argument("--refname", dest="refname")
+    parser.add_argument("--vcf", dest="vcfname")
+    parser.add_argument("--bed", dest="bedname")
     parser.add_argument("--zero-ho", dest="zeroho", action="store_true")
     parser.add_argument("--zero-closed", dest="zeroclosed", action="store_true")
     parser.add_argument("--parsecpg", dest="refname")
@@ -27,16 +27,17 @@ def createParser():
     #ref_name = str(sys.argv[3])
     #fasta_ref = pysam.FastaFile(ref_name)
 def filter_bed_regions(sys_args):
-    parser = argparse.parse_arguments(sys_args)
-
+    #parser = argparse.parse_args(sys_args)
+    parser = createParser()
+    args = parser.parse_args(sys_args)
     vcf_reader = VcfReader(args.vcfname)
-
-    regions = RegionList(filename=args.refname)
+    fasta_seq = pysam.FastaFile(args.refname)
+    regions = RegionList(filename=args.bedname,zeroho=args.zeroho,zeroclosed=args.zeroclosed)
 
     for region in regions.regions:
         rec_list = vcf_reader.getRecordList(region)
-        pass_list = getPassSites(rec_list, remove_cpg=True, fasta_ref=fasta_ref)
-        if pass_list.count(True) >= 3:
+        pass_list = getPassSites(rec_list, remove_cpg=True, fasta_ref=fasta_seq)
+        if pass_list.count(True) >= int(args.minsites):
             print (region.toStr(sep='\t'))
 
 
