@@ -43,7 +43,7 @@ def createParser():
     parser.add_argument("--remove-indels", dest="remove_indels", action="store_true", help=("Removes indels from output VCF files"))
     parser.add_argument("--remove-multi", dest="remove_multiallele", action="store_true")
     parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
-    parser.add_argument("--informative-count", dest="informative_count", default=0)
+    parser.add_argument("--informative-count", dest="informative_count", type=int, default=0)
     subsamp_group = parser.add_mutually_exclusive_group()
     subsamp_group.add_argument('--subsamp-list', dest="subsamp_fn",
                                help="List of sample names to be used")

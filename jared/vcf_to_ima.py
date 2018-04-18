@@ -177,7 +177,7 @@ def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=1, mut_rat
     #    lh += ' '+str(len(pop_data[i][1]))
     for p in popmodel.pop_list:
         lh += ' '+str(2*popmodel.nind[p])
-    lh += ' '+str(gene_len)
+    lh += ' '+str(len(rec_list))
     lh += ' '+mut_model
     lh += ' '+str(inhet_sc)
     mutlocus = mut_rate * gene_len
@@ -333,7 +333,7 @@ def vcf_to_ima(sys_args):
             if regions_provided:
                 region = region_list.regions[i]
             else:
-                region = Region(region_list[0].pos-1,region_list[-1].pos,region_list[0].chrom)
+                region = Region(rec_list[0].pos-1,rec_list[-1].pos,rec_list[0].chrom)
         if len(rec_list) == 0:
             logging.warning(("Region %s has no variants "
                             "in VCF file") % (region.toStr()))
