@@ -56,6 +56,7 @@ def createParser():
                         "VCF file compared to reference"))
     parser.add_argument("--poptag",dest="poptag",help=("If model file has "
                         "multiple models, use model with this name"))
+    parser.add_argument("--mutrate",dest="mutrate",type=float,default=1e-9,help="Mutation rate per base pair (default is 1e-9)")
 
     return parser
 
@@ -343,7 +344,7 @@ def vcf_to_ima(sys_args):
         if fasta_ref is not None:
             ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
             checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
-        reg_header = getLocusHeader(region, popmodel, rec_list)
+        reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate)
         ima_file.write(reg_header+'\n')
         popnum, indiv = 0, 0
         for p in popmodel.pop_list:

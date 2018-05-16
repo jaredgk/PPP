@@ -172,7 +172,7 @@ def vcf_region_write(sys_args):
     vcf_reader = vf.VcfReader(args.vcfname,
                               compress_flag=args.compress_flag,
                               subsamp_num=args.subsamp_num,
-                              subsamp_fn=args.subsamp_fn
+                              subsamp_fn=args.subsamp_fn,
                               index=args.tabix_index)
     logging.info('VCF file read')
     header = vcf_reader.reader.header
