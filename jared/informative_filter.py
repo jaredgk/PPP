@@ -16,6 +16,7 @@ def createParser():
     parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
     parser.add_argument("--informative-count", dest="informative_count", default=0)
     parser.add_argument("--minsites", dest="minsites", default=3, help=("Regions with at least this many variants passing filters will be output"))
+    parser.add_argument("--tbi", dest="tabix_index", help="Path to bgzipped file's index if name doesn't match VCF file")
     return parser
 
 
@@ -31,7 +32,7 @@ def filter_bed_regions(sys_args):
     parser = createParser()
     args = parser.parse_args(sys_args)
     vcf_reader = VcfReader(args.vcfname)
-    fasta_seq = pysam.FastaFile(args.refname)
+    fasta_seq = pysam.FastaFile(args.refname,index=args.tabix_index)
     regions = RegionList(filename=args.bedname,zeroho=args.zeroho,zeroclosed=args.zeroclosed)
 
     for region in regions.regions:

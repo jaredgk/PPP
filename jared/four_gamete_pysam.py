@@ -64,7 +64,7 @@ class BaseData():
             #vcff = pysam.VariantFile(filename)
             #vcff, comp = getVcfReader(filename, index=args.index_name)
             #self.allrecords = getRecordList(vcff, region=region, chrom=args.chrom)
-            vcff = VcfReader(filename,index=args.index_name)
+            vcff = VcfReader(filename,index=args.tabix_index)
             self.allrecords = vcff.getRecordList(region=region, chrom=args.chrom)
             #self.ploidy, self.seqs, self.poslist = vcfload.checkVcfRegionPysam(self.records)
             self.checkVcfRegion()
@@ -508,7 +508,7 @@ def createParser():
     parser.add_argument("--chrom", dest="chrom", help="Select variants "
             "from a single specified chromosome")
     #add checks for correct input type
-    parser.add_argument('--indexname', dest="index_name")
+    parser.add_argument('--tbi', dest="tabix_index")
     return parser
 
 def logArgs(args):

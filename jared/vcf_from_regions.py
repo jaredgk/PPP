@@ -44,6 +44,7 @@ def createParser():
     parser.add_argument("--remove-multi", dest="remove_multiallele", action="store_true")
     parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
     parser.add_argument("--informative-count", dest="informative_count", type=int, default=0)
+    parser.add_argument("--tbi", dest="tabix_index", help="Path to bgzipped file's index if name doesn't match VCF file")
     subsamp_group = parser.add_mutually_exclusive_group()
     subsamp_group.add_argument('--subsamp-list', dest="subsamp_fn",
                                help="List of sample names to be used")
@@ -171,7 +172,8 @@ def vcf_region_write(sys_args):
     vcf_reader = vf.VcfReader(args.vcfname,
                               compress_flag=args.compress_flag,
                               subsamp_num=args.subsamp_num,
-                              subsamp_fn=args.subsamp_fn)
+                              subsamp_fn=args.subsamp_fn
+                              index=args.tabix_index)
     logging.info('VCF file read')
     header = vcf_reader.reader.header
     first_el = vcf_reader.prev_last_rec
