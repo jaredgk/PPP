@@ -31,8 +31,8 @@ def filter_bed_regions(sys_args):
     #parser = argparse.parse_args(sys_args)
     parser = createParser()
     args = parser.parse_args(sys_args)
-    vcf_reader = VcfReader(args.vcfname)
-    fasta_seq = pysam.FastaFile(args.refname,index=args.tabix_index)
+    vcf_reader = VcfReader(args.vcfname,index=args.tabix_index)
+    fasta_seq = pysam.FastaFile(args.refname)
     regions = RegionList(filename=args.bedname,zeroho=args.zeroho,zeroclosed=args.zeroclosed)
 
     for region in regions.regions:
