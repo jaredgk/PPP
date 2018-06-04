@@ -44,7 +44,6 @@ import sys
 import argparse
 import logging
 from logging_module import initLogger
-import vcf_load_4g as vcfload
 import random
 from gene_region import Region, RegionList
 import pysam
@@ -852,7 +851,7 @@ def sample_fourgametetest_intervals(sys_args):
 
 
 if __name__ == '__main__':
-    initLogger(filename="/home/jared/galaxy.log")
+    initLogger()
 
     ### some testing command lines
     #sample_fourgametetest_intervals([])
