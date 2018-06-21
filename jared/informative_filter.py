@@ -17,6 +17,7 @@ def createParser():
     parser.add_argument("--informative-count", dest="informative_count", default=0)
     parser.add_argument("--minsites", dest="minsites", default=3, help=("Regions with at least this many variants passing filters will be output"))
     parser.add_argument("--tbi", dest="tabix_index", help="Path to bgzipped file's index if name doesn't match VCF file")
+    parser.add_argument("--randcount",dest="randcount",type=int,default=-1,help="If set, will randomly draw from input region file until randcount # of passing BED regions are found")
     return parser
 
 
@@ -33,13 +34,26 @@ def filter_bed_regions(sys_args):
     args = parser.parse_args(sys_args)
     vcf_reader = VcfReader(args.vcfname,index=args.tabix_index)
     fasta_seq = pysam.FastaFile(args.refname)
-    regions = RegionList(filename=args.bedname,zeroho=args.zeroho,zeroclosed=args.zeroclosed)
 
+    #regions = RegionList(filename=args.bedname,zeroho=args.zeroho,zeroclosed=args.zeroclosed,sortlist=(not args.randcoun))
+    randomize = False
+    if args.randcount != -1:
+        randomize = True
+
+    regions = RegionList(filename=args.bedname,zeroho=args.zeroho,zeroclosed=args.zeroclosed,sortlist=(not randomize),randomize=randomize)
+    regions_output = 0
     for region in regions.regions:
         rec_list = vcf_reader.getRecordList(region)
         pass_list = getPassSites(rec_list, remove_cpg=True, fasta_ref=fasta_seq)
         if pass_list.count(True) >= int(args.minsites):
             print (region.toStr(sep='\t'))
+            regions_output += 1
+        if args.randcount != -1 and regions_output == args.randcount:
+            break
+
+    if args.randcount != -1 and regions_output != args.randcount:
+        sys.stderr.write("Only %d of %d regions found\n"%(regions_output,args.randcount))
+        exit(1)
 
 
 if __name__ == '__main__':

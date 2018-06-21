@@ -2,6 +2,7 @@ import sys
 import re
 import logging
 from functools import total_ordering
+from random import shuffle
 
 
 def getChromKey(chrom):
@@ -139,7 +140,8 @@ class RegionList:
     def __init__(self, filename=None, genestr=None, reglist=None,
                  zeroclosed=False, zeroho=False, defaultchrom=None,
                  colstr=None, sortlist=True, checkoverlap=True,
-                 sortmethod=None, sortorder=None, chromfilter=None, region_template=None):
+                 sortmethod=None, sortorder=None, chromfilter=None,
+                 region_template=None, randomize=False):
         """Class for storing gene region information
 
         Will either read a file or take a single gene region in a string
@@ -195,6 +197,9 @@ class RegionList:
         if zeroho and zeroclosed:
             raise Exception(("Zero-halfopen and zero-closed options cannot "
                              "be invoked at the same time"))
+
+        if sortlist and randomize:
+            raise Exception("Sorting and randomizing are not compatible options for RegionList")
         self.regions = []
         self.zeroho = zeroho
         self.zeroclosed = zeroclosed
@@ -217,6 +222,9 @@ class RegionList:
                 #raise Exception("Region overlap detected")
                 #UNCOMMENT THIS LATER ^
                 self.fixOverlap()
+
+        if randomize:
+            shuffle(self.regions)
 
     def initFile(self, filename, zeroho, zeroclosed, colstr, defaultchrom):
         """Initialize RegionList with a region file
