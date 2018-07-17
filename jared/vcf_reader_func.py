@@ -191,7 +191,7 @@ class VcfReader():
             self.reader = pysam.VariantFile(vcfname, index_filename=index)
         if popmodel is not None:
             self.popmodel = popmodel
-            popsamp_list = popmodel.indslist
+            popsamp_list = popmodel.inds
             self.reader.subset_samples(popsamp_list)
             self.setPopIdx()
         if subsamp_list is not None:
