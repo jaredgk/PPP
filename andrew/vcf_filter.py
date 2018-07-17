@@ -45,7 +45,7 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out')
     #vcf_parser.add_argument('--log', help = "Specifies if the vcftools log should be saved", action = 'store_false')
 
-    out_format_list = ['vcf', 'vcf.gz', 'bcf', 'removed_sites', 'kept_sites']
+    out_format_list = ['vcf', 'vcf.gz', 'bcf', 'removed_sites', 'kept_sites', 'removed_bed', 'kept_bed']
     out_format_default = 'removed_sites'
 
     vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Specifies the output format.', type = str, choices = out_format_list, default = out_format_default)
@@ -197,6 +197,12 @@ def run (passed_arguments = []):
     elif vcf_args.out_format == 'kept_sites':
         vcftools_call_args.append('--kept-sites')
         vcftools_output_filename = vcf_args.out_prefix + '.kept.sites'
+    elif vcf_args.out_format == 'removed_bed':
+        vcftools_call_args.append('--removed-sites')
+        vcftools_output_filename = vcf_args.out_prefix + '.removed.bed'
+    elif vcf_args.out_format == 'kept_bed':
+        vcftools_call_args.append('--kept-sites')
+        vcftools_output_filename = vcf_args.out_prefix + '.kept.bed'
     elif vcf_args.out_format == 'bcf':
         vcftools_call_args.append('--recode-bcf')
         vcftools_output_filename = vcf_args.out_prefix + '.recode.bcf'
@@ -297,13 +303,21 @@ def run (passed_arguments = []):
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcf)
     logging.info('Input file assigned')
 
+    # Call vcftools with the specifed arguments
+    vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args, vcf_args.out_format, vcftools_output_filename)
+
+    '''
     # Check if the user has requested vcf.gz, if so send the stdout to bgzip
     if vcf_args.out_format == 'vcf.gz':
         # Call both vcftools and bgzip, return stderr
-        vcftools_err = call_vcftools_bgzip(vcfname_arg + vcftools_call_args, vcftools_output_filename)
+        vcftools_err = pipe_vcftools_bgzip(vcfname_arg + vcftools_call_args, vcftools_output_filename)
+    elif vcf_args.out_format == 'bed':
+        # Call only vcftools. vcftools_out will house the output
+        vcftools_out, vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args, return_output = True)
     else:
         # Call only vcftools. Note: vcftools_out will be empty
         vcftools_out, vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
+    '''
 
     # Check if the user specifed the complete output filename
     if vcf_args.out:

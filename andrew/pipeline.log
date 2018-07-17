@@ -1,0 +1,12 @@
+2018-06-15 12:27:08,606 - logArgs - INFO: Argument filter_max_alleles: 2
+2018-06-15 12:27:08,606 - logArgs - INFO: Argument overwrite: False
+2018-06-15 12:27:08,607 - logArgs - INFO: Argument out_format: removed_sites
+2018-06-15 12:27:08,607 - logArgs - INFO: Argument vcf: example/input/merged_chr1_1000.vcf.gz
+2018-06-15 12:27:08,607 - logArgs - INFO: Argument filter_min_alleles: 2
+2018-06-15 12:27:08,607 - logArgs - INFO: Argument filter_include_passed: False
+2018-06-15 12:27:08,607 - logArgs - INFO: Argument out_prefix: out
+2018-06-15 12:27:08,607 - run - INFO: vcftools parameters assigned
+2018-06-15 12:27:08,607 - check_for_vcftools_output - INFO: Output file assigned
+2018-06-15 12:27:08,607 - check_for_vcftools_output - INFO: Log file assigned
+2018-06-15 12:27:08,607 - run - INFO: Input file assigned
+2018-06-15 12:27:08,646 - standard_vcftools_call - INFO: vcftools call complete

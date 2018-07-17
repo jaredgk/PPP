@@ -25,7 +25,6 @@ def check_bgzip_for_errors (bgzip_stderr):
     if bgzip_stderr:
         raise IOError('Error occured while compressing the vcf file')
 
-
 def bgzip_decompress_vcfgz (vcfgz_filename, out_prefix = '', keep_original = False):
         '''
             Converts a vcf.gz to vcf
@@ -81,7 +80,6 @@ def bgzip_decompress_vcfgz (vcfgz_filename, out_prefix = '', keep_original = Fal
 
         # Check that output file was compressed correctly
         check_bgzip_for_errors(bgzip_err)
-
 
 def bgzip_compress_vcf (vcf_filename, out_prefix = '', keep_original = False):
         '''
@@ -140,40 +138,132 @@ def bgzip_compress_vcf (vcf_filename, out_prefix = '', keep_original = False):
         # Check that output file was compressed correctly
         check_bgzip_for_errors(bgzip_err)
 
+def cvt_vcftools_site_to_bed (vcftools_out_str):
+    # Check if str in the header
+    if 'CHROM' not in vcftools_out_str or 'POS' not in vcftools_out_str:
+        # Split the line into a list
+        vcftools_out_data = vcftools_out_str.strip().split('\t')
+        # Convert the chromStart to int
+        vcftools_out_data[1] = int(vcftools_out_data[1])
+        # Calc chromEnd
+        chrom_end = vcftools_out_data[1] + 1
+        # Add chrom_end to the list
+        vcftools_out_data = vcftools_out_data + [chrom_end]
+        # Return the list as a string (with newline element)
+        return '\t'.join(map(str, vcftools_out_data)) + '\n'
+    else:
+        # Remove the header
+        return ''
 
-def call_vcftools_bgzip (vcftools_call_args, vcf_gz_filename):
+def pipe_vcftools (vcftools_call_args):
     '''
-        Calls vcftools and bgzip in tandem
+        Calls vcftools with pipe output
 
-        The function calls vcftools and pipes the output to bgzip to compress to
-        create a vcf.gz file. Returns the stderr of vcftools to create log file
-        of the call.
+        The output of this function is the stdout and stderr of vcftools. This
+        function should only be used if vcftools is being used as the stdin of
+        another function. Please note that this function does not check the for
+        errors in the vcftools call. Please check for errors after the call is
+        closed using check_vcftools_for_errors.
 
         Parameters
         ----------
         vcftools_call_args : list
             vcftools arguments
-        vcf_gz_filename : str
-            The output name of the compressed vcf file
 
         Returns
         -------
-        vcftools_err : str
-            vcftools log output
+        vcftools_call : subprocess.Popen
+            vcftools subprocess call
+        vcftools_call.stdout : PIPE
+            vcftools stdout PIPE (Results)
+        vcftools_call.stderr : PIPE
+            vcftools stderr PIPE (Log)
 
-        Raises
-        ------
-        Exception
-            If vcftools stderr returns an error
-        Exception
-            If bgzip stderr returns an error
     '''
 
     # vcftools subprocess call
     vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+    return vcftools_call
+
+def pipe_vcftools_to_bed_file (vcftools_call_args, output_filename):
+
+    '''
+        Pipes site-file output of vcftools to a bed formmated file
+
+        The purpose of this function is to avoid creating large uncompressed
+        vcf files by directly piping the output of vcftools to bgzip. This
+        results in creating a vcf.gz file without any intermediates.
+
+        Parameters
+        ----------
+        vcftools_call_args : list
+            vcftools arguments
+        output_filename : str
+            Filename of the bed file
+
+    '''
+    # Open vcftools pipe
+    vcftools_call = pipe_vcftools(vcftools_call_args)
+
+    # Create the bed file
+    bed_output = open(output_filename, 'w')
+
+    try:
+        # Iterate the vcftools stdout unless error occurs
+        for vcftools_stdout_line in iter(vcftools_call.stdout.readline, b''):
+            bed_output.write(cvt_vcftools_site_to_bed(vcftools_stdout_line))
+        # Close the bed file
+        bed_output.close()
+    except:
+        # Close the bed file
+        bed_output.close()
+        # Delete the file
+        os.remove(output_filename)
+
+    # Close the vcftools stdout
+    vcftools_call.stdout.close()
+
+    # Wait for vctools to finish
+    vcftools_call.wait()
+
+    # Read the vcftools stderr
+    vcftools_stderr = vcftools_call.stderr.read()
+
+    # Check if code is running in python 3
+    if sys.version_info[0] == 3:
+        # Convert bytes to string
+        vcftools_stderr = vcftools_stderr.decode()
+
+    # Check that the log file was created correctly
+    check_vcftools_for_errors(vcftools_stderr)
+
+    logging.info('vcftools call complete')
+
+    return vcftools_stderr
+
+def pipe_vcftools_bgzip (vcftools_call_args, output_filename):
+
+    '''
+        Pipes the output of vcftools to bgzip
+
+        The purpose of this function is to avoid creating large uncompressed
+        vcf files by directly piping the output of vcftools to bgzip. This
+        results in creating a vcf.gz file without any intermediates.
+
+        Parameters
+        ----------
+        vcftools_call_args : list
+            vcftools arguments
+        output_filename : str
+            Filename of the compressed vcf file
+
+    '''
+
+    vcftools_call = pipe_vcftools(vcftools_call_args)
+
     # Create bgzip output file
-    bgzip_output = open(vcf_gz_filename, 'wb')
+    bgzip_output = open(output_filename, 'wb')
 
     # bgzip subprocess call
     bgzip_call = subprocess.Popen(['bgzip'], stdin = vcftools_call.stdout, stdout = bgzip_output, stderr = subprocess.PIPE)
@@ -181,26 +271,42 @@ def call_vcftools_bgzip (vcftools_call_args, vcf_gz_filename):
     # Close the vcftools stdout
     vcftools_call.stdout.close()
 
-    # Save the stderr from bgzip, stdout = None
-    bgzip_out, bgzip_err = bgzip_call.communicate()
+    # Wait for vctools to finish
+    vcftools_call.wait()
+
+    # Read the vcftools stderr
+    vcftools_stderr = vcftools_call.stderr.read()
+
+    # Check if code is running in python 3
+    if sys.version_info[0] == 3:
+        # Convert bytes to string
+        vcftools_stderr = vcftools_stderr.decode()
+
+    # Check that the log file was created correctly
+    check_vcftools_for_errors(vcftools_stderr)
 
     # Close the compressed vcf file
     bgzip_output.close()
 
-    # Save the stderr from vcftools
-    vcftools_err = vcftools_call.stderr.read()
+    # Wait for bgzip to finish
+    bgzip_call.wait()
+
+    # Save the stderr from bgzip, stdout = None
+    bgzip_stdout, bgzip_stderr = bgzip_call.communicate()
+
+    # Check if code is running in python 3
+    if sys.version_info[0] == 3:
+        # Convert bytes to string
+        bgzip_stderr = bgzip_stderr.decode()
+
+    # Check that output file was compressed correctly
+    check_bgzip_for_errors(bgzip_stderr)
 
     logging.info('vcftools and bgzip calls complete')
 
-    # Check that the log file was created correctly
-    check_vcftools_for_errors(vcftools_err)
+    return vcftools_stderr
 
-    # Check that output file was compressed correctly
-    check_bgzip_for_errors(bgzip_err)
-
-    return vcftools_err
-
-def call_vcftools (vcftools_call_args):
+def standard_vcftools_call (vcftools_call_args):
     '''
         Calls vcftools
 
@@ -214,34 +320,77 @@ def call_vcftools (vcftools_call_args):
 
         Returns
         -------
+        vcftools_out : str
+            vcftools call output
         vcftools_err : str
             vcftools log output
 
         Raises
         ------
         Exception
-            If vcftools stderr returns an erro
+            If vcftools stderr returns an error
     '''
 
-    # vcftools subprocess call
+    # vcftools subprocess call without stdout
     vcftools_call = subprocess.Popen(['vcftools'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Wait for vcftools to finish
-    vcftools_out, vcftools_err = vcftools_call.communicate()
+    vcftools_stdout, vcftools_stderr = vcftools_call.communicate()
 
     # Check if code is running in python 3
     if sys.version_info[0] == 3:
         # Convert bytes to string
-        vcftools_out = vcftools_out.decode()
-        vcftools_err = vcftools_err.decode()
+        vcftools_stderr = vcftools_stderr.decode()
 
     logging.info('vcftools call complete')
 
     # Check that the log file was created correctly
-    check_vcftools_for_errors(vcftools_err)
+    check_vcftools_for_errors(vcftools_stderr)
 
-    return vcftools_out, vcftools_err
+    return vcftools_stderr
 
+def call_vcftools (vcftools_call_args, output_format, vcftools_output_filename):
+    '''
+        Calls vcftools
+
+        The function calls vcftools. Returns the stderr of vcftools to
+        create log file of the call.
+
+        Parameters
+        ----------
+        vcftools_call_args : list
+            vcftools arguments
+        output_format : str
+            The output format
+        vcftools_output_filename : str
+            The output filename assigned by vcftools (for piped calls)
+
+        Returns
+        -------
+        vcftools_out : str
+            vcftools call output
+        vcftools_err : str
+            vcftools log output
+
+        Raises
+        ------
+        Exception
+            If vcftools stderr returns an error
+    '''
+
+    # Check if the output is a bgzipped vcf
+    if output_format == 'vcf.gz':
+        # Pipe vcftools stdout to bgzip to create a bgzipped vcf
+        vcftools_err = pipe_vcftools_bgzip(vcftools_call_args, vcftools_output_filename)
+    elif output_format == 'removed_bed' or output_format == 'kept_bed':
+        # Pipe vcftools stdout to bed file
+        vcftools_err = pipe_vcftools_to_bed_file(vcftools_call_args, vcftools_output_filename)
+    else:
+        # Call vcftools under standard conditions
+        vcftools_err = standard_vcftools_call(vcftools_call_args)
+
+    # Return the log
+    return vcftools_err
 
 def check_for_vcftools_output (vcftools_output):
     '''
@@ -413,7 +562,6 @@ def produce_vcftools_log (output, filename, append_mode = False):
 
     vcftools_log_file.write(str(output))
     vcftools_log_file.close()
-
 
 def assign_vcftools_input_arg (filename):
     '''
