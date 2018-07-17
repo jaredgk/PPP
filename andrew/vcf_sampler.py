@@ -74,7 +74,7 @@ def sampler_parser(passed_arguments):
     statistic_default = 'windowed-weir-fst'
     sampler_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'Specifies the statistic calculated ', type=str, choices = statistic_list, default = statistic_default)
 
-    sampler_parser.add_argument('--statistic-window-size', help = 'Specifies the size of window calculations', type = int, default = 10000)
+    sampler_parser.add_argument('--statistic-window-size', help = 'Specifies the size of window calculations (if BIN_END is absent)', type = int, default = 10000)
 
     # Sampling methods. Currently mutually exclusive to only allow a single sampling method
     sampling_list = ['uniform', 'random']
@@ -317,7 +317,7 @@ def run (passed_arguments = []):
         vcf_input = pysam.VariantFile(sampler_args.vcf, index_filename = sampler_args.vcf_index)
     else:
         # Check if there is an index file
-        if not check_for_index(sampler_args.vcf):
+        if check_for_index(sampler_args.vcf) == False:
             # Create an index if not found
             create_index(sampler_args.vcf)
         # Read in the file using pysam
@@ -339,11 +339,11 @@ def run (passed_arguments = []):
         # List of the individuals within the vcf
         individuals_in_file = list(vcf_input.header.samples)
 
-        if not set(selected_model.ind_list).issubset(set(individuals_in_file)):
+        if not set(selected_model.inds).issubset(set(individuals_in_file)):
             raise IOError('Individuals differ between model "%s" and input.' % sampler_args.model)
 
         # Reduce individuals to those in model
-        vcf_input.subset_samples(selected_model.ind_list)
+        vcf_input.subset_samples(selected_model.inds)
 
     # If no model was specifed, check if a keep or remove file was specifed
     elif sampler_args.filter_keep or sampler_args.filter_remove:
