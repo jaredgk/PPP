@@ -1,0 +1,164 @@
+<tool id="vcf_phase" name="Phase VCF" version="1.0.0.1">
+
+  <description>files with BEAGLE or SHAPEIT</description>
+
+  <requirements>
+      <requirement type="package" >pandas</requirement>
+      <requirement type="package" >pysam</requirement>
+  </requirements>
+
+  <command><![CDATA[
+    #if $input.is_of_type('vcf_bgzip')
+      ln -fs $input input.vcf.gz &&
+    #end if
+    #if $input.is_of_type('vcf')
+      ln -fs $input input.vcf &&
+    #end if
+    python $__tool_directory__/vcf_phase.py
+            #if $input.is_of_type('vcf_bgzip')
+               --vcf input.vcf.gz
+            #end if
+            #if $input.is_of_type('vcf')
+               --vcf input.vcf
+            #end if
+            #if $model_file
+              --model-file $model_file
+              --model $model
+            #end if
+            --phase-algorithm $phase.phase_algorithm
+            #if $phase.beagle_burn_iter
+              --beagle-burn-iter $common.beagle_burn_iter
+            #end if
+            #if $phase.beagle_burn_iter
+              --beagle-burn-iter $phase.beagle_burn_iter
+            #end if
+            #if $phase.phase_algorithm == 'beagle'
+              --beagle-path $__tool_data_path__/shared/jars/
+              #if $phase.beagle_iter
+                --beagle-iter $phase.beagle_iter
+              #end if
+              #if $phase.beagle_states
+                --beagle-states $phase.beagle_states
+              #end if
+              #if $phase.beagle_window
+                --beagle-window $phase.beagle_window
+              #end if
+              #if $phase.beagle_overlap
+                --beagle-overlap $phase.beagle_overlap
+              #end if
+              #if $phase.beagle_error
+                --beagle-error $phase.beagle_error
+              #end if
+              #if $phase.beagle_step
+                --beagle-step $phase.beagle_step
+              #end if
+              #if $phase.beagle_nsteps
+                --beagle-nsteps $phase.beagle_nsteps
+              #end if
+            #end if
+            #if $phase.phase_algorithm == 'shapeit'
+              #if $phase.shapeit_burn_iter
+                --shapeit-burn-iter $phase.shapeit_burn_iter
+              #end if
+              #if $phase.shapeit_prune_iter
+                --shapeit-prune-iter $phase.shapeit_prune_iter
+              #end if
+              #if $phase.shapeit_main_iter
+                --shapeit-main-iter $phase.shapeit_main_iter
+              #end if
+              #if $phase.shapeit_states
+                --shapeit-states $phase.shapeit_states
+              #end if
+              #if $phase.shapeit_window
+                --shapeit-window $phase.shapeit_window
+              #end if
+            #end if
+            #if $common.genetic_map
+              --genetic-map $common.genetic_map
+            #end if
+            #if $common.ne
+              --Ne $common.ne
+            #end if
+            #if $common.random_seed
+              --random-seed $common.random_seed
+            #end if
+            #if $common.phase_chr
+              --phase-chr $common.phase_chr
+            #end if
+            #if $common.phase_from_bp
+              --phase-from-bp $common.phase_from_bp
+            #end if
+            #if $common.phase_to_bp
+              --phase-to-bp $common.phase_to_bp
+            #end if
+            --out $output
+            --out-format $out_format
+  ]]></command>
+
+  <inputs>
+
+    <param format="vcf,vcf_bgzip" name="input" type="data" label="VCF Input"/>
+
+    <param format="model" name="model_file" type="data" label="Model Input" optional="True"/>
+    <param name="model" type="select" label="Select Model" refresh_on_change="True">
+      <options>
+        <filter type="data_meta" ref="model_file" key="models"/>
+      </options>
+    </param>
+
+    <conditional name="phase">
+      <param name="phase_algorithm" type="select" label="Phase Algorithm" refresh_on_change='True'>
+        <option value="beagle" selected="True" >Beagle</option>
+        <option value="shapeit">SHAPEIT</option>
+      </param>
+      <when value="beagle">
+        <param name="beagle_burn_iter" type="integer" label="Burn-in iterations" optional="True"/>
+        <param name="beagle_iter" type="integer" label="Post burn-in iterations" optional="True"/>
+        <param name="beagle_states" type="integer" label="Model states for genotype estimation" optional="True"/>
+        <param name="beagle_window" type="float" label="Sliding window size (cM)" optional="True"/>
+        <param name="beagle_overlap" type="float" label="Overlap between neighboring sliding windows (cM)" optional="True"/>
+        <param name="beagle_error" type="float" label="HMM allele mismatch probability" optional="True"/>
+        <param name="beagle_step" type="float" label="Step length (cM)" optional="True" help="Used for identifying short IBS segments"/>
+        <param name="beagle_nsteps" type="integer" label="Number of consecutive steps" optional="True" help="Used for identifying long IBS segments"/>
+      </when>
+      <when value="shapeit">
+        <param name="shapeit_burn_iter" type="integer" label="Burn-in iterations" optional="True"/>
+        <param name="shapeit_prune_iter" type="integer" label="Pruning iterations" optional="True"/>
+        <param name="shapeit_main_iter" type="integer" label="Main iterations" optional="True"/>
+        <param name="shapeit_states" type="integer" label="Conditioning states for haplotype estimation" optional="True"/>
+        <param name="shapeit_window" type="float" label="Model window size (Mb)" optional="True"/>
+      </when>
+    </conditional>
+
+    <section name="common" title="Common Parameters" expanded="True">
+      <param name="random_seed" type="integer" label="Seed value" optional="True"/>
+      <param format="text" name="genetic_map" type="data" label="Genetic Map" optional="True"/>
+      <param name="ne" type="integer" label="Effective population size" optional="True"/>
+      <param name="phase_chr" type="text" label="Chromosome to phase" optional="True"/>
+      <param name="phase_from_bp" type="integer" label="Lower bound of sites to include" help="Only usable with a single chromosome" optional="True"/>
+      <param name="phase_to_bp" type="integer" label="Upper bound of sites to include" help="Only usable with a single chromosome" optional="True"/>
+    </section>
+
+    <param name="out_format" type="select" label="Output Format">
+      <option value="vcf">VCF File</option>
+      <option value="vcf.gz" selected="True">bgzipped-VCF File</option>
+      <option value="bcf">BCF File</option>
+    </param>
+
+  </inputs>
+  <outputs>
+
+    <data name="output" format="vcf_bgzip">
+      <change_format>
+        <when input="out_format" value="vcf" format="vcf"/>
+        <when input="out_format" value="bcf" format="bcf"/>
+      </change_format>
+    </data>
+
+  </outputs>
+
+  <help>
+      VCF Phaser Help Text
+  </help>
+
+</tool>
