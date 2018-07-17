@@ -228,11 +228,11 @@ def pipe_vcftools_to_bed_file (vcftools_call_args, output_filename):
         # Delete the file
         os.remove(output_filename)
 
-    # Close the vcftools stdout
-    vcftools_call.stdout.close()
-
     # Wait for vctools to finish
     vcftools_call.wait()
+
+    # Close the vcftools stdout
+    vcftools_call.stdout.close()
 
     # Read the vcftools stderr
     vcftools_stderr = vcftools_call.stderr.read()
@@ -274,11 +274,11 @@ def pipe_vcftools_bgzip (vcftools_call_args, output_filename):
     # bgzip subprocess call
     bgzip_call = subprocess.Popen(['bgzip'], stdin = vcftools_call.stdout, stdout = bgzip_output, stderr = subprocess.PIPE)
 
-    # Close the vcftools stdout
-    vcftools_call.stdout.close()
-
     # Wait for vctools to finish
     vcftools_call.wait()
+
+    # Close the vcftools stdout
+    vcftools_call.stdout.close()
 
     # Read the vcftools stderr
     vcftools_stderr = vcftools_call.stderr.read()
@@ -291,11 +291,11 @@ def pipe_vcftools_bgzip (vcftools_call_args, output_filename):
     # Check that the log file was created correctly
     check_vcftools_for_errors(vcftools_stderr)
 
-    # Close the compressed vcf file
-    bgzip_output.close()
-
     # Wait for bgzip to finish
     bgzip_call.wait()
+
+    # Close the compressed vcf file
+    bgzip_output.close()
 
     # Save the stderr from bgzip, stdout = None
     bgzip_stdout, bgzip_stderr = bgzip_call.communicate()
@@ -341,11 +341,11 @@ def pipe_vcftools_bcftools (vcftools_call_args, output_filename):
     # bcftools subprocess call
     bcftools_call = subprocess.Popen(['bcftools'] + convert_args, stdin = vcftools_call.stdout, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
-    # Close the vcftools stdout
-    vcftools_call.stdout.close()
-
     # Wait for vctools to finish
     vcftools_call.wait()
+
+    # Close the vcftools stdout
+    vcftools_call.stdout.close()
 
     # Read the vcftools stderr
     vcftools_stderr = vcftools_call.stderr.read()
@@ -425,6 +425,12 @@ def pipe_vcftools_to_file (vcftools_call_args, output_filename, append_output = 
 
         # Iterate the vcftools stdout
         for vcftools_stdout_line in stdout_iter:
+
+            # Check if code is running in python 3
+            if sys.version_info[0] == 3:
+                # Convert bytes to string
+                vcftools_stdout_line = vcftools_stdout_line.decode()
+
             output_file.write(vcftools_stdout_line)
 
         # Close the bed file
@@ -436,11 +442,13 @@ def pipe_vcftools_to_file (vcftools_call_args, output_filename, append_output = 
         # Delete the file
         os.remove(output_filename)
 
-    # Close the vcftools stdout
-    vcftools_call.stdout.close()
+        raise Exception('vcftools to python pipe error')
 
     # Wait for vctools to finish
     vcftools_call.wait()
+
+    # Close the vcftools stdout
+    vcftools_call.stdout.close()
 
     # Read the vcftools stderr
     vcftools_stderr = vcftools_call.stderr.read()
