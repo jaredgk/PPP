@@ -6,7 +6,6 @@ import copy
 import shutil
 import logging
 
-
 # Import basic vcftools functions
 from vcftools import *
 
@@ -30,6 +29,31 @@ def vcf_calc_parser(passed_arguments):
                 setattr(args, self.dest, value)
         return customAction
 
+    def parser_confirm_file_list ():
+        '''Custom action to confirm file exists in list'''
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, value, option_string=None):
+                # Loop the list
+                for value_item in value:
+                    # Check if the file exists
+                    if not os.path.isfile(value_item):
+                        raise IOError('%s not found' % value_item)
+                if not getattr(args, self.dest):
+                    setattr(args, self.dest, value)
+                else:
+                    getattr(args, self.dest).extend(value)
+        return customAction
+
+    def parser_add_to_list ():
+        '''Custom action to add items to a list'''
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, value, option_string=None):
+                if not getattr(args, self.dest):
+                    setattr(args, self.dest, value)
+                else:
+                    getattr(args, self.dest).extend(value)
+        return customAction
+
     def metavar_list (var_list):
         '''Create a formmated metavar list for the help output'''
         return '{' + ', '.join(var_list) + '}'
@@ -39,37 +63,160 @@ def vcf_calc_parser(passed_arguments):
     # Input arguments.
     vcf_parser.add_argument('--vcf', help = "Input VCF filename", type = str, required = True, action = parser_confirm_file())
 
-    # Model file arguments.
-    vcf_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
-    vcf_parser.add_argument('--model', help = 'Defines the model to analyze', type = str)
+    # Model file arguments
+    vcf_parser.add_argument('--model-file', help = 'The model filename', type = str, action = parser_confirm_file())
+    vcf_parser.add_argument('--model', help = 'Model to analyze', type = str)
+
+    # Non-model file arguments
+    vcf_parser.add_argument('--pop-file', help = 'Population file. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_confirm_file_list())
 
     # Other file arguments. Expand as needed
-    vcf_parser.add_argument('--pop-file', help = 'Defines the population files for calculating specific statistics', type = str, action='append')
-    vcf_parser.add_argument('--out', help = 'Specifies the complete output filename. Cannot be used if multiple output files are created', type = str)
-    vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out')
-    vcf_parser.add_argument('--out-dir', help = "Specifies the output directory. Only used if multiple output files are created", default = 'Statistic_Files')
+    vcf_parser.add_argument('--out', help = 'Output filename. Cannot be used if multiple output files are created', type = str)
+    vcf_parser.add_argument('--out-prefix', help = 'Output prefix (vcftools naming scheme)', type = str,  default = 'out')
+    vcf_parser.add_argument('--out-dir', help = "Output directory. Only used if multiple output files are created", default = 'Statistic_Files')
 
-    # General arguments.
-    vcf_parser.add_argument('--overwrite', help = "Specifies if previous output files should be overwritten", action = 'store_true')
+    # General arguments
+    vcf_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
 
-    # Statistic based arguments.
+    # Statistic based arguments
     statistic_list = ['weir-fst', 'windowed-weir-fst', 'TajimaD', 'site-pi', 'window-pi', 'freq', 'het-fit', 'het-fis']
     statistic_default = 'windowed-weir-fst'
 
-    vcf_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'Specifies the statistic to calculate', type = str, choices = statistic_list, default = statistic_default)
+    vcf_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'The statistic to calculate', type = str, choices = statistic_list, default = statistic_default)
 
     # Statistic window options
-    vcf_parser.add_argument('--statistic-window-size', help = 'Specifies the size of window calculations', type = int, default = 10000)
-    vcf_parser.add_argument('--statistic-window-step', help = 'Specifies step size between windows', type = int, default = 20000)
+    vcf_parser.add_argument('--statistic-window-size', help = 'Window size of relevant calculations', type = int)
+    vcf_parser.add_argument('--statistic-window-step', help = 'Step size between windows of relevant calculations', type = int)
 
     # Position-based position filters
-    vcf_parser.add_argument('--filter-include-positions', help = 'Specifies a set of sites to include within a file (tsv chromosome and position)', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-positions', help = 'Specifies a set of sites to exclude within a file (tsv chromosome and position)', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-positions', help = 'Sites to include within a file', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-positions', help = 'Sites to exclude within a file', action = parser_confirm_file())
+
+    # BED-based position filters
+    vcf_parser.add_argument('--filter-include-bed', help = 'Set of sites to include within a BED file', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-bed', help = 'Set of sites to exclude within a BED file', action = parser_confirm_file())
+
+    # Non-model based filters
+    vcf_parser.add_argument('--filter-include-indv', help = 'Individual to include. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-indv', help = 'Individual to exclude. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-include-indv-file', help = 'Individuals to include in file. Cannont to be used alonside --model', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-indv-file', help = 'Individuals to exclude in file. Cannont to be used alonside --model', action = parser_confirm_file())
 
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)
     else:
         return vcf_parser.parse_args()
+
+def create_stat_output (vcf_args, vcftools_call_args, vcftools_pop_files, vcftools_output_filename):
+    '''
+    Statistic output creation function
+
+    Automates the creation of the various statistic output files. This function
+    is required to for the creation of non-standard vcftools output, multi-file
+    vcftools output, and standard vcftools output.
+
+    Parameters
+    ----------
+    vcf_args : argparse Namespace
+        Holds arguments from the command-line
+    vcftools_call_args : list
+        List of the vcftools arguments
+    vcftools_pop_files : list
+        List of the relevant population files (if required)
+    vcftools_output_filename : str
+         Expected vcftools output filename
+
+    Raises
+    ------
+    Exception
+        Error calling vcftools
+    '''
+
+    # Assigns the file argument for vcftools
+    vcfname_arg = assign_vcftools_input_arg(vcf_args.vcf)
+
+    logging.info('Input file assigned')
+
+    # Run vcftools once if the statistic isn't het-fis
+    if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) > 2:
+
+        def return_filename (filepath):
+            return os.path.basename(filepath).split(os.extsep)[0]
+
+        # Create the output directory
+        if not os.path.exists(vcf_args.out_dir):
+            os.makedirs(vcf_args.out_dir)
+
+        # Loop each population file
+        for first_pop_filepath, second_pop_filepath in itertools.combinations(vcftools_pop_files, 2):
+
+            # Create the population-specific call
+            pop_call_args = copy.deepcopy(vcftools_call_args)
+
+            # Assign the population files
+            pop_call_args.extend(['--weir-fst-pop', first_pop_filepath, '--weir-fst-pop', second_pop_filepath])
+
+            # Extract filename from first filepath
+            first_pop_filename = return_filename(first_pop_filepath)
+            # Extract filename from second filepath
+            second_pop_filename = return_filename(second_pop_filepath)
+
+            # Create the population prefix, and join to the output directory
+            pop_prefix = os.path.join(vcf_args.out_dir, vcf_args.out_prefix)
+
+            # Update the population prefix with the population names
+            pop_prefix += '.%s.%s' % (first_pop_filename, second_pop_filename)
+
+            # Assign the output argument
+            pop_call_args.extend(['--out', pop_prefix])
+
+            # vcftools subprocess call, with stdout
+            vcftools_err = call_vcftools(vcfname_arg + pop_call_args)
+
+            # Check if the user specifed the complete output filename (only log-based)
+            if vcf_args.out:
+                produce_vcftools_log(vcftools_err, vcf_args.out, append_mode = True)
+            else:
+                produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
+
+    elif vcf_args.calc_statistic == 'het-fis':
+
+        # Loop each population file
+        for vcftools_pop_file in vcftools_pop_files:
+
+            # Create the population-specific call
+            pop_call_args = vcftools_call_args + ['--keep', str(vcftools_pop_file)]
+
+            # vcftools subprocess call
+            vcftools_err = call_vcftools(vcfname_arg + pop_call_args, output_format = vcf_args.calc_statistic, output_filename = vcftools_output_filename)
+
+            # Check if the user specifed the complete output filename
+            if vcf_args.out:
+                os.rename(vcftools_output_filename, vcf_args.out)
+                produce_vcftools_log(vcftools_err, vcf_args.out, append_mode = True)
+            else:
+                produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
+
+    else:
+
+        # Check if either Fst statistic is specified
+        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) == 2:
+
+            # Assigns the population files to the vcftools call
+            vcftools_call_args.extend([pop_args for pop_file in vcftools_pop_files for pop_args in ['--weir-fst-pop', pop_file]])
+
+        # Add the output argument
+        vcftools_call_args.extend(['--out', vcf_args.out_prefix])
+
+        # vcftools subprocess call
+        vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
+
+        # Check if the user specifed the complete output filename
+        if vcf_args.out:
+            os.rename(vcftools_output_filename, vcf_args.out)
+            produce_vcftools_log(vcftools_err, vcf_args.out)
+        else:
+            produce_vcftools_log(vcftools_err, vcftools_output_filename)
 
 def run (passed_arguments = []):
     '''
@@ -127,12 +274,23 @@ def run (passed_arguments = []):
     # Used to store population information from either model or pop file(s)
     vcftools_pop_files = []
 
-    # Checks population assignment for the current statistic
-    if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis']:
+    # Checks if the user specified both a model and population files
+    if vcf_args.model_file and vcf_args.pop_file:
+        raise Exception('--model and --pop-file arguments are incompatible')
 
-        # Check if population assignment is possible
-        if not vcf_args.model_file:
-            raise IOError('%s requires a model file to operate. Please use --model-file to select a file' % vcf_args.calc_statistic)
+    # Check that individual-based filters are not being user with a model
+    if vcf_args.model_file and (vcf_args.filter_include_indv or vcf_args.filter_exclude_indv):
+        if vcf_args.filter_include_indv:
+            raise Exception('--model and --filter-include-indv arguments are incompatible')
+        if vcf_args.filter_exclude_indv:
+            raise Exception('--model and --filter-exclude-indv arguments are incompatible')
+
+    # Check that individuals-based filters are not being user with a model
+    if vcf_args.model_file and (vcf_args.filter_include_indv_file or vcf_args.filter_exclude_indv_file):
+        if vcf_args.filter_include_indv_file:
+            raise Exception('--model and --filter_include_indv-file arguments are incompatible')
+        if vcf_args.filter_exclude_indv_file:
+            raise Exception('--model and --filter-exclude-indv-file arguments are incompatible')
 
     # Performs actions related to --model-file argument
     if vcf_args.model_file:
@@ -151,13 +309,8 @@ def run (passed_arguments = []):
         # Select model, might change this in future versions
         selected_model = models_in_file[vcf_args.model]
 
-        # Check if the specified statistic is Fst-based
-        #if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst']:
+        # Check if the specified statistic is fst-based or fis-based
         if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis']:
-
-            # Check if there are enough populations
-            if selected_model.npop < 2:
-                raise IOError('Two or more populations requried. Please check selected model')
 
             # Create the population files
             selected_model.create_pop_files(file_ext = '.txt', overwrite = vcf_args.overwrite)
@@ -165,23 +318,75 @@ def run (passed_arguments = []):
             # Store the population files
             vcftools_pop_files = selected_model.pop_files
 
-            # Check if either Fst statistic is specified
-            if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) == 2:
-
-                # Assigns the population files to the vcftools call
-                vcftools_call_args.extend([pop_args for pop_file in vcftools_pop_files for pop_args in ['--weir-fst-pop', pop_file]])
-
+        # Filter individuals for other statistics
         else:
 
             # Create individuals file
-            selected_model.create_individuals_file(overwrite = vcf_args.overwrite)
+            selected_model.create_ind_file(overwrite = vcf_args.overwrite)
 
             # Assign the individuals file to vcftools
-            vcftools_call_args.extend(['--keep', selected_model.individuals_file])
+            vcftools_call_args.extend(['--keep', selected_model.ind_file])
 
+    # Performs actions related to --pop-file argument
+    if vcf_args.pop_file:
+
+        # Check if the specified statistic is fst-based or fis-based
+        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis']:
+
+            # Store the population files
+            vcftools_pop_files = vcf_args.pop_file
+
+        # Return an error if --pop-file is not supported
+        else:
+            raise Exception('%s does not support the --pop-file argument' % vcf_args.calc_statistic)
+
+    # Individuals-based filters
+    if vcf_args.filter_include_indv_file or vcf_args.filter_exclude_indv_file:
+        # Used to include a file of individuals to keep
+        if vcf_args.filter_exclude_indv_file:
+            vcftools_call_args.extend(['--keep', vcf_args.filter_include_indv_file])
+
+        # Used to include a file of individuals to remove
+        if vcf_args.filter_exclude_indv_file:
+            vcftools_call_args.extend(['--remove', vcf_args.filter_exclude_indv_file])
+
+    # Individual-based filters
+    if vcf_args.filter_include_indv or vcf_args.filter_exclude_indv:
+        if vcf_args.filter_include_indv:
+            for indv_to_include in vcf_args.filter_include_indv:
+                vcftools_call_args.extend(['--indv', indv_to_include])
+        if vcf_args.filter_exclude_indv:
+            for indv_to_exclude in vcf_args.filter_exclude_indv:
+                vcftools_call_args.extend(['--remove-indv', indv_to_exclude])
+
+    # Position (vcftools output file) filters
+    if vcf_args.filter_include_positions or vcf_args.filter_exclude_positions:
+        if vcf_args.filter_include_positions:
+            vcftools_call_args.extend(['--positions', vcf_args.filter_include_positions])
+        if vcf_args.filter_exclude_positions:
+            vcftools_call_args.extend(['--exclude-positions', vcf_args.filter_exclude_positions])
+
+    # Position (BED format file) filters
+    if vcf_args.filter_include_bed or vcf_args.filter_exclude_bed:
+        if vcf_args.filter_include_bed:
+            vcftools_call_args.extend(['--bed', vcf_args.filter_include_bed])
+        if vcf_args.filter_exclude_bed:
+            vcftools_call_args.extend(['--exclude-bed', vcf_args.filter_exclude_bed])
 
     # Check if windowed Fst is specified
     if vcf_args.calc_statistic == 'windowed-weir-fst':
+
+        # Confirm that population files has been assigned
+        if len(vcftools_pop_files) < 2:
+            raise Exception('%s requires at least two populations to operate' % vcf_args.calc_statistic)
+
+        # Confirm that the window size has been assigned
+        if not vcf_args.statistic_window_size:
+            raise Exception('%s requires a specifed window size to operate' % vcf_args.calc_statistic)
+
+        # Confirm that window step size has been assigned
+        if not vcf_args.statistic_window_step:
+            raise Exception('%s requires a specifed window step size to operate' % vcf_args.calc_statistic)
 
         # Assigns the required window arguments
         vcftools_call_args.extend(['--fst-window-size', vcf_args.statistic_window_size, '--fst-window-step', vcf_args.statistic_window_step])
@@ -191,10 +396,18 @@ def run (passed_arguments = []):
 
     elif vcf_args.calc_statistic == 'weir-fst':
 
+        # Confirm that population files has been assigned
+        if len(vcftools_pop_files) < 2:
+            raise Exception('%s requires at least two populations to operate' % vcf_args.calc_statistic)
+
         # Assigns the suffix for the vcftools log file
         vcftools_out_suffix = '.weir.fst'
 
     elif vcf_args.calc_statistic == 'TajimaD':
+
+        # Confirm that the window size has been assigned
+        if not vcf_args.statistic_window_size:
+            raise Exception('%s requires a specifed window size to operate' % vcf_args.calc_statistic)
 
         # Assigns all the vcftools arguments for calculating TajimaD
         vcftools_call_args.extend(['--TajimaD', vcf_args.statistic_window_size])
@@ -211,6 +424,14 @@ def run (passed_arguments = []):
         vcftools_out_suffix = '.sites.pi'
 
     elif vcf_args.calc_statistic == 'window-pi':
+
+        # Confirm that the window size has been assigned
+        if not vcf_args.statistic_window_size:
+            raise Exception('%s requires a specifed window size to operate' % vcf_args.calc_statistic)
+
+        # Confirm that window step size has been assigned
+        if not vcf_args.statistic_window_step:
+            raise Exception('%s requires a specifed window step size to operate' % vcf_args.calc_statistic)
 
         # Assigns all the vcftools arguments for calculating pi
         vcftools_call_args.extend(['--window-pi', vcf_args.statistic_window_size, '--window-pi-step', vcf_args.statistic_window_step])
@@ -236,22 +457,15 @@ def run (passed_arguments = []):
 
     elif vcf_args.calc_statistic == 'het-fis':
 
+        # Confirm that at least one population file has been assigned
+        if not vcftools_pop_files:
+            raise Exception('%s requires at least one population to operate' % vcf_args.calc_statistic)
+
         # Assigns all the vcftools arguments for calculating heterozygosity
         vcftools_call_args.append('--het')
 
         # Assigns the suffix for the vcftools log file
         vcftools_out_suffix = '.het'
-
-    # Assing the filtered positions
-    if vcf_args.filter_include_positions or vcf_args.filter_exclude_positions:
-
-        # Assigns the sites to keep
-        if vcf_args.filter_include_positions:
-            vcftools_call_args.extend(['--positions', vcf_args.filter_include_positions])
-
-        # Assigns the sites to remove
-        if vcf_args.filter_exclude_positions:
-            vcftools_call_args.extend(['--exclude-positions', vcf_args.filter_exclude_positions])
 
     logging.info('vcftools parameters assigned')
 
@@ -285,100 +499,13 @@ def run (passed_arguments = []):
         if os.path.exists(vcf_args.out_dir):
             raise IOError('Statistic Directory already exists')
 
-    # Assigns the file argument for vcftools
-    vcfname_arg = assign_vcftools_input_arg(vcf_args.vcf)
-
-    logging.info('Input file assigned')
-
-    # Run vcftools once if the statistic isn't het-fis
-    if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) > 2:
-
-        def return_filename (filepath):
-            return os.path.basename(filepath).split(os.extsep)[0]
-
-        # Create the output directory
-        if not os.path.exists(vcf_args.out_dir):
-            os.makedirs(vcf_args.out_dir)
-
-        # Loop each population file
-        for first_pop_filepath, second_pop_filepath in itertools.combinations(vcftools_pop_files, 2):
-
-            # Create the population-specific call
-            pop_call_args = copy.deepcopy(vcftools_call_args)
-
-            # Assign the population files
-            pop_call_args.extend(['--weir-fst-pop', first_pop_filepath, '--weir-fst-pop', second_pop_filepath])
-
-            # Extract filename from first filepath
-            first_pop_filename = return_filename(first_pop_filepath)
-            # Extract filename from second filepath
-            second_pop_filename = return_filename(second_pop_filepath)
-
-            # Create the population prefix, and join to the output directory
-            pop_prefix = os.path.join(vcf_args.out_dir, vcf_args.out_prefix)
-
-            # Update the population prefix with the population names
-            pop_prefix += '.%s.%s' % (first_pop_filename, second_pop_filename)
-
-            # Assign the output argument
-            pop_call_args.extend(['--out', pop_prefix])
-
-            # vcftools subprocess call, with stdout
-            vcftools_out, vcftools_err = call_vcftools(vcfname_arg + pop_call_args)
-
-            # Check if the user specifed the complete output filename (only log-based)
-            if vcf_args.out:
-                produce_vcftools_log(vcftools_err, vcf_args.out, append_mode = True)
-            else:
-                produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
-
-    elif vcf_args.calc_statistic == 'het-fis':
-
-        # Add the stdout argument, for repeated calls
-        vcftools_call_args.append('--stdout')
-
-        # Store if the header should be removed
-        strip_header = False
-
-        # Loop each population file
-        for vcftools_pop_file in vcftools_pop_files:
-
-            # Create the population-specific call
-            pop_call_args = vcftools_call_args + ['--keep', str(vcftools_pop_file)]
-
-            # vcftools subprocess call, with stdout
-            vcftools_out, vcftools_err = call_vcftools(vcfname_arg + pop_call_args)
-
-            # Check if the user specifed the complete output filename
-            if vcf_args.out:
-                produce_vcftools_output(vcftools_out, vcf_args.out, append_mode = True, strip_header = strip_header)
-                produce_vcftools_log(vcftools_err, vcf_args.out, append_mode = True)
-            else:
-                produce_vcftools_output(vcftools_out, vcftools_output_filename, append_mode = True, strip_header = strip_header)
-                produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
-
-            # Will strip the header after the first loop
-            strip_header = True
-
-    else:
-
-        # Add the output argument
-        vcftools_call_args.extend(['--out', vcf_args.out_prefix])
-
-        # vcftools subprocess call
-        vcftools_out, vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
-
-        # Check if the user specifed the complete output filename
-        if vcf_args.out:
-            os.rename(vcftools_output_filename, vcf_args.out)
-            produce_vcftools_log(vcftools_err, vcf_args.out)
-        else:
-            produce_vcftools_log(vcftools_err, vcftools_output_filename)
+    # Create the output files for the specified statistic and other arguments
+    create_stat_output(vcf_args, vcftools_call_args, vcftools_pop_files, vcftools_output_filename)
 
     # Delete any files that were created for vcftools
     if vcf_args.model_file:
         selected_model.delete_pop_files()
-        selected_model.delete_individuals_file()
+        selected_model.delete_ind_file()
 
 if __name__ == "__main__":
     initLogger()

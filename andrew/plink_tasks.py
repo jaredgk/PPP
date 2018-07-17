@@ -10,9 +10,9 @@ import logging
 # Call PPP-based scripts
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
 
-import bcftools
 from vcf_reader_func import checkFormat
 from logging_module import initLogger, logArgs
+from plink import call_plink
 
 def plink_argument_parser(passed_arguments):
     '''Phase Argument Parser - Assigns arguments for vcftools from command line.
@@ -33,20 +33,24 @@ def plink_argument_parser(passed_arguments):
 
     plink_parser = argparse.ArgumentParser()
 
+    plink_prefix = plink_parser.add_mutually_exclusive_group()
+
     # Input VCF argument
     plink_parser.add_argument("--vcf", help = "Input VCF filename", type = str, action = parser_confirm_file())
+
+    # Input HAPS arguments
+    plink_parser.add_argument("--haps", help = "Input HAPS filename", type = str, action = parser_confirm_file())
+    plink_parser.add_argument("--sample", help = "Input SAMPLE filename. Called alongside --haps", type = str, action = parser_confirm_file())
+    plink_prefix.add_argument("--haps-prefix", help = "Input HAPS filename prefix", type = str)
 
     # Input PED arguments
     plink_parser.add_argument("--ped", help = "Input PED filename", type = str, action = parser_confirm_file())
     plink_parser.add_argument("--map", help = "Input MAP filename. Called alongside --ped", type = str, action = parser_confirm_file())
-
+    plink_prefix.add_argument("--ped-prefix", help = "Input PED filename prefix", type = str)
     # Input BED arguments
     plink_parser.add_argument("--bed", help = "Input BED filename", type = str, action = parser_confirm_file())
     plink_parser.add_argument("--fam", help = "Input FAM filename. Called alongside --bed", type = str, action = parser_confirm_file())
     plink_parser.add_argument("--bim", help = "Input BIM filename. Called alongside --bed", type = str, action = parser_confirm_file())
-
-    plink_prefix = plink_parser.add_mutually_exclusive_group()
-    plink_prefix.add_argument("--ped-prefix", help = "Input PED filename prefix", type = str)
     plink_prefix.add_argument("--bed-prefix", help = "Input BED filename prefix", type = str)
 
     output_formats = ['vcf', 'vcf.gz', 'bcf', 'ped', 'binary-ped']
@@ -61,89 +65,6 @@ def plink_argument_parser(passed_arguments):
         return plink_parser.parse_args(passed_arguments)
     else:
         return plink_parser.parse_args()
-
-def check_plink_for_errors (plink_stderr):
-    '''
-        Checks the plink stderr for errors
-
-        Parameters
-        ----------
-        plink_stderr : str
-            plink stderr
-
-        Raises
-        ------
-        IOError
-            If plink stderr returns an error
-    '''
-
-    # Print output if error found. Build up as errors are discovered
-    if plink_stderr:
-        raise Exception(plink_stderr)
-
-def call_plink (plink_call_args):
-    '''
-        Calls plink
-
-        The function calls plink. Returns the stderr of plink to create a log
-        file of the call.
-
-        Parameters
-        ----------
-        plink_call_args : list
-            plink arguments
-
-        Raises
-        ------
-        Exception
-            If plink stderr returns an error
-    '''
-
-    # vcftools subprocess call
-    plink_call = subprocess.Popen(['plink'] + list(map(str, plink_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    # Wait for vcftools to finish
-    plink_out, plink_err = plink_call.communicate()
-
-    # Check if code is running in python 3
-    if sys.version_info[0] == 3:
-        # Convert bytes to string
-        plink_out = plink_out.decode()
-        plink_err = plink_err.decode()
-
-    logging.info('plink call complete')
-
-    # Check that the log file was created correctly
-    check_plink_for_errors(plink_err)
-
-def convert_vcfgz_to_bcf (output_prefix):
-
-    '''
-        Converts vcf.gz files to bcf files
-
-        Parameters
-        ----------
-        output_prefix : str
-            Specifies the filename prefix
-
-        Raises
-        ------
-        IOError
-            If the vcf.gz cannot be found
-    '''
-
-    # Assign the VCFGZ filename
-    vcfgz_filename = output_prefix + '.vcf.gz'
-
-    # Confirm the file exists, if not return error
-    if not os.path.isfile(vcfgz_filename):
-        raise IOError('Cannot locate vcf.gz intermediate file for bcf converion')
-
-    # Convert the file
-    bcftools.convert_to_bcf(vcfgz_filename, output_prefix)
-
-    # Delete the intermediate VCFGZ file
-    os.remove(vcfgz_filename)
 
 def assign_plink_output_args (output_prefix, output_format):
     '''
@@ -231,23 +152,20 @@ def assign_plink_input_from_prefix (input_prefix, input_format):
                 plink_ped = plink_filename
             elif '.map' in plink_filename:
                 plink_map = plink_filename
+
         # Check that input files included a ped file
-        if plink_ped:
-
-            # Check that ped and map files are both found
-            if plink_ped and plink_map:
-
-                # Return the ped-based files
-                return ['--file', plink_ped[:-4]]
-
-            else:
-                raise IOError('Unable to assign map file. Please confirm the file is named correctly')
-
-        # Return error message if no ped/bed input was found
-        else:
+        if not plink_ped:
+            # Return error message if no ped input was found
             raise IOError('Unable to assign ped file. Please confirm the prefix and/or command is specified correctly')
 
-    # Check for ped input
+        if not plink_map:
+            # Return error message if no map input was found
+            raise IOError('Unable to assign map file. Please confirm the file is named correctly')
+
+        # Return the ped-based files
+        return ['--file', plink_ped[:-4]]
+
+    # Check for binary-ped input
     elif input_format == 'binary-ped':
 
         # Plink BED, BIM, and FAM files
@@ -267,20 +185,51 @@ def assign_plink_input_from_prefix (input_prefix, input_format):
                 plink_fam = plink_filename
 
         # Check that input files included a bed file
-        if plink_bed:
-
-            # Check that bed, bim, and fam files were found
-            if plink_bed and plink_bim and plink_fam:
-
-                # Return the bed-based files
-                return ['--bfile', plink_bed[:-4]]
-
-            else:
-                raise IOError('Unable to assign bim and/or fam files. Please confirm the files are named correctly')
-
-        # Return error message if no ped/bed input was found
-        else:
+        if not plink_bed:
+            # Return error message if no ped/bed input was found
             raise IOError('Unable to assign bed file. Please confirm the prefix and/or command is specified correctly')
+
+        # Check that input files included a bed file
+        if not plink_bim:
+            # Return error message if no bim input was found
+            raise IOError('Unable to assign bim file. Please confirm the file is named correctly')
+
+        # Check that input files included a bed file
+        if not plink_fam:
+            # Return error message if no fam input was found
+            raise IOError('Unable to assign fam file. Please confirm the file is named correctly')
+
+        # Return the binary-ped files
+        return ['--bfile', plink_bed[:-4]]
+
+    # Check for haps input
+    elif input_format == 'haps':
+
+        # Plink haps and sample files
+        plink_haps = None
+        plink_sample = None
+
+        # Check if expected files are found
+        for plink_filename in prefix_files:
+
+            # Check for haps and associated files
+            if '.haps' in plink_filename:
+                plink_haps = plink_filename
+            elif '.sample' in plink_filename:
+                plink_sample = plink_filename
+
+        # Check that input files included a haps file
+        if not plink_haps:
+            # Return error message if no haps input was found
+            raise IOError('Unable to assign haps file. Please confirm the prefix and/or command is specified correctly')
+
+        # Check that input files included a sample file
+        if not plink_sample:
+            # Return error message if no sample input was found
+            raise IOError('Unable to assign sample file. Please confirm the file is named correctly')
+
+        # Return the haps-based files
+        return ['--haps', plink_haps, 'ref-first', '--sample', plink_sample]
 
 def assign_plink_input_from_command_args (plink_args):
 
@@ -304,7 +253,7 @@ def assign_plink_input_from_command_args (plink_args):
     elif plink_args.bed:
 
         # Check if bim and fam file are also assigned
-        if plink_bed and plink_bim and plink_fam:
+        if plink_args.bed and plink_args.bim and plink_args.fam:
 
             # Add the bed associated commands
             input_command_args.extend(['--bed', plink_args.bed, '--bim', plink_args.bim, '--fam', plink_args.fam])
@@ -313,6 +262,20 @@ def assign_plink_input_from_command_args (plink_args):
 
         else:
             raise IOError('Unable to assign bim and/or fam files. Please confirm the files are named correctly')
+
+    # Check if a haps file is assigned
+    elif plink_args.haps:
+
+        # Check if bim and fam file are also assigned
+        if plink_args.haps and plink_args.sample:
+
+            # Add the bed associated commands
+            input_command_args.extend(['--haps', plink_args.haps, 'ref-first', '--sample', plink_args.sample])
+            # Return the input command
+            return input_command_args
+
+        else:
+            raise IOError('Unable to assign sample file. Please confirm the file is named correctly')
 
     # Check if a vcf file is assigned
     elif plink_args.vcf:
@@ -340,6 +303,8 @@ def assign_plink_input_from_command_args (plink_args):
         else:
             raise Exception('Unknown VCF file format')
 
+    raise Exception('No input specified')
+
 def run (passed_arguments = []):
     '''
         PLINK toolset automator
@@ -355,14 +320,14 @@ def run (passed_arguments = []):
             Specifies the input PED filename
         --map : str
             Specifies the input MAP filename. Called alongside --ped
+        --ped-prefix : str
+            Specifies the input PED filename prefix
         --bed : str
             Specifies the input BED filename
         --map : str
             Specifies the input FAM filename. Called alongside --bed
         --bim : str
             Specifies the input BIM filename. Called alongside --bed
-        --ped-prefix : str
-            Specifies the input PED filename prefix
         --bed-prefix : str
             Specifies the input BED filename prefix
         --out : str
@@ -395,16 +360,20 @@ def run (passed_arguments = []):
     # List to hold the input argument(s)
     plink_input_args = []
 
-    # Assign ped/bed input from prefix
-    if plink_args.ped_prefix or plink_args.bed_prefix:
+    if plink_args.ped_prefix:
 
-        if plink_args.ped_prefix:
-            # Assign the ped based files
-            plink_input_args = assign_plink_input_from_prefix(plink_args.ped_prefix, 'ped')
+        # Assign the ped based files
+        plink_input_args = assign_plink_input_from_prefix(plink_args.ped_prefix, 'ped')
 
-        elif plink_args.bed_prefix:
-            # Assign the bed based files
-            plink_input_args = assign_plink_input_from_prefix(plink_args.bed_prefix, 'binary-ped')
+    elif plink_args.bed_prefix:
+
+        # Assign the bed based files
+        plink_input_args = assign_plink_input_from_prefix(plink_args.bed_prefix, 'binary-ped')
+
+    elif plink_args.haps_prefix:
+
+        # Assign the bed based files
+        plink_input_args = assign_plink_input_from_prefix(plink_args.haps_prefix, 'haps')
 
     else:
         # Assign the general input
@@ -417,13 +386,17 @@ def run (passed_arguments = []):
     logging.info('Output parameters assigned')
 
     # Call plink with the selected arguments
-    call_plink(plink_input_args + plink_output_args)
+    call_plink(plink_input_args + plink_output_args, plink_args.out_prefix, plink_args.out_format)
 
-    # Convert VCFGZ to BCF, as PLINK cannot directly create a BCF
-    if plink_args.out_format == 'bcf':
+    # Rename output to plink_args.out, if specified
+    if plink_args.out:
+        shutil.move('%s.%s' % (plink_args.out_prefix, plink_args.out_format), plink_args.out)
+        shutil.move(plink_args.out_prefix + '.log', plink_args.out + '.log')
+    # Rename log using plink_args.out_prefix
+    else:
+        shutil.move(plink_args.out_prefix + '.log', '%s.%s.log' % (plink_args.out_prefix, plink_args.out_format))
 
-        # Convert to BCF
-        convert_vcfgz_to_bcf(plink_args.out_prefix)
+    logging.info('plink log file created')
 
 if __name__ == "__main__":
     initLogger()

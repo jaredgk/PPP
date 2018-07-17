@@ -13,6 +13,86 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
 from logging_module import initLogger
 
+class ModelFile(dict):
+    def __init__(self, *arg, **kw):
+        super(ModelFile, self).__init__(*arg, **kw)
+        self.inds = []
+        self.ind_file = ''
+        self.exclude_file = ''
+
+    def assign_inds (self, inds = []):
+        # Return error if inds is empty
+        if not inds:
+            raise IOError('No individuals found in the model file.')
+        # Store the individuals
+        self.inds = [str(ind) for ind in inds]
+
+    def create_ind_file (self, file_ext = '', file_path = '', overwrite = False):
+        # Assign the filename for the population file
+        ind_filename = 'unique_individuals' + file_ext
+
+        # If a path is assigned, create the file at the specified location
+        if file_path:
+            ind_filename = os.path.join(file_path, ind_filename)
+
+        # Check if previous files should be overwriten
+        if not overwrite:
+            # Check if the file already exists
+            if os.path.isfile(ind_filename):
+                raise IOError('Individuals file exists.')
+
+        # Create the population file
+        ind_file = open(ind_filename, 'w')
+        ind_file.write('%s\n' %'\n'.join(self.inds))
+        ind_file.close()
+
+        # Save the individuals filename
+        self.ind_file = ind_filename
+
+    def delete_ind_file (self):
+        # Check if an individuals file was created
+        if self.ind_file:
+
+            # Delete the individuals file
+            os.remove(self.ind_file)
+
+            # Remove the filename
+            self.ind_file = ''
+
+    def create_exclude_ind_file (self, inds_to_include = [], file_ext = '', file_path = '', overwrite = False):
+        # Assign the filename for the population file
+        ind_filename = 'exclude_individuals' + file_ext
+
+        # If a path is assigned, create the file at the specified location
+        if file_path:
+            ind_filename = os.path.join(file_path, ind_filename)
+
+        # Check if previous files should be overwriten
+        if not overwrite:
+            # Check if the file already exists
+            if os.path.isfile(ind_filename):
+                raise IOError('Individuals file exists.')
+
+        # Create exclude list by removing included individuals
+        exclude_inds = list(set(self.inds) - set(inds_to_include))
+
+        # Create the population file
+        ind_file = open(ind_filename, 'w')
+        ind_file.write('%s\n' %'\n'.join(exclude_inds))
+        ind_file.close()
+
+        # Save the individuals filename
+        self.exclude_file = ind_filename
+
+    def delete_ind_file (self):
+        # Check if an individuals file was created
+        if self.exclude_file:
+
+            # Delete the individuals file
+            os.remove(self.exclude_file)
+
+            # Remove the filename
+            self.exclude_file = ''
 
 class Model:
     def __init__ (self, name):
@@ -23,21 +103,21 @@ class Model:
         self.nind = defaultdict(int)
         self.ind_dict = defaultdict(list)
         self.pop_files = []
-        self.individuals_file = ''
+        self.ind_file = ''
 
     @property
-    def ind_list(self):
+    def inds(self):
         return list(itertools.chain.from_iterable(self.ind_dict.values()))
 
     def assign_tree (self, tree):
-        self.tree = tree
+        self.tree = str(tree)
 
     def assign_pop (self, pop, inds = []):
         self.npop += 1
-        self.pop_list.append(pop)
+        self.pop_list.append(str(pop))
         if inds:
             self.nind[pop] = len(inds)
-            self.ind_dict[pop] = inds
+            self.ind_dict[pop] = [str(ind) for ind in inds]
 
     def create_pop_files (self, file_ext = '', file_path = '', overwrite = False):
         for pop in self.pop_list:
@@ -74,8 +154,7 @@ class Model:
             # Remove the filenames
             self.pop_files = []
 
-
-    def create_individuals_file (self, file_ext = '', file_path = '', overwrite = False):
+    def create_ind_file (self, file_ext = '', file_path = '', overwrite = False):
         # Assign the filename for the population file
         ind_filename = 'individual.keep' + file_ext
 
@@ -91,36 +170,39 @@ class Model:
 
         # Create the population file
         ind_file = open(ind_filename, 'w')
-        ind_file.write('%s\n' %'\n'.join(self.ind_list))
+        ind_file.write('%s\n' %'\n'.join(self.inds))
         ind_file.close()
 
         # Save the individuals filename
-        self.individuals_file = ind_filename
+        self.ind_file = ind_filename
 
-    def delete_individuals_file (self):
+    def delete_ind_file (self):
         # Check if an individuals file was created
-        if self.individuals_file:
+        if self.ind_file:
 
             # Delete the individuals file
-            os.remove(self.individuals_file)
+            os.remove(self.ind_file)
 
             # Remove the filename
-            self.individuals_file = ''
+            self.ind_file = ''
 
-def read_model_file (filename):
+def read_model_file (model_filename):
 
     # Check that the file exists
-    if not os.path.isfile(filename):
+    if not os.path.isfile(model_filename):
         raise IOError
 
+    # Create ModelFile object
+    models_to_return = ModelFile()
+
     # Open the model file
-    model_file = open(filename, 'r')
+    model_file = open(model_filename, 'rU')
 
     # Parse the model file using the json reader
     models_dict = json.load(model_file)
 
-    # Used to store each model within the file
-    models_in_file = {}
+    # List to store all unique individuals (i.e. individuals in all models)
+    individual_list = []
 
     # Loop the parsed models
     for model_dict in models_dict:
@@ -133,11 +215,17 @@ def read_model_file (filename):
 
             # Assign the population ans it's individuals to the model
             model.assign_pop(pop, pop_dict['inds'])
+            # Assign the individuals to the unique individual list
+            individual_list.extend(pop_dict['inds'])
+
+        # Remove duplicates from the unique individual list
+        individual_list = list(set(individual_list))
 
         # Save the model
-        models_in_file[model.name] = model
+        models_to_return[str(model.name)] = model
 
-    model_file.close()
+    # Store the  unique individuals within the ModelFile object
+    models_to_return.assign_inds(individual_list)
 
     # Return the models
-    return models_in_file
+    return models_to_return
