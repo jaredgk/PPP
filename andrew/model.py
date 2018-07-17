@@ -195,8 +195,13 @@ def read_model_file (model_filename):
     # Create ModelFile object
     models_to_return = ModelFile()
 
-    # Open the model file
-    model_file = open(model_filename, 'rU')
+    # Check if using python 2 or 3
+    if sys.version_info[0] == 2:
+        # Open the model file in python 2
+        model_file = open(model_filename, 'rU')
+    else:
+        # Open the model file in python 3
+        model_file = open(model_filename, 'r', newline=None)
 
     # Parse the model file using the json reader
     models_dict = json.load(model_file)

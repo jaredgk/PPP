@@ -52,6 +52,8 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'windowed-weir-fst',
+                      '--statistic-window-size', '10000',
+                      '--statistic-window-step', '20000',
                       '--model-file', 'example/input/input.model',
                       '--model', '2Pop',
                       '--out-prefix', 'out',
@@ -70,6 +72,7 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'TajimaD',
+                      '--statistic-window-size', '10000',
                       '--out-prefix', 'out',
                       '--overwrite'])
 
@@ -86,6 +89,8 @@ class vcf_calc_tests (unittest.TestCase):
         # Run the function with the following arguments
         vcf_calc.run(['--vcf', 'example/input/merged_chr1_10000.vcf.gz',
                       '--calc-statistic', 'window-pi',
+                      '--statistic-window-size', '10000',
+                      '--statistic-window-step', '20000',
                       '--out-prefix', 'out',
                       '--overwrite'])
 
