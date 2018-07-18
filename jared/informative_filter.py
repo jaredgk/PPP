@@ -14,7 +14,7 @@ def createParser():
     parser.add_argument("--remove-indels", dest="remove_indels", action="store_true", help=("Removes indels from output VCF files"))
     parser.add_argument("--remove-multi", dest="remove_multiallele", action="store_true")
     parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
-    parser.add_argument("--informative-count", dest="informative_count", default=0)
+    parser.add_argument("--informative-count", dest="informative_count", default=2)
     parser.add_argument("--minsites", dest="minsites", default=3, help=("Regions with at least this many variants passing filters will be output"))
     parser.add_argument("--tbi", dest="tabix_index", help="Path to bgzipped file's index if name doesn't match VCF file")
     parser.add_argument("--randcount",dest="randcount",type=int,default=-1,help="If set, will randomly draw from input region file until randcount # of passing BED regions are found")
@@ -40,11 +40,18 @@ def filter_bed_regions(sys_args):
     if args.randcount != -1:
         randomize = True
 
-    regions = RegionList(filename=args.bedname,zeroho=args.zeroho,zeroclosed=args.zeroclosed,sortlist=(not randomize),randomize=randomize)
+    regions = RegionList(filename=args.bedname,zeroho=args.zeroho,
+                         zeroclosed=args.zeroclosed,sortlist=(not randomize),
+                         randomize=randomize)
     regions_output = 0
     for region in regions.regions:
         rec_list = vcf_reader.getRecordList(region)
-        pass_list = getPassSites(rec_list, remove_cpg=True, fasta_ref=fasta_seq)
+        pass_list = getPassSites(rec_list, remove_cpg=True,
+                    remove_indels=args.remove_indels,
+                    remove_multiallele=args.remove_multiallele,
+                    remove_missing=args.remove_missing,
+                    informative_count=args.informative_count,
+                    fasta_ref=fasta_seq)
         if pass_list.count(True) >= int(args.minsites):
             print (region.toStr(sep='\t'))
             regions_output += 1
