@@ -1,0 +1,41 @@
+<tool id="fourgamete" name="Four Gamete Test" version="0.1">
+    <requirements>
+        <requirement type="package">pysam</requirement>
+    </requirements>
+    <stdio>
+        <exit_code range="1:" level="fatal" />
+    </stdio>
+    <description>Tests a VCF file for a subregion that passes four gamete test</description>
+    <command>
+        <![CDATA[
+            python $__tool_directory__/four_gamete_pysam.py
+            --vcfname $input
+            --out $output
+            --4gcompat
+            --reti
+            #if str($select_arg) == 'left':
+            --left
+            #elif str($select_arg) == 'right':
+            --right
+            #else
+            --rani
+            #end if
+            --numinf $infsites
+
+
+        ]]>
+
+    </command>
+    <inputs>
+        <param format="vcf,vcf_bgzip,bcf" name="input" type="data" label="VCF input" />
+        <param type="integer" name="infsites" label="Number of informative sites required in subregion" value="2" min="0" />
+        <param name="select_arg" type="select" label="Subregion to Select">
+            <option value="left">Left-most</option>
+            <option value="right" selected="True">Right-most</option>
+            <option value="random">Random</option>
+        </param>
+    </inputs>
+    <outputs>
+        <data format="vcf" name="output"/>
+    </outputs>
+</tool>

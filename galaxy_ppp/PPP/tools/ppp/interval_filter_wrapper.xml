@@ -1,0 +1,50 @@
+<tool id="intervalfilter" name="Filter for Informative Intervals" version="0.1">
+    <requirements>
+        <requirement type="package">pysam</requirement>
+    </requirements>
+    <stdio>
+        <exit_code range="1:" level="fatal" />
+    </stdio>
+    <description>Finds regions in a VCF file that have enough informative sites for IM analyses
+    </description>
+    <command>
+        <![CDATA[
+            python $__tool_directory__/informative_filter.py
+            --vcf $input_vcf
+            --bed $input_bed
+            #if $indel:
+            --remove-indels
+            #end if
+
+
+        ]]>
+
+
+
+    </command>
+    <inputs>
+        <param format="vcf_bgzip" name="input_vcf" type="data" label="VCF File (bgzipped)" />
+        <param format="bed" name="input_bed" type="data" label="BED regions to filter" />
+
+        <param type="boolean" name="indel" label="Don't count indels as informative" checked="true" />
+        <param type="boolean" name="remove_missing" label="Don't count sites with missing data as informative" checked="true" />
+        <param type="boolean" name="remove_multi" label="Don't count sites with more than two alleles as informative" checked="true" />
+        <param type="integer" name="informative_count" label="Number of sites required to deem region informative" value="3" />
+        <conditional name="return_mode">
+            <param name="return_setcount" type="select" label="Output Type" >
+                <option value="some" selected="True">Return set number of regions</option>
+                <option value="all">Return all passing regions</option>
+            </param>
+            <when value="some">
+                <param type="integer" name="region_count" label="Number of regions to return" value="200"/>
+            </when>
+        </conditional>
+
+
+
+    </inputs>
+    <outputs>
+        <data format="bed" name="output" />
+    </outputs>
+
+</tool>

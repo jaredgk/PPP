@@ -1,0 +1,37 @@
+<tool id="vcf_to_ima" name="VCF to IMa Input" version="0.1">
+    <requirements>
+        <requirement type="package">pysam</requirement>
+    </requirements>
+    <stdio>
+        <exit_code range="1:" level="fatal" />
+    </stdio>
+    <description>Generates an input file for IMa3 from VCF files for each target loci</description>
+    <command>
+        <![CDATA[
+            python $__tool_directory__/vcf_to_ima.py
+            --vcfs
+            #for $loci in $vcf_collection:
+                $loci
+            #end for
+            --pop $model_file
+            --output $output
+            --mutrate $mutrate
+
+
+
+        ]]>
+
+
+
+
+    </command>
+    <inputs>
+        <param format="vcf,vcf_bgzip" name="vcf_collection" type="data_collection" collection_type="list" label="VCF Collection" />
+        <param format="model" name="model_file" type="data" label="Model File" />
+        <param type="float" name="mutrate" label="Mutation Rate" value="1e-9"/>
+
+    </inputs>
+    <outputs>
+        <data format="txt" name="output" />
+    </outputs>
+</tool>
