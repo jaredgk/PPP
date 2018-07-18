@@ -7,6 +7,10 @@
     <tool file="ppp/stat_sampler.xml" />
     <tool file="ppp/vcf_split.xml" />
     <tool file="ppp/vcf_phase.xml" />
+    <tool file="ppp/four_gamete_wrapper.xml" />
+    <tool file="ppp/interval_filter_wrapper.xml" />
+    <tool file="ppp/vcf_region_wrapper.xml" />
+    <tool file="ppp/vcf_ima_wrapper.xml" />
   </section>
   <section  id="ppp_legacy" name="Legacy Functions">
     <tool file="ppp_legacy/vcf_sampler.xml" />
