@@ -2,15 +2,17 @@
 <toolbox monitor="true">
   <label id="ppp" text="PPP Functions" />
   <section id="ppp_vcf" name="VCF Functions">
-    <tool file="ppp/vcf_calc.xml" />
     <tool file="ppp/vcf_filter.xml" />
-    <tool file="ppp/stat_sampler.xml" />
+    <tool file="ppp/vcf_calc.xml" />
     <tool file="ppp/vcf_split.xml" />
     <tool file="ppp/vcf_phase.xml" />
     <tool file="ppp/four_gamete_wrapper.xml" />
     <tool file="ppp/interval_filter_wrapper.xml" />
     <tool file="ppp/vcf_region_wrapper.xml" />
     <tool file="ppp/vcf_ima_wrapper.xml" />
+  </section>
+  <section  id="ppp_stat" name="Statistic Functions">
+      <tool file="ppp/stat_sampler.xml" />
   </section>
   <section  id="ppp_legacy" name="Legacy Functions">
     <tool file="ppp_legacy/vcf_sampler.xml" />
