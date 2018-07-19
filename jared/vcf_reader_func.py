@@ -156,7 +156,15 @@ def getPassSites(record_list, remove_cpg=False, remove_indels=True,
     return pass_list
 
 
-
+def filterSites(record_list, remove_cpg=False, remove_indels=True,
+                remove_multiallele=True, remove_missing=0, inform_level=2,
+                fasta_ref=None):
+    pass_list = getPassSites(record_list,remove_cpg,remove_indels,remove_multiallele,remove_missing,inform_level,fasta_ref)
+    out_list = []
+    for i in range(len(pass_list)):
+        if pass_list[i]:
+            out_list.append(record_list[i])
+    return out_list
 
 
 

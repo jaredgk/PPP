@@ -35,6 +35,10 @@ def createParser():
     parser.add_argument("--zero-closed", dest="zeroclosed", action="store_true")
     parser.add_argument("--indels", dest="indel_flag", action="store_true",
                         help="Include indels when reporting sequences")
+    parser.add_argument("--remove-multiallele",dest="remove_multiallele",action="store_true")
+    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
+    parser.add_argument("--parsecpg",dest="parsecpg",action="store_true")
+    parser.add_argument("--noseq",dest="printseq",action="store_false",help="Will only print variants when reference is provided. Used so CpG filtering can be done if invariant sites aren't desired in output")
     parser.add_argument("--trim-to-ref-length", dest="trim_seq",
                         action="store_true",
                         help=("Trims sequences if indels cause them to be "
@@ -57,7 +61,8 @@ def createParser():
     parser.add_argument("--poptag",dest="poptag",help=("If model file has "
                         "multiple models, use model with this name"))
     parser.add_argument("--mutrate",dest="mutrate",type=float,default=1e-9,help="Mutation rate per base pair (default is 1e-9)")
-
+    parser.add_argument("--fasta",dest="fasta",action="store_true")
+    parser.add_argument("--multi-out",dest="multi_out",type=str)
     return parser
 
 
@@ -185,14 +190,24 @@ def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=1, mut_rat
     lh += ' '+str("%.14f" % (mutlocus))
     return lh
 
+def getMultiName(args):
+    suffix = '.fasta' if args.fasta else '.u'
+    i = 1
+    while True:
+        yield args.multi_out+'_region'+str(i)+suffix
+        i += 1
+
 def getOutputFilename(args):
+    if args.output_name is not None:
+        return args.output_name
+    suffix = '.fasta' if args.fasta else '.u'
     va = args.vcfname.split('.')
     if len(va) == 1:
-        return va+'.u'
+        return va+suffix
     ext_cut = -1
     if va[-1] == 'gz':
         ext_cut = -2
-    return '.'.join(va[:ext_cut])+'.u'
+    return '.'.join(va[:ext_cut])+suffix
 
 
 def vcf_to_ima(sys_args):
@@ -269,12 +284,11 @@ def vcf_to_ima(sys_args):
     checkArgs(args)
     logArgs(args)
     #validateFiles(args)
-    if args.output_name is not None:
-        ima_filename = args.output_name
+    if args.multi_out is None:
+        output_filename = getOutputFilename(args)
+        output_file = open(output_filename, 'w')
     else:
-        ima_filename = getOutputFilename(args)
-    ima_file = open(ima_filename, 'w')
-
+        outnamegen = getMultiName(args)
     popmodels = read_model_file(args.popname)
     if len(popmodels) != 1:
         popmodel = popmodels[args.poptag]
@@ -305,7 +319,7 @@ def vcf_to_ima(sys_args):
         region_list = RegionList(filename=args.genename, zeroho=args.zeroho,
                             zeroclosed=args.zeroclosed,
                             colstr=args.gene_col)
-    logging.info('Region list read')
+        logging.info('Region list read')
     fasta_ref = None
     if args.refname is not None:
         fasta_ref = pysam.FastaFile(args.refname)
@@ -316,12 +330,20 @@ def vcf_to_ima(sys_args):
     if regions_provided:
         logging.info('Total regions: %d' % (len(region_list.regions)))
     total_regions = (len(region_list.regions) if regions_provided else len(args.vcflist))
-    writeHeader(popmodel, total_regions, ima_file)
+    if not args.fasta:
+        writeHeader(popmodel, total_regions, output_file)
     if not single_file:
         vcf_reader.reader.close()
     for i in range(total_regions):
         #if regions_provided:
         #region = region_list.regions[i]
+        if args.multi_out is not None:
+            try:
+                output_file.close()
+            except:
+                pass
+            output_filename = next(outnamegen)
+            output_file = open(output_filename,'w')
         if single_file:
             region = region_list.regions[i]
             rec_list = vcf_reader.getRecordList(region)
@@ -344,22 +366,28 @@ def vcf_to_ima(sys_args):
         if fasta_ref is not None:
             ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
             checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
-        reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate)
-        ima_file.write(reg_header+'\n')
+        if not args.fasta:
+            reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate)
+            output_file.write(reg_header+'\n')
         popnum, indiv = 0, 0
         for p in popmodel.pop_list:
             for indiv_idx in vcf_reader.popkeys[p]:
                 for hap in range(len(first_el.samples[indiv_idx].alleles)):
+                    if args.fasta:
+                        output_file.write('>'+first_el.samples[indiv_idx].name+'_'+str(hap)+'\n')
                     seq = generateSequence(rec_list, ref_seq,
                                    region, region.chrom, indiv_idx, hap, args)
-                    seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
-                    seq_name += ''.join([' ' for i in range(len(seq_name),10)])
-                    ima_file.write(seq_name+seq+'\n')
+                    if not args.fasta:
+                        seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
+                        seq_name += ''.join([' ' for i in range(len(seq_name),10)])
+                        output_file.write(seq_name)
+
+                    output_file.write(seq+'\n')
                 indiv += 1
             popnum += 1
             indiv = 0
         record_count += 1
-    ima_file.close()
+    output_file.close()
 
 if __name__ == "__main__":
     initLogger()
