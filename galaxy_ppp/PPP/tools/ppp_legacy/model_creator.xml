@@ -1,5 +1,5 @@
-<tool id="model_creator" name="Model Creator" version="0.1b">
-  <description>Automates the creation of a model file</description>
+<tool id="model_creator" name="Create Model" version="0.1b">
+  <description>file manually</description>
   <command><![CDATA[
   python $__tool_directory__/model_creator.py
           --out $output
