@@ -36,7 +36,7 @@ def createParser():
     parser.add_argument("--keep-indels", dest="indel_flag", action="store_true",
                         help="Include indels when reporting sequences")
     parser.add_argument("--remove-multiallele",dest="remove_multiallele",action="store_true")
-    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
+    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"),type=int)
     parser.add_argument("--parsecpg",dest="parsecpg",action="store_true")
     parser.add_argument("--noseq",dest="printseq",action="store_false",help="Will only print variants when reference is provided. Used so CpG filtering can be done if invariant sites aren't desired in output")
     parser.add_argument("--trim-to-ref-length", dest="trim_seq",

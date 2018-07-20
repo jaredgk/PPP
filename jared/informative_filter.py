@@ -13,7 +13,7 @@ def createParser():
     parser.add_argument("--parsecpg", dest="refname")
     parser.add_argument("--remove-indels", dest="remove_indels", action="store_true", help=("Removes indels from output VCF files"))
     parser.add_argument("--remove-multi", dest="remove_multiallele", action="store_true")
-    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
+    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, type=int, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
     parser.add_argument("--informative-count", dest="informative_count", default=2)
     parser.add_argument("--minsites", dest="minsites", default=3, help=("Regions with at least this many variants passing filters will be output"))
     parser.add_argument("--tbi", dest="tabix_index", help="Path to bgzipped file's index if name doesn't match VCF file")
