@@ -170,7 +170,7 @@ def filterSites(record_list, remove_cpg=False, remove_indels=True,
 
 class VcfReader():
     def __init__(self, vcfname, compress_flag=False, subsamp_num=None,
-                 subsamp_fn=None, subsamp_list=None, index=None, popmodel=None):
+                 subsamp_fn=None, subsamp_list=None, index=None, popmodel=None, use_allpop=False):
 
         ext = checkFormat(vcfname)
         if ext in ['gzip','other'] :
@@ -180,6 +180,8 @@ class VcfReader():
         self.reader_uncompressed = (self.file_uncompressed and not compress_flag)
         self.popmodel = None
         self.popkeys = None
+        if popmodel is not None and use_allpop:
+            raise Exception("Popmodel and allpop cannot both be specified")
         if compress_flag and file_uncompressed:
             vcfname = compressVcf(vcfname)
         if subsamp_num is not None:
@@ -202,6 +204,8 @@ class VcfReader():
             popsamp_list = popmodel.inds
             self.reader.subset_samples(popsamp_list)
             self.setPopIdx()
+        if use_allpop:
+            self.setAllPop()
         if subsamp_list is not None:
             logging.debug('Subsampling %d individuals from VCF file' %
             (len(subsamp_list)))
@@ -230,6 +234,11 @@ class VcfReader():
 
     def close(self):
         self.reader.close()
+
+    def setAllPop(self):
+        self.popkeys = {'ALL':[]}
+        for i in range(len(self.reader.header.samples)):
+            self.popkeys['ALL'].append(i)
 
 
 

@@ -33,7 +33,7 @@ def createParser():
                         "model file"))
     parser.add_argument("--zero-ho", dest="zeroho", action="store_true")
     parser.add_argument("--zero-closed", dest="zeroclosed", action="store_true")
-    parser.add_argument("--indels", dest="indel_flag", action="store_true",
+    parser.add_argument("--keep-indels", dest="indel_flag", action="store_true",
                         help="Include indels when reporting sequences")
     parser.add_argument("--remove-multiallele",dest="remove_multiallele",action="store_true")
     parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
@@ -73,8 +73,10 @@ def checkArgs(args):
         raise Exception("Cannot use both arguments --vcf and --vcfs")
     if args.vcfname is not None and args.refname is None:
         raise Exception("If using --vcf, must provide a BED file with --gr")
-    if args.popname is None:
-        raise Exception("Model file required (--pop)")
+    if args.refname is None and args.parsecpg:
+        raise Exception("CpG parsing requires reference genome (--ref)")
+    #if args.popname is None:
+    #    raise Exception("Model file required (--pop)")
 
 def validateFiles(args):
     """Validates that files provided to args all exist on users system"""
@@ -149,6 +151,8 @@ def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
         else:
             max_indel = getMaxAlleleLength(vcf_record.alleles)
             allele = vcf_record.samples[indiv].alleles[idx]
+            if allele is None:
+                allele = 'N'
             for i in range(len(allele), max_indel):
                 allele += '_'
             seq += allele
@@ -289,12 +293,19 @@ def vcf_to_ima(sys_args):
         output_file = open(output_filename, 'w')
     else:
         outnamegen = getMultiName(args)
-    popmodels = read_model_file(args.popname)
-    if len(popmodels) != 1:
-        popmodel = popmodels[args.poptag]
+    popmodel = None
+    use_allpop = False
+    if args.popname is not None:
+        popmodels = read_model_file(args.popname)
+        if len(popmodels) != 1:
+            popmodel = popmodels[args.poptag]
+        else:
+            pp = list(popmodels.keys())
+            popmodel = popmodels[pp[0]]
     else:
-        pp = list(popmodels.keys())
-        popmodel = popmodels[pp[0]]
+        use_allpop = True
+
+    filter_recs = (args.remove_multiallele or (args.remove_missing != -1) or not args.indel_flag or args.parsecpg)
 
     if args.vcfname is not None:
         single_file = True
@@ -308,11 +319,10 @@ def vcf_to_ima(sys_args):
         vn = args.vcflist[0]
     vcf_reader = vf.VcfReader(vn,
                               compress_flag=args.compress_flag,
-                              popmodel=popmodel)
+                              popmodel=popmodel,
+                              use_allpop=use_allpop)
     logging.info('VCF file read')
-    #first_el = next(vcf_reader)
-    #chrom = vcf_reader.prev_last_rec.chrom
-    #compressed = (input_ext != 'vcf')
+
     regions_provided = False
     if args.genename is not None:
         regions_provided = True
@@ -350,13 +360,17 @@ def vcf_to_ima(sys_args):
         else:
             vcf_reader = vf.VcfReader(args.vcflist[i],
                                       compress_flag=args.compress_flag,
-                                      popmodel=popmodel)
+                                      popmodel=popmodel,
+                                      use_allpop=use_allpop)
             rec_list = vcf_reader.getRecordList()
             vcf_reader.reader.close()
             if regions_provided:
                 region = region_list.regions[i]
             else:
                 region = Region(rec_list[0].pos-1,rec_list[-1].pos,rec_list[0].chrom)
+        if filter_recs:
+            t = vf.filterSites(rec_list,remove_cpg=args.parsecpg,remove_indels=(not args.indel_flag),remove_multiallele=args.remove_multiallele,remove_missing=args.remove_missing,inform_level=0,fasta_ref=fasta_ref)
+            rec_list = t
         if len(rec_list) == 0:
             logging.warning(("Region %s has no variants "
                             "in VCF file") % (region.toStr()))
@@ -370,7 +384,8 @@ def vcf_to_ima(sys_args):
             reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate)
             output_file.write(reg_header+'\n')
         popnum, indiv = 0, 0
-        for p in popmodel.pop_list:
+        #for p in popmodel.pop_list:
+        for p in vcf_reader.popkeys.keys():
             for indiv_idx in vcf_reader.popkeys[p]:
                 for hap in range(len(first_el.samples[indiv_idx].alleles)):
                     if args.fasta:
