@@ -455,7 +455,6 @@ def createParser():
     output_group = parser.add_mutually_exclusive_group()
     output_group.add_argument("--out", dest="out")
     output_group.add_argument("--out-prefix", dest="out_prefix")
-    output_group.add_argument("--out-reg", dest="out_reg")
     intervaltype_group = parser.add_mutually_exclusive_group(required=
             "--reti" in sys.argv)
     intervaltype_group.add_argument("--hk", dest="intervaltype",
@@ -760,7 +759,7 @@ def sample_fourgametetest_intervals(sys_args):
     if args.ranseed != None:
         random.seed(int(args.ranseed[0]))
     filetype = ''
-    out_list = (args.out is None and args.out_reg is None and args.out_prefix is None)
+    out_list = (args.out is None and args.out_prefix is None)
 
     if args.vcfreg is not None:
         filetype = "VCF"
@@ -787,12 +786,6 @@ def sample_fourgametetest_intervals(sys_args):
                     if args.returntype == 'returnlist':
                         raise Exception('Multiple outputs directed to single file')
                     outputSubregion(args, intervals, basedata, region=region, filename=args.out)
-            if args.out_reg is not None:
-                regf = open(args.out_reg,'w')
-                for intv in interval_list:
-                    if args.returntype == 'returnlist':
-                        for iv in intv:
-                            pass
 
         else:
             basedata = BaseData(args, "VCF",vcfname)
@@ -837,8 +830,6 @@ def sample_fourgametetest_intervals(sys_args):
         filetype="FASTA"
         if len(args.fasta) > 1 and args.out_prefix is not None:
             raise Exception(("Multiple FASTAs require --out-prefix flag"))
-        if args.out_reg is not None:
-            raise Exception(("FASTA files cannot be output to region file"))
         for fastaname in args.fasta:
             basedata = BaseData(args, "FASTA", fastaname)
             intervals = getIntervalList(args, basedata)
