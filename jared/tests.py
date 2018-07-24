@@ -246,6 +246,11 @@ class fourgameteTest(unittest.TestCase):
         test_list = sample_fourgametetest_intervals(["--vcfname","example/chr11subsamples4gtest.vcf.gz","--4gcompat","--retl"])
         self.assertEqual(region_list,test_list)
 
+    def test_vcf(self):
+        sample_fourgametetest_intervals(["--vcfname","example/chr11.subsamples.vcf.gz",'--4gcompat','--reti','--out','example/chr11.4g.vcf','--numinf','2'])
+        self.assertTrue(filecmp.cmp('example/chr11.4gtest1.vcf','example/chr11.4g.vcf'))
+        tryRemove('example/chr11.4g.vcf')
+
 
 class imaTest(unittest.TestCase):
     def test_ima(self):

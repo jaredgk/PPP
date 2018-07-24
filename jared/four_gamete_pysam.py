@@ -47,7 +47,7 @@ from logging_module import initLogger
 import random
 from gene_region import Region, RegionList
 import pysam
-from vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, getVcfReader, VcfReader
+from vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, VcfReader
 
 
 class BaseData():
@@ -60,17 +60,11 @@ class BaseData():
         self.records = []
         if format == 'VCF':
             self.onlysnps = True
-            #vcff = pysam.VariantFile(filename)
-            #vcff, comp = getVcfReader(filename, index=args.index_name)
-            #self.allrecords = getRecordList(vcff, region=region, chrom=args.chrom)
             vcff = VcfReader(filename,index=args.tabix_index)
             self.allrecords = vcff.getRecordList(region=region, chrom=args.chrom)
-            #self.ploidy, self.seqs, self.poslist = vcfload.checkVcfRegionPysam(self.records)
             self.checkVcfRegion()
             self.header = vcff.reader.header
             vcff.close()
-            #self.seqcount = len(self.seqs)
-            #self.numbases = listcheckallsamelength(self.seqs)
         elif format == "FASTA":
             self.onlysnps = False
             f = open(filename,"r")
@@ -179,10 +173,13 @@ class BaseData():
                             if self.seqs[k][j].upper() == 'T' :
                                 lineset[3].add(k)
                         linesets.append(lineset)
+                        if len(self.informpolysites) >= MAXINFORMSNPS:
+                            logging.warning('Maximum SNP count of %d has been hit'%(MAXINFORMSNPS))
+                            break
         logging.info('Informative site count: %d' % len(self.informpolysites))
-        if len(self.informpolysites) > MAXINFORMSNPS:
-            raise Exception("the number of informative snps: %d"
-                    " exceeds the maximum: %d"%(len(self.informpolysites),MAXINFORMSNPS))
+        #if len(self.informpolysites) > MAXINFORMSNPS:
+        #    raise Exception("the number of informative snps: %d"
+#                    " exceeds the maximum: %d"%(len(self.informpolysites),MAXINFORMSNPS))
         c = 0
         sl = len(linesets)
         if sl > 1 :
@@ -401,7 +398,10 @@ class BaseData():
         return self.cintervals
 
     def checkVcfRegion(self):
-        #record_list = getRecordList(vcf_reader, region)
+        """
+        Checks that variants in region are SNPs and creates a list with valid sites. Also sets ploidy and position list of valid sites.
+
+        """
         valid_bases = ['A','C','G','T']
         skiplines = []
         self.ploidy = -1
@@ -436,7 +436,6 @@ class BaseData():
                 self.poslist.append(record.pos)
                 self.records.append(record)
         self.seqs = [[base_list[row][col] for row in range(0, len(base_list))] for col in range(0, len(base_list[0]))]
-        #return ploidy, transposed_bases, pos_list
 
 
 def createParser():
@@ -578,8 +577,8 @@ def replace_positions(intervals,list_of_positions):
     """
     bintervals = []
     for iv in intervals:
-        logging.info('Index: %d %d' % (iv[0],iv[1]))
-        logging.info('Length: %d' % len(list_of_positions))
+        #logging.info('Index: %d %d' % (iv[0],iv[1]))
+        #logging.info('Length: %d' % len(list_of_positions))
         bintervals.append([list_of_positions[iv[0]-1],list_of_positions[iv[1]-1]+1])
     return bintervals
 
@@ -630,13 +629,12 @@ def sampleinterval(picktype,numinf,intervals,infcounts):
     return None
 
 def getIntervalList(args, basedata):
-    #basedata = BaseData(format, filename, region)
-    #(polysites, informpolysites, cintervals, cmat) = buildlistsofsites(basedata,args.includesnpmissingdata,
-        #args.only2basesnps)
+    """
+    Returns list of intervals from either hk85 or 4gcompat function.
+    Also controls return based on args provided (list or single interval)
+    """
 
     if args.intervaltype == "HandK85":
-        #intervals=hudsonkaplan85intervals(basedata.cintervals,
-        #    basedata.numbases,basedata.poslist)
         #hk code doesn't return counts of the informatics sites in each interval
         intervals = basedata.hk85intervals()
         if args.numinformativesites != None:
@@ -644,12 +642,9 @@ def getIntervalList(args, basedata):
         intervalinformativecounts = None # not implemented  for hk
         numinf = None # set to None, hk use of # inform sites not implemented
 
-    else: # argdic['intervaltype'] =='CONTIG4GPASS'
-        #intervals,intervalinformativecounts= compatibleintervals(cmat,
-        #    informpolysites, basedata.numbases,basedata.poslist,basedata.onlysnps)
+    else:
         intervals, intervalinformativecounts = basedata.compatibleintervals()
 
-    # print (argdic)
     if args.returntype == 'returnlist':
         return intervals
     else:
@@ -664,6 +659,9 @@ def outputSubregion(args, interval, basedata, region=None, filename=None):
     #find records in range of new interval
     #open file with prefix and region name
     #write records, close file
+    """
+    Outputs records in identified sub-interval to desired output file
+    """
     if region is None:
         subregion = Region(interval[0],interval[1]+1,basedata.records[0].chrom)
     else:
@@ -692,48 +690,60 @@ def sample_fourgametetest_intervals(sys_args):
     incombpatibility.   Intervals can either flank a recombination event or
     be sure not to contain an incombatibility.
 
-    usage:  [-h] (--fasta | --sit | --vcf) (--hk | --4gcompat) (--reti | --retl)
-        [--rani | --ranb | --left | --right] [--numinf NUMINFORMATIVESITES]
-        [--b2] [--incN]
-        filename
 
     Parameters
     ----------
 
-    positional arguments:
-    filename              Input filename
+    Input (one required):
+    --fasta : str
+        Filename(s) of input FASTA file for testing
+    --vcfreg : str, str
+        Filename of input VCF file and BED file with list of
+        regions to run tests on
+    --vcfname : str
+        Filename(s) of VCF files, each corresponding to a region, that will be subsampled for compatible intervals
+    --sit : str
+        Filename(s) of input SITES format files for testing
 
-    optional arguments:
-    -h, --help            show this help message and exit
-    --fasta               fasta file of multiple aligned sequences, all the same
-                            length
-    --sit                 SITES format file
-    --vcf                 vcf format file
-    --hk                  get a set of parsimonious intervals each containing at
-                        least 1 recombination event. Follows appendix 2 of
-                        Hudson and Kaplan 1985
-    --4gcompat            get a set of intervals such that for each interval all
-                        the included bases are compatible with each other
-                        based on the 4 gamete test
-    --reti                return a single interval
-    --retl                return a list of all intervals
-    --rani                return a randomly selected interval from the list of
-                        all intervals
-    --ranb                return a single randomly selected interval with
-                        probabiliy of selection proportional to interval
-                        length
-    --left                return the leftmost interval
-    --right               return the rightmost interval
-    --numinf NUMINFORMATIVESITES
-                        limit the picking of an interval to only those with at
-                        least this many informative snps
-    --b2                  causes snps with more than 2 bases to be ignored,
-                        default is to include them
-    --incN                causes snps with missing data to be included, default
-                        is to ignore them
-    --ranseed RANSEED   positive integer to serve as the random number seed
-                        for use with --ranb or --rani, not required but useful
-                        when debugging
+    Output types:
+    --out : str
+        Name of single output file.
+    --out-prefix : str
+        Prefix for name of output files
+    --out-reg : str
+        Name of file that stores passing interval per interval in input BED file (currently not working)
+
+    Tests (one required)
+    --hk : bool
+        Will find intervals that contain at least one recombination event
+    --4gcompat : bool
+        Will find intervals with zero recombination events in them
+
+    Return options:
+    --reti : bool
+        Output will be of a single region, indicated by rani/ranb/left/right
+    --retl : bool
+        Output will be of all passing regions
+
+    For single region:
+    --left : bool (default)
+        Single output region will be left-most region with enough informative sites
+    --right : bool
+        Output region will be right-most region
+    --rani : bool
+        Region will be randomly selected, with each region having equal chance of selection
+    --ranb : bool
+        Region will be randomly selected, with each region having selection odds proportional to size
+
+    General options:
+    --numinf : int
+        Number of sites in an identified interval required for reporting (default is 1)
+    --incN : bool
+        Include SNPs with missing data (default is to ignore them)
+    --ranseed : int
+        Seed for picking random interval from list
+    --tbi : str
+        Path to tabix index for input VCF file if it's name doesn't match
 
     """
     parser = createParser()
