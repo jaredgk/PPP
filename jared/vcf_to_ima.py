@@ -110,7 +110,7 @@ def checkRefAlign(vcf_recs, fasta_ref, chrom, ref_check):
     for vcf_r in vcf_recs:
         vcf_seq = vcf_r.ref
         pos = vcf_r.pos-1
-        fasta_seq = fasta_ref.fetch(chrom, pos, pos+len(vcf_seq))
+        fasta_seq = fasta_ref.fetch(vcf_r.chrom, pos, pos+len(vcf_seq))
         if vcf_seq.upper() != fasta_seq.upper():
             if ref_check:
                 raise Exception(("VCF bases and reference bases do not match."
@@ -378,7 +378,10 @@ def vcf_to_ima(sys_args):
                       (region.start,region.end,len(rec_list)))
         ref_seq = None
         if fasta_ref is not None:
-            ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
+            if len(rec_list) != 0:
+                ref_seq = fasta_ref.fetch(rec_list[0].chrom,region.start,region.end)
+            else:
+                ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
             checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
         if not args.fasta:
             reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate)
