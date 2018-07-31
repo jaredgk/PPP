@@ -103,6 +103,11 @@ def checkForMultiallele(rec_list,pass_list):
             pass_list[i+1] = False
         if len(rec_list[i].alleles) > 2:
             pass_list[i] = False
+            
+def flipChrom(chrom):
+    if chrom[0:3] == 'chr':
+        return chrom[0:3]
+    return 'chr'+chrom
 
 def getAlleleCountDict(rec):
     alleles = defaultdict(int)
