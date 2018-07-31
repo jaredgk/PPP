@@ -381,7 +381,7 @@ def vcf_to_ima(sys_args):
             try:
                 ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
             except KeyError:
-                reg_set = fasta_ref.fetch(vf.flipChrom(region.chrom),region.start,region.end)
+                ref_seq = fasta_ref.fetch(vf.flipChrom(region.chrom),region.start,region.end)
             checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
         if not args.fasta:
             reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate)

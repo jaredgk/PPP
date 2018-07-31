@@ -1,6 +1,14 @@
 import sys
+import argparse
+
+def createParser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--size',dest="window_size",type=int,default=1000)
+    return parser
 
 
+parser = createParser()
+args = parser.parse_args()
 
 #sample_count = 20
 #missing_data_count = [0 for i in range(sample_count+1)]
@@ -39,8 +47,9 @@ for line in sys.stdin:
         if in_section:
             in_section = False
             diff = prev_pos - prev_full_pos
-            if diff > 1000:
-                print (la[0],prev_miss_pos,prev_full_pos,prev_pos,cur_pos,diff)
+            if diff > args.window_size:
+                sys.stdout.write(la[0]+'\t'+str(prev_full_pos)+'\t'+str(prev_pos)+'\n')
+                #print (la[0],prev_miss_pos,prev_full_pos,prev_pos,cur_pos,diff)
     else:
         if not in_section:
             prev_miss_pos = prev_pos
