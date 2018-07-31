@@ -380,7 +380,7 @@ def vcf_to_ima(sys_args):
         if fasta_ref is not None:
             try:
                 ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
-            ecxept KeyError:
+            except KeyError:
                 reg_set = fasta_ref.fetch(vf.flipChrom(region.chrom),region.start,region.end)
             checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
         if not args.fasta:
