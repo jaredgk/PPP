@@ -11,6 +11,7 @@ from gene_region import RegionList, Region
 from logging_module import initLogger
 from four_gamete_pysam import sample_fourgametetest_intervals
 from vcf_to_ima import vcf_to_ima
+from find_intergenic_bed import get_intergenic
 
 def tryRemove(filename):
     try:
@@ -37,6 +38,17 @@ class funcTest(unittest.TestCase):
                 'example/snp_region.txt']
         pa = parser.parse_args(args)
         self.assertRaises(ValueError, validateFiles, pa)
+
+class intergenicTest(unittest.TestCase):
+    def test_oneidx(self):
+        args = ['--bed','example/fib_in.txt',
+                '--out','example/fib_t.txt']
+        get_intergenic(args)
+        self.assertTrue(filecmp.cmp('example/fib_t.txt','example/fib_oneidx.txt'))
+    def test_zeroho(self):
+        args = ['--bed','example/fib_in.txt','--out','example/fib_t.txt','--zero-ho']
+        get_intergenic(args)
+        self.assertTrue(filecmp.cmp('example/fib_t.txt','example/fib_zeroho.txt'))
 
 
 class geneRegionTest(unittest.TestCase):
