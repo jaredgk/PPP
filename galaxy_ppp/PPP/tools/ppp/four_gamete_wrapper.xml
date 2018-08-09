@@ -48,7 +48,7 @@
 
     Input VCF will be examined for regions that pass the four-gamete test, which indicates there have been no recombination in this region for this sample. For most cases, a failure of the four-gamete test occurs when two SNPs have four gametes between them. (00,01,10,11) Using selection criteria, a region with the target number of informative SNPs that passes the four-gamete criteria will be output to a VCF file.
 
-    ]]
+    ]]>
 
     </help>
 </tool>
