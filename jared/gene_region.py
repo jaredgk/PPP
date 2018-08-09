@@ -106,6 +106,9 @@ class Region:
             return self.start < other.start
         return self.end < other.end
 
+    def __len__(self):
+        return self.end-self.start
+
     def containsRecord(self, rec):
         k1 = self.getChromKey()
         kr = getChromKey(rec.chrom)
@@ -333,6 +336,15 @@ class RegionList:
                 file_handle.write(reg_str)
         if return_str:
             return out_str
+
+    def filterByChrom(self,chrom_list,include=False):
+        if include:
+            self.regions = [r for r in self.regions if r.chrom in chrom_list]
+        else:
+            self.regions = [r for r in self.regions if r.chrom not in chrom_list]
+
+    def filterOutXY(self):
+        self.filterByChrom(['X','Y'])
 
     #TO do:
     #Add sort method for strictly text based sorting
