@@ -398,7 +398,7 @@ function filter_table(elem) {
 }
 </script>
     <h1>vcf_filter_test_suite.html</h1>
-    <p>Report generated on 10-Aug-2018 at 16:54:52 by<a href="https://pypi.python.org/pypi/pytest-html"> pytest-html</a> v1.19.0</p>
+    <p>Report generated on 13-Aug-2018 at 13:55:40 by<a href="https://pypi.python.org/pypi/pytest-html"> pytest-html</a> v1.19.0</p>
     <h2>Environment</h2>
     <table id="environment">
       <tr>
@@ -414,8 +414,8 @@ function filter_table(elem) {
         <td>Python</td>
         <td>3.6.3</td></tr></table>
     <h2>Summary</h2>
-    <p>26 tests ran in 35.06 seconds. </p>
-    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="passed">14 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="failed">12 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <p>4 tests ran in 23.80 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="passed">4 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="failed">0 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filter_table(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
     <h2>Results</h2>
     <table id="results-table">
       <thead id="results-table-head">
@@ -426,165 +426,33 @@ function filter_table(elem) {
           <th>Links</th></tr>
         <tr hidden="true" id="not-found-message">
           <th colspan="4">No results found. Try to check the filters</th></tr></thead>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-from-bp 1000000 --filter-exclude-chr chr2 --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Require a single chromosome when specifying a range.&#x27;, &#x27;Traceback (most recent call last...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba2aba20&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 484.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-indv-file Schweinfurthii.txt --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Could not open Individual file:None&#x27;, &#x27;Traceback (most recent call last):&#x27;, &#x27;  File &quot;/ho...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba31d8d0&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 484.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-indv-file Schweinfurthii.txt --filter-min-alleles 2 --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Could not open Individual file:None&#x27;, &#x27;Traceback (most recent call last):&#x27;, &#x27;  File &quot;/ho...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba2b0898&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 488.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-indv-file Schweinfurthii.txt --filter-max-alleles 4 --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Could not open Individual file:None&#x27;, &#x27;Traceback (most recent call last):&#x27;, &#x27;  File &quot;/ho...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba2c2d30&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 232.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-indv-file Schweinfurthii.txt --filter-include-chr chr1 --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Could not open Individual file:None&#x27;, &#x27;Traceback (most recent call last):&#x27;, &#x27;  File &quot;/ho...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba2689e8&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 232.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-indv-file Schweinfurthii.txt --filter-exclude-chr chr2 --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Could not open Individual file:None&#x27;, &#x27;Traceback (most recent call last):&#x27;, &#x27;  File &quot;/ho...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba26e0b8&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 232.0 kB
-CPU Usage: 69.8 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-indv-file Schweinfurthii.txt --filter-from-bp 1000000 --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Could not open Individual file:None&#x27;, &#x27;Traceback (most recent call last):&#x27;, &#x27;  File &quot;/ho...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba358860&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 500.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-indv-file Schweinfurthii.txt --filter-from-bp 1000000 --filter-min-alleles 2 --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Could not open Individual file:None&#x27;, &#x27;Traceback (most recent call last):&#x27;, &#x27;  File &quot;/ho...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba2abcf8&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 484.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-indv-file Schweinfurthii.txt --filter-from-bp 1000000 --filter-max-alleles 4 --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Could not open Individual file:None&#x27;, &#x27;Traceback (most recent call last):&#x27;, &#x27;  File &quot;/ho...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba31dba8&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 484.0 kB
-CPU Usage: 79.9 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-indv-file Schweinfurthii.txt --filter-from-bp 1000000 --filter-include-chr chr1 --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Could not open Individual file:None&#x27;, &#x27;Traceback (most recent call last):&#x27;, &#x27;  File &quot;/ho...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba274860&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 232.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-indv-file Schweinfurthii.txt --filter-from-bp 1000000 --filter-exclude-chr chr2 --overwrite]</td>
-          <td class="col-duration">0.11</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Require a single chromosome when specifying a range.&#x27;, &#x27;Traceback (most recent call last...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba268e80&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 484.0 kB
-CPU Usage: 69.9 %
-</div></td></tr></tbody>
-      <tbody class="failed results-table-row">
-        <tr>
-          <td class="col-result">Failed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-include-chr chr1 --filter-exclude-chr chr2 --overwrite]</td>
-          <td class="col-duration">0.10</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log"><span class="error">E   AssertionError: [&#x27;exp_handler - ERROR: Error: Cannot specify chromosomes to keep and to exclude&#x27;, &#x27;Traceback (most recent call last):&#x27;...fname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)&#x27;, ...]</span><br/>    assert 1 == 0<br/>     +  where 1 = &lt;subprocess.Popen object at 0x7efeba2a0a90&gt;.returncode<br/>----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 228.0 kB
-CPU Usage: 89.8 %
-</div></td></tr></tbody>
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
           <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --overwrite]</td>
-          <td class="col-duration">1.13</td>
+          <td class="col-duration">1.15</td>
           <td class="col-links"></td></tr>
         <tr>
           <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 488.0 kB
+            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 228.0 kB
 CPU Usage: 69.9 %
 </div></td></tr></tbody>
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
           <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-min-alleles 2 --overwrite]</td>
-          <td class="col-duration">1.24</td>
+          <td class="col-duration">1.23</td>
           <td class="col-links"></td></tr>
         <tr>
           <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 232.0 kB
-CPU Usage: 89.8 %
+            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 488.0 kB
+CPU Usage: 69.8 %
 </div></td></tr></tbody>
       <tbody class="passed results-table-row">
         <tr>
           <td class="col-result">Passed</td>
           <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-max-alleles 4 --overwrite]</td>
-          <td class="col-duration">1.12</td>
+          <td class="col-duration">1.20</td>
           <td class="col-links"></td></tr>
         <tr>
           <td class="extra" colspan="4">
@@ -595,120 +463,10 @@ CPU Usage: 79.8 %
         <tr>
           <td class="col-result">Passed</td>
           <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-include-chr chr1 --overwrite]</td>
-          <td class="col-duration">1.13</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 228.0 kB
-CPU Usage: 69.8 %
-</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-exclude-chr chr2 --overwrite]</td>
-          <td class="col-duration">1.16</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 228.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-from-bp 1000000 --overwrite]</td>
-          <td class="col-duration">1.15</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 764.0 kB
-CPU Usage: 69.8 %
-</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-from-bp 1000000 --filter-min-alleles 2 --overwrite]</td>
-          <td class="col-duration">1.12</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 228.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-from-bp 1000000 --filter-max-alleles 4 --overwrite]</td>
-          <td class="col-duration">1.18</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 232.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-from-bp 1000000 --filter-include-chr chr1 --overwrite]</td>
-          <td class="col-duration">1.05</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 232.0 kB
-CPU Usage: 69.9 %
-</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-min-alleles 2 --filter-max-alleles 4 --overwrite]</td>
-          <td class="col-duration">1.12</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 232.0 kB
-CPU Usage: 69.8 %
-</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-min-alleles 2 --filter-include-chr chr1 --overwrite]</td>
-          <td class="col-duration">1.15</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 228.0 kB
-CPU Usage: 69.9 %
-</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-min-alleles 2 --filter-exclude-chr chr2 --overwrite]</td>
-          <td class="col-duration">1.19</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 232.0 kB
-CPU Usage: 59.9 %
-</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-max-alleles 4 --filter-include-chr chr1 --overwrite]</td>
           <td class="col-duration">1.14</td>
           <td class="col-links"></td></tr>
         <tr>
           <td class="extra" colspan="4">
-            <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 232.0 kB
-CPU Usage: 79.8 %
-</div></td></tr></tbody>
-      <tbody class="passed results-table-row">
-        <tr>
-          <td class="col-result">Passed</td>
-          <td class="col-name">test_1.py::test_filter[python vcf_filter.py --vcf merged_chr1_10000.vcf.gz --out-format vcf --out-prefix merged_chr1_10000 --filter-max-alleles 4 --filter-exclude-chr chr2 --overwrite]</td>
-          <td class="col-duration">1.16</td>
-          <td class="col-links"></td></tr>
-        <tr>
-          <td class="extra" colspan="4">
             <div class="log">----------------------------- Captured stdout call -----------------------------<br/>Memory Usage: 228.0 kB
-CPU Usage: 79.8 %
+CPU Usage: 69.9 %
 </div></td></tr></tbody></table></body></html>

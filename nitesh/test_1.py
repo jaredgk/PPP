@@ -7,16 +7,11 @@ from subprocess import Popen, PIPE, STDOUT
 TIMEOUT = 60 * 15  # 15 minute timeout holder
 
 inputFileList = [['--vcf', 'merged_chr1_10000.vcf.gz']]
-# outFormatList = [['--out-format', 'vcf'], ['--out-format', 'vcf.gz'], ['--out-format', 'bcf'], ['--out-format', 'removed_sites'], ['--out-format', 'kept_sites'], ['--out-format', 'removed_bed']]
-outFormatList = [['--out-format', 'vcf']]
+outFormatList = [['--out-format', 'vcf'], ['--out-format', 'vcf.gz'], ['--out-format', 'bcf'], ['--out-format', 'removed_sites'], ['--out-format', 'kept_sites'], ['--out-format', 'removed_bed']]
 outPrefixList = [['--out-prefix', 'merged_chr1_10000']]
-# Remaining_options = [None, ['--filter-include-indv', '10'], ['--filter-exclude-indv', '10'], ['--filter-include-indv-file', 'include_indv_filename'], ['--filter-exclude-indv-file', 'exclude_indv_filename'], ['--filter-min-alleles', '2'], ['--filter-max-alleles', '4'], ['--filter-max-missing', '10'], ['--filter-include-chr', '10'], ['--filter-exclude-chr', '10'], ['--filter-from-bp', '10'], ['--filter-to-bp', '10'], ['--filter-include-positions', '10'], ['--filter-exclude-positions', '10'], ['--filter-include-bed', '10'], ['--filter-exclude-bed', '10'], ['--filter-include-passed', '10'], ['--filter-include-flag', '10'], ['--filter-exclude-flag', '10'], ['--filter-include-info', '10'], ['--filter-exclude-info', '10'], ['--filter-include-snp', '10'], ['--filter-include-snps', '10'], ['--filter-exclude-snps', '10'], ['--filter-maf-min', '10'], ['--filter-maf-max', '10'], ['--filter-mac-min', '10'], ['--filter-mac-max', '10'], ['--filter-distance', '10']]
-# Remaining_options1 = [None, ['--filter-include-indv', 'Pan_paniscus-9731_LB502'], ['--filter-exclude-indv', 'Pan_paniscus-A914_Hortense'], ['--filter-include-indv-file', 'Paniscus.txt'], ['--filter-exclude-indv-file', 'Schweinfurthii.txt'], ['--filter-min-alleles', '2'], ['--filter-max-alleles', '4'], ['--filter-max-missing', '1.0'], ['--filter-include-chr', 'chr1'], ['--filter-exclude-chr', 'chr2']]
-Remaining_options1 = [None, ['--filter-exclude-indv-file', 'Schweinfurthii.txt']]
-# Remaining_options2 = [None, ['--filter-from-bp', '1000000'], ['--filter-to-bp', '2000000'], ['--filter-include-positions', '10'], ['--filter-exclude-positions', '10'], ['--filter-include-bed', 'chr1_sites.bed'], ['--filter-exclude-bed', 'chr1_sites.bed'], ['--filter-include-passed'], ['--filter-include-flag', '10'], ['--filter-exclude-flag', '10']]
-Remaining_options2 = [None, ['--filter-from-bp', '1000000']]
-# Remaining_options3 = [None, ['--filter-include-info', '10'], ['--filter-exclude-info', '10'], ['--filter-include-snp', '10'], ['--filter-include-snps', '10'], ['--filter-exclude-snps', '10'], ['--filter-maf-min', '10'], ['--filter-maf-max', '10'], ['--filter-mac-min', '10'], ['--filter-mac-max', '10'], ['--filter-distance', '10']]
-Remaining_options3 = [None, ['--filter-min-alleles', '2'], ['--filter-max-alleles', '4'], ['--filter-include-chr', 'chr1'], ['--filter-exclude-chr', 'chr2']]
+Remaining_options1 = [None, ['--filter-include-indv', 'Pan_paniscus-9731_LB502'], ['--filter-exclude-indv', 'Pan_paniscus-A914_Hortense'], ['--filter-include-indv-file', 'Paniscus.txt'], ['--filter-exclude-indv-file', 'Schweinfurthii.txt'], ['--filter-min-alleles', '2'], ['--filter-max-alleles', '4']]
+Remaining_options2 = [None, ['--filter-max-missing', '1.0'], ['--filter-include-chr', 'chr1'], ['--filter-exclude-chr', 'chr2'], ['--filter-from-bp', '1000000'], ['--filter-to-bp', '2000000'], ['--filter-include-positions', 'chr1_sites.sites'], ['--filter-exclude-positions' , 'chr1_sites.sites']]
+Remaining_options3 = [None, ['--filter-include-bed', 'chr1_sites.bed'] ,['--filter-exclude-bed', 'chr1_sites.bed'] ,['--filter-include-passed'] ,['--filter-include-flag', 'PASS'] ,['--filter-exclude-flag', 'PASS'] ,['--filter-distance', '500']]
 overwrite = [['--overwrite']]
 
 def flatten(tuple_of_lists):
