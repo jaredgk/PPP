@@ -10,32 +10,36 @@
   <command><![CDATA[
     #if $input.is_of_type('vcf_bgzip')
       ln -fs $input input.vcf.gz &&
+      ln -fs $input.metadata.tabix_index input.vcf.gz.tbi &&
     #end if
     #if $input.is_of_type('vcf')
       ln -fs $input input.vcf &&
     #end if
     python $__tool_directory__/vcf_phase.py
+            --phase-algorithm $phase.phase_algorithm
+            --out $output
+            --out-format $out_format
+
             #if $input.is_of_type('vcf_bgzip')
                --vcf input.vcf.gz
             #end if
+
             #if $input.is_of_type('vcf')
                --vcf input.vcf
             #end if
+
             #if $model_file
               --model-file $model_file
               --model $model
             #end if
-            --phase-algorithm $phase.phase_algorithm
-            #if $phase.beagle_burn_iter
-              --beagle-burn-iter $common.beagle_burn_iter
-            #end if
-            #if $phase.beagle_burn_iter
-              --beagle-burn-iter $phase.beagle_burn_iter
-            #end if
+
             #if $phase.phase_algorithm == 'beagle'
               --beagle-path $__tool_data_path__/shared/jars/
               #if $phase.beagle_iter
                 --beagle-iter $phase.beagle_iter
+              #end if
+              #if $phase.beagle_burn_iter
+                --beagle-burn-iter $phase.beagle_burn_iter
               #end if
               #if $phase.beagle_states
                 --beagle-states $phase.beagle_states
@@ -56,6 +60,7 @@
                 --beagle-nsteps $phase.beagle_nsteps
               #end if
             #end if
+
             #if $phase.phase_algorithm == 'shapeit'
               #if $phase.shapeit_burn_iter
                 --shapeit-burn-iter $phase.shapeit_burn_iter
@@ -73,26 +78,32 @@
                 --shapeit-window $phase.shapeit_window
               #end if
             #end if
+
             #if $common.genetic_map
               --genetic-map $common.genetic_map
             #end if
+
             #if $common.ne
               --Ne $common.ne
             #end if
+
             #if $common.random_seed
               --random-seed $common.random_seed
             #end if
+
             #if $common.phase_chr
               --phase-chr $common.phase_chr
             #end if
+
             #if $common.phase_from_bp
               --phase-from-bp $common.phase_from_bp
             #end if
+
             #if $common.phase_to_bp
               --phase-to-bp $common.phase_to_bp
             #end if
-            --out $output
-            --out-format $out_format
+
+
   ]]></command>
 
   <inputs>
@@ -100,7 +111,7 @@
     <param format="vcf,vcf_bgzip" name="input" type="data" label="VCF Input"/>
 
     <param format="model" name="model_file" type="data" label="Model Input" optional="True"/>
-    <param name="model" type="select" label="Select Model" refresh_on_change="True">
+    <param name="model" type="select" label="Select Model" refresh_on_change="True" optional="True">
       <options>
         <filter type="data_meta" ref="model_file" key="models"/>
       </options>

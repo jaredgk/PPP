@@ -56,10 +56,11 @@ class Region:
         """
         self.start = start
         self.end = end
-        if chrom[0:3] == 'chr':
-            self.chrom = chrom[3:]
-        else:
-            self.chrom = chrom
+        self.chrom = chrom
+        #if chrom[0:3] == 'chr':
+        #    self.chrom = chrom[3:]
+        #else:
+        #    self.chrom = chrom
 
     def cloneRegion(self):
         return Region(self.start,self.end,self.chrom)
@@ -87,8 +88,10 @@ class Region:
             if k1 != k2:
                 return keyComp(k1,k2)
         elif Region.sort_method == "string":
-            k1 = self.chrom
-            k2 = other.chrom
+            #k1 = self.chrom
+            #k2 = other.chrom
+            k1 = (self.chrom if self.chrom[:3] != 'chr' else self.chrom[3:])
+            k2 = (other.chrom if other.chrom[:3] != 'chr' else other.chrom[3:])
             if k1 != k2:
                 return k1 < k2
         else:
@@ -344,7 +347,7 @@ class RegionList:
             self.regions = [r for r in self.regions if r.chrom not in chrom_list]
 
     def filterOutXY(self):
-        self.filterByChrom(['X','Y'])
+        self.filterByChrom(['X','Y','chrX','chrY'])
 
     #TO do:
     #Add sort method for strictly text based sorting
