@@ -103,7 +103,7 @@ def checkForMultiallele(rec_list,pass_list):
             pass_list[i+1] = False
         if len(rec_list[i].alleles) > 2:
             pass_list[i] = False
-            
+
 def flipChrom(chrom):
     if chrom[0:3] == 'chr':
         return chrom[0:3]
@@ -245,20 +245,23 @@ class VcfReader():
         for i in range(len(self.reader.header.samples)):
             self.popkeys['ALL'].append(i)
 
-
+def modChrom(c,vcf_chr):
+    if c is None:
+        return None
+    if vcf_chr and c[:3] != 'chr':
+        return 'chr'+c
+    if not vcf_chr and c[:3] == 'chr':
+        return c[3:]
+    return c
 
 def getRecordList(vcf_reader, region=None, chrom=None, start=None,
                   end=None, add_chr=False):
     """Returns list for use in subsampling from input file"""
     if region is not None:
-        c = region.chrom
-        if add_chr:
-            c = 'chr'+region.chrom
+        c = modChrom(region.chrom,add_chr)
         var_sites = vcf_reader.fetch(c, region.start, region.end)
     else:
-        c = chrom
-        if add_chr:
-            c = 'chr'+chrom
+        c = modChrom(chrom,add_chr)
         var_sites = vcf_reader.fetch(c, start, end)
     lst = []
     for rec in var_sites:
