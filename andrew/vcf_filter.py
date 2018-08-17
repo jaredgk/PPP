@@ -266,7 +266,7 @@ def run (passed_arguments = []):
     # Individuals-based filters
     if vcf_args.filter_include_indv_file or vcf_args.filter_exclude_indv_file:
         # Used to include a file of individuals to keep
-        if vcf_args.filter_exclude_indv_file:
+        if vcf_args.filter_include_indv_file:
             vcftools_call_args.extend(['--keep', vcf_args.filter_include_indv_file])
 
         # Used to include a file of individuals to remove

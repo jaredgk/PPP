@@ -2,17 +2,21 @@ import os
 import pytest
 import psutil
 import itertools
+from random import shuffle
 from subprocess import Popen, PIPE, STDOUT
 
 TIMEOUT = 60 * 15  # 15 minute timeout holder
 
-inputFileList = [['--vcf', 'merged_chr1_10000.vcf.gz']]
-outFormatList = [['--out-format', 'vcf'], ['--out-format', 'vcf.gz'], ['--out-format', 'bcf'], ['--out-format', 'removed_sites'], ['--out-format', 'kept_sites'], ['--out-format', 'removed_bed']]
-outPrefixList = [['--out-prefix', 'merged_chr1_10000']]
-Remaining_options1 = [None, ['--filter-include-indv', 'Pan_paniscus-9731_LB502'], ['--filter-exclude-indv', 'Pan_paniscus-A914_Hortense'], ['--filter-include-indv-file', 'Paniscus.txt'], ['--filter-exclude-indv-file', 'Schweinfurthii.txt'], ['--filter-min-alleles', '2'], ['--filter-max-alleles', '4']]
-Remaining_options2 = [None, ['--filter-max-missing', '1.0'], ['--filter-include-chr', 'chr1'], ['--filter-exclude-chr', 'chr2'], ['--filter-from-bp', '1000000'], ['--filter-to-bp', '2000000'], ['--filter-include-positions', 'chr1_sites.sites'], ['--filter-exclude-positions' , 'chr1_sites.sites']]
-Remaining_options3 = [None, ['--filter-include-bed', 'chr1_sites.bed'] ,['--filter-exclude-bed', 'chr1_sites.bed'] ,['--filter-include-passed'] ,['--filter-include-flag', 'PASS'] ,['--filter-exclude-flag', 'PASS'] ,['--filter-distance', '500']]
+PERCENT = 2  # Random Run 2 % test cases from all combinations
+
+inputFileList = [['--vcf', 'chr11.unfiltered.vcf']]
+outFormatList = [['--out-format', 'vcf'], ['--out-format', 'vcf.gz'], ['--out-format', 'bcf'], ['--out-format', 'removed_sites'], ['--out-format', 'kept_sites'], ['--out-format', 'removed_bed'], ['--out-format', 'kept_bed']]
+outPrefixList = [['--out-prefix', 'chr11_vcf']]
+Remaining_options1 = [None, ['--filter-include-indv', 'Pan_paniscus-9731_LB502'], ['--filter-exclude-indv', 'Pan_paniscus-A914_Hortense'], ['--filter-include-indv-file', 'Paniscus.txt'], ['--filter-exclude-indv-file', 'UK10k_group1.txt'], ['--filter-min-alleles', '2'], ['--filter-max-alleles', '4'], ['--filter-max-missing', '1.0'], ['--filter-include-chr', 'chr1'], ['--filter-exclude-chr', 'chr2']]
+Remaining_options2 = [None, ['--filter-from-bp', '1000000'], ['--filter-to-bp', '2000000'], ['--filter-include-positions', 'chr1_sites.sites'], ['--filter-exclude-positions', 'chr1_sites.sites'], ['--filter-include-bed', 'chr1_sites.bed'], ['--filter-exclude-bed', 'chr1_sites.bed'], ['--filter-include-passed'], ['--filter-include-flag', 'q10']]
+Remaining_options3 = [None, ['--filter-exclude-flag', 's50'], ['--filter-include-info', 'DB'], ['--filter-exclude-info', 'H2'], ['--filter-maf-min', '0.2'], ['--filter-maf-max', '0.3'], ['--filter-mac-min', '8'], ['--filter-mac-max', '12'], ['--filter-distance', '500']]
 overwrite = [['--overwrite']]
+
 
 def flatten(tuple_of_lists):
     nested_list = list(tuple_of_lists)
@@ -39,19 +43,26 @@ def id_func(args):
     return ids
 
 
+def random_tests_select(list_a, percentage):
+    shuffle(list_a)
+    percentage = percentage / 100
+    count = int(len(list_a) * percentage)
+    if not count: return []  # edge case, no elements removed
+    list_a[-count:], list_b = [], list_a[-count:]
+    return list_b
+
+
 filterArgs0 = list(itertools.product(inputFileList, outFormatList, outPrefixList, Remaining_options1, Remaining_options2, Remaining_options3, overwrite))
 filterArgs1 = list(itertools.product(inputFileList, outFormatList, outPrefixList, list_of_lists(itertools.combinations(filter(None.__ne__, Remaining_options1), 2)), overwrite))
 filterArgs2 = list(itertools.product(inputFileList, outFormatList, outPrefixList, list_of_lists(itertools.combinations(filter(None.__ne__, Remaining_options2), 2)), overwrite))
 filterArgs3 = list(itertools.product(inputFileList, outFormatList, outPrefixList, list_of_lists(itertools.combinations(filter(None.__ne__, Remaining_options3), 2)), overwrite))
 
-
-fa1 = list_of_lists(filterArgs0)
-fa3 = list_of_lists(filterArgs3)
-
 all_combinations = list_of_lists(filterArgs0) + list_of_lists(filterArgs1) + list_of_lists(filterArgs2) + list_of_lists(filterArgs3)
 
+random_tests = random_tests_select(all_combinations, PERCENT)
 
-@pytest.mark.parametrize('filter_args', all_combinations, ids=id_func(all_combinations))
+
+@pytest.mark.parametrize('filter_args', random_tests, ids=id_func(random_tests))
 @pytest.mark.timeout(TIMEOUT)      # 15 minutes test case timeout
 def test_filter(filter_args):
     p = Popen(['python ' + os.getcwd() + '/vcf_filter.py ' + ' '.join(flatten(filter_args))], shell=True, stdin=PIPE,
@@ -68,4 +79,4 @@ def test_filter(filter_args):
     assert p.returncode == 0, output
 
 
-pytest.main(['--html=reports/vcf_filter_test_suite.html', '--capture=fd', '--self-contained-html', '--capture=sys', '--tb=no'])
+# pytest -n auto --html=reports/vcf_filter_test_suite.html --capture=fd --self-contained-html --capture=sys --tb=no
