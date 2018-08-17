@@ -12,6 +12,7 @@ from logging_module import initLogger
 from four_gamete_pysam import sample_fourgametetest_intervals
 from vcf_to_ima import vcf_to_ima
 from find_intergenic_bed import get_intergenic
+from get_nonmissing_chunks import regionsWithData
 
 def tryRemove(filename):
     try:
@@ -49,6 +50,34 @@ class intergenicTest(unittest.TestCase):
         args = ['--bed','example/fib_in.txt','--out','example/fib_t.txt','--zero-ho']
         get_intergenic(args)
         self.assertTrue(filecmp.cmp('example/fib_t.txt','example/fib_zeroho.txt'))
+
+class missingTest(unittest.TestCase):
+    def test_default(self):
+        args = ['--vcf','example/macaca_missingdata.vcf.gz',
+                '--out','example/gmd_test.txt']
+        regionsWithData(args)
+        self.assertTrue(filecmp.cmp('example/gmd_test.txt','example/gmd_test_default.txt'))
+
+    def test_extend(self):
+        args = ['--vcf','example/macaca_missingdata.vcf.gz',
+                '--extend-regions'
+                '--out','example/gmd_test.txt']
+        regionsWithData(args)
+        self.assertTrue(filecmp.cmp('example/gmd_test.txt','example/gmd_test_extend.txt'))
+
+    def test_allowOneMiss(self):
+        args = ['--vcf','example/macaca_missingdata.vcf.gz',
+                '--missing-count','1',
+                '--out','example/gmd_test.txt']
+        regionsWithData(args)
+        self.assertTrue(filecmp.cmp('example/gmd_test.txt','example/gmd_test_miss1.txt'))
+
+    def test_allsize(self):
+        args = ['--vcf','example/macaca_missingdata.vcf.gz',
+                '--size','0',
+                '--out','example/gmd_test.txt']
+        regionsWithData(args)
+        self.assertTrue(filecmp.cmp('example/gmd_test.txt','example/gmd_test_size0.txt'))
 
 
 class geneRegionTest(unittest.TestCase):
