@@ -2,6 +2,7 @@ import sys
 import re
 import logging
 from functools import total_ordering
+from random import shuffle
 
 
 def getChromKey(chrom):
@@ -55,10 +56,11 @@ class Region:
         """
         self.start = start
         self.end = end
-        if chrom[0:3] == 'chr':
-            self.chrom = chrom[3:]
-        else:
-            self.chrom = chrom
+        self.chrom = chrom
+        #if chrom[0:3] == 'chr':
+        #    self.chrom = chrom[3:]
+        #else:
+        #    self.chrom = chrom
 
     def cloneRegion(self):
         return Region(self.start,self.end,self.chrom)
@@ -86,8 +88,10 @@ class Region:
             if k1 != k2:
                 return keyComp(k1,k2)
         elif Region.sort_method == "string":
-            k1 = self.chrom
-            k2 = other.chrom
+            #k1 = self.chrom
+            #k2 = other.chrom
+            k1 = (self.chrom if self.chrom[:3] != 'chr' else self.chrom[3:])
+            k2 = (other.chrom if other.chrom[:3] != 'chr' else other.chrom[3:])
             if k1 != k2:
                 return k1 < k2
         else:
@@ -104,6 +108,9 @@ class Region:
         if self.start != other.start:
             return self.start < other.start
         return self.end < other.end
+
+    def __len__(self):
+        return self.end-self.start
 
     def containsRecord(self, rec):
         k1 = self.getChromKey()
@@ -139,7 +146,8 @@ class RegionList:
     def __init__(self, filename=None, genestr=None, reglist=None,
                  zeroclosed=False, zeroho=False, defaultchrom=None,
                  colstr=None, sortlist=True, checkoverlap=True,
-                 sortmethod=None, sortorder=None, chromfilter=None, region_template=None):
+                 sortmethod=None, sortorder=None, chromfilter=None,
+                 region_template=None, randomize=False):
         """Class for storing gene region information
 
         Will either read a file or take a single gene region in a string
@@ -195,6 +203,9 @@ class RegionList:
         if zeroho and zeroclosed:
             raise Exception(("Zero-halfopen and zero-closed options cannot "
                              "be invoked at the same time"))
+
+        if sortlist and randomize:
+            raise Exception("Sorting and randomizing are not compatible options for RegionList")
         self.regions = []
         self.zeroho = zeroho
         self.zeroclosed = zeroclosed
@@ -217,6 +228,9 @@ class RegionList:
                 #raise Exception("Region overlap detected")
                 #UNCOMMENT THIS LATER ^
                 self.fixOverlap()
+
+        if randomize:
+            shuffle(self.regions)
 
     def initFile(self, filename, zeroho, zeroclosed, colstr, defaultchrom):
         """Initialize RegionList with a region file
@@ -325,6 +339,15 @@ class RegionList:
                 file_handle.write(reg_str)
         if return_str:
             return out_str
+
+    def filterByChrom(self,chrom_list,include=False):
+        if include:
+            self.regions = [r for r in self.regions if r.chrom in chrom_list]
+        else:
+            self.regions = [r for r in self.regions if r.chrom not in chrom_list]
+
+    def filterOutXY(self):
+        self.filterByChrom(['X','Y','chrX','chrY'])
 
     #TO do:
     #Add sort method for strictly text based sorting

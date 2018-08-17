@@ -33,8 +33,12 @@ def createParser():
                         "model file"))
     parser.add_argument("--zero-ho", dest="zeroho", action="store_true")
     parser.add_argument("--zero-closed", dest="zeroclosed", action="store_true")
-    parser.add_argument("--indels", dest="indel_flag", action="store_true",
+    parser.add_argument("--keep-indels", dest="indel_flag", action="store_true",
                         help="Include indels when reporting sequences")
+    parser.add_argument("--remove-multiallele",dest="remove_multiallele",action="store_true")
+    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"),type=int)
+    parser.add_argument("--parsecpg",dest="parsecpg",action="store_true")
+    parser.add_argument("--noseq",dest="printseq",action="store_false",help="Will only print variants when reference is provided. Used so CpG filtering can be done if invariant sites aren't desired in output")
     parser.add_argument("--trim-to-ref-length", dest="trim_seq",
                         action="store_true",
                         help=("Trims sequences if indels cause them to be "
@@ -57,7 +61,8 @@ def createParser():
     parser.add_argument("--poptag",dest="poptag",help=("If model file has "
                         "multiple models, use model with this name"))
     parser.add_argument("--mutrate",dest="mutrate",type=float,default=1e-9,help="Mutation rate per base pair (default is 1e-9)")
-
+    parser.add_argument("--fasta",dest="fasta",action="store_true")
+    parser.add_argument("--multi-out",dest="multi_out",type=str)
     return parser
 
 
@@ -68,8 +73,10 @@ def checkArgs(args):
         raise Exception("Cannot use both arguments --vcf and --vcfs")
     if args.vcfname is not None and args.refname is None:
         raise Exception("If using --vcf, must provide a BED file with --gr")
-    if args.popname is None:
-        raise Exception("Model file required (--pop)")
+    if args.refname is None and args.parsecpg:
+        raise Exception("CpG parsing requires reference genome (--ref)")
+    #if args.popname is None:
+    #    raise Exception("Model file required (--pop)")
 
 def validateFiles(args):
     """Validates that files provided to args all exist on users system"""
@@ -103,7 +110,7 @@ def checkRefAlign(vcf_recs, fasta_ref, chrom, ref_check):
     for vcf_r in vcf_recs:
         vcf_seq = vcf_r.ref
         pos = vcf_r.pos-1
-        fasta_seq = fasta_ref.fetch(chrom, pos, pos+len(vcf_seq))
+        fasta_seq = fasta_ref.fetch(vcf_r.chrom, pos, pos+len(vcf_seq))
         if vcf_seq.upper() != fasta_seq.upper():
             if ref_check:
                 raise Exception(("VCF bases and reference bases do not match."
@@ -144,6 +151,8 @@ def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
         else:
             max_indel = getMaxAlleleLength(vcf_record.alleles)
             allele = vcf_record.samples[indiv].alleles[idx]
+            if allele is None:
+                allele = 'N'
             for i in range(len(allele), max_indel):
                 allele += '_'
             seq += allele
@@ -185,14 +194,24 @@ def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=1, mut_rat
     lh += ' '+str("%.14f" % (mutlocus))
     return lh
 
+def getMultiName(args):
+    suffix = '.fasta' if args.fasta else '.u'
+    i = 1
+    while True:
+        yield args.multi_out+'_region'+str(i)+suffix
+        i += 1
+
 def getOutputFilename(args):
+    if args.output_name is not None:
+        return args.output_name
+    suffix = '.fasta' if args.fasta else '.u'
     va = args.vcfname.split('.')
     if len(va) == 1:
-        return va+'.u'
+        return va+suffix
     ext_cut = -1
     if va[-1] == 'gz':
         ext_cut = -2
-    return '.'.join(va[:ext_cut])+'.u'
+    return '.'.join(va[:ext_cut])+suffix
 
 
 def vcf_to_ima(sys_args):
@@ -269,18 +288,24 @@ def vcf_to_ima(sys_args):
     checkArgs(args)
     logArgs(args)
     #validateFiles(args)
-    if args.output_name is not None:
-        ima_filename = args.output_name
+    if args.multi_out is None:
+        output_filename = getOutputFilename(args)
+        output_file = open(output_filename, 'w')
     else:
-        ima_filename = getOutputFilename(args)
-    ima_file = open(ima_filename, 'w')
+        outnamegen = getMultiName(args)
+    popmodel = None
+    use_allpop = False
+    if args.popname is not None:
+        popmodels = read_model_file(args.popname)
+        if len(popmodels) != 1:
+            popmodel = popmodels[args.poptag]
+        else:
+            pp = list(popmodels.keys())
+            popmodel = popmodels[pp[0]]
+    else:
+        use_allpop = True
 
-    popmodels = read_model_file(args.popname)
-    if len(popmodels) != 1:
-        popmodel = popmodels[args.poptag]
-    else:
-        pp = list(popmodels.keys())
-        popmodel = popmodels[pp[0]]
+    filter_recs = (args.remove_multiallele or (args.remove_missing != -1) or not args.indel_flag or args.parsecpg)
 
     if args.vcfname is not None:
         single_file = True
@@ -294,18 +319,17 @@ def vcf_to_ima(sys_args):
         vn = args.vcflist[0]
     vcf_reader = vf.VcfReader(vn,
                               compress_flag=args.compress_flag,
-                              popmodel=popmodel)
+                              popmodel=popmodel,
+                              use_allpop=use_allpop)
     logging.info('VCF file read')
-    #first_el = next(vcf_reader)
-    #chrom = vcf_reader.prev_last_rec.chrom
-    #compressed = (input_ext != 'vcf')
+
     regions_provided = False
     if args.genename is not None:
         regions_provided = True
         region_list = RegionList(filename=args.genename, zeroho=args.zeroho,
                             zeroclosed=args.zeroclosed,
                             colstr=args.gene_col)
-    logging.info('Region list read')
+        logging.info('Region list read')
     fasta_ref = None
     if args.refname is not None:
         fasta_ref = pysam.FastaFile(args.refname)
@@ -316,25 +340,37 @@ def vcf_to_ima(sys_args):
     if regions_provided:
         logging.info('Total regions: %d' % (len(region_list.regions)))
     total_regions = (len(region_list.regions) if regions_provided else len(args.vcflist))
-    writeHeader(popmodel, total_regions, ima_file)
+    if not args.fasta:
+        writeHeader(popmodel, total_regions, output_file)
     if not single_file:
         vcf_reader.reader.close()
     for i in range(total_regions):
         #if regions_provided:
         #region = region_list.regions[i]
+        if args.multi_out is not None:
+            try:
+                output_file.close()
+            except:
+                pass
+            output_filename = next(outnamegen)
+            output_file = open(output_filename,'w')
         if single_file:
             region = region_list.regions[i]
             rec_list = vcf_reader.getRecordList(region)
         else:
             vcf_reader = vf.VcfReader(args.vcflist[i],
                                       compress_flag=args.compress_flag,
-                                      popmodel=popmodel)
+                                      popmodel=popmodel,
+                                      use_allpop=use_allpop)
             rec_list = vcf_reader.getRecordList()
             vcf_reader.reader.close()
             if regions_provided:
                 region = region_list.regions[i]
             else:
                 region = Region(rec_list[0].pos-1,rec_list[-1].pos,rec_list[0].chrom)
+        if filter_recs:
+            t = vf.filterSites(rec_list,remove_cpg=args.parsecpg,remove_indels=(not args.indel_flag),remove_multiallele=args.remove_multiallele,remove_missing=args.remove_missing,inform_level=0,fasta_ref=fasta_ref)
+            rec_list = t
         if len(rec_list) == 0:
             logging.warning(("Region %s has no variants "
                             "in VCF file") % (region.toStr()))
@@ -342,24 +378,34 @@ def vcf_to_ima(sys_args):
                       (region.start,region.end,len(rec_list)))
         ref_seq = None
         if fasta_ref is not None:
-            ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
+            try:
+                ref_seq = fasta_ref.fetch(region.chrom, region.start, region.end)
+            except KeyError:
+                ref_seq = fasta_ref.fetch(vf.flipChrom(region.chrom),region.start,region.end)
             checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
-        reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate)
-        ima_file.write(reg_header+'\n')
+        if not args.fasta:
+            reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate)
+            output_file.write(reg_header+'\n')
         popnum, indiv = 0, 0
-        for p in popmodel.pop_list:
+        #for p in popmodel.pop_list:
+        for p in vcf_reader.popkeys.keys():
             for indiv_idx in vcf_reader.popkeys[p]:
                 for hap in range(len(first_el.samples[indiv_idx].alleles)):
+                    if args.fasta:
+                        output_file.write('>'+first_el.samples[indiv_idx].name+'_'+str(hap)+'\n')
                     seq = generateSequence(rec_list, ref_seq,
                                    region, region.chrom, indiv_idx, hap, args)
-                    seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
-                    seq_name += ''.join([' ' for i in range(len(seq_name),10)])
-                    ima_file.write(seq_name+seq+'\n')
+                    if not args.fasta:
+                        seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
+                        seq_name += ''.join([' ' for i in range(len(seq_name),10)])
+                        output_file.write(seq_name)
+
+                    output_file.write(seq+'\n')
                 indiv += 1
             popnum += 1
             indiv = 0
         record_count += 1
-    ima_file.close()
+    output_file.close()
 
 if __name__ == "__main__":
     initLogger()

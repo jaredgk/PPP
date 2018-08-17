@@ -232,5 +232,5 @@ def vcf_region_write(sys_args):
 
 
 if __name__ == '__main__':
-    initLogger(filename="/home/jared/galaxy.log")
+    initLogger()
     vcf_region_write(sys.argv[1:])

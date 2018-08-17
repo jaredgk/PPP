@@ -104,6 +104,11 @@ def checkForMultiallele(rec_list,pass_list):
         if len(rec_list[i].alleles) > 2:
             pass_list[i] = False
 
+def flipChrom(chrom):
+    if chrom[0:3] == 'chr':
+        return chrom[0:3]
+    return 'chr'+chrom
+
 def getAlleleCountDict(rec):
     alleles = defaultdict(int)
     total_sites = 0
@@ -156,13 +161,21 @@ def getPassSites(record_list, remove_cpg=False, remove_indels=True,
     return pass_list
 
 
-
+def filterSites(record_list, remove_cpg=False, remove_indels=True,
+                remove_multiallele=True, remove_missing=0, inform_level=2,
+                fasta_ref=None):
+    pass_list = getPassSites(record_list,remove_cpg,remove_indels,remove_multiallele,remove_missing,inform_level,fasta_ref)
+    out_list = []
+    for i in range(len(pass_list)):
+        if pass_list[i]:
+            out_list.append(record_list[i])
+    return out_list
 
 
 
 class VcfReader():
     def __init__(self, vcfname, compress_flag=False, subsamp_num=None,
-                 subsamp_fn=None, subsamp_list=None, index=None, popmodel=None):
+                 subsamp_fn=None, subsamp_list=None, index=None, popmodel=None, use_allpop=False):
 
         ext = checkFormat(vcfname)
         if ext in ['gzip','other'] :
@@ -172,6 +185,8 @@ class VcfReader():
         self.reader_uncompressed = (self.file_uncompressed and not compress_flag)
         self.popmodel = None
         self.popkeys = None
+        if popmodel is not None and use_allpop:
+            raise Exception("Popmodel and allpop cannot both be specified")
         if compress_flag and file_uncompressed:
             vcfname = compressVcf(vcfname)
         if subsamp_num is not None:
@@ -191,9 +206,11 @@ class VcfReader():
             self.reader = pysam.VariantFile(vcfname, index_filename=index)
         if popmodel is not None:
             self.popmodel = popmodel
-            popsamp_list = popmodel.ind_list
+            popsamp_list = popmodel.inds
             self.reader.subset_samples(popsamp_list)
             self.setPopIdx()
+        if use_allpop:
+            self.setAllPop()
         if subsamp_list is not None:
             logging.debug('Subsampling %d individuals from VCF file' %
             (len(subsamp_list)))
@@ -223,20 +240,28 @@ class VcfReader():
     def close(self):
         self.reader.close()
 
+    def setAllPop(self):
+        self.popkeys = {'ALL':[]}
+        for i in range(len(self.reader.header.samples)):
+            self.popkeys['ALL'].append(i)
 
+def modChrom(c,vcf_chr):
+    if c is None:
+        return None
+    if vcf_chr and c[:3] != 'chr':
+        return 'chr'+c
+    if not vcf_chr and c[:3] == 'chr':
+        return c[3:]
+    return c
 
 def getRecordList(vcf_reader, region=None, chrom=None, start=None,
                   end=None, add_chr=False):
     """Returns list for use in subsampling from input file"""
     if region is not None:
-        c = region.chrom
-        if add_chr:
-            c = 'chr'+region.chrom
+        c = modChrom(region.chrom,add_chr)
         var_sites = vcf_reader.fetch(c, region.start, region.end)
     else:
-        c = chrom
-        if add_chr:
-            c = 'chr'+chrom
+        c = modChrom(chrom,add_chr)
         var_sites = vcf_reader.fetch(c, start, end)
     lst = []
     for rec in var_sites:
