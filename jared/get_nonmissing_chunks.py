@@ -38,6 +38,17 @@ def fixChromName(chrom,addchr,removechr):
         return chrom[3:]
     return chrom
 
+def outputLine(chrom,start_pos,end_pos,args):
+    sp = start_pos
+    ep = end_pos
+    if args.zero_ho:
+        sp -= 1
+    elif args.zero_closed:
+        sp -= 1
+        ep -= 1
+    chrom = fixChromName(chrom,args.addchr,args.removechr)
+    return chrom+'\t'+str(start_pos)+'\t'+str(end_pos)+'\n'
+
 def regionsWithData(sysargs):
     parser = createParser()
     args = parser.parse_args(sysargs)
@@ -86,6 +97,10 @@ def regionsWithData(sysargs):
                     break
         cur_pos = int(la[1])
         if prev_pos == 0 or prev_chrom != la[0]:
+            if prev_pos != 0:
+                start_pos = ((prev_miss_pos+prev_full_pos+1)//2 if args.extend else prev_full_pos)
+                end_pos = prev_pos
+                outstream.write(outputLine(prev_chrom,start_pos,end_pos,args))
             prev_miss_pos = cur_pos
             prev_full_pos = cur_pos
             prev_chrom = la[0]
@@ -104,13 +119,14 @@ def regionsWithData(sysargs):
                     end_pos = prev_pos
                 diff = end_pos - start_pos
                 if diff > args.window_size:
-                    if args.zero_ho:
-                        start_pos -= 1
-                    elif args.zero_closed:
-                        start_pos -= 1
-                        end_pos -= 1
-                    chrom = fixChromName(la[0],args.addchr,args.removechr)
-                    outstream.write(chrom+'\t'+str(start_pos)+'\t'+str(end_pos)+'\n')
+                    #if args.zero_ho:
+                    #    start_pos -= 1
+                    #elif args.zero_closed:
+                    #    start_pos -= 1
+                    #    end_pos -= 1
+                    #chrom = fixChromName(la[0],args.addchr,args.removechr)
+                    #outstream.write(chrom+'\t'+str(start_pos)+'\t'+str(end_pos)+'\n')
+                    outstream.write(outputLine(la[0],start_pos,end_pos,args))
                     #sys.stdout.write(la[0]+'\t'+str(prev_full_pos)+'\t'+str(prev_pos)+'\n')
                     #print (la[0],prev_miss_pos,prev_full_pos,prev_pos,cur_pos,diff)
         else:
@@ -120,6 +136,13 @@ def regionsWithData(sysargs):
                 in_section = True
         prev_pos = cur_pos
         line = getl(instream,compressed_input)
+    if in_section:
+        if args.extend:
+            start_pos = (prev_miss_pos+prev_full_pos+1)//2
+        else:
+            start_pos = prev_full_pos
+        end_pos = prev_pos
+        outstream.write(outputLine(prev_chrom,start_pos,end_pos,args))
     try:
         outstream.close()
     except:
