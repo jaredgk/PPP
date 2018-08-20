@@ -25,6 +25,12 @@ def createParser():
                         help=("Remove 'chr' from start of chromosome name"))
     return parser
 
+def getl(f,compressed=False):
+    l = f.readline()
+    if compressed:
+        return l.decode()
+    return l
+
 def fixChromName(chrom,addchr,removechr):
     if addchr and chrom[3:] != 'chr':
         return 'chr'+chrom
@@ -35,13 +41,19 @@ def fixChromName(chrom,addchr,removechr):
 def regionsWithData(sysargs):
     parser = createParser()
     args = parser.parse_args(sysargs)
-
+    compressed_input = False
     if args.vcfname is None:
         instream = sys.stdin
-    elif args.vcfname[3:] == '.gz':
-        instream = io.TextIOWrapper(io.BufferedReader(gzip.open(args.vcfname)),encoding="utf-8")
+    elif args.vcfname[-3:] == '.gz':
+        #instream = io.TextIOWrapper(io.BufferedReader(gzip.open(args.vcfname),'rb'),encoding="utf-8")
+        compressed_input = True
+        instream = gzip.open(args.vcfname,'r')
     else:
         instream = open(args.vcfname,'r')
+    if args.outname is not None:
+        outstream = open(args.outname,'w')
+    else:
+        outstream = sys.stdout
 
     #sample_count = 20
     #missing_data_count = [0 for i in range(sample_count+1)]
@@ -56,9 +68,11 @@ def regionsWithData(sysargs):
     prev_chrom = ''
 
     in_section = False
-
-    for line in instream:
+    line = getl(instream,compressed_input)
+    while len(line.strip()) > 0:
+    #for line in instream:
         if line[0] == '#':
+            line = getl(instream,compressed_input)
             continue
         la = line.strip().split()
         missing_for_site = False
@@ -96,7 +110,7 @@ def regionsWithData(sysargs):
                         start_pos -= 1
                         end_pos -= 1
                     chrom = fixChromName(la[0],args.addchr,args.removechr)
-                    sys.stdout.write(chrom+'\t'+str(start_pos)+'\t'+str(end_pos)+'\n')
+                    outstream.write(chrom+'\t'+str(start_pos)+'\t'+str(end_pos)+'\n')
                     #sys.stdout.write(la[0]+'\t'+str(prev_full_pos)+'\t'+str(prev_pos)+'\n')
                     #print (la[0],prev_miss_pos,prev_full_pos,prev_pos,cur_pos,diff)
         else:
@@ -105,6 +119,11 @@ def regionsWithData(sysargs):
                 prev_full_pos = cur_pos
                 in_section = True
         prev_pos = cur_pos
+        line = getl(instream,compressed_input)
+    try:
+        outstream.close()
+    except:
+        pass
 
 if __name__ == '__main__':
     regionsWithData(sys.argv[1:])

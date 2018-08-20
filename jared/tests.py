@@ -60,7 +60,7 @@ class missingTest(unittest.TestCase):
 
     def test_extend(self):
         args = ['--vcf','example/macaca_missingdata.vcf.gz',
-                '--extend-regions'
+                '--extend-regions',
                 '--out','example/gmd_test.txt']
         regionsWithData(args)
         self.assertTrue(filecmp.cmp('example/gmd_test.txt','example/gmd_test_extend.txt'))
