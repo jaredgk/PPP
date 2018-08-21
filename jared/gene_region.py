@@ -146,8 +146,8 @@ class Region:
 class RegionList:
 
     def __init__(self, filename=None, genestr=None, reglist=None,
-                 zeroclosed=False, zeroho=False, defaultchrom=None,
-                 colstr=None, sortlist=True, checkoverlap=True,
+                 zeroclosed=False, zeroho=False, 
+                 colstr=None, sortlist=True, checkoverlap=None,
                  sortmethod=None, sortorder=None, chromfilter=None,
                  region_template=None, randomize=False):
         """Class for storing gene region information
@@ -189,9 +189,9 @@ class RegionList:
         if region_template is not None:
             zeroho = region_template.zeroho
             zeroclosed = region_template.zeroclosed
-            self.collist = region_template.collist
             sortlist = region_template.sortlist
             checkoverlap = region_template.checkoverlap
+            sortorder = region_template.sortorder
 
         if self.collist is None:
             if colstr is None:
@@ -210,6 +210,8 @@ class RegionList:
 
         if sortlist and randomize:
             raise Exception("Sorting and randomizing are not compatible options for RegionList")
+        if checkoverlap not in [None,'fix','error']:
+            raise Exception("Invalid checkoverlap value: %s" % (checkoverlap))
         self.regions = []
         self.zeroho = zeroho
         self.zeroclosed = zeroclosed
@@ -225,11 +227,12 @@ class RegionList:
 
         if sortlist:
             self.regions.sort()
-        if checkoverlap:
+        if checkoverlap is not None:
             if self.hasOverlap():
-                #raise Exception("Region overlap detected")
-                #UNCOMMENT THIS LATER ^
-                self.fixOverlap()
+                if checkoverlap == "fix":
+                    self.fixOverlap()
+                elif checkoverlap == "error":
+                    raise Exception("Region overlap detected")
 
         if randomize:
             shuffle(self.regions)

@@ -103,7 +103,7 @@ class geneRegionTest(unittest.TestCase):
 
 
     def test_RL_overlap(self):
-        rl = RegionList('example/overlap_regions.txt', checkoverlap=False)
+        rl = RegionList('example/overlap_regions.txt')
         self.assertTrue(rl.hasOverlap())
 
 

@@ -253,7 +253,7 @@ def vcf_to_seq(sys_args):
 
     region_list = RegionList(filename=args.genename, zeroho=args.zeroho,
                             zeroclosed=args.zeroclosed,
-                            colstr=args.gene_col, defaultchrom=chrom)
+                            colstr=args.gene_col)
     logging.info('Region list read')
     fasta_ref = pysam.FastaFile(args.refname)
     record_count = 1
