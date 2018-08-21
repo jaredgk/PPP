@@ -35,7 +35,7 @@ def setRegionSort(sorttype,sortlist=None):
     if sorttype == 'list' and sortlist is not None:
         setSortOrder(sortlist)
 
-def setSortOrder(sortlist,trimchrom=True):
+def setSortOrder(sortlist,trimchrom=False):
     hold_list = []
     for c in sortlist:
         if trimchrom and c[0:3] == 'chr':
@@ -61,6 +61,8 @@ class Region:
         #    self.chrom = chrom[3:]
         #else:
         #    self.chrom = chrom
+    def __deepcopy__(self):
+        return Region(self.start,self.end,self.chrom)
 
     def cloneRegion(self):
         return Region(self.start,self.end,self.chrom)
@@ -187,7 +189,6 @@ class RegionList:
         if region_template is not None:
             zeroho = region_template.zeroho
             zeroclosed = region_template.zeroclosed
-            defaultchrom = region_template.defaultchrom
             self.collist = region_template.collist
             sortlist = region_template.sortlist
             checkoverlap = region_template.checkoverlap
@@ -198,28 +199,29 @@ class RegionList:
             else:
                 self.parseCols(colstr)
         if filename is None and genestr is None and reglist is None:
-            raise Exception(("Either a filename or gene region must be "
-                            "provided for creating a gene region list"))
+            raise Exception(("A filename, region string, or list of "
+                             "region strings must be provided for " "creating a gene region list"))
+        if [filename,genestr,reglist].count(None) < 2:
+            raise Exception(("Only one of filename, region string, and "
+                            "region list can be specified for init"))
         if zeroho and zeroclosed:
-            raise Exception(("Zero-halfopen and zero-closed options cannot "
-                             "be invoked at the same time"))
+            raise Exception(("Zero-halfopen and zero-closed options "
+                             "cannot be invoked at the same time"))
 
         if sortlist and randomize:
             raise Exception("Sorting and randomizing are not compatible options for RegionList")
         self.regions = []
         self.zeroho = zeroho
         self.zeroclosed = zeroclosed
-        self.chromfilter = None
-        if chromfilter is not None:
-            self.chromfilter = (chromfilter[3:] if chromfilter[0:3] == 'chr' else chromfilter)
+        self.chromfilter = chromfilter
         if sortmethod is not None:
             setRegionSort(sortmethod,sortlist=sortorder)
         if filename is not None:
-            self.initFile(filename, zeroho, zeroclosed, colstr, defaultchrom)
+            self.initFile(filename)
         elif genestr is not None:
-            self.initStr(genestr, zeroho, zeroclosed, colstr, defaultchrom)
+            self.initStr(genestr)
         else:
-            self.initList(reglist, zeroho, zeroclosed, colstr, defaultchrom)
+            self.initList(reglist)
 
         if sortlist:
             self.regions.sort()
@@ -232,7 +234,7 @@ class RegionList:
         if randomize:
             shuffle(self.regions)
 
-    def initFile(self, filename, zeroho, zeroclosed, colstr, defaultchrom):
+    def initFile(self,filename):
         """Initialize RegionList with a region file
         """
         with open(filename, 'r') as regionfile:
@@ -240,29 +242,24 @@ class RegionList:
                 if line[0] == '#':
                     continue
                 la = line.strip().split()
-                self.initRegion(la,defaultchrom)
+                self.initRegion(la)
 
 
-    def initStr(self, genestr, zeroho, zeroclosed, colstr, defaultchrom):
+    def initStr(self,genestr):
         la = genestr.split(':')
-        self.initRegion(la,defaultchrom)
+        self.initRegion(la)
 
 
-    def initList(self, reglist, zeroho, zeroclosed, colstr, defaultchrom):
+    def initList(self,reglist):
         for reg in reglist:
-            self.initRegion(reg,defaultchrom)
+            self.initRegion(reg)
 
 
 
-    def initRegion(self,la,defaultchrom):
+    def initRegion(self,la):
         start = int(la[self.collist[0]])
         end = int(la[self.collist[1]])
-        if len(self.collist) == 3:
-            chrom = la[self.collist[2]]
-        elif defaultchrom is not None:
-            chrom = defaultchrom
-        else:
-            raise Exception("Chromosome for region is not specified")
+        chrom = la[self.collist[2]]
         if self.chromfilter is not None and chrom != self.chromfilter:
             return
         if not self.zeroho:
@@ -274,9 +271,9 @@ class RegionList:
 
     def parseCols(self,cols):
         col_list = [int(i) for i in cols.split(',')]
-        if len(col_list) < 2 or len(col_list) > 3:
-            raise Exception(("Column string %s is either too short or "
-                             "too long" % (cols)))
+        if len(col_list) != 3:
+            raise Exception(("Column string %s must have three "
+                             "values" % (cols)))
         self.collist = col_list
 
     def toStr(self, idx, sep=':'):
