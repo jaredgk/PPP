@@ -186,13 +186,11 @@ def vcf_region_write(sys_args):
 
     if args.gene_str is not None:
         region_list = RegionList(genestr=args.gene_str,zeroho=args.zeroho,
-                                 zeroclosed=args.zeroclosed,
-                                 defaultchrom=chrom)
+                                 zeroclosed=args.zeroclosed)
     elif args.genename is not None:
         region_list = RegionList(filename=args.genename,zeroho=args.zeroho,
                                  zeroclosed=args.zeroclosed,
-                                 colstr=args.gene_col,
-                                 defaultchrom=chrom)
+                                 colstr=args.gene_col)
     else:
         raise Exception(("No value provided for region filename or "
                          "single region"))
