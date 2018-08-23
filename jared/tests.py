@@ -3,10 +3,11 @@ import pysam
 import parser
 import filecmp
 import os
+import sys
 from vcf_ref_to_seq import getMaxAlleleLength, getFastaFilename, \
     vcf_to_seq, createParser, validateFiles
 from vcf_from_regions import vcf_region_write
-from vcf_reader_func import checkFormat
+from vcf_reader_func import checkFormat, VcfReader
 from gene_region import RegionList, Region
 from logging_module import initLogger
 from four_gamete_pysam import sample_fourgametetest_intervals
@@ -82,6 +83,10 @@ class missingTest(unittest.TestCase):
 
 class geneRegionTest(unittest.TestCase):
 
+    def getARecord(self):
+        vcfr = VcfReader('example/chr11.subsamples.vcf.gz')
+        return vcfr.prev_last_rec
+
     def test_RL_collist(self):
         collist = '2,4,6'
         rl = RegionList('example/gr_ex_multicolumn.txt', colstr=collist, zeroho=True)
@@ -105,6 +110,24 @@ class geneRegionTest(unittest.TestCase):
     def test_RL_overlap(self):
         rl = RegionList('example/overlap_regions.txt')
         self.assertTrue(rl.hasOverlap())
+
+    def test_CR_in(self):
+        rec = self.getARecord()
+        rl = RegionList(genestr="11:142500:142600")
+        self.assertTrue(rl.regions[0].containsRecord(rec) == 'in')
+
+    def test_CR_before(self):
+        rec = self.getARecord()
+        rl = RegionList(genestr="11:142531:142600")
+        val = rl.regions[0].containsRecord(rec)
+        sys.stderr.write(str(val)+'\n')
+        self.assertTrue(rl.regions[0].containsRecord(rec) == 'before')
+
+    def test_CR_after(self):
+        rec = self.getARecord()
+        rl = RegionList(genestr="11:142500:142529")
+        val = rl.regions[0].containsRecord(rec)
+        self.assertTrue(val == 'after')
 
 
 class snpTest(unittest.TestCase):

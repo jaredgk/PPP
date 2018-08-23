@@ -121,9 +121,10 @@ class Region:
             if keyComp(k1,kr):
                 return 'before'
             return 'after'
-        if rec.pos < self.start:
+        comp_pos = rec.pos-1
+        if comp_pos < self.start:
             return 'before'
-        if rec.pos >= self.end:
+        if comp_pos >= self.end:
             return 'after'
         return 'in'
 
@@ -146,10 +147,10 @@ class Region:
 class RegionList:
 
     def __init__(self, filename=None, genestr=None, reglist=None,
-                 zeroclosed=False, zeroho=False, 
+                 zeroclosed=False, zeroho=False,
                  colstr=None, sortlist=True, checkoverlap=None,
                  sortmethod=None, sortorder=None, chromfilter=None,
-                 region_template=None, randomize=False):
+                 list_template=None, randomize=False):
         """Class for storing gene region information
 
         Will either read a file or take a single gene region in a string
@@ -186,12 +187,12 @@ class RegionList:
 
         """
         self.collist = None
-        if region_template is not None:
-            zeroho = region_template.zeroho
-            zeroclosed = region_template.zeroclosed
-            sortlist = region_template.sortlist
-            checkoverlap = region_template.checkoverlap
-            sortorder = region_template.sortorder
+        if list_template is not None:
+            zeroho = list_template.zeroho
+            zeroclosed = list_template.zeroclosed
+            sortlist = list_template.sortlist
+            checkoverlap = list_template.checkoverlap
+            sortorder = list_template.sortorder
 
         if self.collist is None:
             if colstr is None:
