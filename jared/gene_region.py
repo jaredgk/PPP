@@ -153,9 +153,11 @@ class RegionList:
                  list_template=None, randomize=False):
         """Class for storing gene region information
 
-        Will either read a file or take a single gene region in a string
-        as input, then create an object with some metadata and a list of
-        gene regions.
+        Will create a list that stores genomic regions imported from
+        a file, string, or list. List can be sorted in various ways,
+        filtered for regions on one or multiple chromosomes, convert
+        between coordinate systems, and integrated with other PPP
+        functions.
 
         Parameters
         ----------
@@ -164,21 +166,45 @@ class RegionList:
         genestr : str (None)
             Semicolon-separated list of region data, either in "start:end"
             or "start:end:chrom" format.
-        oneidx : bool (False)
-            If true, region will be read in as a one-index based string.
-            This results in one position being subtracted from the start
-            and end coordinates
+        zeroho : bool (False)
+            If true, input is in zero-based, half-open coordinates. Since
+            pysam uses this format, coordinates will be unaltered
+            (default is to use one-based closed coordinates)
+        zeroclosed : bool (False)
+            If true, uses zero-based, closed coordinates, which adds 1
+            to the end value for a region. Rarely if ever used option.
         colstr : str (None)
-            If reading in from a file with many columns, will indicate
-            what columns hold start/end data and chrom data if three
-            items are given.
-        defaultchrom : str (None)
-            If no chromosome data is provided in the region file or string,
-            will set the chromosome to this value
-        halfopen : bool (True)
-            If true, the region range will be [start,end), so the start
-            coordinate will be included in the region but the end
-            will not
+            Three-element string separated by semicolons, with
+            each element being an integer corresponding to the 0-based index of the column of the start, end, and chromosome values
+            for input region(s).
+        sortlist : bool (True)
+            Will sort list once initialized using assigned sorting scheme.
+        checkoverlap : str (None, 'error','fix')
+            If None, will not check for overlaps. If 'error', will raise
+            an exception if overlap is found. If 'fix', overlapping
+            regions will be merged. Note zero-based, half-open intervals
+            do not overlap when adjacent ones share end/start position,
+            but one-based closed intervals do.
+        sortmethod : str (None,'natural','string','list')
+            Determines method for sorting. 'natural' is pre-set method,
+            passing None to the constructor will ensure sort type is
+            unchanged from other calls. This sorts akin to 'sort -V' unix
+            command, which breaks a string into ints and substrings for
+            sorting. 'string' will sort via regular string method. 'list'
+            will use list passed to sortorder as ordering of chromosomes.
+        sortorder : list (None)
+            If 'list' sortmethod is used, regions will be sorted according
+            to the order specified in this list.
+        chromfilter : str (None)
+            If set, will allow only regions from passed chromosome
+            into the region list.
+        list_template : RegionList (None)
+            If creating new list with regions from a different list,
+            will use options from given list instead of arguments passed
+            for the following arguments: zeroho, zeroclosed, sortlist,
+            checkoverlap, and sortorder.
+        randomize : bool (False)
+            If set, will randomly shuffle regions in list.
 
         Exceptions
         ----------
@@ -315,10 +341,10 @@ class RegionList:
         self.regions = region_hold
 
     def printList(self, file_handle=None, file_name=None,
-                  return_str=False, delim="\t", add_chr=False):
+                  return_str=False, delim="\t", add_chr=False,
+                  remove_chr=False):
         if file_handle is None and file_name is None:
             file_handle = sys.stdout
-            #raise Exception("Either file_handle or file_name must be set")
         if file_name is not None:
             file_handle = open(file_name, 'w')
         if return_str:
@@ -331,8 +357,10 @@ class RegionList:
             elif self.zeroclosed:
                 end -= 1
             chrom = region.chrom
-            if add_chr:
+            if add_chr and chrom[:3] != 'chr':
                 chrom = "chr"+region.chrom
+            if remove_chr and chrom[:3] == 'chr':
+                chrom = region.chrom[3:]
             reg_str = chrom+delim+str(start)+delim+str(end)+'\n'
             if return_str:
                 out_str += reg_str
