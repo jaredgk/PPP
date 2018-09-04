@@ -178,6 +178,10 @@ def writeHeader(popmodel, gr_len, out_f, pop_string="(0,1):2"):
     out_f.write(str(gr_len)+'\n')
 
 def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=1, mut_rate=1e-9):
+    if gener.chrom in ['X','chrX']:
+        inhet_sc = 0.75
+    elif gener.chrom in ['Y','chrY']:
+        inhet_sc = 0.25
     name = gener.chrom+':'+str(gener.start)+':'+str(gener.end)
     gene_len = gener.end-gener.start
     for rec in rec_list:
