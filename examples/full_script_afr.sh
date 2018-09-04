@@ -1,6 +1,6 @@
 #Files downloaded from UCSC table browser
 
-DIR="/home/jared/workspace/projects_ppp/african_simons/singlescript/"
+DIR="/home/jared/workspace/projects_ppp/african_simons/singlescript2/"
 SDIR="/home/jared/workspace/projects_ppp/african_simons/"
 
 #Gene file, from UCSC
@@ -20,18 +20,18 @@ LOCI=200
 
 #Step 1: Invert files to get neutral regions
 echo "Inverting files"
-python find_intergenic_bed.py --regionf $UCSC_GENE_FILE --pad 10000 --out $GENE_INVERT --regcol 4,5,2  #--pad is used to get intergenic regions away from genes
-python find_intergenic_bed.py --regionf $UCSC_REPEAT_FILE --out $REPEAT_INVERT --regcol 6,7,5
+#python find_intergenic_bed.py --bed $UCSC_GENE_FILE --pad 10000 --out $GENE_INVERT --regcol 4,5,2  #--pad is used to get intergenic regions away from genes
+#python find_intergenic_bed.py --bed $UCSC_REPEAT_FILE --out $REPEAT_INVERT --regcol 6,7,5
 
 #Step 2: Use bedtools intersect to merge valid regions
 INT_BED=$DIR"human_premissing.bed"
 echo "Merging inverted files"
-bedtools intersect -a $GENE_INVERT -b $REPEAT_INVERT | sort -V > $INT_BED
+#bedtools intersect -a $GENE_INVERT -b $REPEAT_INVERT | sort -V > $INT_BED
 
 #3: Get areas without missing data from VCF input
 echo "Generating regions without missing data"
 MISSING_BED=$DIR"human_missing_regions.bed"
-zcat $VCF | python get_nonmissing_chunks.py | awk '{ print $1,$3,$4 }' | tr " " "\t" > $MISSING_BED
+#zcat $VCF | python get_nonmissing_chunks.py --addchr > $MISSING_BED
 
 #4: Merge missing data into bed file for check for informative sites
 echo "Generating regions for informative check"
@@ -41,15 +41,14 @@ bedtools intersect -a $INT_BED -b $MISSING_BED | sort -V | grep -v "X" | grep -v
 GOOD_BED_REGIONS=$DIR"informative_regions.bed"
 
 #To speed up informative region check, subsample 10x or more of desired final loci
-shuf -n 5000 $PREINFORM_BED | sort -V > $PREINFORM_SUBSAMP
+#shuf -n 5000 $PREINFORM_BED | sort -V > $PREINFORM_SUBSAMP
 
 #5: Search subsampled intervals to make sure each has at least 3 informative sites
 echo "Parsing for informative regions"
-python informative_filter.py --vcf $VCF --bed $PREINFORM_SUBSAMP --parsecpg $REF --minsites 3 > $GOOD_BED_REGIONS
+SAMPLE_REGIONS=$DIR"final_sampled_regions.bed"
+python informative_filter.py --vcf $VCF --bed $PREINFORM_BED --parsecpg $REF --minsites 5 --min-length 1000 --randcount $LOCI > $SAMPLE_REGIONS
 
 #6: Select 200 loci at random from list
-SAMPLE_REGIONS=$DIR"final_sampled_regions.bed"
-shuf -n $LOCI $GOOD_BED_REGIONS | sort -V > $SAMPLE_REGIONS
 
 
 #7: From main VCF, pull regions and create a VCF file for each region with informative, biallelic, non-CpG sites
@@ -74,13 +73,17 @@ do
     #Phase the VCF file
     cd ../andrew
     python vcf_phase.py --vcf $START_F --out $PHASE_F --phase-algorithm shapeit
+    shapeit -convert --input-haps out --output-vcf $PHASE_F
     cd ../jared
     
     #Check for a subregion that passes the 4-gamete test
     python four_gamete_pysam.py --vcfname $PHASE_F --out $GAM_F --4gcompat --reti --right --numinf 2
     #Extend regions for more accurate lengths of loci
-    python extend_with_vcf.py $VCF $GAM_F >> $REGION_F
-    echo $GAM_F >> $FILEPATH_F #For input list passed to 
+    if [[ $? == 0 ]]
+    then
+        python extend_with_vcf.py $VCF $GAM_F >> $REGION_F
+        echo $GAM_F >> $FILEPATH_F #For input list passed to 
+    fi
 done
 
 #Creates input file. Takes VCF list, extended VCF regions, and model file
