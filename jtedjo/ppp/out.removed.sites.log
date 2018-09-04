@@ -1,0 +1,18 @@
+
+VCFtools - 0.1.16
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf testfile
+	--max-alleles 2
+	--min-alleles 2
+	--removed-sites
+
+Warning: Expected at least 2 parts in FORMAT entry: ID=PL,Number=G,Type=Integer,Description="Normalized, Phred-scaled likelihoods for genotypes as defined in the VCF specification">
+Warning: Expected at least 2 parts in INFO entry: ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
+Warning: Expected at least 2 parts in INFO entry: ID=AF,Number=A,Type=Float,Description="Allele Frequency, for each ALT allele, in the same order as listed">
+Warning: Expected at least 2 parts in INFO entry: ID=SF,Number=.,Type=String,Description="Source File (index to sourceFiles, f when filtered)">
+After filtering, kept 38 out of 38 Individuals
+Outputting Removed Sites...
+After filtering, kept 9982 out of a possible 10000 Sites
+Run Time = 1.00 seconds

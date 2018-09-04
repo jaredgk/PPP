@@ -1,0 +1,54 @@
+<tool id="fourgamete" name="Four Gamete Test" version="0.1">
+    <requirements>
+        <requirement type="package">pysam</requirement>
+    </requirements>
+    <stdio>
+        <exit_code range="1:" level="fatal" />
+    </stdio>
+    <description>Tests a VCF file for a subregion that passes four gamete test</description>
+    <command>
+        <![CDATA[
+            python $__tool_directory__/four_gamete_pysam.py
+            --vcfname $input
+            --out $output
+            --4gcompat
+            --reti
+            #if str($select_arg) == 'left':
+            --left
+            #elif str($select_arg) == 'right':
+            --right
+            #elif str($select_arg) == 'randomi':
+            --rani
+            #else:
+            --ranb
+            #end if
+            --numinf $infsites
+            #if  $input.is_of_type('vcf_bgzip')
+                --tbi $input.metadata.tabix_index
+            #end if
+
+        ]]>
+
+    </command>
+    <inputs>
+        <param format="vcf,vcf_bgzip,bcf" name="input" type="data" label="VCF input" />
+        <param type="integer" name="infsites" label="Number of informative sites required in subregion" value="2" min="0" />
+        <param name="select_arg" type="select" label="Subregion to Select">
+            <option value="left">Left-most</option>
+            <option value="right" selected="True">Right-most</option>
+            <option value="randomi">Random (equal probability per region)</option>
+            <option value="randomb">Random (probability equal to size)</option>
+        </param>
+    </inputs>
+    <outputs>
+        <data format="vcf" name="output"/>
+    </outputs>
+    <help>
+    <![CDATA[
+
+    Input VCF will be examined for regions that pass the four-gamete test, which indicates there have been no recombination in this region for this sample. For most cases, a failure of the four-gamete test occurs when two SNPs have four gametes between them. (00,01,10,11) Using selection criteria, a region with the target number of informative SNPs that passes the four-gamete criteria will be output to a VCF file.
+
+    ]]>
+
+    </help>
+</tool>
