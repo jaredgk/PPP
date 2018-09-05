@@ -1,0 +1,24 @@
+2018-08-31 14:49:36,970 - logArgs - INFO: Argument filter_max_alleles: 2
+2018-08-31 14:49:36,970 - logArgs - INFO: Argument overwrite: True
+2018-08-31 14:49:36,970 - logArgs - INFO: Argument out_format: vcf.gz
+2018-08-31 14:49:36,970 - logArgs - INFO: Argument vcf: ../../../../andrew/example/input/merged_chr1_10000.vcf.gz
+2018-08-31 14:49:36,970 - logArgs - INFO: Argument filter_min_alleles: 2
+2018-08-31 14:49:36,970 - logArgs - INFO: Argument filter_include_passed: False
+2018-08-31 14:49:36,970 - logArgs - INFO: Argument out_prefix: out
+2018-08-31 14:49:36,970 - run - INFO: vcftools parameters assigned
+2018-08-31 14:49:36,971 - run - INFO: Input file assigned
+2018-08-31 14:49:36,992 - exp_handler - ERROR: [Errno 2] No such file or directory
+Traceback (most recent call last):
+  File "vcf_filter.py", line 405, in <module>
+    run()
+  File "vcf_filter.py", line 390, in run
+    vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)
+  File "/home/asethuraman/PPP/galaxy_ppp/PPP/tools/ppp/vcftools.py", line 543, in call_vcftools
+    vcftools_err = pipe_vcftools_bgzip(vcftools_call_args, output_filename)
+  File "/home/asethuraman/PPP/galaxy_ppp/PPP/tools/ppp/vcftools.py", line 275, in pipe_vcftools_bgzip
+    bgzip_call = subprocess.Popen(['bgzip'], stdin = vcftools_call.stdout, stdout = bgzip_output, stderr = subprocess.PIPE)
+  File "/usr/lib/python2.7/subprocess.py", line 394, in __init__
+    errread, errwrite)
+  File "/usr/lib/python2.7/subprocess.py", line 1047, in _execute_child
+    raise child_exception
+OSError: [Errno 2] No such file or directory

@@ -1,0 +1,45 @@
+<tool id="vcf_pop_reader" name="Pop Reader Test" version="0.1b">
+  <description>Automates the calculation of various statistics</description>
+  <command><![CDATA[
+
+  echo $model_file.metadata.models > $output1 &&
+  echo $model_file.metadata.npops > $output2
+  ]]></command>
+
+  <inputs>
+
+    <param format="model" name="model_file" type="data" label="Model Input"/>
+    <param name="model" type="select" label="Select Model" help="Used to specify the individuals and/or populations to assess">
+      <options>
+        <filter type="data_meta" ref="model_file" key="models"/>
+      </options>
+    </param>
+
+    <param name="calc_statistic" type="select" label="Statistic">
+      <option value="windowed-weir-fst" selected="True" >Windowed Fst</option>
+      <option value="weir-fst">Fst</option>
+      <option value="TajimaD">Tajima's D</option>
+      <option value="window-pi">Windowed Nucleotide Diversity</option>
+      <option value="site-pi">Nucleotide Diversity</option>
+      <option value="freq">Allele Frequency</option>
+      <option value="het-fit">Heterozygosity (Fit)</option>
+      <option value="het-fis">Heterozygosity (Fis)</option>
+    </param>
+
+  </inputs>
+
+  <outputs>
+    <data format="tabular" name="output1">
+      <filter> model_file.metadata.npop_dict[model] &lt; 3 or (calc_statistic not in ["windowed-weir-fst", "weir-fst"]) </filter>
+    </data>
+    <data format="tabular" name="output2">
+      <filter> model_file.metadata.npop_dict[model] &gt;= 3 and (calc_statistic in ["windowed-weir-fst", "weir-fst"]) </filter>
+    </data>
+
+
+  </outputs>
+  <help>
+      VCF Statistics Calculator Help Text
+  </help>
+
+</tool>
