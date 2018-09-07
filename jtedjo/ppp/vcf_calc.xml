@@ -178,7 +178,7 @@
             <param format="txt,tabular" name="filter_include_indv_file" type="data" label="File of individuals to include" optional="True"/>
             <param format="txt,tabular" name="filter_exclude_indv_file" type="data" label="File of individuals to exclude" optional="True"/>
 
-            <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma seperate multiple entries">
+            <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma separate multiple entries">
               <sanitizer>
                 <valid initial="string.printable">
                   <remove value="&#10;"/>
@@ -189,7 +189,7 @@
               </sanitizer>
             </param>
 
-            <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma seperate multiple entries">
+            <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma separate multiple entries">
               <sanitizer>
                 <valid initial="string.printable">
                   <remove value="&#10;"/>
@@ -225,7 +225,7 @@
             <param format="txt,tabular" name="filter_include_indv_file" type="data" label="File of individuals to include" optional="True"/>
             <param format="txt,tabular" name="filter_exclude_indv_file" type="data" label="File of individuals to exclude" optional="True"/>
 
-            <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma seperate multiple entries">
+            <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma separate multiple entries">
               <sanitizer>
                 <valid initial="string.printable">
                   <remove value="&#10;"/>
@@ -236,7 +236,7 @@
               </sanitizer>
             </param>
 
-            <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma seperate multiple entries">
+            <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma separate multiple entries">
               <sanitizer>
                 <valid initial="string.printable">
                   <remove value="&#10;"/>
@@ -270,7 +270,7 @@
             <param format="txt,tabular" name="filter_include_indv_file" type="data" label="File of individuals to include" optional="True"/>
             <param format="txt,tabular" name="filter_exclude_indv_file" type="data" label="File of individuals to exclude" optional="True"/>
 
-            <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma seperate multiple entries">
+            <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma separate multiple entries">
               <sanitizer>
                 <valid initial="string.printable">
                   <remove value="&#10;"/>
@@ -281,7 +281,7 @@
               </sanitizer>
             </param>
 
-            <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma seperate multiple entries">
+            <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma separate multiple entries">
               <sanitizer>
                 <valid initial="string.printable">
                   <remove value="&#10;"/>
@@ -315,7 +315,7 @@
             <param format="txt,tabular" name="filter_include_indv_file" type="data" label="File of individuals to include" optional="True"/>
             <param format="txt,tabular" name="filter_exclude_indv_file" type="data" label="File of individuals to exclude" optional="True"/>
 
-            <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma seperate multiple entries">
+            <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma separate multiple entries">
               <sanitizer>
                 <valid initial="string.printable">
                   <remove value="&#10;"/>
@@ -326,7 +326,7 @@
               </sanitizer>
             </param>
 
-            <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma seperate multiple entries">
+            <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma separate multiple entries">
               <sanitizer>
                 <valid initial="string.printable">
                   <remove value="&#10;"/>
@@ -360,7 +360,7 @@
             <param format="txt,tabular" name="filter_include_indv_file" type="data" label="File of individuals to include" optional="True"/>
             <param format="txt,tabular" name="filter_exclude_indv_file" type="data" label="File of individuals to exclude" optional="True"/>
 
-            <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma seperate multiple entries">
+            <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma separate multiple entries">
               <sanitizer>
                 <valid initial="string.printable">
                   <remove value="&#10;"/>
@@ -371,7 +371,7 @@
               </sanitizer>
             </param>
 
-            <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma seperate multiple entries">
+            <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma separate multiple entries">
               <sanitizer>
                 <valid initial="string.printable">
                   <remove value="&#10;"/>
@@ -388,8 +388,8 @@
     </conditional>
 
     <section name="filter" title="Additional Filters" expanded="False">
-      <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True" help="Tab-seperated file of chromosomes and positions"/>
-      <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True" help="Tab-seperated file of chromosomes and positions"/>
+      <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True" help="Tab-separated file of chromosomes and positions"/>
+      <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True" help="Tab-separated file of chromosomes and positions"/>
       <param format="bed" name="filter_include_bed" type="data" label="Include Positions File (BED format)" optional="True"/>
       <param format="bed" name="filter_exclude_bed" type="data" label="Exclude Positions File (BED format)" optional="True"/>
     </section>
@@ -428,7 +428,30 @@
 
   </outputs>
   <help>
-      VCF Statistics Calculator Help Text
+  <![CDATA[
+    **General Information**
+
+    VCF Statistics utilize functions from vcftools to create statistical data of the input files. The input can be in the format of vcf, vcf_bgzip, or bcf. 
+
+    **Statistics**
+    
+    FST: this option is used to calculate an Fst estimate from Weir and Cockerham’s 1984 paper. This is the preferred calculation of Fst. The provided file must contain a list of individuals (one individual per line) from the VCF file that correspond to one population.
+
+    Windowed FST: this option is used to do the Fst calculations on a windowed basis instead of a per-site basis. These arguments specify the desired window size and the desired step size between windows.
+
+    Tajima's D: this option output Tajima's D statistic in bins with size of the specified number.
+
+    Nucleotide Diversity: this option measures nucleotide divergency on a per-site basis.
+
+    Windowed Nucleotide Diversity: this option measures the nucleotide diversity in windows, with the number provided as the window size.
+
+    Allele Frequency: this option is used to find the allele frequency for each site.
+
+    Heterozygosity: this option calculates the measure of heterozygosity on a per-individual basis. Specfically, the inbreeding coefficient, F, is estimated for each individual using a method of moments.
+
+    detailed information on vcftools and the statistics: http://vcftools.sourceforge.net/man_latest.html
+
+  ]]>
   </help>
 
 </tool>
