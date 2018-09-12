@@ -129,7 +129,7 @@
 	<param name="beagle_iter" type="integer" label="Post burn-in iterations" help="number of iterations used to estimate genotype phase" optional="True">
 	  <validator type="in_range" min="0"/>
 	</param>
-	<param name="beagle_states" type="integer" label="Model states for genotype estimation" help="numebr of model states used to estimate genotype phase" optional="True">
+	<param name="beagle_states" type="integer" label="Model states for genotype estimation" help="number of model states used to estimate genotype phase" optional="True">
           <validator type="in_range" min="0"/>
 	</param>
 	<param name="beagle_window" type="float" label="Sliding window size (cM)" help="specifies the centiMorgan(cM) length of each sliding window" optional="True">
@@ -206,7 +206,14 @@
       SHAPEIT: http://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.html
 
       The authors of the algorithm described their calculations and methods in associated publications which we have attached below in the "citation section".
-     
+
+      
+
+      
+
+      
+      
+      
       ]]>
 
   </help>
