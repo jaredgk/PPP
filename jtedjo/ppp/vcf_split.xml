@@ -81,7 +81,7 @@
         <param format="txt,tabular" name="filter_include_indv_file" type="data" label="File of individuals to include" optional="True"/>
         <param format="txt,tabular" name="filter_exclude_indv_file" type="data" label="File of individuals to exclude" optional="True"/>
 
-        <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma seperate multiple entries">
+        <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma separate multiple entries">
           <sanitizer>
             <valid initial="string.printable">
               <remove value="&#10;"/>
@@ -92,7 +92,7 @@
           </sanitizer>
         </param>
 
-        <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma seperate multiple entries">
+        <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma separate multiple entries">
           <sanitizer>
             <valid initial="string.printable">
               <remove value="&#10;"/>
@@ -107,7 +107,7 @@
 
     <param format="tabular" name="split_file" type="data" label="Split File"/>
 
-    <param name="statistic_window_size" type="integer" label="Statistic Window Size" help="Use if BIN_END is absent in the heder of the split file" optional="True"/>
+    <param name="statistic_window_size" type="integer" label="Statistic Window Size" help="Use if BIN_END is absent in the header of the split file" optional="True"/>
 
     <param name="out_prefix" type="text" label="VCF Output Prefix" value="Sample"/>
 
@@ -118,8 +118,8 @@
     </param>
 
     <section name="filter" title="Additional Filters" expanded="False">
-      <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True" help="Tab-seperated file of chromosomes and positions"/>
-      <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True" help="Tab-seperated file of chromosomes and positions"/>
+      <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True" help="Tab-separated file of chromosomes and positions"/>
+      <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True" help="Tab-separated file of chromosomes and positions"/>
       <param format="bed" name="filter_include_bed" type="data" label="Include Positions File (BED format)" optional="True"/>
       <param format="bed" name="filter_exclude_bed" type="data" label="Exclude Positions File (BED format)" optional="True"/>
     </section>

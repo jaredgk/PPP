@@ -27,8 +27,10 @@
             #if $remove_multi:
             --remove-multi
             #end if
-            #if int($remove_missing) != -1:
-            --remove-missing $remove_missing
+            #if int($remove_missing) == 0:
+	    --remove-missing $remove_missing
+	    #else if int($remove_missing) > 0:
+	    --remove-mising $n_missing
             #end if
             #if $return_mode.return_setcount == 'some':
             --randcount $return_mode.region_count
@@ -55,7 +57,16 @@
 
         <param type="boolean" name="indel" label="Don't count indels as informative" checked="true" />
         <param type="boolean" name="remove_multi" label="Don't count sites with more than two alleles as informative" checked="true" />
-        <param type="integer" name="remove_missing" label="Missing Data (-1 for no filter, 0 for filter any missing data, 1+ for remove sites with n missing individuals)" value="-1" />
+	<conditional name="selection">
+	    <param type="select" display ="radio" name="remove_missing" label="Missing Data (-1 for no filter, 0 for filter any missing data, 1+ for remove sites with n missing individuals)" value="-1">
+                <option value="-1"> No Filter</option>
+	        <option value="0">Filter All Missing Data </option>
+	        <option value="1">N Missing Individuals </option>
+	    </param>
+            <when value="1"> 
+		    <param name ="n_missing" type="integer" value="10" Min = "1" />
+            </when>
+        </conditional>
         <param type="integer" name="informative_count" label="Number of sites required to deem region informative" value="3" />
         <param type="integer" name="min_length" label="Minimum length of valid regions" value="1000" />
         <param type="boolean" name="filterxy" label="Filter out X/Y regions" checked="true" />

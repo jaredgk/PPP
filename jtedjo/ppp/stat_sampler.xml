@@ -38,7 +38,8 @@
     </param>
 
     <conditional name="selected_scheme">
-      <param name="sampling_scheme" type="select" label="Sampling Scheme">
+	    <param name="sampling_scheme" type="select" label="Sampling Scheme" help="Random scheme will sample random genetic loci across the genome. 
+		    Uniform scheme will construct equally sized bins across the summary statistic, order the bins, then uniformly sample loci across each bin.">
         <option value="random" selected="True" >Random</option>
         <option value="uniform">Uniform</option>
       </param>
@@ -46,7 +47,7 @@
         <param name="sample_size" type="integer" value="100" label="Sample Size"/>
       </when>
       <when value="uniform">
-        <param name="sample_size" type="integer" value="100" label="Sample Size"/>
+        <param name="sample_size" type="integer" value="100" label="Number of Loci"/>
         <param name="uniform_bins" type="integer" value="10" label="Uniform Bins"/>
       </when>
     </conditional>
@@ -58,7 +59,18 @@
     <data format="tabular" name="output"/>
   </outputs>
   <help>
-      VCF Sampler Help Text
+    <![CDATA[
+     
+      **General Information**
+    
+      *VCF Sampler* uses the result of statistic calculation function. in particular the output from the statistics: Windowed FST, FST, tajima's D, Windowed Nucleotide Diversity, and Nucleotide diversity.
+
+    ]]>
   </help>
+
+  <citations>
+    <citation type="doi">10.1093/molbev/msy162</citation>
+
+  </citations>
 
 </tool>

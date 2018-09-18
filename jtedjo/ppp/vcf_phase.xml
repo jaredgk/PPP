@@ -123,31 +123,57 @@
         <option value="shapeit">SHAPEIT</option>
       </param>
       <when value="beagle">
-        <param name="beagle_burn_iter" type="integer" label="Burn-in iterations" optional="True"/>
-        <param name="beagle_iter" type="integer" label="Post burn-in iterations" optional="True"/>
-        <param name="beagle_states" type="integer" label="Model states for genotype estimation" optional="True"/>
-        <param name="beagle_window" type="float" label="Sliding window size (cM)" optional="True"/>
-        <param name="beagle_overlap" type="float" label="Overlap between neighboring sliding windows (cM)" optional="True"/>
-        <param name="beagle_error" type="float" label="HMM allele mismatch probability" optional="True"/>
-        <param name="beagle_step" type="float" label="Step length (cM)" optional="True" help="Used for identifying short IBS segments"/>
-        <param name="beagle_nsteps" type="integer" label="Number of consecutive steps" optional="True" help="Used for identifying long IBS segments"/>
+	<param name="beagle_burn_iter" type="integer" label="Burn-in iterations" help="number of burnin iterations used to estimate init. haplotype freq. model" optional="True">
+	  <validator type="in_range" min="0"/>
+        </param>
+	<param name="beagle_iter" type="integer" label="Post burn-in iterations" help="number of iterations used to estimate genotype phase" optional="True">
+	  <validator type="in_range" min="0"/>
+	</param>
+	<param name="beagle_states" type="integer" label="Model states for genotype estimation" help="number of model states used to estimate genotype phase" optional="True">
+          <validator type="in_range" min="0"/>
+	</param>
+	<param name="beagle_window" type="float" label="Sliding window size (cM)" help="specifies the centiMorgan(cM) length of each sliding window" optional="True">
+          <validator type="in_range" min="0"/>
+	</param>
+	<param name="beagle_overlap" type="float" label="Overlap between neighboring sliding windows (cM)" help="specifies the centiMorgan length of overlap between adjacent sliding windows" optional="True">
+          <validator type="in_range" min="0"/>
+	</param>
+	<param name="beagle_error" type="float" label="HMM allele mismatch probability" help="specifies the allele mismatch probability for the hidden Markov model" optional="True">
+          <validator type="in_range" min="0" exclude_min="true"/>
+	</param>
+	<param name="beagle_step" type="float" label="Step length (cM)" optional="True" help="Used for identifying short IBS segments">
+          <validator type="in_range" min="0"/>
+	</param>
+	<param name="beagle_nsteps" type="integer" label="Number of consecutive steps" optional="True" help="Used for identifying long IBS segments">
+          <validator type="in_range" min="1" exclude_min="true"/>
+	</param>
       </when>
       <when value="shapeit">
-        <param name="shapeit_burn_iter" type="integer" label="Burn-in iterations" optional="True"/>
-        <param name="shapeit_prune_iter" type="integer" label="Pruning iterations" optional="True"/>
-        <param name="shapeit_main_iter" type="integer" label="Main iterations" optional="True"/>
-        <param name="shapeit_states" type="integer" label="Conditioning states for haplotype estimation" optional="True"/>
+	<param name="shapeit_burn_iter" type="integer" label="Burn-in iterations" help="number of burn-in iterations used to find good starting haplotype estimate" optional="True">
+          <validator type="in_range" min="0"/>
+	</param>
+	<param name="shapeit_prune_iter" type="integer" label="Pruning iterations" help="number of iterations of the pruning stage. Store the transition probabilities and used to prune genotype graphs in order to get more parsimonious graphs"  optional="True">
+          <validator type="in_range" min="0"/>
+	</param>
+	<param name="shapeit_main_iter" type="integer" label="Main iterations" help="the number of main iterations which will be used to estimate the final haplotypes." optional="True">
+          <validator type="in_range" min="0"/>
+	</param>
+        <param name="shapeit_states" type="integer" label="Conditioning states for haplotype estimation" help="number of conditioning states that haplotype estimated is based on. Increasing the conditioning states increase accuracy of SHAPEIT."  optional="True"/>
         <param name="shapeit_window" type="float" label="Model window size (Mb)" optional="True"/>
       </when>
     </conditional>
 
     <section name="common" title="Common Parameters" expanded="True">
-      <param name="random_seed" type="integer" label="Seed value" optional="True"/>
-      <param format="text" name="genetic_map" type="data" label="Genetic Map" optional="True"/>
+      <param name="random_seed" type="integer" label="Seed value" help="specifies the seed for RNG" optional= "True"/>
+      <param format="text" name="genetic_map" type="data" label="Genetic Map" help="specifies PLINK format genetic map with cM units." optional="True"/>
       <param name="ne" type="integer" label="Effective population size" optional="True"/>
       <param name="phase_chr" type="text" label="Chromosome to phase" optional="True"/>
-      <param name="phase_from_bp" type="integer" label="Lower bound of sites to include" help="Only usable with a single chromosome" optional="True"/>
-      <param name="phase_to_bp" type="integer" label="Upper bound of sites to include" help="Only usable with a single chromosome" optional="True"/>
+      <param name="phase_from_bp" type="integer" label="Lower bound of sites to include" help="Only usable with a single chromosome" optional="True">
+          <validator type="in_range" min="0"/>
+      </param>
+      <param name="phase_to_bp" type="integer" label="Upper bound of sites to include" help="Only usable with a single chromosome" optional="True">
+          <validator type="in_range" min="0"/>
+    </param>
     </section>
 
     <param name="out_format" type="select" label="Output Format">
@@ -169,7 +195,36 @@
   </outputs>
 
   <help>
-      VCF Phaser Help Text
+    <![CDATA[
+    
+      **General Information**
+      
+      *VCF Phaser* is a tool to estimate the haplotypes (phasing) from genotype data and the imputation of markers.
+
+      There are two phasing algorithms to choose from and are detailed by their respective developers: 
+      Beagle: https://faculty.washington.edu/browning/beagle/beagle.html
+      SHAPEIT: http://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.html
+
+      The authors of the algorithm described their calculations and methods in associated publications which we have attached below in the "citation section".
+
+      
+
+      
+
+      
+      
+      
+      ]]>
+
   </help>
+  <citations>
+    <citation type="doi">10.1016/j.ajhg.2018.07.015</citation>
+    <citation type="doi">10.1086/521987</citation>
+    <citation type="doi">10.1038/nmeth.1785</citation>
+    <citation type="doi">10.1038/nmeth.2307</citation>
+    <citation type="doi">10.1016/j.ajhg.2013.09.002</citation>
+    <citation type="doi">10.1371/journal.pgen.1004234</citation>
+    <citation type="doi">10.1038/ncomms4934</citation>
+  </citations>
 
 </tool>

@@ -128,7 +128,7 @@
         <param format="txt,tabular" name="filter_include_indv_file" type="data" label="File of individuals to include" optional="True"/>
         <param format="txt,tabular" name="filter_exclude_indv_file" type="data" label="File of individuals to exclude" optional="True"/>
 
-        <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma seperate multiple entries">
+        <param name="filter_include_indv" type="text" label="Individual to include" optional="True" area="True" help="Comma separate multiple entries">
           <sanitizer>
             <valid initial="string.printable">
               <remove value="&#10;"/>
@@ -139,7 +139,7 @@
           </sanitizer>
         </param>
 
-        <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma seperate multiple entries">
+        <param name="filter_exclude_indv" type="text" label="Individual to exclude" optional="True" area="True" help="Comma separate multiple entries">
           <sanitizer>
             <valid initial="string.printable">
               <remove value="&#10;"/>
@@ -152,12 +152,18 @@
       </when>
     </conditional>
 
-    <param name="filter_min_alleles" type="integer" value="2" label="Minimum alleles" help="Include only sites with a greater than or equal number of alleles"/>
-    <param name="filter_max_alleles" type="integer" value="2" label="Maximum alleles" help="Include only sites with a lesser than or equal number of alleles"/>
-    <param name="filter_max_missing" type="float" value="1.0" label="Max Missing Proportion" help="Exclude sites by the proportion of missing data. 0.0 include all missing data, 1.0 excludes all missing data"/>
-
+    <param name="filter_min_alleles" type="integer" value="2" label="Minimum alleles" help="Include only sites with a greater than or equal number of alleles" >
+      <validator type="in_range" min="1"/>
+    </param>
+   
+    <param name="filter_max_alleles" type="integer" value="2" label="Maximum alleles" help="Include only sites with a lesser than or equal number of alleles">
+      <validator type="in_range" min="1"/>
+    </param>
+    <param name="filter_max_missing" type="float" value="1.0" label="Max Missing Proportion" help="Exclude sites by the proportion of missing data. 0.0 include all missing data, 1.0 excludes all missing data">
+      <validator type="in_range" min="0" max="1"/>
+    </param>
     <section name="pos" title="Position Filters" expanded="False" help="Filters that include/exclude sites due on their chromosome and/or position">
-      <param name="filter_include_chr" type="text" label="Chromosome to include" optional="True" area="True" help="Comma seperate multiple entries">
+      <param name="filter_include_chr" type="text" label="Chromosome to include" optional="True" area="True" help="Comma separate multiple entries">
         <sanitizer>
           <valid initial="string.printable">
             <remove value="&#10;"/>
@@ -167,7 +173,7 @@
           </mapping>
         </sanitizer>
       </param>
-      <param name="filter_exclude_chr" type="text" label="Chromosome to exclude" optional="True" area="True" help="Comma seperate multiple entries">
+      <param name="filter_exclude_chr" type="text" label="Chromosome to exclude" optional="True" area="True" help="Comma separate multiple entries">
         <sanitizer>
           <valid initial="string.printable">
             <remove value="&#10;"/>
@@ -177,14 +183,18 @@
           </mapping>
         </sanitizer>
       </param>
-      <param name="filter_from_bp" type="integer" label="Lower bound of sites to include" optional="True" help="Should only be used with single chromosome"/>
-      <param name="filter_to_bp" type="integer" label="Upper bound of sites to include" optional="True" help="Should only be used with single chromosome"/>
+      <param name="filter_from_bp" type="integer" label="Lower bound of sites to include" optional="True" help="Should only be used with single chromosome">
+        <validator type="in_range" min="0"/>
+      </param>
+      <param name="filter_to_bp" type="integer" label="Upper bound of sites to include" optional="True" help="Should only be used with single chromosome">
+	<validator type="in_range" min="0"/> 
+      </param>
       <param name="filter_distance" type="integer" label="Distance no two sites may be within" optional="True"/>
     </section>
 
     <section name="pos_file" title="Position Filters (File-based)" expanded="False" help="Filters that include/exclude sites using files">
-      <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True" help="Tab-seperated file of chromosomes and positions"/>
-      <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True" help="Tab-seperated file of chromosomes and positions"/>
+      <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True" help="Tab-separated file of chromosomes and positions"/>
+      <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True" help="Tab-separated file of chromosomes and positions"/>
       <param format="bed" name="filter_include_bed" type="data" label="Include Positions File (BED format)" optional="True"/>
       <param format="bed" name="filter_exclude_bed" type="data" label="Exclude Positions File (BED format)" optional="True"/>
     </section>
@@ -196,7 +206,7 @@
     </section>
 
  </inputs>
-  <outputs>
+ <outputs>
     <data name="output" format="tabular">
       <change_format>
         <when input="out_format" value="vcf" format="vcf"/>
@@ -208,7 +218,32 @@
     </data>
   </outputs>
   <help>
-      VCF Filter Help Text
+  <![CDATA[
+  
+    **General Information**
+
+    *VCF Filter* utilize vcftools to filter input files(in vcf, vcf_bgzip or bcf format) based on a variety of user defined parameters.
+    
+    **Filter option**
+
+    Include/exclude sites with certain number of alleles
+    
+    Exclude sites on proportion of missing data
+    
+    Include/exclude particular chromosome(s)
+    
+    Create range of boundary of sites in a SINGLE chromosome
+
+    .. class:: infomark 
+ 
+   lower/upper bound can only be used with single chromosome that can be specified by "Chromosome to include"
+       
+   Include or exclude a set of sites on the basis of a list of positions in a file. Each line of the input file should contain a (tab-separated) chromosome and position. The file can have comment lines that start with a "#", they will be ignored.
+
+  Include or exclude a set of sites on the basis of a BED file. Only the first three columns (chrom, chromStart and chromEnd) are required. The BED file is expected to have a header line. A site will be kept or excluded if any part of any allele (REF or ALT) at a site is within the range of one of the BED entries.   
+   
+    
+  ]]>
   </help>
 
 </tool>
