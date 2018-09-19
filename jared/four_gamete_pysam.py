@@ -119,7 +119,6 @@ class BaseData():
 
     def buildlistofsites(self, includesnpmissingdata, only2basesnps):
         MAXINFORMSNPS = 1000
-        #seqcount,numbases,seqs,list_of_positions,ONLYSNPS = getseqlist(basedata.filename,format)
         # Find polymorphic sites
         self.polysites = []
         self.informpolysites = []
@@ -177,9 +176,6 @@ class BaseData():
                             logging.warning('Maximum SNP count of %d has been hit'%(MAXINFORMSNPS))
                             break
         logging.info('Informative site count: %d' % len(self.informpolysites))
-        #if len(self.informpolysites) > MAXINFORMSNPS:
-        #    raise Exception("the number of informative snps: %d"
-#                    " exceeds the maximum: %d"%(len(self.informpolysites),MAXINFORMSNPS))
         c = 0
         sl = len(linesets)
         if sl > 1 :
@@ -199,10 +195,8 @@ class BaseData():
                             self.cmat[i].append(1)
                         else:
                             self.cmat[i].append(-1)
-        #print (self.cintervals)
 
-    #def compatibleintervals(cmat,informpolysites,numbases,
-            #list_of_positions,ONLYSNPS):
+
     def compatibleintervals(self):
         """
          return a list of intervals
@@ -662,9 +656,9 @@ def outputSubregion(args, interval, basedata, region=None, filename=None):
     Outputs records in identified sub-interval to desired output file
     """
     if region is None:
-        subregion = Region(interval[0],interval[1]+1,basedata.records[0].chrom)
+        subregion = Region(interval[0]-1,interval[1],basedata.records[0].chrom)
     else:
-        subregion = Region(interval[0],interval[1]+1,region.chrom)
+        subregion = Region(interval[0]-1,interval[1],region.chrom)
     subrecords = getRecordsInRegion(subregion, basedata.records)
     if filename is None:
         subfn = vcfRegionName(args.out_prefix,subregion,"vcf.gz")
@@ -812,6 +806,7 @@ def sample_fourgametetest_intervals(sys_args):
         for vcfname in args.vcfname:
             basedata = BaseData(args, "VCF",vcfname)
             intervals = getIntervalList(args,basedata)
+            sys.stderr.write(str(intervals)+'\n')
             interval_list.append(intervals)
             if args.out_prefix is not None:
                 if args.returntype == 'returnlist':
