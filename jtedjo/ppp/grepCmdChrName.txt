@@ -1,0 +1,20 @@
+>Potential GREP commands to create an output file with only the Chromosome name:
+
+
+For the Individual Names:
+1. Find the header row:
+grep "CHROM" inputFile
+
+2. Turn the columns into rows:
+tr -s '[:blank:] '\n' < inputFile > outputFile
+
+3. Only have the Chromosome names within the file:
+grep -A500 'FORMAT' outputFile | grep -v "FORMAT"
+
+500 is arbitrary values. so if sample size is greater than 500, it would not work.
+
+sed -n -e '/CHROM/$p' filename > output
+
+cat justdata.vcf awk '{print $1}' > chroms
+cat chroms | sort | uniq
+
