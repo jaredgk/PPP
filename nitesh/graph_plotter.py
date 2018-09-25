@@ -1,7 +1,9 @@
-import matplotlib
 import pandas as pd
+import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 
 def manhattan_plot(in_file):
@@ -41,4 +43,25 @@ def admixture_barplot(in_file, numinds):
     fig.savefig(in_file + ".pdf", bbox_inches='tight')
 
 
-admixture_barplot("outfile_f", 212)
+def pca_plot(in_file):
+    df = pd.read_table(in_file, index_col=0, header=0)
+
+    features = list(df.columns.values)
+    # Separating out the features
+    data = df.loc[:, features].values
+
+    # Standardizing the features
+    data = StandardScaler().fit_transform(data)
+    pca = PCA(n_components=2)
+    prncpl_comp = pca.fit_transform(data)
+    prncpl_df = pd.DataFrame(data=prncpl_comp, columns=['PC1', 'PC2'])
+    fig = plt.figure()
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+    plt.title('2 component PCA', fontsize=20)
+
+    plt.scatter(prncpl_df['PC1'], prncpl_df['PC2'])
+    plt.legend('Samples')
+    plt.grid()
+    fig.savefig(in_file + ".pdf", bbox_inches='tight')
+
