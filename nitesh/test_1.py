@@ -9,6 +9,8 @@ TIMEOUT = 60 * 15  # 15 minute timeout holder
 
 PERCENT = 2  # Random Run 2 % test cases from all combinations
 
+# VCF filter testing script
+
 inputFileList = [['--vcf', 'chr11.unfiltered.vcf']]
 outFormatList = [['--out-format', 'vcf'], ['--out-format', 'vcf.gz'], ['--out-format', 'bcf'], ['--out-format', 'removed_sites'], ['--out-format', 'kept_sites'], ['--out-format', 'removed_bed'], ['--out-format', 'kept_bed']]
 outPrefixList = [['--out-prefix', 'chr11_vcf']]

@@ -74,7 +74,7 @@ def sampler_parser(passed_arguments):
     statistic_default = 'windowed-weir-fst'
     sampler_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'Specifies the statistic calculated ', type=str, choices = statistic_list, default = statistic_default)
 
-    sampler_parser.add_argument('--statistic-window-size', help = 'Specifies the size of window calculations (if BIN_END is absent)', type = int, default = 1000)
+    sampler_parser.add_argument('--statistic-window-size', help = 'Specifies the size of window calculations (if BIN_END is absent)', type = int, default = 10000)
 
     # Sampling methods. Currently mutually exclusive to only allow a single sampling method
     sampling_list = ['uniform', 'random']

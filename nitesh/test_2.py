@@ -84,4 +84,4 @@ def test_calc(calc_args):
     assert p.returncode == 0, output
 
 
-# pytest --html=reports/vcf_calc_test_suite.html --capture=fd --self-contained-html --capture=sys --tb=no
+# pytest --html=reports/vcf_calc_test_suite.html --capture=fd --self-contained-html --capture=sys --tb=no test_2.py
