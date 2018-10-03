@@ -2,7 +2,6 @@ import os
 import pytest
 import psutil
 import itertools
-from random import shuffle
 from subprocess import Popen, PIPE, STDOUT
 
 TIMEOUT = 60 * 15  # 15 minute timeout holder
@@ -44,15 +43,6 @@ def id_func(args):
     for i in args:
         ids.append('python vcf_calc.py ' + ' '.join(i))
     return ids
-
-
-def random_tests_select(list_a, percentage):
-    shuffle(list_a)
-    percentage = percentage / 100
-    count = int(len(list_a) * percentage)
-    if not count: return []  # edge case, no elements removed
-    list_a[-count:], list_b = [], list_a[-count:]
-    return list_b
 
 
 calcArgs0 = list(itertools.product(inputFileList, outPrefix, calcStat[0], modelFile, model, windowSize, windowStep, overwrite))

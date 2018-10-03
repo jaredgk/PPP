@@ -81,4 +81,4 @@ def test_filter(filter_args):
     assert p.returncode == 0, output
 
 
-# pytest -n auto --html=reports/vcf_filter_test_suite.html --capture=fd --self-contained-html --capture=sys --tb=no
+# pytest --html=reports/vcf_filter_test_suite.html --capture=fd --self-contained-html --capture=sys --tb=no test_1.py
