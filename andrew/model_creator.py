@@ -4,6 +4,7 @@ import json
 import argparse
 import logging
 import itertools
+from model import Model, ModelFile, write_model_file
 
 from collections import defaultdict
 from collections import OrderedDict
@@ -19,57 +20,58 @@ def model_creator_parser (passed_arguments):
     def parser_dict_list_append ():
         '''Custom action to house data as defaultdict list'''
         class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
+            def __call__(self, parser, args, values, option_string=None):
                 if getattr(args, self.dest):
-                    # Append the argument with the file
-                    getattr(args, self.dest)[value[0]].append(value[1])
-
+                    if values[1] not in getattr(args, self.dest)[values[0]]:
+                        # Append the argument with the file
+                        getattr(args, self.dest)[values[0]].append(values[1])
                 else:
                     # Set the argument with the file (as list)
                     arg_dict = defaultdict(list)
-                    arg_dict[value[0]].append(value[1])
+                    arg_dict[values[0]].append(values[1])
                     setattr(args, self.dest, arg_dict)
         return customAction
 
     def parser_dict_list_extend ():
         '''Custom action to house data as defaultdict list'''
         class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
+            def __call__(self, parser, args, values, option_string=None):
                 if getattr(args, self.dest):
-                    # Append the argument with the file
-                    getattr(args, self.dest)[value[0]].extend(value[1:])
-
+                    for value in values[1:]:
+                        if value not in getattr(args, self.dest)[values[0]]:
+                            # Append the argument with the file
+                            getattr(args, self.dest)[values[0]].append(value)
                 else:
                     # Set the argument with the file (as list)
                     arg_dict = defaultdict(list)
-                    arg_dict[value[0]].extend(value[1:])
+                    arg_dict[values[0]].extend(values[1:])
                     setattr(args, self.dest, arg_dict)
         return customAction
 
     def parser_dict_str ():
         '''Custom action to house data as defaultdict int'''
         class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
+            def __call__(self, parser, args, values, option_string=None):
                 # Assign the passed value
                 if getattr(args, self.dest):
                     # Append the argument with the file
-                    getattr(args, self.dest)[value[0]] = value[1]
+                    getattr(args, self.dest)[values[0]] = values[1]
 
                 else:
                     # Set the argument with the file (as list)
                     arg_dict = defaultdict(str)
-                    arg_dict[value[0]] = value[1]
+                    arg_dict[values[0]] = values[1]
                     setattr(args, self.dest, arg_dict)
         return customAction
 
     def parser_dict_int ():
         '''Custom action to house data as defaultdict int'''
         class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
+            def __call__(self, parser, args, values, option_string=None):
 
                 # Check the passed value is an int
                 try:
-                    int(value[1])
+                    int(values[1])
                 except:
                     print '--%s only accepts integers' % self.dest
                     sys.exit()
@@ -77,32 +79,32 @@ def model_creator_parser (passed_arguments):
                 # Assign the passed value
                 if getattr(args, self.dest):
                     # Append the argument with the file
-                    getattr(args, self.dest)[value[0]] = int(value[1])
+                    getattr(args, self.dest)[values[0]] = int(values[1])
 
                 else:
                     # Set the argument with the file (as list)
                     arg_dict = defaultdict(int)
-                    arg_dict[value[0]] = int(value[1])
+                    arg_dict[values[0]] = int(values[1])
                     setattr(args, self.dest, arg_dict)
         return customAction
 
     def parser_dict_file ():
         '''Custom action to house data as defaultdict int'''
         class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
+            def __call__(self, parser, args, values, option_string=None):
 
-                if not os.path.isfile(value[1]):
-                    raise IOError('Input not found.') # File not found
+                if not os.path.isfile(values[1]):
+                    raise IOError('%s not found' % values[1])
 
                 # Assign the passed value
                 if getattr(args, self.dest):
                     # Append the argument with the file
-                    getattr(args, self.dest)[value[0]] = value[1]
+                    getattr(args, self.dest)[values[0]] = values[1]
 
                 else:
                     # Set the argument with the file (as list)
                     arg_dict = defaultdict(str)
-                    arg_dict[value[0]] = value[1]
+                    arg_dict[values[0]] = values[1]
                     setattr(args, self.dest, arg_dict)
         return customAction
 
@@ -112,36 +114,26 @@ def model_creator_parser (passed_arguments):
 
     model_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
-    # Input arguments.
-    #model_parser.add_argument("--vcf", metavar = 'VCF_Input', help = "Input VCF filename", type = str, action = parser_confirm_file())
-
-    # Other file arguments. Expand as needed
-    model_parser.add_argument('--out', help = 'Specifies the complete output filename.', type = str, default = 'out.model')
-
-    # General arguments.
-    model_parser.add_argument('--overwrite', help = "Specifies if previous output files should be overwritten", action = 'store_true')
-
     # General model arguments
     model_parser.add_argument('--model', help = 'Defines the name of a model', type = str, action = 'append', required = True)
 
-    model_parser.add_argument('--model-tree', help = 'Defines the population tree of the model, in Newick format', type = str, nargs = 2, action = parser_dict_str(), required = True)
+    # Tree arguments
+    model_parser.add_argument('--model-tree', help = 'Assign population tree string to a model, in Newick format', type = str, nargs = 2, action = parser_dict_str())
+    model_parser.add_argument('--model-tree-file', help = 'Assign population tree file to a model, in Newick format', type = str, nargs = 2, action = parser_dict_file())
 
-    # Population assignment
-    model_parser.add_argument('--assign-npop', help = 'Assigns the number of populations to a model.', type = str, nargs = 2, action = parser_dict_int())
+    # Population arguments
+    model_parser.add_argument('--model-pop', dest = 'pops', help = 'Assign a population name to a model', type = str, nargs = 2, action = parser_dict_list_append())
+    model_parser.add_argument('--model-pops', dest = 'pops', help = 'Assign multiple population names to a model', type = str, nargs = '+', action = parser_dict_list_extend())
+    model_parser.add_argument('--model-pop-file', help = 'Assign multiple population names to a model usign a file', type = str, nargs = 2, action = parser_dict_file())
 
-    # Pop assignment methods
-    pop_group = model_parser.add_mutually_exclusive_group(required=True)
-    pop_group.add_argument('--assign-pop', dest = 'pops', help = 'Assigns a population name to a model.', type = str, nargs = 2, action = parser_dict_list_append())
-    pop_group.add_argument('--assign-pops', dest = 'pops', help = 'Assigns multiple population names to a model.', type = str, nargs = '+', action = parser_dict_list_extend())
+    # Individual arguments
+    model_parser.add_argument('--pop-ind', dest = 'inds', help = 'Assign an individual name to a population', type = str, nargs = 2, action = parser_dict_list_append())
+    model_parser.add_argument('--pop-inds', dest = 'inds', help = 'Assign multiple individual names to a population', type = str, nargs = '+', action = parser_dict_list_extend())
+    model_parser.add_argument('--pop-ind-file', help = 'Assign multiple individual names to a population using a file', type = str, nargs = 2, action = parser_dict_file())
 
-    # Individual assignment
-    model_parser.add_argument('--assign-nind', help = 'Assigns number of individuals to a model.', type = str, nargs = 2, action = parser_dict_int())
-
-    # Ind Assignment
-    ind_group = model_parser.add_mutually_exclusive_group(required=True)
-    ind_group.add_argument('--assign-ind', dest = 'inds', help = 'Assigns an individual name to a population.', type = str, nargs = 2, action = parser_dict_list_append())
-    ind_group.add_argument('--assign-inds', dest = 'inds', help = 'Assigns multiple individual names to a population.', type = str, nargs = '+', action = parser_dict_list_extend())
-    ind_group.add_argument('--assign-ind-file', help = 'Assigns multiple individual names to a population using a file.', type = str, nargs = 2, action = parser_dict_file())
+    # Output Arguments
+    model_parser.add_argument('--out', help = 'Specifies the complete output filename.', type = str, default = 'out.model')
+    model_parser.add_argument('--overwrite', help = "Specifies if previous output files should be overwritten", action = 'store_true')
 
     if passed_arguments:
         return model_parser.parse_args(passed_arguments)
@@ -154,133 +146,209 @@ def logArgs(args, pipeline_function):
     for k in vars(args):
         logging.info('Arguments %s: %s' % (k, vars(args)[k]))
 
-def read_population_file (filename):
-    # List of store individuals
-    inds = []
+def incompatible_duplicates_check (term, *arguments_to_test):
 
-    # Read the individuals from the file
-    with open(filename, 'rU') as pop_file:
-        for pop_line in pop_file:
-            # Store the individuals
-            inds.append(pop_line.strip())
+    # Duplicate count
+    duplicates_count = 0
 
-    # Return individuals
-    return inds
+    # Loop the passed arguments
+    for argument_to_test in arguments_to_test:
+
+        # Check if the argument has been populated
+        if argument_to_test:
+
+            # Check if the argument has the term
+            if term in argument_to_test:
+
+                # Add to the duplicate count if the incompatible term is found
+                duplicates_count += 1
+
+    # Check if there were duplicates_count
+    if duplicates_count > 1:
+        return True
+    else:
+        return False
+
+def assigment_check (term, *arguments_to_be_assigned):
+
+    # Term assignment boolean
+    term_assigned = False
+
+    # Loop the passed arguments
+    for argument_to_be_assigned in arguments_to_be_assigned:
+
+        # Check if the argument has been populated
+        if argument_to_be_assigned:
+
+            # Check if the argument has the term
+            if term in argument_to_be_assigned:
+
+                # Mark the term assigned
+                term_assigned = True
+
+    # Return the boolean
+    return term_assigned
+
+def dict_argument_to_list (term, list_argument):
+
+    # Check if either the argument or term was not assigned
+    if not list_argument or term not in list_argument:
+        return []
+
+    # Return data as list
+    return list_argument[term]
+
+def file_dict_argument_to_list (term, file_argument):
+
+    # Check if either the argument or term was not assigned
+    if not file_argument or term not in file_argument:
+        return []
+
+    # List to hold the file data
+    data_list = []
+
+    # Check if running via python 3
+    if sys.version_info[0] == 3:
+
+        # Open the file and save the data
+        with open(file_argument[term], 'r') as data_file:
+            for data_line in data_file:
+                data_list.append(data_line.strip())
+
+    # Check if running via python 2
+    else:
+
+        # Open the file and save the data
+        with open(file_argument[term], 'rb') as data_file:
+            for data_line in data_file:
+                data_list.append(data_line.strip())
+
+    # Return data as list
+    return data_list
 
 def run (passed_arguments = []):
     '''
 
     Parameters
     ----------
+    --model : str
+        Name of the model
+    --model-tree : str, str
+        Assign newick-formatted population tree to model
+        Example: --model-tree model_name newick_tree
+    --model-tree-file : str, str
+        Assign newick-formatted population tree file to model
+        Example: --model-tree-file model_name newick_file
+    --model-pop : str, str
+        Assign single population name to a model
+        Example: --model-pop model_name pop_name
+    --model-pops : str, list
+        Assign multiple population names to a model
+        Example: --model-pops model_name pop_name1 pop_name2 etc.
+    --model-pop-file : str, str
+        Assign population names to a model using a file
+        Example: --model-pop-file model_name pop_file
+    --pop-ind : str, str
+        Assign single individual name to a population
+        Example: --pop-ind pop_name ind_name
+    --pop-inds : str, list
+        Assign multiple population names to a model
+        Example: --pop-inds pop_name ind_name1 ind_name2 etc.
+    --pop-ind-file : str, str
+        Assign population names to a model using a file
+        Example: --pop-ind-file pop_name ind_file
+    --out : str
+        Filename of the model output
 
     Returns
     -------
 
     Raises
     ------
+    Exception
+        No tree assigned to model
+    Exception
+        Multiple trees assigned to model
+    Exception
+        No population assigned to model
+    Exception
+        No individuals assigned to population
 
     '''
 
     # Grab VCF arguments from command line
-    model_args = model_creator_parser(passed_arguments)
+    creator_args = model_creator_parser(passed_arguments)
 
     # Adds the arguments (i.e. parameters) to the log file
-    logArgs(model_args, 'model_creator')
+    logArgs(creator_args, 'model_creator')
 
-    # Dict to store lists of individuals
-    ind_dict = defaultdict(list)
-
-    # Check if ind_files were specified by the user
-    if model_args.assign_ind_file:
-        for pop, ind_file in model_args.assign_ind_file.items():
-            ind_dict[pop] = read_population_file(ind_file)
-
-    else:
-        ind_dict = model_args.inds
+    # Create the model file
+    model_file = ModelFile()
 
     # Loop each model specified to confirm parameters are valid
-    for current_model in model_args.model:
+    for model in creator_args.model:
 
         # Check that a tree has been assigned to the model
-        if current_model not in model_args.model_tree:
-            print 'No tree assigned to: %s' % current_model
-            sys.exit()
+        if not assigment_check(model, creator_args.model_tree_file, creator_args.model_tree):
+            raise Exception('No tree assigned to %s' % model)
 
-        # Check that pops have been assigned to the model
-        if current_model not in model_args.pops:
-            print 'No populations assigned to: %s' % current_model
-            sys.exit()
+        # Check that multiple trees have not been assigned to the model
+        if incompatible_duplicates_check(model, creator_args.model_tree_file, creator_args.model_tree):
+            raise Exception('Multiple trees assigned to %s' % model)
 
-        # Check if the number of populations has been assigned
-        if model_args.assign_npop:
-            # Check if the number of populations has been assigned for the current model
-            if model_args.assign_npop[current_model]:
-                if len(model_args.pops[current_model]) != model_args.assign_npop[current_model]:
-                    print  len(model_args.pops[current_model]),  model_args.assign_npop[current_model]
-                    print 'Number of populations (--npop) assigned to %s does not match the named popultions' % current_model
-                    sys.exit()
+        # Check if a pop assignment arguments has been used
+        if not assigment_check(model, creator_args.pops, creator_args.model_pop_file):
+            raise Exception('No populations assigned to %s' % model)
 
-        # Loop each population in the model
-        for current_pop in model_args.pops[current_model]:
+        # Create the model
+        model_data = Model(name = model)
 
-            # Check that the population has been assigned to at least one model
-            if current_pop not in set(itertools.chain.from_iterable(model_args.pops.values())):
-                print 'Population (%s) not assigned to any model' % current_pop
-                sys.exit()
+        logging.info('Model (%s) created' % model)
 
-            # Check that inds have been assigned to the population
-            if current_pop not in ind_dict:
-                print 'No individuals assigned to: %s' % current_pop
-                sys.exit()
+        # Convert the inds dict into a list
+        pop_list = dict_argument_to_list(model, creator_args.pops)
 
-                # Check if the number of inds has been assigned
-                if model_args.assign_nind:
-                    # Check if the number of inds has been assigned for the current pop
-                    if model_args.assign_nind[current_pop]:
-                        if len(ind_dict[current_pop]) != model_args.assign_nind[current_pop]:
-                            print 'Number of individuals (--nind) assigned to %s does not match the named individuals' % current_pop
-                            sys.exit()
+        # Convert the pop file into a list
+        pop_file_list = file_dict_argument_to_list(model, creator_args.model_pop_file)
 
-    # List to store the models
-    models_dict = []
+        # Combine the pop arguments
+        combined_pops = list(set(pop_list + pop_file_list))
 
-    # Loop each model specified to generate the output
-    for current_model in model_args.model:
+        logging.info('Populations assigned for model (%s)' % model)
 
-        # Create an ordered container for model information
-        model_dict = OrderedDict()
-
-        # Save the name of the model
-        model_dict['name'] = current_model
-
-        # Check if the model isn't a single population
-        if len(model_args.pops[current_model]) > 1:
-
-            # Assign the tree to the population
-            model_dict['tree'] = model_args.model_tree[current_model]
-
-        # Create container for population information
-        pop_dict = defaultdict(lambda: defaultdict(list))
+        # Assign the tree
+        model_data.assign_tree(tree = '')
 
         # Loop each population in the model
-        for current_pop in model_args.pops[current_model]:
-            # Assign the individuals to the population
-            pop_dict[current_pop]['inds'] = ind_dict[current_pop]
+        for pop in combined_pops:
 
-        # Append the pop_dict
-        model_dict['pops'] = pop_dict
+            # Check if a individual assignment arguments has been used
+            if not assigment_check(pop, creator_args.inds, creator_args.pop_ind_file):
+                raise Exception('No individuals assigned to %s' % pop)
 
-        # Append the model_dict
-        models_dict.append(model_dict)
+            # Convert the inds dict into a list
+            ind_list = dict_argument_to_list(pop, creator_args.inds)
 
-    # Open the output file
-    output_file = open(model_args.out, 'w')
+            # Convert the inds file into a list
+            ind_file_list = file_dict_argument_to_list(pop, creator_args.pop_ind_file)
 
-    # Write the json-formmated data to the output file
-    output_file.write(json.dumps(models_dict, indent = 4))
+            # Combine the pop arguments
+            combined_inds = list(set(ind_list + ind_file_list))
 
-    output_file.close()
+            logging.info('Individuals assigned for population (%s)' % pop)
+
+            # Assign the population
+            model_data.assign_pop(pop = pop, inds = combined_inds)
+
+            logging.info('Model (%s) assigned to model file' % model)
+
+        # Add the model to the model file
+        model_file[model] = model_data
+
+    # Create the model file
+    write_model_file(model_file, creator_args.out, overwrite = creator_args.overwrite)
 
 
 if __name__ == "__main__":
+    initLogger()
     run()
