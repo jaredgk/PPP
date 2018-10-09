@@ -114,7 +114,6 @@ class BaseData():
         logging.info('Sequence length: %d' % self.numbases)
         self.seqcount = len(self.seqs)
         logging.info('Sequence count: %d' % self.seqcount)
-        #self.polysites, self.informpolysites, self.cintervals, self.cmat =
         self.buildlistofsites(args.includesnpmissingdata, args.only2basesnps)
 
     def buildlistofsites(self, includesnpmissingdata, only2basesnps):
@@ -422,7 +421,7 @@ class BaseData():
                     somedata = True
                 for samp_allele in indiv.alleles:
                     if samp_allele is None:
-                        var_list.append('.')
+                        var_list.append('N')
                     else:
                         var_list.append(samp_allele)
             if somedata:
@@ -481,14 +480,15 @@ def createParser():
     returntype_group.add_argument("--right", dest="intervalpicktype",
             action='store_const', const="rightinterval",
             default="leftinterval",help = "return the rightmost interval")
+    returntype_group.add_argument("--maxlen", dest="intervalpicktype",action="store_const", const="maxregion",default="leftinterval",help="return interval with most SNPs")
     parser.add_argument("--numinf",dest= "numinformativesites",
             action="store",nargs = 1,type = int, default = None,help =
             "limit the picking of an interval to only those with at least this"
             " many informative snps")
-    parser.add_argument("--b2",dest="only2basesnps",action="store_true",
+    parser.add_argument("--remove-multiallele",dest="only2basesnps",action="store_true",
             default=False,help = "causes snps with more than 2 bases "
             "to be ignored, default is to include them")
-    parser.add_argument("--incN", dest="includesnpmissingdata",
+    parser.add_argument("--include-missing", dest="includesnpmissingdata",
             action="store_true", default=False,help="causes snps with missing"
             " data to be included, default is to ignore them")
     parser.add_argument("--ranseed", dest="ranseed", type=int,
@@ -618,6 +618,11 @@ def sampleinterval(picktype,numinf,intervals,infcounts):
             else:
                 break
         return  intervals[ okints[i]]
+    if picktype == "maxregion":
+        #print (okints)
+        #print (infcounts)
+        #print (intervals)
+        return intervals[infcounts.index(max(infcounts))]
     assert False  # should not get here
     return None
 

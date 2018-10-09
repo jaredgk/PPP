@@ -5,7 +5,10 @@ import logging
 from logging_module import initLogger
 from gene_region import Region, RegionList
 import vcf_reader_func as vf
+import os
+sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
 
+from model import Model, read_model_file
 
 
 def createParser():
@@ -51,6 +54,8 @@ def createParser():
     subsamp_group.add_argument('--subsamp-num', dest="subsamp_num",
                                help=("Number of individuals to be randomly "
                                      "subsampled from VCF file"))
+    subsamp_group.add_argument('--model',dest="modelname",help="Model file for selecting individuals for writing")
+    parser.add_argument('--poptag',dest="poptag",help="If model file is used, will use model with this name")
     return parser
 
 def logArgs(args):
@@ -169,10 +174,19 @@ def vcf_region_write(sys_args):
         sys.exit(1)
     args = parser.parse_args(sys_args)
     logArgs(args)
+    popmodel = None
+    if args.modelname is not None:
+        popmodels = read_model_file(args.modelname)
+        if len(popmodels) != 1:
+            popmodel = popmodels[args.poptag]
+        else:
+            pp = list(popmodels.keys())
+            popmodel = popmodels[pp[0]]
     vcf_reader = vf.VcfReader(args.vcfname,
                               compress_flag=args.compress_flag,
                               subsamp_num=args.subsamp_num,
                               subsamp_fn=args.subsamp_fn,
+                              popmodel=popmodel,
                               index=args.tabix_index)
     logging.info('VCF file read')
     header = vcf_reader.reader.header

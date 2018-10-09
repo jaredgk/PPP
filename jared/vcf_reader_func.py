@@ -145,13 +145,12 @@ def getPassSites(record_list, remove_cpg=False, remove_indels=True,
         checkForMultiallele(record_list,pass_list)
     for i in range(len(record_list)):
         rec = record_list[i]
-        logging.info(rec.pos)
         if remove_indels and not checkRecordIsSnp(rec):
             pass_list[i] = False
         if remove_cpg and checkIfCpG(rec,fasta_ref):
             pass_list[i] = False
         alleles,total_sites,missing_inds = getAlleleCountDict(rec)
-        if remove_missing != -1 and missing_inds > remove_missing:
+        if remove_missing != -1 and missing_inds > int(remove_missing):
             pass_list[i] = False
         if inform_level != 0 and not isInformative(rec,mincount=inform_level,alleles=alleles):
             pass_list[i] = False
@@ -329,6 +328,7 @@ def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
 
 def checkRecordIsSnp(rec):
     """Checks if this record is a single nucleotide variant, returns bool."""
+    logging.info(str(rec.pos))
     if len(rec.ref) != 1:
         return False
     if rec.alts is None:
