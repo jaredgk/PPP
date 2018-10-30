@@ -647,7 +647,3 @@ def convert_to_vcfgz (filename, output_prefix, keep_original = False):
         if check_for_index(filename) == True:
             delete_index(filename)
         os.remove(filename)
-
-
-import sys
-print (get_unique_chrs(sys.argv[1]))
