@@ -113,6 +113,12 @@ def pipe_bcftools_to_list (bcftools_call_args):
 
         # Iterate the bcftools stdout unless error occurs
         for bcftools_stdout_line in iter(bcftools_call.stdout.readline, b''):
+
+            # Check if code is running in python 3
+            if sys.version_info[0] == 3:
+                # Convert bytes to string
+                bcftools_stdout_line = bcftools_stdout_line.decode()
+
             # Remove the newline character
             bcftools_line = bcftools_stdout_line.strip()
             # Save the line to the list
@@ -174,6 +180,12 @@ def pipe_bcftools_to_set (bcftools_call_args):
 
         # Iterate the bcftools stdout unless error occurs
         for bcftools_stdout_line in iter(bcftools_call.stdout.readline, b''):
+
+            # Check if code is running in python 3
+            if sys.version_info[0] == 3:
+                # Convert bytes to string
+                bcftools_stdout_line = bcftools_stdout_line.decode()
+
             # Remove the newline character
             bcftools_line = bcftools_stdout_line.strip()
             # Check if the element is different from the previous element
@@ -635,3 +647,7 @@ def convert_to_vcfgz (filename, output_prefix, keep_original = False):
         if check_for_index(filename) == True:
             delete_index(filename)
         os.remove(filename)
+
+
+import sys
+print (get_unique_chrs(sys.argv[1]))
