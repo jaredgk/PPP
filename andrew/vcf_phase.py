@@ -13,7 +13,7 @@ from logging_module import initLogger, logArgs
 from model import read_model_file
 from beagle import call_beagle
 from shapeit import call_shapeit, remove_intermediate_files
-from bcftools import pipe_bcftools_to_chr, chr_subset_file, concatenate
+from bcftools import get_unique_chrs, chr_subset_file, concatenate
 
 def phase_argument_parser(passed_arguments):
     '''Phase Argument Parser - Assigns arguments for vcftools from command line.
@@ -242,7 +242,7 @@ def run (passed_arguments = []):
             include_file_created = True
 
     # Get the list of chromosomes within the VCF
-    chrs_in_vcf = pipe_bcftools_to_chr(phase_args.vcf)
+    chrs_in_vcf = get_unique_chrs(phase_args.vcf)
 
     # Check if the user specified a specific chromosome
     if phase_args.phase_chr:
