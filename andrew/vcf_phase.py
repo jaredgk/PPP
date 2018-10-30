@@ -275,35 +275,35 @@ def run (passed_arguments = []):
 
         # Assign the burn-in iter, if specified
         if phase_args.beagle_burn_iter:
-            phase_call_args.append('burnin=' + phase_args.beagle_burn_iter)
+            phase_call_args.append('burnin=' + str(phase_args.beagle_burn_iter))
 
         # Assign the iter, if specified
         if phase_args.beagle_iter:
-            phase_call_args.append('iterations=' + phase_args.beagle_iter)
+            phase_call_args.append('iterations=' + str(phase_args.beagle_iter))
 
         # Assign the state count, if specified
         if phase_args.beagle_states:
-            phase_call_args.append('phase-states=' + phase_args.beagle_states)
+            phase_call_args.append('phase-states=' + str(phase_args.beagle_states))
 
         # Assign the window length, if specified
         if phase_args.beagle_window:
-            phase_call_args.append('window=' + phase_args.beagle_window)
+            phase_call_args.append('window=' + str(phase_args.beagle_window))
 
         # Assign the window overlap, if specified
         if phase_args.beagle_overlap:
-            phase_call_args.append('overlap=' + phase_args.beagle_overlap)
+            phase_call_args.append('overlap=' + str(phase_args.beagle_overlap))
 
         # Assign the HMM error, if specified
         if phase_args.beagle_error:
-            phase_call_args.append('err=' + phase_args.beagle_error)
+            phase_call_args.append('err=' + str(phase_args.beagle_error))
 
         # Assign the step length, if specified
         if phase_args.beagle_step:
-            phase_call_args.append('step=' + phase_args.beagle_step)
+            phase_call_args.append('step=' + str(phase_args.beagle_step))
 
         # Assign the number of steps, if specified
         if phase_args.beagle_nsteps:
-            phase_call_args.append('nsteps=' + phase_args.beagle_nsteps)
+            phase_call_args.append('nsteps=' + str(phase_args.beagle_nsteps))
 
         # Assign the genetic map, if specified
         if phase_args.genetic_map:
@@ -311,11 +311,11 @@ def run (passed_arguments = []):
 
         # Assign the effective pop size, if specified
         if phase_args.Ne:
-            phase_call_args.append('ne=' + phase_args.Ne)
+            phase_call_args.append('ne=' + str(phase_args.Ne))
 
         # Assign the random seed, if specified
         if phase_args.random_seed:
-            phase_call_args.append('seed=' + phase_args.random_seed)
+            phase_call_args.append('seed=' + str(phase_args.random_seed))
 
         # Assign the chromosome to phase, if specified
         if phase_args.phase_chr:
@@ -359,23 +359,23 @@ def run (passed_arguments = []):
 
         # Assign the shapeit burn in iter, if specified
         if phase_args.shapeit_burn_iter:
-            phase_call_args.extend(['--burn', phase_args.shapeit_burn_iter])
+            phase_call_args.extend(['--burn', str(phase_args.shapeit_burn_iter)])
 
         # Assign the shapeit prune iter, if specified
         if phase_args.shapeit_prune_iter:
-            phase_call_args.extend(['--prune', phase_args.shapeit_prune_iter])
+            phase_call_args.extend(['--prune', str(phase_args.shapeit_prune_iter)])
 
         # Assign the shapeit main iter, if specified
         if phase_args.shapeit_main_iter:
-            phase_call_args.extend(['--main', phase_args.shapeit_main_iter])
+            phase_call_args.extend(['--main', str(phase_args.shapeit_main_iter)])
 
         # Assign the number of shapeit states if specified
         if phase_args.shapeit_states:
-            phase_call_args.extend(['--states', phase_args.shapeit_states])
+            phase_call_args.extend(['--states', str(phase_args.shapeit_states)])
 
         # Assign the shapeit window size, if specified
         if phase_args.shapeit_window:
-            phase_call_args.extend(['--window', phase_args.shapeit_window])
+            phase_call_args.extend(['--window', str(phase_args.shapeit_window)])
 
         # Assign the genetic map, if specified
         if phase_args.genetic_map:
@@ -383,11 +383,11 @@ def run (passed_arguments = []):
 
         # Assign the effective pop size, if specified
         if phase_args.Ne:
-            phase_call_args.extend(['--effective-size', phase_args.Ne])
+            phase_call_args.extend(['--effective-size', str(phase_args.Ne)])
 
         # Assign the random seed, if specified
         if phase_args.random_seed:
-            phase_call_args.extend(['--seed', phase_args.random_seed])
+            phase_call_args.extend(['--seed', str(phase_args.random_seed)])
 
         # Check if only a single shapeit run is required
         if phase_args.phase_chr or len(chrs_in_vcf) == 1:
