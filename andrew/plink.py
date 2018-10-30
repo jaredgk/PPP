@@ -382,7 +382,7 @@ def assign_plink_input_from_prefix (input_prefix, input_format):
 def assign_plink_input_from_command_args (ped_filename = None, map_filename = None,
                                           bed_filename = None, bim_filename = None, fam_filename = None,
                                           haps_filename = None, sample_filename = None,
-                                          vcf_filename = None, **kwargs):
+                                          vcf_filename = None, vcf_fid = None, **kwargs):
 
     input_command_args = []
 
@@ -434,7 +434,16 @@ def assign_plink_input_from_command_args (ped_filename = None, map_filename = No
         # Assign the vcf file format
         vcfname_format = checkFormat(vcf_filename)
 
-        input_command_args.extend(['--const-fid', '--allow-extra-chr'])
+        # Check if a fmaily ID was assigned for the vcf file
+        if vcf_fid:
+            # Assign the family id
+            input_command_args.extend(['--const-fid', vcf_fid])
+
+        # If no family ID was assigned, use double IDs
+        else:
+            input_command_args.append('--double-id')
+
+        input_command_args.append('--allow-extra-chr')
 
         # Assign the associated input command, or return an error.
         if vcfname_format == 'vcf' or vcfname_format == 'bgzip':

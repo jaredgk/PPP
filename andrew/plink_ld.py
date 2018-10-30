@@ -47,6 +47,9 @@ def plink_argument_parser(passed_arguments):
     # Input VCF argument
     plink_parser.add_argument("--vcf", dest = 'vcf_filename', help = "Input VCF filename", type = str, action = parser_confirm_file())
 
+    # Sets a family ID for the samples in the VCF
+    plink_parser.add_argument("--vcf-fid", dest = 'vcf_fid', help = "Specifies the family ID for all samples", type = str)
+
     # Input PED arguments
     plink_parser.add_argument("--ped", dest = 'ped_filename', help = "Input PED filename", type = str, action = parser_confirm_file())
     plink_parser.add_argument("--map", dest = 'map_filename', help = "Input MAP filename. Called alongside --ped", type = str, action = parser_confirm_file())
@@ -114,6 +117,8 @@ def run (passed_arguments = []):
         ----------
         --vcf : str
             Specifies the input VCF filename
+        --vcf-fid : str
+            Specifies the family ID for all samples
         --ped : str
             Specifies the input PED filename
         --map : str
