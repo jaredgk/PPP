@@ -84,46 +84,39 @@ def pipe_bcftools (bcftools_call_args):
 
     return bcftools_call
 
-def pipe_bcftools_to_chr (vcf_filename):
+def pipe_bcftools_to_list (bcftools_call_args):
     '''
-        Pipes chromosome and/or contig output of bcftools to a list of unique
-        entries
+        Pipes output of bcftools to a set
 
-        The purpose of this function is to return a list of the unique
-        chromosomes and/or contigs for use in other functions.
+        The purpose of this function is to return a set of the output of
+        various bcftools commands, this will result in the removal of duplicate
+        entries.
 
         Parameters
         ----------
-        vcf_filename : str
-            VCF input
+        bcftools_call_args : list
+            bcftools arguments
 
         Returns
         -------
-        chromosomes_to_return : list
-            Unique chromosomes and/or contigs within VCF input
+        set_to_return : set
+            Set of unique elements from the bcftools output
     '''
 
     # Open bcftools pipe
-    bcftools_call = pipe_bcftools(['query', '-f', '%CHROM\n', vcf_filename])
+    bcftools_call = pipe_bcftools(bcftools_call_args)
 
-    # Create a set to hold unique chromosome
-    chromosomes_to_return = set()
+    # Create a list to hold unique elements
+    list_to_return = []
 
     try:
-
-        # Current chromosomes/contigs, reduces duplicates if VCF is sorted
-        previous_chr = None
 
         # Iterate the bcftools stdout unless error occurs
         for bcftools_stdout_line in iter(bcftools_call.stdout.readline, b''):
             # Remove the newline character
-            bcftools_line_chr = bcftools_stdout_line.strip()
-            # Check if the bcftools bcftools chr is different from stored chr
-            if bcftools_line_chr != previous_chr:
-                # Store the new chr for comparisons to reduce duplicates
-                previous_chr = bcftools_line_chr
-                # Save the chr
-                chromosomes_to_return.add(bcftools_line_chr)
+            bcftools_line = bcftools_stdout_line.strip()
+            # Save the line to the list
+            list_to_return.append(bcftools_line)
 
     except:
         raise Exception('bcftools call error')
@@ -147,7 +140,72 @@ def pipe_bcftools_to_chr (vcf_filename):
 
     logging.info('bcftools call complete')
 
-    return list(chromosomes_to_return)
+    return list_to_return
+
+def pipe_bcftools_to_set (bcftools_call_args):
+    '''
+        Pipes output of bcftools to a set
+
+        The purpose of this function is to return a set of the output of
+        various bcftools commands, this will result in the removal of duplicate
+        entries.
+
+        Parameters
+        ----------
+        bcftools_call_args : list
+            bcftools arguments
+
+        Returns
+        -------
+        set_to_return : set
+            Set of unique elements from the bcftools output
+    '''
+
+    # Open bcftools pipe
+    bcftools_call = pipe_bcftools(bcftools_call_args)
+
+    # Create a set to hold unique elements
+    set_to_return = set()
+
+    try:
+
+        # Current element, reduces duplicates if VCF is sorted
+        previous_element = None
+
+        # Iterate the bcftools stdout unless error occurs
+        for bcftools_stdout_line in iter(bcftools_call.stdout.readline, b''):
+            # Remove the newline character
+            bcftools_line = bcftools_stdout_line.strip()
+            # Check if the element is different from the previous element
+            if bcftools_line != previous_element:
+                # Store the new element for comparisons to reduce duplicates
+                previous_element = bcftools_line
+                # Save the element in the set
+                set_to_return.add(bcftools_line)
+
+    except:
+        raise Exception('bcftools call error')
+
+    # Close the bcftools stdout
+    bcftools_call.stdout.close()
+
+    # Wait for bctools to finish
+    bcftools_call.wait()
+
+    # Read the bcftools stderr
+    bcftools_stderr = bcftools_call.stderr.read()
+
+    # Check if code is running in python 3
+    if sys.version_info[0] == 3:
+        # Convert bytes to string
+        bcftools_stderr = bcftools_stderr.decode()
+
+    # Check that the log file was created correctly
+    check_bcftools_for_errors(bcftools_stderr)
+
+    logging.info('bcftools call complete')
+
+    return set_to_return
 
 def call_bcftools (bcftools_call_args):
     '''
@@ -187,6 +245,22 @@ def call_bcftools (bcftools_call_args):
     logging.info('bcftools call complete')
 
     return bcftools_stderr
+
+def get_unique_chrs (filename):
+
+    # Get set of the chromosomes
+    chromosome_set = pipe_bcftools_to_set(['query', '-f', '%CHROM\n', filename])
+
+    # Return list of the unique chromosomes
+    return list(chromosome_set)
+
+def get_samples (filename):
+
+    # Get list of the samples
+    sample_list = pipe_bcftools_to_list(['query', '-l', filename])
+
+    # Return list of the samples
+    return sample_list
 
 def check_for_index (filename):
     '''
