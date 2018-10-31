@@ -1,0 +1,60 @@
+<tool id="vcf_subregion" name="VCF to VCF region" version="0.1">
+	<description>Generates a VCF file for one or many regions in a master VCF file</description>
+	<requirements>
+		<requirement type="package">pysam</requirement>
+	</requirements>
+    <stdio>
+        <exit_code range="1:" level="fatal" />
+    </stdio>
+	<command><![CDATA[
+        mkdir vcfs/;
+        #if $input.is_of_type('vcf_bgzip')
+        ln -fs $input input.vcf.gz;
+        ln -fs $input.metadata.tabix_index input.vcf.gz.tbi;
+        #end if
+		python $__tool_directory__/vcf_from_regions.py
+        #if $input.is_of_type('vcf_bgzip')
+        input.vcf.gz
+        #else
+        $input
+        #end if
+        #if $region_cond.region_format == 'list'
+        --rl $region_cond.region_list
+        #end if
+        #if $region_cond.region_format == 'str'
+        --r $region_cond.region_str
+        #end if
+        --multi-out
+        --output vcfs/job_run_
+        #if  $input.is_of_type('vcf_bgzip')
+            --tbi $input.metadata.tabix_index
+        #end if
+	]]>
+	</command>
+	<inputs>
+		<param format="vcf,vcf_bgzip" name="input" type="data" label="VCF Input" />
+		<conditional name="region_cond">
+			<param name="region_format" type="select" label="Region source">
+				<option value="list" selected="True">BED file</option>
+				<option value="str">Form input</option>
+			</param>
+			<when value="str">
+				<param name="region_chrom" type="text" label="Region Chromosome" />
+                <param name="region_start" type="integer" label="Region Start" value="0" />
+                <param name="region_end" type="integer" label="Region End" value="0" />
+			</when>
+            <when value="list">
+                <param name="region_list" type="data" label="BED file" />
+            </when>
+
+		</conditional>
+	</inputs>
+    <outputs>
+        <collection type="list" name="collection-output">
+            <discover_datasets pattern="__name_and_ext__" directory="vcfs" />
+        </collection>
+    </outputs>
+
+
+
+</tool>
