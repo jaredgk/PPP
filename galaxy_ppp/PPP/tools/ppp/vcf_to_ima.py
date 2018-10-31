@@ -61,6 +61,7 @@ def createParser():
     parser.add_argument("--poptag",dest="poptag",help=("If model file has "
                         "multiple models, use model with this name"))
     parser.add_argument("--mutrate",dest="mutrate",type=float,default=1e-9,help="Mutation rate per base pair (default is 1e-9)")
+    parser.add_argument("--inheritance-scalar",dest="inhet_sc",type=float,default=None)
     parser.add_argument("--fasta",dest="fasta",action="store_true")
     parser.add_argument("--multi-out",dest="multi_out",type=str)
     return parser
@@ -110,7 +111,10 @@ def checkRefAlign(vcf_recs, fasta_ref, chrom, ref_check):
     for vcf_r in vcf_recs:
         vcf_seq = vcf_r.ref
         pos = vcf_r.pos-1
-        fasta_seq = fasta_ref.fetch(vcf_r.chrom, pos, pos+len(vcf_seq))
+        try:
+            fasta_seq = fasta_ref.fetch(vcf_r.chrom, pos, pos+len(vcf_seq))
+        except KeyError:
+            fasta_seq = fasta_ref.fetch(vf.flipChrom(vcf_r.chrom),pos,pos+len(vcf_seq))
         if vcf_seq.upper() != fasta_seq.upper():
             if ref_check:
                 raise Exception(("VCF bases and reference bases do not match."
@@ -177,7 +181,14 @@ def writeHeader(popmodel, gr_len, out_f, pop_string="(0,1):2"):
     #out_f.write(pop_string+'\n')
     out_f.write(str(gr_len)+'\n')
 
-def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=1, mut_rate=1e-9):
+def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=None, mut_rate=1e-9,include_seq=False):
+    if inhet_sc is None:
+        if gener.chrom in ['X','chrX']:
+            inhet_sc = 0.75
+        elif gener.chrom in ['Y','chrY','MT','chrMT']:
+            inhet_sc = 0.25
+        else:
+            inhet_sc = 1
     name = gener.chrom+':'+str(gener.start)+':'+str(gener.end)
     gene_len = gener.end-gener.start
     for rec in rec_list:
@@ -187,7 +198,10 @@ def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=1, mut_rat
     #    lh += ' '+str(len(pop_data[i][1]))
     for p in popmodel.pop_list:
         lh += ' '+str(2*popmodel.nind[p])
-    lh += ' '+str(len(rec_list))
+    if include_seq:
+        lh += ' '+str(gene_len)
+    else:
+        lh += ' '+str(len(rec_list))
     lh += ' '+mut_model
     lh += ' '+str(inhet_sc)
     mutlocus = mut_rate * gene_len
@@ -369,7 +383,7 @@ def vcf_to_ima(sys_args):
             else:
                 region = Region(rec_list[0].pos-1,rec_list[-1].pos,rec_list[0].chrom)
         if filter_recs:
-            t = vf.filterSites(rec_list,remove_cpg=args.parsecpg,remove_indels=(not args.indel_flag),remove_multiallele=args.remove_multiallele,remove_missing=args.remove_missing,inform_level=0,fasta_ref=fasta_ref)
+            t = vf.filterSites(rec_list,remove_cpg=args.parsecpg,remove_indels=(not args.indel_flag),remove_multiallele=args.remove_multiallele,remove_missing=args.remove_missing,inform_level=1,fasta_ref=fasta_ref)
             rec_list = t
         if len(rec_list) == 0:
             logging.warning(("Region %s has no variants "
@@ -384,7 +398,7 @@ def vcf_to_ima(sys_args):
                 ref_seq = fasta_ref.fetch(vf.flipChrom(region.chrom),region.start,region.end)
             checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
         if not args.fasta:
-            reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate)
+            reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate,inhet_sc=args.inhet_sc,include_seq=(fasta_ref is not None))
             output_file.write(reg_header+'\n')
         popnum, indiv = 0, 0
         #for p in popmodel.pop_list:

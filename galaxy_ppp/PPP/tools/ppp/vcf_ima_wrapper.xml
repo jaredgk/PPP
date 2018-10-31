@@ -1,6 +1,7 @@
 <tool id="vcf_to_ima" name="VCF to IMa Input" version="0.1">
     <requirements>
         <requirement type="package">pysam</requirement>
+        <requirement type="package">numpy</requirement>
     </requirements>
     <stdio>
         <exit_code range="1:" level="fatal" />
@@ -14,9 +15,19 @@
                 $loci
             #end for
             --pop $model_file
+            #if $model_pop != '':
+                --poptag $model_pop
+            #end if
             --output $output
             --mutrate $mutrate
-
+            #if $inhet_cond.inhet_bool
+            --inheritance-scalar $inhet_cond.inheritance
+            #end if
+            #if $reference_genome:
+            --ref $reference_genome
+            $printseq
+            $parsecpg
+            #end if
 
 
         ]]>
@@ -28,7 +39,17 @@
     <inputs>
         <param format="vcf,vcf_bgzip" name="vcf_collection" type="data_collection" collection_type="list" label="VCF Collection" />
         <param format="model" name="model_file" type="data" label="Model File" />
+        <param type="text" name="model_pop" label="Population Name" />
+        <param type="data" format="fasta" name="reference_genome" label="Reference FASTA" optional="true"/>
+        <param type="boolean" name="parsecpg" label="Remove CpGs from loci if reference is provided" truevalue="--parsecpg" falsevalue=""/>
+        <param type="boolean" name="printseq" label="Add invariant sites to loci" truevalue="" falsevalue="--noseq" />
         <param type="float" name="mutrate" label="Mutation Rate" value="1e-9"/>
+        <conditional name="inhet_cond">
+        <param type="boolean" name="inhet_bool" label="Use custom inheritance scalar" />
+        <when value="true">
+        <param type="float" name="inheritance" label="Inheritance Scalar (default 1 for autosomes, .75 for X, .25 for Y/MT)" value="1"/>
+    </when>
+</conditional>
 
     </inputs>
     <outputs>
