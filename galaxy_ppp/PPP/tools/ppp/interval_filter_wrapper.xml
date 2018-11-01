@@ -21,20 +21,14 @@
             --vcf $input_vcf
             #end if
             --bed $input_bed
-            #if $indel:
-            --remove-indels
-            #end if
-            #if $remove_multi:
-            --remove-multi
-            #end if
+            $indel
+            $remove_multi
+            $filterxy
             #if int($remove_missing) != -1:
             --remove-missing $remove_missing
             #end if
             #if $return_mode.return_setcount == 'some':
             --randcount $return_mode.region_count
-            #end if
-            #if $filterxy:
-            --no-xy
             #end if
             --min-length $min_length
             #if $cpg_cond.cpg_bool:
@@ -52,15 +46,14 @@
     <inputs>
         <param format="vcf_bgzip" name="input_vcf" type="data" label="VCF File (bgzipped)" />
         <param format="bed" name="input_bed" type="data" label="BED regions to filter" />
-
-        <param type="boolean" name="indel" label="Don't count indels as informative" checked="true" />
-        <param type="boolean" name="remove_multi" label="Don't count sites with more than two alleles as informative" checked="true" />
+        <param type="boolean" name="indel" label="Don't count indels as informative" checked="true" truevalue="--remove-indels" falsevalue=""/>
+        <param type="boolean" name="remove_multi" label="Don't count sites with more than two alleles as informative" checked="true" truevalue="--remove-multi" falsevalue=""/>
         <param type="integer" name="remove_missing" label="Missing Data (-1 for no filter, 0 for filter any missing data, 1+ for remove sites with n missing individuals)" value="-1" />
         <param type="integer" name="informative_count" label="Number of sites required to deem region informative" value="3" />
         <param type="integer" name="min_length" label="Minimum length of valid regions" value="1000" />
-        <param type="boolean" name="filterxy" label="Filter out X/Y regions" checked="true" />
+        <param type="boolean" name="filterxy" label="Filter out X/Y regions" checked="true" truevalue="--no-xy" falsevalue=""/>
         <conditional name="cpg_cond">
-            <param name="cpg_bool" type="boolean" label="Filter CpGs" />
+            <param name="cpg_bool" type="boolean" label="Filter CpGs"/>
             <when value="true">
                 <param name="cpg_reg" type="data" label="Reference Genome" format="fasta,fasta.gz" />
             </when>
