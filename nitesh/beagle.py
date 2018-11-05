@@ -144,7 +144,7 @@ def call_beagle (beagle_path, beagle_call_args, output_prefix, output_format):
         output_format : str
             Output file format
     '''
-    print(beagle_call_args)
+
     # Standard call to beagle
     standard_beagle_call(beagle_path, beagle_call_args, output_prefix)
 

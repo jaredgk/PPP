@@ -72,11 +72,16 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument('--filter-exclude-indv-file', help = 'Individuals to exclude in file. Cannont to be used alonside --model', action = parser_confirm_file())
 
     # Allele count filters
-    vcf_parser.add_argument('--filter-min-alleles', help = 'Only sites with a number of allele >= to the number given should be included', type = int,  default = 2)
-    vcf_parser.add_argument('--filter-max-alleles', help = 'Only sites with a number of allele <= to the number given should be included', type = int,  default = 2)
+    vcf_parser.add_argument('--filter-min-alleles', help = 'Only sites with a number of allele >= to the number given should be included', type = int)
+    vcf_parser.add_argument('--filter-max-alleles', help = 'Only sites with a number of allele <= to the number given should be included', type = int)
 
     # Missing data filter
     vcf_parser.add_argument('--filter-max-missing', help = 'Exclude sites by the proportion of missing data (0.0: include all, 1.0: no missing data)', type = float)
+
+    # Indel filters
+    indel_filters = vcf_parser.add_mutually_exclusive_group()
+    indel_filters.add_argument('--filter-include-only-indels', help = 'Include only sites that contain an indel', action = 'store_true')
+    indel_filters.add_argument('--filter-exclude-indels', help = 'Exclude sites that contain an indel', action = 'store_true')
 
     # Chromosome filters
     vcf_parser.add_argument('--filter-include-chr', help = 'Chromosome to include. Note: This argument may be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
@@ -281,6 +286,13 @@ def run (passed_arguments = []):
         if vcf_args.filter_exclude_indv:
             for indv_to_exclude in vcf_args.filter_exclude_indv:
                 vcftools_call_args.extend(['--remove-indv', indv_to_exclude])
+
+    # Indel-based filters
+    if vcf_args.filter_include_only_indels or vcf_args.filter_exclude_indels:
+        if vcf_args.filter_include_only_indels:
+            vcftools_call_args.append('--keep-only-indels')
+        if vcf_args.filter_exclude_indels:
+            vcftools_call_args.append('--remove-indels')
 
     # Chromosome-based filters
     if vcf_args.filter_include_chr or vcf_args.filter_exclude_chr:

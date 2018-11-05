@@ -79,14 +79,14 @@ def vcf_calc_parser(passed_arguments):
     vcf_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
 
     # Statistic based arguments
-    statistic_list = ['weir-fst', 'windowed-weir-fst', 'TajimaD', 'site-pi', 'window-pi', 'freq', 'het-fit', 'het-fis']
+    statistic_list = ['weir-fst', 'windowed-weir-fst', 'TajimaD', 'site-pi', 'window-pi', 'freq', 'het-fit', 'het-fis', 'hardy-weinberg']
     statistic_default = 'windowed-weir-fst'
 
     vcf_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'The statistic to calculate', type = str, choices = statistic_list, default = statistic_default)
 
     # Statistic window options
-    vcf_parser.add_argument('--statistic-window-size', help = 'Window size of relevant calculations', type = int)
-    vcf_parser.add_argument('--statistic-window-step', help = 'Step size between windows of relevant calculations', type = int)
+    vcf_parser.add_argument('--statistic-window-size', help = 'Window size of relevant statistics', type = int)
+    vcf_parser.add_argument('--statistic-window-step', help = 'Step size between windows of relevant statistics', type = int)
 
     # Position-based position filters
     vcf_parser.add_argument('--filter-include-positions', help = 'Sites to include within a file', action = parser_confirm_file())
@@ -241,7 +241,9 @@ def run (passed_arguments = []):
     --statistic-window-size : int
         Specifies the window size for window-based statistics
     --statistic-window-step : int
-        Specifies step size between windows for spcific window-based statistics
+        Specifies step size between windows for specific window-based statistics
+    --statistic-pvalue-cutoff : float
+        P-value cutoff for specific statistics
     --filter-include-positions : str
         Specifies a set of sites to include within a tsv file (chromosome and position)
     --filter-exclude-positions : str
@@ -438,6 +440,14 @@ def run (passed_arguments = []):
 
         # Assigns the suffix for the vcftools log file
         vcftools_out_suffix = '.windowed.pi'
+
+    elif vcf_args.calc_statistic == 'hardy-weinberg':
+
+        # Assigns all the vcftools arguments for the allele frequency
+        vcftools_call_args.append('--hardy')
+
+        # Assigns the suffix for the vcftools log file
+        vcftools_out_suffix = '.hwe'
 
     elif vcf_args.calc_statistic == 'freq':
 
