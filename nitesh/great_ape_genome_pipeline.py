@@ -23,7 +23,7 @@ process = subprocess.Popen("python vcf_filter.py --vcf merged.vcf.gz --filter-ma
                            --out-prefix great_ape_genome/Pantrog_onlybiallelic_nomissing  --filter-exclude-chr chrX chrY --overwrite"
                            , shell=True, stdout=subprocess.PIPE)
 process.wait()
-if process == 0:
+if process.returncode == 0:
     process2 = subprocess.Popen("python vcf_calc.py --vcf great_ape_genome/Pantrog_onlybiallelic_nomissing.recode.vcf.gz  \
                                 --out-prefix great_ape_genome/fst.calc --calc-statistic windowed-weir-fst --model-file \
                                 example/input/input.model --model 2Pop --statistic-window-size 10000 --statistic-window-step 20000 \
@@ -31,14 +31,14 @@ if process == 0:
     process2.wait()
     if process2.returncode == 0:
         print("FST calculation successful.\n")
-        process3 = subprocess.Popen("python vcf_sampler.py --vcf great_ape_genome/merged.vcf.gz --statistic-file \
+        process3 = subprocess.Popen("python vcf_sampler.py --vcf merged.vcf.gz --statistic-file \
                                     great_ape_genome/fst.calc.windowed.weir.fst --out-format vcf.gz --calc-statistic \
-                                    windowed-weir-fst --sampling-scheme random --uniform-bins 5 --out-prefix great_ape_genome/sampled --overwrite",
+                                    windowed-weir-fst --sampling-scheme random --uniform-bins 5 --out-dir great_ape_genome/ --overwrite",
                                     shell=True, stdout=subprocess.PIPE)
         process3.wait()
         if process3.returncode == 0:
             print("Sampling successful.\n")
-            for i in range(5):
+            for i in range(200):
                 process4 = subprocess.Popen("python vcf_filter.py --vcf great_ape_genome/Sample_Files/sampled_" + str(i)
                                             + ".vcf.gz --filter-max-missing 1.0 --out-format vcf.gz --out-prefix \
                                             great_ape_genome/Sampled_nonmissing/sampled_nomissing_" + str(i) + " --overwrite",
