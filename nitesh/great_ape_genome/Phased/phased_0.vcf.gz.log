@@ -1,0 +1,73 @@
+beagle.28Sep18.793.jar (version 5.0)
+Copyright (C) 2014-2018 Brian L. Browning
+Enter "java -jar beagle.28Sep18.793.jar" to list command line argument
+Start time: 01:18 PM PST on 07 Nov 2018
+
+Command line: java -Xmx7095m -jar beagle.28Sep18.793.jar
+  gt=great_ape_genome/Sampled_nonmissing/Sample_nomissing_0.recode.vcf.gz
+  out=great_ape_genome/Phased/phased_0
+  burnin=12
+  iterations=24
+  phase-states=320
+  window=20.0
+  overlap=2.0
+  err=0.0005
+  step=0.05
+  nsteps=5
+  seed=100
+
+No genetic map is specified: using 1 cM = 1 Mb
+
+Reference samples:           0
+Study samples:              38
+
+Window 1 (chr1:17580345-17589940)
+Study markers:             153
+
+Burnin  iteration 1:           0 seconds
+Burnin  iteration 2:           0 seconds
+Burnin  iteration 3:           0 seconds
+Burnin  iteration 4:           0 seconds
+Burnin  iteration 5:           0 seconds
+Burnin  iteration 6:           0 seconds
+Burnin  iteration 7:           0 seconds
+Burnin  iteration 8:           0 seconds
+Burnin  iteration 9:           0 seconds
+Burnin  iteration 10:          0 seconds
+Burnin  iteration 11:          0 seconds
+Burnin  iteration 12:          0 seconds
+
+Phasing iteration 1:           0 seconds
+Phasing iteration 2:           0 seconds
+Phasing iteration 3:           0 seconds
+Phasing iteration 4:           0 seconds
+Phasing iteration 5:           0 seconds
+Phasing iteration 6:           0 seconds
+Phasing iteration 7:           0 seconds
+Phasing iteration 8:           0 seconds
+Phasing iteration 9:           0 seconds
+Phasing iteration 10:          0 seconds
+Phasing iteration 11:          0 seconds
+Phasing iteration 12:          0 seconds
+Phasing iteration 13:          0 seconds
+Phasing iteration 14:          0 seconds
+Phasing iteration 15:          0 seconds
+Phasing iteration 16:          0 seconds
+Phasing iteration 17:          0 seconds
+Phasing iteration 18:          0 seconds
+Phasing iteration 19:          0 seconds
+Phasing iteration 20:          0 seconds
+Phasing iteration 21:          0 seconds
+Phasing iteration 22:          0 seconds
+Phasing iteration 23:          0 seconds
+Phasing iteration 24:          0 seconds
+
+Cumulative Statistics:
+
+Study markers:             153
+
+Haplotype phasing time:        1 second
+Total time:                    1 second
+
+End time: 01:18 PM PST on 07 Nov 2018
+beagle.28Sep18.793.jar finished

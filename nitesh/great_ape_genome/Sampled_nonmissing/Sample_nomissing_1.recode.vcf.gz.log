@@ -1,0 +1,16 @@
+
+VCFtools - 0.1.15
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--gzvcf great_ape_genome/Sample_Files/Sample_1.vcf.gz
+	--max-missing 1
+	--out great_ape_genome/Sampled_nonmissing/Sample_nomissing_1
+	--recode
+	--stdout
+
+Using zlib version: 1.2.7
+After filtering, kept 38 out of 38 Individuals
+Outputting VCF file...
+After filtering, kept 84 out of a possible 218 Sites
+Run Time = 0.00 seconds
