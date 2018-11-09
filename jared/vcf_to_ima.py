@@ -72,10 +72,12 @@ def checkArgs(args):
         raise Exception("Must provide at least one VCF file to either --vcf or --vcfs")
     if args.vcfname is not None and args.vcflist is not None:
         raise Exception("Cannot use both arguments --vcf and --vcfs")
-    if args.vcfname is not None and args.refname is None:
-        raise Exception("If using --vcf, must provide a BED file with --gr")
+    if args.vcfname is not None and args.genename is None:
+        raise Exception("If using --vcf, must provide a BED file with --bed")
     if args.refname is None and args.parsecpg:
         raise Exception("CpG parsing requires reference genome (--ref)")
+    if args.popname is None and not args.fasta:
+        raise Exception("IMa file requires model input with --pop")
     #if args.popname is None:
     #    raise Exception("Model file required (--pop)")
 
@@ -383,7 +385,7 @@ def vcf_to_ima(sys_args):
             else:
                 region = Region(rec_list[0].pos-1,rec_list[-1].pos,rec_list[0].chrom)
         if filter_recs:
-            t = vf.filterSites(rec_list,remove_cpg=args.parsecpg,remove_indels=(not args.indel_flag),remove_multiallele=args.remove_multiallele,remove_missing=args.remove_missing,inform_level=0,fasta_ref=fasta_ref)
+            t = vf.filterSites(rec_list,remove_cpg=args.parsecpg,remove_indels=(not args.indel_flag),remove_multiallele=args.remove_multiallele,remove_missing=args.remove_missing,inform_level=1,fasta_ref=fasta_ref)
             rec_list = t
         if len(rec_list) == 0:
             logging.warning(("Region %s has no variants "

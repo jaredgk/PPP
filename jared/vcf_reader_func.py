@@ -64,7 +64,10 @@ def checkFormat(vcfname):
         return 'vcf'
     return 'other'
 
-def checkIfCpG(record,fasta_ref,offset=0,add_chr=False):
+
+
+def checkIfCpG(record,fasta_ref,add_chr=False):
+    #Note: will not detect multiallelic/indel combos
     dr = None
     pos = record.pos
     c = record.chrom
@@ -76,7 +79,6 @@ def checkIfCpG(record,fasta_ref,offset=0,add_chr=False):
         seq = fasta_ref.fetch(c,pos-1,pos+1)
         if seq[0].upper() != 'C':
             logging.warning('%s %d has bad base %s' % (record.chrom,record.pos,seq[0]))
-            #raise Exception("checkIfCpG function not lining up properly")
         if seq[1].upper() == 'G':
             return True
         return False
@@ -84,7 +86,6 @@ def checkIfCpG(record,fasta_ref,offset=0,add_chr=False):
         seq = fasta_ref.fetch(c,pos-2,pos)
         if seq[1].upper() != 'G':
             logging.warning('%s %d has bad base %s' % (record.chrom,record.pos,seq[1]))
-            #raise Exception("checkIfCpg function not lining up on negative strand")
         if seq[0].upper() == 'C':
             return True
         return False
@@ -110,24 +111,40 @@ def flipChrom(chrom):
     return 'chr'+chrom
 
 def getAlleleCountDict(rec):
+    """
+    Returns dict with allele counts for all
+    """
     alleles = defaultdict(int)
     total_sites = 0
     missing_inds = 0
     for j in range(len(rec.samples)):
         samp = rec.samples[j]
         if None in samp.alleles:
-            missing_inds += 1
+            alleles['N'] += 2
+            #missing_inds += 1
         for k in range(len(samp.alleles)):
             b = samp.alleles[k]
             if b is not None:
                 alleles[b] += 1
             total_sites+=1
-    return alleles, total_sites, missing_inds
+    return alleles
+
+def getAlleleStats(rec):
+    acd = getAlleleCountDict(rec)
+    missing_inds = (acd['N'] if 'N' in acd.keys() else 0)
+    total_sites = sum(acd.values())-missing_inds
+    return acd,total_sites,missing_inds
+
+def isInvariant(rec):
+    alleles, total_sites, missing_inds = getAlleleStats(rec)
+    if len(alleles) == 1:
+        return True
+    return False
 
 def isInformative(rec, mincount=2, alleles=None):
     count = 0
     if alleles is None:
-        alleles, total_sites, missing_inds = getAlleleCountDict(rec)
+        alleles, total_sites, missing_inds = getAlleleStats(rec)
     if len(alleles) != 2:
         return False
     i1,i2 = alleles.keys()
@@ -149,7 +166,7 @@ def getPassSites(record_list, remove_cpg=False, remove_indels=True,
             pass_list[i] = False
         if remove_cpg and checkIfCpG(rec,fasta_ref):
             pass_list[i] = False
-        alleles,total_sites,missing_inds = getAlleleCountDict(rec)
+        alleles,total_sites,missing_inds = getAlleleStats(rec)
         if remove_missing != -1 and missing_inds > int(remove_missing):
             pass_list[i] = False
         if inform_level != 0 and not isInformative(rec,mincount=inform_level,alleles=alleles):
