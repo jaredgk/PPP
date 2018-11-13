@@ -28,21 +28,32 @@ def createParser():
     parser.add_argument("--vcf", dest="vcfname", help="Input VCF filename")
     parser.add_argument("--vcfs", dest="vcflist", nargs="+")
     parser.add_argument("--ref", dest="refname", help="Reference FASTA file")
-    parser.add_argument("--bed", dest="genename", help="Name of gene region file")
+    parser.add_argument("--bed", dest="genename",
+                        help="Name of gene region file")
     parser.add_argument("--pop", dest="popname", help=("Filename of pop "
                         "model file"))
-    parser.add_argument("--zero-ho", dest="zeroho", action="store_true")
+    parser.add_argument("--zero-ho", dest="zeroho", action="store_true",
+                        help="Region coordinates are zero-based, half-open")
     parser.add_argument("--zero-closed", dest="zeroclosed", action="store_true")
     parser.add_argument("--keep-indels", dest="indel_flag", action="store_true",
                         help="Include indels when reporting sequences")
-    parser.add_argument("--remove-multiallele",dest="remove_multiallele",action="store_true")
-    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"),type=int)
+    parser.add_argument("--remove-multiallele",dest="remove_multiallele",
+                        action="store_true", help=("Remove sites with more "
+                        "than two alleles"))
+    parser.add_argument("--remove-missing", dest="remove_missing", default=-1,
+                        help=("Will filter out site if more than the given "
+                        "number of individuals (not genotypes) are missing "
+                        "data. 0 removes sites with any missing data, -1 "
+                        "(default) removes nothing"),type=int)
     parser.add_argument("--parsecpg",dest="parsecpg",action="store_true")
-    parser.add_argument("--noseq",dest="printseq",action="store_false",help="Will only print variants when reference is provided. Used so CpG filtering can be done if invariant sites aren't desired in output")
+    parser.add_argument("--noseq",dest="printseq",action="store_false",
+                        help=("Will only print variants when reference is "
+                        "provided. Used so CpG filtering can be done if "
+                        "invariant sites aren't desired in output"))
     parser.add_argument("--trim-to-ref-length", dest="trim_seq",
                         action="store_true",
                         help=("Trims sequences if indels cause them to be "
-                              "longer than reference"))
+                        "longer than reference"))
     parser.add_argument("--output", dest="output_name", default="input.ima.u",
                         help= ("Optional name for output other than default"))
     parser.add_argument("--gene-col", dest="gene_col", help= (
@@ -60,8 +71,10 @@ def createParser():
                         "VCF file compared to reference"))
     parser.add_argument("--poptag",dest="poptag",help=("If model file has "
                         "multiple models, use model with this name"))
-    parser.add_argument("--mutrate",dest="mutrate",type=float,default=1e-9,help="Mutation rate per base pair (default is 1e-9)")
-    parser.add_argument("--inheritance-scalar",dest="inhet_sc",type=float,default=None)
+    parser.add_argument("--mutrate",dest="mutrate",type=float,default=1e-9,
+                        help="Mutation rate per base pair (default is 1e-9)")
+    parser.add_argument("--inheritance-scalar",dest="inhet_sc",type=float,
+                        default=None)
     parser.add_argument("--fasta",dest="fasta",action="store_true")
     parser.add_argument("--multi-out",dest="multi_out",type=str)
     return parser
@@ -78,34 +91,24 @@ def checkArgs(args):
         raise Exception("CpG parsing requires reference genome (--ref)")
     if args.popname is None and not args.fasta:
         raise Exception("IMa file requires model input with --pop")
-    #if args.popname is None:
-    #    raise Exception("Model file required (--pop)")
+
 
 def validateFiles(args):
     """Validates that files provided to args all exist on users system"""
     for var in ['vcfname', 'refname', 'genename','popname']:
         f = vars(args)[var]
-        if not os.path.exists(f):
+        if f is not None and not os.path.exists(f):
             raise ValueError('Filepath for %s not found at %s' %
                             (var, f))
+    if args.vcflist is not None:
+        for f in args.vcflist:
+            if not os.path.exists(f):
+                raise ValueError(('File not found at %s') % f)
 
 
 def getMaxAlleleLength(alleles):
     """If an indel, returns length of longest allele (returns 1 for snp)"""
     return max([len(r) for r in alleles])
-
-
-
-def getNextIdxName(rec, prev_pop, prev_indiv, prev_idx, pop_data):
-
-    if len(rec.samples[prev_indiv].alleles) > prev_idx + 1:
-        return prev_pop, prev_indiv, prev_idx+1
-    if len(pop_data[prev_pop][1]) > prev_indiv + 1:
-        return prev_pop, prev_indiv + 1, 0
-    if len(pop_data) > prev_pop + 1:
-        return prev_pop+1, 0, 0
-    return -1, -1, -1
-
 
 
 def checkRefAlign(vcf_recs, fasta_ref, chrom, ref_check):
@@ -125,7 +128,7 @@ def checkRefAlign(vcf_recs, fasta_ref, chrom, ref_check):
             else:
                 logging.warning("Bases at position %s do not match" %
                             str(pos))
-                continue
+                break
 
 
 def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
@@ -143,18 +146,23 @@ def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
         if not args.indel_flag and not issnp:
             continue
 
+        #If reference included, add all bases between last and current variant
         pos_offset = vcf_record.pos - 1 - region.start
         if ref_seq is not None:
             for i in range(prev_offset, pos_offset):
                 seq += ref_seq[i]
+
         allele = vcf_record.samples[indiv].alleles[idx]
         if allele is None:
             raise Exception(("Individual %d at position %d is missing "
             "data") % (vcf_record.pos,indiv))
         if issnp:
+            #Place allele, move reference offset
             seq += vcf_record.samples[indiv].alleles[idx]
             prev_offset = pos_offset+1
         else:
+            #Find longest allele, pad others to its length
+            #Offset by length of reference allele
             max_indel = getMaxAlleleLength(vcf_record.alleles)
             allele = vcf_record.samples[indiv].alleles[idx]
             if allele is None:
@@ -164,6 +172,7 @@ def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
             seq += allele
             indel_offset = len(vcf_record.ref)
             prev_offset = pos_offset+indel_offset
+    #Output remaining sequence
     if ref_seq is not None:
         for i in range(prev_offset, len(ref_seq)):
             seq += ref_seq[i]
@@ -173,15 +182,18 @@ def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
 
 
 
-def writeHeader(popmodel, gr_len, out_f, pop_string="(0,1):2"):
-    out_f.write('Test IMa input\n')
+def writeHeader(popmodel, loci_count, out_f, header="Test IMa input",
+                pop_string=None):
+    out_f.write(header+'\n')
     out_f.write(str(popmodel.npop)+'\n')
     pops = ''
     for p in popmodel.pop_list:
         pops += (p+' ')
     out_f.write(pops+'\n')
-    #out_f.write(pop_string+'\n')
-    out_f.write(str(gr_len)+'\n')
+    #Add default treestring when found in IMa3 source
+    if pop_string is not None:
+        out_f.write(pop_string+'\n')
+    out_f.write(str(loci_count)+'\n')
 
 def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=None, mut_rate=1e-9,include_seq=False):
     if inhet_sc is None:
@@ -204,6 +216,8 @@ def getLocusHeader(gener, popmodel, rec_list, mut_model="I", inhet_sc=None, mut_
         lh += ' '+str(gene_len)
     else:
         lh += ' '+str(len(rec_list))
+    if mut_model not in ['I','H','S','J','IS']:
+        raise Exception("%s is an invalid mutation model (must select from I,H,S,J,IS)" % (mut_model))
     lh += ' '+mut_model
     lh += ' '+str(inhet_sc)
     mutlocus = mut_rate * gene_len
