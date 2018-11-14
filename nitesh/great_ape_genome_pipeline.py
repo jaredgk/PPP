@@ -8,19 +8,16 @@ if os.path.exists(dir):
 os.makedirs(dir)
 
 subdir1 = 'great_ape_genome/Sampled_nonmissing'
-# if os.path.exists(subdir1):
-#     shutil.rmtree(subdir1)
 os.makedirs(subdir1)
 
 subdir2 = 'great_ape_genome/Phased'
-# if os.path.exists(subdir2):
-#     shutil.rmtree(subdir2)
 os.makedirs(subdir2)
 
 subdir3 = 'great_ape_genome/four_gamete'
-# if os.path.exists(subdir3):
-#     shutil.rmtree(subdir3)
 os.makedirs(subdir3)
+
+subdir4 = 'great_ape_genome/ima'
+os.makedirs(subdir4)
 
 
 # Filtering out non biallelic and missing chromosomes
@@ -41,10 +38,9 @@ if process.returncode == 0:
         print("FST calculation successful.\n")
 
         # Sampling
-        process3 = subprocess.Popen("python vcf_sampler.py --vcf merged.vcf.gz --statistic-file \
-                                    fst.calc.windowed.weir.fst --out-format vcf.gz --calc-statistic \
-                                    windowed-weir-fst --sampling-scheme random --uniform-bins 5 --out-dir great_ape_genome/Sample_Files --overwrite",
-                                    shell=True, stdout=subprocess.PIPE)
+        process3 = subprocess.Popen("python vcf_sampler.py --vcf merged.vcf.gz --statistic-file great_ape_genome/fst.calc.windowed.weir.fst \
+                                    --out-format vcf.gz --calc-statistic windowed-weir-fst --sampling-scheme random --uniform-bins 5 \
+                                    --out-dir great_ape_genome/Sample_Files --overwrite", shell=True, stdout=subprocess.PIPE)
         process3.wait()
         if process3.returncode == 0:
             print("Sampling successful.\n")
