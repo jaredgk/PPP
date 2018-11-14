@@ -1,10 +1,10 @@
 import os
-import shutil
+import fnmatch
 import subprocess
 
 dir = 'great_ape_genome'
-if os.path.exists(dir):
-    shutil.rmtree(dir)
+# if os.path.exists(dir):
+#     shutil.rmtree(dir)
 os.makedirs(dir)
 
 subdir1 = 'great_ape_genome/Sampled_nonmissing'
@@ -15,9 +15,6 @@ os.makedirs(subdir2)
 
 subdir3 = 'great_ape_genome/four_gamete'
 os.makedirs(subdir3)
-
-subdir4 = 'great_ape_genome/ima'
-os.makedirs(subdir4)
 
 
 # Filtering out non biallelic and missing chromosomes
@@ -66,21 +63,37 @@ if process.returncode == 0:
                         print("phasing successful.\n")
 
                         # indexing files
-                        process5 = subprocess.Popen("tabix -p vcf great_ape_genome/Sampled_nonmissing/Sample_nomissing_" + str(i) + ".recode.vcf.gz",
+                        process5 = subprocess.Popen("tabix -p vcf great_ape_genome/Phased/phased_" + str(i) + ".recode.vcf.gz",
                                                     shell=True, stdout=subprocess.PIPE)
 
                         if process5.returncode == 0:
 
-                            # four gamate test
-                            process5 = subprocess.Popen("python ../jared/four_gamete_pysam.py --vcfname great_ape_genome/Sampled_nonmissing/Sample_nomissing_" + str(i) + ".recode.vcf.gz --out-prefix  great_ape_genome/four_gamete/Sample_" + str(i) + " --4gcompat --reti --right --numinf 2", shell=True, stdout=subprocess.PIPE)
-                        else:
-                            print("Error while four gamete.\n")
+                            # Four-gamate test
+                            process5 = subprocess.Popen("python ../jared/four_gamete_pysam.py --vcfname \
+                                                        great_ape_genome/Phased/phased_" + str(i) + ".recode.vcf.gz --out-prefix \
+                                                        great_ape_genome/four_gamete/Sample_" + str(i) + " --4gcompat --reti --right --numinf 2",
+                                                        shell=True, stdout=subprocess.PIPE)
+                            if process5.returncode != 0:
+                                print("error while four-gamete test on file great_ape_genome/Phased/phased_" + str(i) + ".recode.vcf.gz")
+
+                            process6 = subprocess.Popen("python ../jared/four_gamete_pysam.py --vcfname \
+                                                        great_ape_genome/Phased/phased_" + str(i) + ".recode.vcf.gz --out-prefix \
+                                                        great_ape_genome/four_gamete/Sample_" + str(i) + " --4gcompat --reti --right --numinf 2",
+                                                        shell=True, stdout=subprocess.PIPE)
                     else:
                         print("Error while phasing.\n")
                 else:
                     print("Error while filtering.\n")
 
+            loci_List = fnmatch.filter(os.listdir('great_ape_genome/Phased'), '*.vcf.gz')  # gettibng list of
+            new_loci_List = [subdir2 + "/" + s for s in loci_List]  # Adding relative path to each file
 
+            process7 = subprocess.Popen("python ../jared/vcf_to_ima.py --vcfs " + (' '.join(str(x) for x in new_loci_List)) +
+                                        " --ref ../nitesh/hg18.fasta --pop example/input/input.model --out \
+                                        great_ape_genome/ima_all_loci.fasta --poptag 2Pop", shell=True, stdout=subprocess.PIPE)
+            if process7.returncode == 0:
+                # code for ima2p
+                pass
         else:
             print("Error while sampling.\n")
     else:
