@@ -381,7 +381,7 @@ def delete_index (filename):
         raise Exception('GZIP-compressed VCF files do not support index files.')
 
     # Return error if no index is found
-    raise Exception('No index file found.')
+    raise Exception('No index file found or the index has the incorrect extension.')
 
 def create_index (filename):
     '''
@@ -486,7 +486,7 @@ def chr_subset_file (filename, chromosome, output_prefix, output_format, from_bp
     # Call bcftools
     call_bcftools(subset_args)
 
-def concatenate (filenames, output_prefix, output_format, keep_original = False):
+def concatenate (filenames, output_prefix, output_format, keep_original = False, optional_args = []):
     '''
         Concatenate multiple VCF-formatted files
 
@@ -501,6 +501,10 @@ def concatenate (filenames, output_prefix, output_format, keep_original = False)
             Prefix of the VCF-formatted output (i.e. without file extension)
         output_format : str
             The format of the output (e.g. vcf, bcf, vcf.gz)
+        keep_original : bool, optional 
+            Decides if the original files should be kept
+        optional_args : list, optional
+            List of additional and optional arguments
     '''
 
     # Holds the arguments to convert to VCF format
@@ -518,17 +522,92 @@ def concatenate (filenames, output_prefix, output_format, keep_original = False)
     # Assigns the output file to the arguments
     concat_args.extend(['-o', vcf_output])
 
-    # Assigns the input files to merge
+    # Assigns the input files to concatenate
     concat_args.extend(filenames)
 
     # Call bcftools
-    call_bcftools(concat_args)
+    call_bcftools(concat_args + optional_args)
 
     # Delete the original files once the merged file is created
     if not keep_original:
+
+        # Loop the files
         for filename in filenames:
+
+            # Check if the file has an index
             if check_for_index(filename) == True:
+
+                # Delete the index
                 delete_index(filename)
+
+            # Delete the file
+            os.remove(filename)
+
+def merge (filenames, output_prefix, output_format, keep_original = False, optional_args = []):
+    '''
+        Merge multiple VCF-formatted files
+
+        This function will merge multiple VCF-formatted files into a
+        single VCF-formatted file of the specifed format.
+
+        Parameters
+        ----------
+        filenames : list
+            List of VCF-formatted input filenames
+        output_prefix : str
+            Prefix of the VCF-formatted output (i.e. without file extension)
+        output_format : str
+            The format of the output (e.g. vcf, bcf, vcf.gz)
+        keep_original : bool, optional 
+            Decides if the original files should be kept
+        optional_args : list, optional
+            List of additional and optional arguments
+
+    '''
+
+    # Holds the arguments to convert to VCF format
+    merge_args = ['merge']
+
+    # Assign the output format arguments
+    output_format_args = return_output_format_args(output_format)
+
+    # Store the output format arguments
+    merge_args.extend(output_format_args)
+
+    # Stores the specified output filename
+    vcf_output = '%s.%s' % (output_prefix, output_format)
+
+    # Assigns the output file to the arguments
+    merge_args.extend(['-o', vcf_output])
+
+    # Loop the file names
+    for filename in filenames:
+
+        # Check if the files are indexed
+        if check_for_index(filename) == False:
+
+            # Create an index if not found
+            create_index(filename)
+
+    # Assigns the input files to merge
+    merge_args.extend(filenames)
+
+    # Call bcftools
+    call_bcftools(merge_args + optional_args)
+
+    # Delete the original files once the merged file is created
+    if not keep_original:
+
+        # Loop the files
+        for filename in filenames:
+
+            # Check if the file has an index
+            if check_for_index(filename) == True:
+
+                # Delete the index
+                delete_index(filename)
+
+            # Delete the file
             os.remove(filename)
 
 def convert_to_bcf (filename, output_prefix, keep_original = False):
@@ -566,8 +645,14 @@ def convert_to_bcf (filename, output_prefix, keep_original = False):
 
     # Delete the original file once the bcf file is created
     if not keep_original:
+        
+        # Check if the file has an index
         if check_for_index(filename) == True:
+
+            # Delete the index
             delete_index(filename)
+
+        # Delete the file
         os.remove(filename)
 
 def convert_to_vcf (filename, output_prefix, keep_original = False):
@@ -605,8 +690,14 @@ def convert_to_vcf (filename, output_prefix, keep_original = False):
 
     # Delete the original file once the vcf file is created
     if not keep_original:
+
+        # Check if the file has an index
         if check_for_index(filename) == True:
+
+            # Delete the index
             delete_index(filename)
+
+        # Delete the file
         os.remove(filename)
 
 def convert_to_vcfgz (filename, output_prefix, keep_original = False):
@@ -644,6 +735,12 @@ def convert_to_vcfgz (filename, output_prefix, keep_original = False):
 
     # Delete the original file once the vcfgz file is created
     if not keep_original:
+        
+        # Check if the file has an index
         if check_for_index(filename) == True:
+
+            # Delete the index
             delete_index(filename)
+
+        # Delete the file
         os.remove(filename)
