@@ -260,6 +260,12 @@ def call_bcftools (bcftools_call_args):
 
 def get_unique_chrs (filename):
 
+    # Check if the files are indexed
+    if check_for_index(filename) == False:
+
+        # Create an index if not found
+        create_index(filename)
+
     # Get set of the chromosomes
     chromosome_set = pipe_bcftools_to_set(['query', '-f', '%CHROM\n', filename])
 
@@ -305,18 +311,26 @@ def check_for_index (filename):
 
     # Check if the file to be indexed is a vcf.gz
     if file_format == 'bgzip':
+
         # Check if the index (.tbi) exists
         if os.path.isfile(filename + '.tbi'):
+
+            # Return True if the file has an index
             return True
 
     # Check if the file to be indexed is a bcf
     elif file_format == 'bcf':
+
         # Check if the index (.csi) exists
         if os.path.isfile(filename + '.csi'):
+
+            # Return True if the file has an index
             return True
 
     # Check if the file is vcf (does not need an index)
     elif file_format == 'vcf':
+
+        # Return None, as uncompressed VCF files do not have an index
         return None
 
     # Check if the file is gzip-compressed vcf (cannot have an index)
@@ -327,7 +341,7 @@ def check_for_index (filename):
     else:
         raise Exception('Unknown file format')
 
-    # Return false if no index is found
+    # Return False if the file supports an index, but does not have one
     return False
 
 def delete_index (filename):
@@ -407,13 +421,19 @@ def create_index (filename):
 
     # Check if the file to be indexed is a vcf.gz
     if file_format == 'bgzip':
+
         # Create a index (.tbi)
         call_bcftools(['index', '-t', filename])
 
+        logging.info('Index file created')
+
     # Check if the file to be indexed is a bcf
     elif file_format == 'bcf':
+
         # Create a index (.csi)
         call_bcftools(['index', '-c', filename])
+
+        logging.info('Index file created')
 
     # Report if file cannot be indexed
     else:
@@ -473,7 +493,7 @@ def chr_subset_file (filename, chromosome, output_prefix, output_format, from_bp
         chr_subet_arg += ''.join(map(str, filttered_position_args))
 
     # Checks if the input file has an index, then subset to the arguments
-    if check_for_index(filename):
+    if check_for_index(filename) == False:
         # Subsets using the index
         subset_args.extend(['-r', chr_subet_arg])
     else:
@@ -485,7 +505,7 @@ def chr_subset_file (filename, chromosome, output_prefix, output_format, from_bp
 
     # Call bcftools
     call_bcftools(subset_args)
-
+    
 def concatenate (filenames, output_prefix, output_format, keep_original = False, optional_args = []):
     '''
         Concatenate multiple VCF-formatted files
