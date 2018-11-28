@@ -13,7 +13,7 @@ from logging_module import initLogger, logArgs
 from model import read_model_file
 from beagle import call_beagle
 from shapeit import call_shapeit, remove_intermediate_files
-from bcftools import get_unique_chrs, chr_subset_file, concatenate
+from bcftools import get_unique_chrs, chr_subset_file, concatenate, check_for_index, create_index
 
 def phase_argument_parser(passed_arguments):
     '''Phase Argument Parser - Assigns arguments for vcftools from command line.
@@ -197,6 +197,25 @@ def run (passed_arguments = []):
     # bool to check if an include file was created
     include_file_created = False
 
+    # Assign expected phased output filename
+    phased_output = '%s.%s' % (phase_args.out_prefix, phase_args.out_format)
+
+    # Check if previous output should not be overwriten
+    if not phase_args.overwrite:
+
+        # Check if the user has specified an output filename
+        if phase_args.out:
+
+            # Check if previous output exists
+            if os.path.exists(phase_args.out):
+                raise IOError('Phased output already exists')
+
+        else:
+
+            # Check if previous output exists
+            if os.path.exists(phased_output):
+                raise IOError('Phased output already exists')
+
     # Performs actions related to --model-file and argument assignment
     if phase_args.model_file:
 
@@ -246,6 +265,7 @@ def run (passed_arguments = []):
 
     # Check if the user specified a specific chromosome
     if phase_args.phase_chr:
+
         # Check if the chromosome is within the file
         if phase_args.phase_chr not in chrs_in_vcf:
             raise Exception('--phase-chr %s not found in %s' % (phase_args.phase_chr, phase_args.vcf))
@@ -341,9 +361,6 @@ def run (passed_arguments = []):
         # Call beagle wrapper
         call_beagle(phase_args.beagle_path, list(map(str, phase_call_args)), phase_args.out_prefix, phase_args.out_format)
 
-        # Assign expected phased output filename
-        phased_output = '%s.%s' % (phase_args.out_prefix, phase_args.out_format)
-
         # Rename output to phase_args.out, if specified
         if phase_args.out:
             shutil.move(phased_output, phase_args.out)
@@ -433,9 +450,6 @@ def run (passed_arguments = []):
             # Call shapeit wrapper
             call_shapeit(list(map(str, phase_call_args)), phase_args.out_prefix, phase_args.out_format)
 
-            # Assign expected phased output filename
-            phased_output = '%s.%s' % (phase_args.out_prefix, phase_args.out_format)
-
             # Combine the log files
             concatenate_logs([phase_args.out_prefix + '.phase.log', phase_args.out_prefix + '.log'],  phased_output + '.log')
 
@@ -519,9 +533,6 @@ def run (passed_arguments = []):
             concatenate(phased_filename_list, phase_args.out_prefix, phase_args.out_format)
 
             logging.info('Concatenated chromosomes')
-
-            # Assign expected concatenated output filename
-            phased_output = '%s.%s' % (phase_args.out_prefix, phase_args.out_format)
 
             # Combine the log files
             concatenate_logs(phased_log_list, phased_output + '.log')
