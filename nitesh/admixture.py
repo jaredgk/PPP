@@ -26,7 +26,7 @@ def admix_filter_parser(passed_arguments):
     admix_parser.add_argument('--random-seed', help='random seed', type=int)
     admix_parser.add_argument('--threads', help='No. of threads to be used for computation', type=int)
     admix_parser.add_argument('--method', help='Algorithm to be used (em or block)', type=str, choices={"em", "block"})
-    admix_parser.add_argument('--acceleration', help='Set acceleration(sqs<X> or qn<X>)', type=int)
+    admix_parser.add_argument('--acceleration', help='Set acceleration(sqs<X> or qn<X>)', type=str)
     admix_parser.add_argument('--convergence', help='Set convergence criterion (major or minor)', type=int)
     admix_parser.add_argument('--bootstrap', help='Bootstrapping [with X replicates]', type=int)
 
@@ -76,7 +76,7 @@ def run(passed_arguments = []):
 
     # Add acceleration(int) to the list
     if admix_args.acceleration:
-        admix_call_args.extend(['-a=' + str(admix_args.acceleration)])
+        admix_call_args.extend(['-a', admix_args.acceleration])
 
     # Add convergence(int) to the list
     if admix_args.convergence:
@@ -88,7 +88,7 @@ def run(passed_arguments = []):
 
     logging.info('admixture parameters assigned')
 
-    # Run admixture executable file with options provided by user
+    # Run 'admixture' executable file with options provided by user
     admixture_call = subprocess.Popen(admixture_exec + " " + ' '.join(map(str, admix_call_args)),
                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
