@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 # Color blind color cycle hex codes
 CB_color_cycle = ['#ffb000', '#dc267f', '#648fff', '#fe6100', '#785ef0']
 
+
 def manhattan_plot(in_file):
     try:
         data = pd.read_table(in_file, sep="\t")
@@ -54,28 +55,32 @@ def admixture_barplot(in_file, numinds):
 
 
 def pca_plot(in_file):
-    df = pd.read_table(in_file, index_col=0, header=0)
+    try:
+        df = pd.read_table(in_file, index_col=0, header=0)
 
-    features = list(df.columns.values)
-    # Separating out the features
-    data = df.loc[:, features].values
+        features = list(df.columns.values)
+        # Separating out the features
+        data = df.loc[:, features].values
 
-    # Standardizing the features
-    data = StandardScaler().fit_transform(data)
-    pca = PCA(n_components=2)
-    prncpl_comp = pca.fit_transform(data)
-    prncpl_df = pd.DataFrame(data=prncpl_comp, columns=['PC1', 'PC2'])
-    fig = plt.figure()
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
-    plt.title('2 component PCA', fontsize=20)
+        # Standardizing the features
+        data = StandardScaler().fit_transform(data)
+        pca = PCA(n_components=2)
+        prncpl_comp = pca.fit_transform(data)
+        prncpl_df = pd.DataFrame(data=prncpl_comp, columns=['PC1', 'PC2'])
+        fig = plt.figure()
+        plt.xlabel('Principal Component 1')
+        plt.ylabel('Principal Component 2')
+        plt.title('2 component PCA', fontsize=20)
 
-    plt.scatter(prncpl_df['PC1'], prncpl_df['PC2'])
-    plt.legend('Samples')
-    plt.grid()
-    fig.savefig(in_file + ".pdf", bbox_inches='tight')
+        plt.scatter(prncpl_df['PC1'], prncpl_df['PC2'])
+        plt.legend('Samples')
+        plt.grid()
+        fig.savefig(in_file + ".pdf", bbox_inches='tight')
+    except FileNotFoundError as e:
+        print(e)
 
 
+# Function for plotting graphs for admixture output data set
 def bar_plot(in_file):
     try:
         df = pd.read_table(in_file, header=None, delim_whitespace=True)
@@ -88,8 +93,10 @@ def bar_plot(in_file):
 # Function for plotting graphs for ima2p output data sets
 def do_plots(in_file):
     try:
-        output1 = subprocess.run("grep -B 1000 -m 1 \"SumP\" " + in_file + " | grep -v \"SumP\"", shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-        output2 = subprocess.run("grep -B 1000 -m 2 \"SumP\" " + in_file + " | grep -v \"SumP\" | tail -n1000", shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+        output1 = subprocess.run("grep -B 1000 -m 1 \"SumP\" " + in_file + " | grep -v \"SumP\"", shell=True,
+                                 stdout=subprocess.PIPE, universal_newlines=True)
+        output2 = subprocess.run("grep -B 1000 -m 2 \"SumP\" " + in_file + " | grep -v \"SumP\" | tail -n1000",
+                                 shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 
         t0 = pd.read_table(StringIO(output1.stdout), sep="\t", header=None)
         t0.drop(t0.columns[[0]], axis=1, inplace=True)
@@ -126,5 +133,5 @@ def do_plots(in_file):
         plt.tight_layout()
         plt.savefig(in_file + ".pdf")
     except:
-        print( in_file +": No such file or directory")
+        print(in_file + ": No such file or directory")
 
