@@ -32,7 +32,7 @@ def call_ima2p (ima2p_call_args):
     ima2p_call = subprocess.Popen(list(map(str,ima2p_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
     b = subprocess.list2cmdline(a)
-    print b
+    print(b)
 
 
 

@@ -80,8 +80,6 @@ if process.returncode == 0:
                                                         great_ape_genome/Phased/phased_" + str(i) + ".recode.vcf.gz --out-prefix \
                                                         great_ape_genome/four_gamete/Sample_" + str(i) + " --4gcompat --reti --right --numinf 2",
                                                         shell=True, stdout=subprocess.PIPE)
-                    else:
-                        print("Error while phasing.\n")
                 else:
                     print("Error while filtering.\n")
 

@@ -1,10 +1,10 @@
 import os
-import shutil
 import subprocess
+import fnmatch
 
 dir = 'stickleback_genome'
-if os.path.exists(dir):
-    shutil.rmtree(dir)
+# if os.path.exists(dir):
+#     shutil.rmtree(dir)
 os.makedirs(dir)
 
 subdir1 = 'stickleback_genome/four_gamete'
@@ -38,7 +38,20 @@ if process.returncode == 0:
             print("Sampling successful.\n")
             for i in range(200):
                 # four gamate test
-                process5 = subprocess.Popen("python ../jared/four_gamete_pysam.py --vcfname stickleback_genome/Sample_Files/Sample_" + str(i) + ".vcf.gz --out-prefix stickleback_genome/four_gamete/Sample_" + str(i) + " --4gcompat --reti --right --numinf 2", shell=True, stdout=subprocess.PIPE)
+                process4 = subprocess.Popen("python ../jared/four_gamete_pysam.py --vcfname stickleback_genome/Sample_Files/Sample_" + str(i) + ".vcf.gz \
+                                            --out-prefix stickleback_genome/four_gamete/Sample_" + str(i) + " --4gcompat --reti --right --numinf 2",
+                                            shell=True, stdout=subprocess.PIPE)
+
+            loci_List = fnmatch.filter(os.listdir('stickleback_genome/Sample_Files'), '*.vcf.gz')  # gettibng list of sampled loci files
+            new_loci_List = ["stickleback_genome/Sample_Files/" + s for s in loci_List]  # Adding relative path to each file
+
+            process5 = subprocess.Popen("python ../jared/vcf_to_ima.py --vcfs " + (' '.join(str(x) for x in new_loci_List)) +
+                                        " --ref ../nitesh/hg18.fasta --pop example/input/sticklebackmodel.txt --out \
+                                        stickleback_genome/ima_all_loci.fasta --poptag 2Pop", shell=True, stdout=subprocess.PIPE)
+            if process5.returncode == 0:
+                # code for ima2p
+                pass
+
         else:
             print("Error while sampling.\n")
     else:
