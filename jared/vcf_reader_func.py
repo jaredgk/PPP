@@ -53,6 +53,8 @@ def checkFormat(vcfname):
         File extension as indicated by header
 
     """
+    if vcfname == '-':
+        return 'vcf' #may want to note its a stream
     typ = checkIfGzip(vcfname)
     if typ != 'nozip':
         return typ
@@ -187,6 +189,14 @@ def filterSites(record_list, remove_cpg=False, remove_indels=True,
             out_list.append(record_list[i])
     return out_list
 
+def crossModelAndVcf(pop_list,vcf_samples):
+    missing_list = []
+    for p in pop_list:
+        if p not in vcf_samples:
+            missing_list.append(p)
+    if len(missing_list) != 0:
+        raise Exception("Samples %s are missing from VCF" % (','.join(missing_list)))
+
 
 
 class VcfReader():
@@ -223,6 +233,9 @@ class VcfReader():
         if popmodel is not None:
             self.popmodel = popmodel
             popsamp_list = popmodel.inds
+            #Temp error to see who isn't real
+            vcf_names = [l for l in self.reader.header.samples]
+            crossModelAndVcf(popsamp_list,vcf_names)
             self.reader.subset_samples(popsamp_list)
             self.setPopIdx()
         if use_allpop:

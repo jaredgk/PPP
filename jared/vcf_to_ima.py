@@ -93,7 +93,7 @@ class outputBuffer():
         self.outfile.write(' '.join(self.header['pops'])+'\n')
         if self.poptree is not None:
             self.outfile.write(self.poptree+'\n')
-        self.outfile.write(str(len(self.loci()))+'\n')
+        self.outfile.write(str(len(self.loci)+'\n'))
 
 
 

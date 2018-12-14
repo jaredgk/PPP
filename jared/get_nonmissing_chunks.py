@@ -73,7 +73,7 @@ def regionsWithData(sysargs):
 
     popmodel = None
     if args.popname is not None:
-        popmodels = read_model_file(args.modelname)
+        popmodels = read_model_file(args.popname)
         pp = list(popmodels.keys())
         popmodel = popmodels[pp[0]]
 
