@@ -19,6 +19,84 @@ sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
 
 from model import Model, read_model_file
 
+class locus():
+    #Name, pops, store for seqs, length, mut model, scalar, mutrate
+    def __init__(self, gener, rec_list, popmodel, args):
+        if args.inhet_sc is None:
+            if gener.chrom in ['X','chrX']:
+                self.inhet_sc = 0.75
+            elif gener.chrom in ['Y','chrY','MT','chrMT']:
+                self.inhet_sc = 0.25
+            else:
+                self.inhet_sc = 1
+        else:
+            self.inhet_sc = args.inhet_sc
+        self.name = gener.chrom+':'+str(gener.start)+':'+str(gener.end)
+        self.gene_len = gener.end - gener.start
+        for rec in rec_list:
+            self.gene_len += (getMaxAlleleLength(rec.alleles) - len(rec.ref))
+        self.popmodel = popmodel
+        self.popkeys = []
+        self.seqs = {}
+        for p in popmodel.pop_list:
+            self.popkeys.append(p)
+            self.seqs[p] = []
+        self.mut_model = 'I'
+        #if args.mut_model is not None:
+        #    if args.mut_model not in ['I','H','S','J','IS']:
+        #        raise Exception("%s is an invalid mutation model (must select from I,H,S,J,IS)" % (args.mut_model))
+        #    self.mut_model = args.mut_model
+        if args.refname is not None and args.printseq:
+            self.seq_len = self.gene_len
+        else:
+            self.seq_len = len(rec_list)
+        self.mutrate = self.gene_len * args.mutrate
+
+    def addSeq(self,seq,pop):
+        try:
+            self.seqs[pop].append(seq)
+        except IndexError:
+            raise Exception("Pop %s is not in pop list" % pop)
+
+    def printToFile(self, outf = sys.stdout):
+        out_str = ''
+        out_str += (self.name)+' '
+        for p in self.popkeys:
+            out_str += (str(len(self.seqs[p]))+' ')
+        out_str += str(self.seq_len)+' '
+        out_str += self.mut_model + ' '
+        out_str += str(self.inhet_sc)+' '
+        out_str += str("%.14f" % (self.mutrate))+'\n'
+        outf.write(out_str)
+        for p in self.popkeys:
+            for seq in self.seqs[p]:
+                outf.write(seq+'\n')
+
+class outputBuffer():
+
+    def __init__(self, popmodel, outfile=sys.stdout):
+        self.header = None
+        self.hold = True
+        self.outfile = outfile
+        self.popmodel = popmodel
+        self.poptree = None
+        self.loci = []
+
+    def createHeader(self):
+        self.header = {}
+        self.header['title'] = 'Test IMa input'
+        self.header['pops'] = [p for p in self.popmodel.pop_list]
+
+    def writeHeader(self):
+        self.outfile.write(self.header['title']+'\n')
+        self.outfile.write(str(len(self.header['pops']))+'\n')
+        self.outfile.write(' '.join(self.header['pops'])+'\n')
+        if self.poptree is not None:
+            self.outfile.write(self.poptree+'\n')
+        self.outfile.write(str(len(self.loci()))+'\n')
+
+
+
 def createParser():
     parser = argparse.ArgumentParser(description=("Generates an IMa input "
                                      "file from a VCF file, a reference"
@@ -40,11 +118,12 @@ def createParser():
     parser.add_argument("--remove-multiallele",dest="remove_multiallele",
                         action="store_true", help=("Remove sites with more "
                         "than two alleles"))
-    parser.add_argument("--remove-missing", dest="remove_missing", default=-1,
-                        help=("Will filter out site if more than the given "
-                        "number of individuals (not genotypes) are missing "
-                        "data. 0 removes sites with any missing data, -1 "
-                        "(default) removes nothing"),type=int)
+    #parser.add_argument("--remove-missing", dest="remove_missing", default=-1,
+    #                   help=("Will filter out site if more than the given "
+    #                    "number of individuals (not genotypes) are missing "
+    #                    "data. 0 removes sites with any missing data, -1 "
+    #                    "(default) removes nothing"),type=int)
+    parser.add_argument("--drop-missing-sites",dest="remove_missing",action="store_const",const=0,default=-1,help=("Will remove sites with missing data instead of throwing error"))
     parser.add_argument("--parsecpg",dest="parsecpg",action="store_true")
     parser.add_argument("--noseq",dest="printseq",action="store_false",
                         help=("Will only print variants when reference is "
@@ -77,6 +156,8 @@ def createParser():
                         default=None)
     parser.add_argument("--fasta",dest="fasta",action="store_true")
     parser.add_argument("--multi-out",dest="multi_out",type=str)
+    parser.add_argument("--drop-missing-inds",dest="drop_inds",action="store_true",
+                        help="Drop individuals from loci if they are missing any data")
     return parser
 
 
@@ -242,6 +323,12 @@ def getOutputFilename(args):
     if va[-1] == 'gz':
         ext_cut = -2
     return '.'.join(va[:ext_cut])+suffix
+
+def hasMissingData(rec_list, indiv_idx):
+    for rec in rec_list:
+        if rec.samples[indiv_idx].alleles[0] is None:
+            return True
+    return False
 
 
 def vcf_to_ima(sys_args):
@@ -414,8 +501,9 @@ def vcf_to_ima(sys_args):
                 ref_seq = fasta_ref.fetch(vf.flipChrom(region.chrom),region.start,region.end)
             checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
         if not args.fasta:
-            reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate,inhet_sc=args.inhet_sc,include_seq=(fasta_ref is not None))
-            output_file.write(reg_header+'\n')
+            temp_locus = locus(region, rec_list, popmodel, args)
+            #reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate,inhet_sc=args.inhet_sc,include_seq=(fasta_ref is not None))
+            #output_file.write(reg_header+'\n')
         popnum, indiv = 0, 0
         #for p in popmodel.pop_list:
         for p in vcf_reader.popkeys.keys():
@@ -423,17 +511,28 @@ def vcf_to_ima(sys_args):
                 for hap in range(len(first_el.samples[indiv_idx].alleles)):
                     if args.fasta:
                         output_file.write('>'+first_el.samples[indiv_idx].name+'_'+str(hap)+'\n')
+                        output_file.write(seq+'\n')
+                        continue
+                    hmd = hasMissingData(rec_list,indiv_idx)
+                    if hmd:
+                        if not args.drop_inds:
+                            raise Exception("Individual %d from pop %s at loci %d, site %d is missing data" % (indiv_idx,p,record_count,i))
+                        else:
+                            continue
+
                     seq = generateSequence(rec_list, ref_seq,
                                    region, region.chrom, indiv_idx, hap, args)
-                    if not args.fasta:
-                        seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
-                        seq_name += ''.join([' ' for i in range(len(seq_name),10)])
-                        output_file.write(seq_name)
+                    seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
+                    seq_name += ''.join([' ' for i in range(len(seq_name),10)])
+                    allseq = seq_name + seq
+                    temp_locus.addSeq(seq,p)
+                    #output_file.write(seq_name)
 
-                    output_file.write(seq+'\n')
+                    #output_file.write(seq+'\n')
                 indiv += 1
             popnum += 1
             indiv = 0
+        temp_locus.printToFile(outf = output_file)
         record_count += 1
     output_file.close()
 

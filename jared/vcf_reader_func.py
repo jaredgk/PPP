@@ -203,7 +203,7 @@ class VcfReader():
         self.popkeys = None
         if popmodel is not None and use_allpop:
             raise Exception("Popmodel and allpop cannot both be specified")
-        if compress_flag and file_uncompressed:
+        if compress_flag and self.file_uncompressed:
             vcfname = compressVcf(vcfname)
         if subsamp_num is not None:
             if subsamp_list is not None:
