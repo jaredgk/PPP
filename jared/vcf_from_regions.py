@@ -29,7 +29,6 @@ def createParser():
                               "(chromosome) columns"))
     parser.add_argument('--zero-ho', dest="zeroho", action="store_true")
     parser.add_argument('--zero-closed', dest="zeroclosed", action="store_true")
-
     parser.add_argument("--output", dest="output_name", help= (
                         "Optional name for output other than default"))
     parser.add_argument("--gene-col", dest="gene_col", help= (
@@ -43,11 +42,21 @@ def createParser():
                         help="Produces multiple output VCFs instead of one")
     parser.add_argument("--parsecpg", dest="refname")
     parser.add_argument("--compress-out", dest="compress", action="store_true")
-    parser.add_argument("--remove-indels", dest="remove_indels", action="store_true", help=("Removes indels from output VCF files"))
+    parser.add_argument("--remove-indels", dest="remove_indels", 
+                        action="store_true", 
+                        help=("Removes indels from output VCF files"))
     parser.add_argument("--remove-multi", dest="remove_multiallele", action="store_true")
-    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, help=("Will filter out site if more than the given number of individuals (not genotypes) are missing data. 0 removes sites with any missing data, -1 (default) removes nothing"))
-    parser.add_argument("--informative-count", dest="informative_count", type=int, default=0)
-    parser.add_argument("--tbi", dest="tabix_index", help="Path to bgzipped file's index if name doesn't match VCF file")
+    parser.add_argument("--remove-missing", dest="remove_missing", default=-1, 
+                        help=("Will filter out site if more than the given number of "
+                        "individuals (not genotypes) are missing data. 0 removes sites"
+                        " with any missing data, -1 (default) removes nothing"))
+    parser.add_argument("--informative-count", dest="informative_count",
+                        type=int, default=0)
+    parser.add_argument("--tbi", dest="tabix_index", help="Path to bgzipped "
+                        "file's index if name doesn't match VCF file")
+    parser.add_argument("--remove-missing-inds",dest="remove_missing_inds",
+                        action="store_true", help=("Will remove individuals "
+                        "with missing data from a loci's VCF file"))
     subsamp_group = parser.add_mutually_exclusive_group()
     subsamp_group.add_argument('--subsamp-list', dest="subsamp_fn",
                                help="List of sample names to be used")
@@ -88,7 +97,7 @@ def getOutputPrefix(args):
         return args.output_name
     for ext in ['vcf.gz','vcf']:
         offset = -1*len(ext)
-        if ext == vcfname[offset:]:
+        if ext == args.vcfname[offset:]:
             return args.vcfname[:offset]
     return args.vcfname
 
@@ -236,7 +245,12 @@ def vcf_region_write(sys_args):
             outname = getMultiFileName(out_p, rc, args.compress)
             vcf_out = pysam.VariantFile(outname, 'w', header=header)
         if filter_sites:
-            pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg, remove_indels=args.remove_indels, remove_multiallele=args.remove_multiallele,remove_missing=args.remove_missing, inform_level=args.informative_count, fasta_ref=fasta_ref)
+            pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg,
+                          remove_indels=args.remove_indels, 
+                          remove_multiallele=args.remove_multiallele,
+                          remove_missing=args.remove_missing,
+                          inform_level=args.informative_count,
+                          fasta_ref=fasta_ref)
         for i in range(len(rec_list)):
             #make filter_sites an option
             if (not filter_sites) or pass_list[i]:

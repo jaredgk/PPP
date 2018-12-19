@@ -325,9 +325,10 @@ class imaTest(unittest.TestCase):
                     '--ref','example/human_g1k_chr11.fasta',
                     '--bed','example/snp_region.txt',
                     '--pop','example/testmodel.model',
-                    '--zero-ho'])
+                    '--zero-ho',
+                    '--output','example/chr11.subsamples.ima.u'])
         self.assertTrue(filecmp.cmp('example/chr11.ima.u',
-                        'example/chr11.subsamples.u'))
+                        'example/chr11.subsamples.ima.u'))
 
 
 

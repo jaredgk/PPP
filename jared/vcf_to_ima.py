@@ -504,12 +504,16 @@ def vcf_to_ima(sys_args):
             temp_locus = locus(region, rec_list, popmodel, args)
             #reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate,inhet_sc=args.inhet_sc,include_seq=(fasta_ref is not None))
             #output_file.write(reg_header+'\n')
-        popnum, indiv = 0, 0
+        popnum = 0
         #for p in popmodel.pop_list:
         for p in vcf_reader.popkeys.keys():
-            for indiv_idx in vcf_reader.popkeys[p]:
+            for indiv,indiv_idx in enumerate(vcf_reader.popkeys[p]):
+                if indiv_idx == -1:
+                    continue
                 for hap in range(len(first_el.samples[indiv_idx].alleles)):
                     if args.fasta:
+                        seq = generateSequence(rec_list, ref_seq,
+                                   region, region.chrom, indiv_idx, hap, args)
                         output_file.write('>'+first_el.samples[indiv_idx].name+'_'+str(hap)+'\n')
                         output_file.write(seq+'\n')
                         continue
@@ -525,11 +529,11 @@ def vcf_to_ima(sys_args):
                     seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
                     seq_name += ''.join([' ' for i in range(len(seq_name),10)])
                     allseq = seq_name + seq
-                    temp_locus.addSeq(seq,p)
+                    temp_locus.addSeq(allseq,p)
                     #output_file.write(seq_name)
 
                     #output_file.write(seq+'\n')
-                indiv += 1
+                #indiv += 1
             popnum += 1
             indiv = 0
         temp_locus.printToFile(outf = output_file)
