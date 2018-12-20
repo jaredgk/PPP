@@ -6,6 +6,8 @@ from random import sample
 from collections import defaultdict
 import os
 import gzip
+
+sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
 from model import read_model_file
 
 def checkIfGzip(filename):
@@ -119,20 +121,17 @@ def checkPopWithoutMissing(rec_list,model,pop_keys,min_per_pop=5):
         present_count = 0
         for i in range(len(pop_keys[pop])):
             tidx = pop_keys[pop][i]
-            print (tidx)
             if tidx != -1:
                 all_data = True
                 for rec in rec_list:
                     rec_alleles = rec.samples[tidx].alleles
                     if rec_alleles[0] in [None,'N']:
                         all_data = False
-                        print ("missing")
                         break
                 if all_data:
                     present_count += 1
-                #if present_count >= min_per_pop:
-                #    break
-        print (present_count,min_per_pop)
+                if present_count >= min_per_pop:
+                    break
         if present_count < min_per_pop:
             return False
     return True
