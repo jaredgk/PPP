@@ -6,6 +6,7 @@ from random import sample
 from collections import defaultdict
 import os
 import gzip
+from model import read_model_file
 
 def checkIfGzip(filename):
     try:
@@ -112,6 +113,40 @@ def checkForMultiallele(rec_list,pass_list):
             pass_list[i+1] = False
         if len(rec_list[i].alleles) > 2:
             pass_list[i] = False
+
+def checkPopWithoutMissing(rec_list,model,pop_keys,min_per_pop=5):
+    for pop in pop_keys:
+        present_count = 0
+        for i in range(len(pop_keys[pop])):
+            tidx = pop_keys[pop][i]
+            print (tidx)
+            if tidx != -1:
+                all_data = True
+                for rec in rec_list:
+                    rec_alleles = rec.samples[tidx].alleles
+                    if rec_alleles[0] in [None,'N']:
+                        all_data = False
+                        print ("missing")
+                        break
+                if all_data:
+                    present_count += 1
+                #if present_count >= min_per_pop:
+                #    break
+        print (present_count,min_per_pop)
+        if present_count < min_per_pop:
+            return False
+    return True
+
+def readSinglePopModel(popfilename,popname=None):
+    popmodels = read_model_file(popfilename)
+    if len(popmodels) != 1:
+        if popname is None:
+            raise Exception("Model file %s needs one model to be specified")
+        return popmodels[popname]
+    else:
+        pp = list(popmodels.keys())
+        return popmodels[pp[0]]
+
 
 def flipChrom(chrom):
     if chrom[0:3] == 'chr':
