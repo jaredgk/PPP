@@ -50,7 +50,8 @@ def filter_single_vcf(sysargs):
     vcf_in = VcfReader(args.vcfname)
     vcf_in.reader.subset_samples(final_names)
     vcf_out = pysam.VariantFile(args.outname,'w',header=vcf_in.reader.header)
-    for rec in vcf_in.reader:
+    rec_list = vcf_in.getRecordList()
+    for rec in rec_list:
         vcf_out.write(rec)
     vcf_in.close()
     vcf_out.close()
