@@ -1,3 +1,10 @@
+"""
+Required input files:
+1. BEAGLE.Combined66.snpEff1Effect.SNPs.OnlyInCombined66.masked68.nocnvrs.recode.vcf.gz
+2. stickleback_genes.bed
+3. sticklebackmodel.txt
+"""
+
 import os
 import subprocess
 import fnmatch

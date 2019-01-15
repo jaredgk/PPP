@@ -1,3 +1,10 @@
+"""
+Required input files:
+1. merged.vcf.gz
+2. input.model
+3. sticklebackmodel.txt
+"""
+
 import os
 import fnmatch
 import subprocess
