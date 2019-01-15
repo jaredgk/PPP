@@ -7,6 +7,9 @@ from collections import defaultdict
 import os
 import gzip
 
+sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
+from model import read_model_file
+
 def checkIfGzip(filename):
     try:
         gf = gzip.open(filename)
@@ -53,6 +56,8 @@ def checkFormat(vcfname):
         File extension as indicated by header
 
     """
+    if vcfname == '-':
+        return 'vcf' #may want to note its a stream
     typ = checkIfGzip(vcfname)
     if typ != 'nozip':
         return typ
@@ -76,14 +81,20 @@ def checkIfCpG(record,fasta_ref,add_chr=False):
     if add_chr:
         c = 'chr'+record.chrom
     if record.ref == 'C' and 'T' in record.alts:
-        seq = fasta_ref.fetch(c,pos-1,pos+1)
+        try:
+            seq = fasta_ref.fetch(c,pos-1,pos+1)
+        except KeyError:
+            seq = fasta_ref.fetch(flipChrom(c),pos-1,pos+1)
         if seq[0].upper() != 'C':
             logging.warning('%s %d has bad base %s' % (record.chrom,record.pos,seq[0]))
         if seq[1].upper() == 'G':
             return True
         return False
     elif record.ref == 'G' and 'A' in record.alts:
-        seq = fasta_ref.fetch(c,pos-2,pos)
+        try:
+            seq = fasta_ref.fetch(c,pos-2,pos)
+        except KeyError:
+            seq = fasta_ref.fetch(flipChrom(c),pos-2,pos)
         if seq[1].upper() != 'G':
             logging.warning('%s %d has bad base %s' % (record.chrom,record.pos,seq[1]))
         if seq[0].upper() == 'C':
@@ -104,6 +115,37 @@ def checkForMultiallele(rec_list,pass_list):
             pass_list[i+1] = False
         if len(rec_list[i].alleles) > 2:
             pass_list[i] = False
+
+def checkPopWithoutMissing(rec_list,model,pop_keys,min_per_pop=5):
+    for pop in pop_keys:
+        present_count = 0
+        for i in range(len(pop_keys[pop])):
+            tidx = pop_keys[pop][i]
+            if tidx != -1:
+                all_data = True
+                for rec in rec_list:
+                    rec_alleles = rec.samples[tidx].alleles
+                    if rec_alleles[0] in [None,'N']:
+                        all_data = False
+                        break
+                if all_data:
+                    present_count += 1
+                if present_count >= min_per_pop:
+                    break
+        if present_count < min_per_pop:
+            return False
+    return True
+
+def readSinglePopModel(popfilename,popname=None):
+    popmodels = read_model_file(popfilename)
+    if len(popmodels) != 1:
+        if popname is None:
+            raise Exception("Model file %s needs one model to be specified")
+        return popmodels[popname]
+    else:
+        pp = list(popmodels.keys())
+        return popmodels[pp[0]]
+
 
 def flipChrom(chrom):
     if chrom[0:3] == 'chr':
@@ -187,11 +229,37 @@ def filterSites(record_list, remove_cpg=False, remove_indels=True,
             out_list.append(record_list[i])
     return out_list
 
+def crossModelAndVcf(pop_list,vcf_samples,allow_missing_inds=True):
+    missing_list = []
+    present_list = []
+    for p in pop_list:
+        if p not in vcf_samples:
+            missing_list.append(p)
+        else:
+            present_list.append(p)
+    if len(missing_list) != 0:
+        if allow_missing_inds:
+            logging.warning("Samples %s are missing from VCF" % (','.join(missing_list)))
+        else:
+            raise Exception("Samples %s are missing from VCF" % (','.join(missing_list)))
+    return present_list
+
+def getIndsWithAllData(rec_list):
+    idx_list = []
+    for i in range(len(rec_list[0].samples)):
+        has_data = True
+        for rec in rec_list:
+            if rec.samples[i].alleles[0] in [None,'N']:
+                has_data = False
+        if has_data:
+            idx_list.append(i)
+    return idx_list
 
 
 class VcfReader():
     def __init__(self, vcfname, compress_flag=False, subsamp_num=None,
-                 subsamp_fn=None, subsamp_list=None, index=None, popmodel=None, use_allpop=False):
+                 subsamp_fn=None, subsamp_list=None, index=None, 
+                 popmodel=None, use_allpop=False, allow_missing_inds=True):
 
         ext = checkFormat(vcfname)
         if ext in ['gzip','other'] :
@@ -203,7 +271,7 @@ class VcfReader():
         self.popkeys = None
         if popmodel is not None and use_allpop:
             raise Exception("Popmodel and allpop cannot both be specified")
-        if compress_flag and file_uncompressed:
+        if compress_flag and self.file_uncompressed:
             vcfname = compressVcf(vcfname)
         if subsamp_num is not None:
             if subsamp_list is not None:
@@ -223,8 +291,11 @@ class VcfReader():
         if popmodel is not None:
             self.popmodel = popmodel
             popsamp_list = popmodel.inds
-            self.reader.subset_samples(popsamp_list)
-            self.setPopIdx()
+            vcf_names = [l for l in self.reader.header.samples]
+            present_list = crossModelAndVcf(popsamp_list,vcf_names)
+            #self.reader.subset_samples(popsamp_list)
+            self.reader.subset_samples(present_list)
+            self.setPopIdx(present_list)
         if use_allpop:
             self.setAllPop()
         if subsamp_list is not None:
@@ -245,13 +316,16 @@ class VcfReader():
         else:
             return getRecordList(self.reader, region, chrom, start, end, self.chr_in_chrom)
 
-    def setPopIdx(self):
+    def setPopIdx(self,present_list):
         self.popkeys = {}
         sample_names = [l for l in self.reader.header.samples]
         for p in self.popmodel.pop_list:
             self.popkeys[p] = []
-            for ind in self.popmodel.ind_dict[p]:
-                self.popkeys[p].append(sample_names.index(ind))
+            for indiv in self.popmodel.ind_dict[p]:
+                if indiv in present_list:
+                    self.popkeys[p].append(sample_names.index(indiv))
+                else:
+                    self.popkeys[p].append(-1)
 
     def close(self):
         self.reader.close()
@@ -260,6 +334,9 @@ class VcfReader():
         self.popkeys = {'ALL':[]}
         for i in range(len(self.reader.header.samples)):
             self.popkeys['ALL'].append(i)
+
+    def returnNames(self,index_list):
+        return [self.reader.header[i] for i in index_list]
 
 def modChrom(c,vcf_chr):
     if c is None:

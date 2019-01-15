@@ -58,6 +58,8 @@ class BaseData():
         self.format = format
         self.header = None
         self.records = []
+        self.extend_noninf = args.extend_noninf
+        self.extend_inf = args.extend_inf
         if format == 'VCF':
             self.onlysnps = True
             vcff = VcfReader(filename,index=args.tabix_index)
@@ -274,30 +276,57 @@ class BaseData():
             return cints,cintinformlist
         if self.onlysnps:
         ## using a vcf file,  intervals are 1-based  but positions in list_of_positions are 0-based
+            if not self.extend_inf:
+                for ci in range(len(cints)):
+                    tempcint = [-1,-1]
+                    if ci == 0:
+                        tempcint[0] = cints[ci][0]
+                    else:
+                        tempcint[0] = self.informpolysites[self.informpolysites.index(cints[ci-1][1])+1]
+                    tempcint[1] = cints[ci][1]
+                    cints[ci] = tempcint
+                    cintinformlist[ci] = self.informpolysites.index(cints[ci][1]) - self.informpolysites.index(cints[ci][0])+1
             for ci in range(len(cints)):
-                temp = [-1,-1]
-                if ci == 0:
-                    assert cints[ci][0] > 0
-                    temp[0] = self.poslist[cints[ci][0] - 1]  ## -1 because list_of_positions is 0-based
+                tempcint = [-1,-1]
+                if not self.extend_noninf:
+                    tempcint[0] = self.poslist[cints[ci][0]-1]
+                    if ci == len(cints)-1:
+                        tempcint[1] = self.poslist[-1]
+                    else:
+                        tempcint[1] = self.poslist[self.informpolysites[self.informpolysites.index(cints[ci][1])+1]-1]-1
                 else:
-                    temp[0] = self.poslist[self.informpolysites[self.informpolysites.index(cints[ci][0]) -1] -1] + 1  ## position of previous informative snp + 1
-                if ci == len(cints)-1:
-                    temp[1] = self.poslist[cints[ci][1] -1]
-                else:
-                    temp[1] = self.poslist[self.informpolysites[self.informpolysites.index(cints[ci][1]) + 1] -1] -1   ## position of next informative snp -1
-                cintspadded.append(temp)
+                    if ci == 0:
+                        assert cints[ci][0] > 0
+                        tempcint[0] = self.poslist[cints[ci][0] - 1]  ## -1 because list_of_positions is 0-based
+                    else:
+                        tempcint[0] = self.poslist[self.informpolysites[self.informpolysites.index(cints[ci][0]) -1] -1] + 1  ## position of previous informative snp + 1
+                    if ci == len(cints)-1:
+                        tempcint[1] = self.poslist[cints[ci][1] -1]
+                    else:
+                        tempcint[1] = self.poslist[self.informpolysites[self.informpolysites.index(cints[ci][1]) + 1] -1] -1   ## position of next informative snp -1
+                cintspadded.append(tempcint)
         else:
-            for ci in range(len(cints)):
-                temp = [-1,-1]
-                if ci == 0:
-                    temp[0] = 1
-                else:
-                    temp[0] = self.informpolysites[self.informpolysites.index(cints[ci][0]) -1] + 1   ## position of previous informative snp + 1
-                if ci == len(cints)-1:
-                    temp[1] = numbases
-                else:
-                    temp[1] = self.informpolysites[self.informpolysites.index(cints[ci][1]) + 1] -1    ## position of next informative snp -1
-                cintspadded.append(temp)
+            tempcint = [-1,-1]
+            if not self.extend_inf:
+                for ci in range(len(cints)):
+                    if ci == 0:
+                        tempcint[0] = cints[ci][0]
+                    else:
+                        tempcint[0] = self.informpolysites[self.informpolysites.index(cints[ci-1][1])+1]
+                    tempcint[1] = cints[ci][1]
+                    cints[ci] = tempcint
+                    cintinformlist[ci] = self.informpolysites.index(cints[ci][1]) - self.informpolysites.index(cints[ci][0])+1
+            else:
+                for ci in range(len(cints)):
+                    if ci == 0:
+                        tempcint[0] = 1
+                    else:
+                        tempcint[0] = self.informpolysites[self.informpolysites.index(cints[ci][0]) -1] + 1   ## position of previous informative snp + 1
+                    if ci == len(cints)-1:
+                        tempcint[1] = self.numbases
+                    else:
+                        tempcint[1] = self.informpolysites[self.informpolysites.index(cints[ci][1]) + 1] -1    ## position of next informative snp -1
+                    cintspadded.append(tempcint)
         return cintspadded,cintinformlist
         #return cints,cintinformlist
 
@@ -498,6 +527,10 @@ def createParser():
             " useful when debugging")
     parser.add_argument("--chrom", dest="chrom", help="Select variants "
             "from a single specified chromosome")
+    parser.add_argument("--ovlps",dest="extend_noninf",action="store_true",
+                        help=("Extend region to overlapping non-informative sites"))
+    parser.add_argument("--ovlpi",dest="extend_inf",action="store_true",
+                        help="Extend region to overlapping informative sites")
     #add checks for correct input type
     parser.add_argument('--tbi', dest="tabix_index")
     return parser

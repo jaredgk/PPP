@@ -305,7 +305,7 @@ class fourgameteTest(unittest.TestCase):
         region_list = [[[192385, 196943], [192386, 202252], [198987, 202546],
          [201585, 202811], [202548, 207399], [206422, 215363], [207401, 218140],
           [207463, 218639], [217815, 221584]]]
-        test_list = sample_fourgametetest_intervals(["--vcfname","example/chr11subsamples4gtest.vcf.gz","--4gcompat","--retl"])
+        test_list = sample_fourgametetest_intervals(["--vcfname","example/chr11subsamples4gtest.vcf.gz","--4gcompat","--retl",'--ovlpi','--ovlps'])
         self.assertEqual(region_list,test_list)
 
     def test_vcf(self):
@@ -314,7 +314,7 @@ class fourgameteTest(unittest.TestCase):
         tryRemove('example/chr11.4g.vcf')
 
     def test_consecutive(self):
-        sample_fourgametetest_intervals(["--vcfname","example/chr11.4gsmall.vcf",'--4gcompat','--reti','--out','example/chr11.4g.vcf','--numinf','2'])
+        sample_fourgametetest_intervals(["--vcfname","example/chr11.4gsmall.vcf",'--4gcompat','--reti','--out','example/chr11.4g.vcf','--numinf','2','--ovlpi','--ovlps'])
         self.assertTrue(filecmp.cmp('example/chr11.4gtest2.vcf','example/chr11.4g.vcf'))
         tryRemove('example/chr11.4g.vcf')
 
@@ -325,9 +325,10 @@ class imaTest(unittest.TestCase):
                     '--ref','example/human_g1k_chr11.fasta',
                     '--bed','example/snp_region.txt',
                     '--pop','example/testmodel.model',
-                    '--zero-ho'])
+                    '--zero-ho',
+                    '--output','example/chr11.subsamples.ima.u'])
         self.assertTrue(filecmp.cmp('example/chr11.ima.u',
-                        'example/chr11.subsamples.u'))
+                        'example/chr11.subsamples.ima.u'))
 
 
 
