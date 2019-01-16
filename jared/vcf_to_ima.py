@@ -224,6 +224,7 @@ def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
 
     for vcf_record in rec_list:
         issnp = vf.checkRecordIsSnp(vcf_record)
+        logging.info(str(ref_seq)+'\t'+str(len(ref_seq)))
         if not args.indel_flag and not issnp:
             continue
 

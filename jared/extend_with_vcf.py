@@ -39,7 +39,7 @@ region = Region(lilrecs[0].pos-1,lilrecs[-1].pos+1,lilrecs[0].chrom)
 
 rl = vcfr.getRecordList(region)
 if len(rl) == 0:
-    loggin.warning("Region at %s has no variants" % region.toStr())
+    logging.warning("Region at %s has no variants" % region.toStr())
     print (region.toStr(sep='\t'))
     exit()
 left_in = rl[0].pos
