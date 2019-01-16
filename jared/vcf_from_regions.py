@@ -65,6 +65,7 @@ def createParser():
                                      "subsampled from VCF file"))
     subsamp_group.add_argument('--model',dest="modelname",help="Model file for selecting individuals for writing")
     parser.add_argument('--poptag',dest="poptag",help="If model file is used, will use model with this name")
+    parser.add_argument("--forceempty",dest="forceempty",action="store_true",help=("Will create empty VCF if a region is empty rather than throw an error"))
     return parser
 
 def logArgs(args):
@@ -235,8 +236,11 @@ def vcf_region_write(sys_args):
     for rc,region in enumerate(region_list.regions,start=1):
         rec_list = vcf_reader.getRecordList(region)
         if len(rec_list) == 0:
-            logging.warning(("Region from %d to %d has no variants "
-                            "in VCF file") % (region.start,region.end))
+            if args.forceempty
+                logging.warning(("Region %s has no variants "
+                            "in VCF file") % (region.toStr()))
+            else:
+                raise Exception("Region %s has no variants" % (region.toStr()))
         if args.multi_out:
             try:
                 vcf_out.close()
