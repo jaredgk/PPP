@@ -236,7 +236,7 @@ def vcf_region_write(sys_args):
     for rc,region in enumerate(region_list.regions,start=1):
         rec_list = vcf_reader.getRecordList(region)
         if len(rec_list) == 0:
-            if args.forceempty
+            if args.forceempty:
                 logging.warning(("Region %s has no variants "
                             "in VCF file") % (region.toStr()))
             else:
