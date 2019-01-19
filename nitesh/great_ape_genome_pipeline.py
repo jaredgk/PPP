@@ -2,7 +2,6 @@
 Required input files:
 1. merged.vcf.gz
 2. input.model
-3. sticklebackmodel.txt
 """
 
 import os
@@ -70,23 +69,18 @@ if process.returncode == 0:
                         print("phasing successful.\n")
 
                         # indexing files
-                        process5 = subprocess.Popen("tabix -p vcf great_ape_genome/Phased/phased_" + str(i) + ".recode.vcf.gz",
+                        process6 = subprocess.Popen("tabix -p vcf great_ape_genome/Phased/phased_" + str(i) + ".recode.vcf.gz",
                                                     shell=True, stdout=subprocess.PIPE)
 
-                        if process5.returncode == 0:
+                        if process6.returncode == 0:
 
                             # Four-gamate test
-                            process5 = subprocess.Popen("python ../jared/four_gamete_pysam.py --vcfname \
+                            process7 = subprocess.Popen("python ../jared/four_gamete_pysam.py --vcfname \
                                                         great_ape_genome/Phased/phased_" + str(i) + ".recode.vcf.gz --out-prefix \
                                                         great_ape_genome/four_gamete/Sample_" + str(i) + " --4gcompat --reti --right --numinf 2",
                                                         shell=True, stdout=subprocess.PIPE)
-                            if process5.returncode != 0:
+                            if process7.returncode != 0:
                                 print("error while four-gamete test on file great_ape_genome/Phased/phased_" + str(i) + ".recode.vcf.gz")
-
-                            process6 = subprocess.Popen("python ../jared/four_gamete_pysam.py --vcfname \
-                                                        great_ape_genome/Phased/phased_" + str(i) + ".recode.vcf.gz --out-prefix \
-                                                        great_ape_genome/four_gamete/Sample_" + str(i) + " --4gcompat --reti --right --numinf 2",
-                                                        shell=True, stdout=subprocess.PIPE)
                 else:
                     print("Error while filtering.\n")
 
