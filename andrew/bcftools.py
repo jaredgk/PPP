@@ -439,7 +439,7 @@ def create_index (filename):
     else:
         raise Exception('Error creating index for: %s. Only .bcf and .vcf.gz (bgzip) files are supported.' % filename)
 
-def chr_subset_file (filename, chromosome, output_prefix, output_format, from_bp = None, to_bp = None):
+def chr_subset_file (filename, chromosome, output_prefix, output_format, from_bp = None, to_bp = None, overwrite = False):
     '''
         Creates chromosome subset
 
@@ -460,6 +460,8 @@ def chr_subset_file (filename, chromosome, output_prefix, output_format, from_bp
             Lower bound of sites to include
         to_bp : int, optional
             Upper bound of sites to include
+        overwrite : bool, optional
+            Specify if previous output should be overwritten
     '''
 
     # Creates a list to the arguments and store the bcftools call
@@ -473,6 +475,14 @@ def chr_subset_file (filename, chromosome, output_prefix, output_format, from_bp
 
     # Stores the specified output filename
     vcf_output = '%s.%s' % (output_prefix, output_format)
+
+    # Check if previous output should not be overwritten 
+    if not overwrite:
+
+        # Check if previous output exists
+        if os.path.isfile(vcf_output):
+
+            raise Exception('Temporary file %s already exists')
 
     # Assigns the output file to the arguments
     subset_args.extend(['-o', vcf_output])

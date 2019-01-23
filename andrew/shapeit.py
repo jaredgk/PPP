@@ -11,8 +11,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 from vcf_reader_func import checkFormat
 from logging_module import initLogger, logArgs
 from plink import convert_haps_to_vcf
-#from vcftools import bgzip_decompress_vcfgz
-#from bcftools import convert_to_bcf, check_for_index, create_index
 
 def check_shapeit_for_errors (shapeit_stdout, output_prefix):
     '''
@@ -38,10 +36,10 @@ def check_shapeit_for_errors (shapeit_stdout, output_prefix):
     # Print output if not completed and no error found. Unlikely to be used, but included.
     else:
         # Remove intermediate files before reporting the error
-        remove_intermediate_files(output_prefix, error_intermediates = True)
+        remove_shapeit_intermediate_files(output_prefix, error_intermediates = True)
         raise Exception(str(shapeit_stdout))
 
-def remove_intermediate_files (output_prefix, error_intermediates = False):
+def remove_shapeit_intermediate_files (output_prefix, error_intermediates = False):
     '''
         Removes shapeit intermediate files
 
@@ -98,6 +96,40 @@ def remove_intermediate_files (output_prefix, error_intermediates = False):
         os.remove(output_prefix + '.sample')
 
     logging.info('shapeit-related files removed')
+
+def check_for_shapeit_intermediate_files (output_prefix, overwrite = False):
+
+    # Check if intermediates files should not be overwritten
+    if not overwrite:
+
+        # List to hold intermediate files
+        shapeit_intermediate_files = []
+    
+        # Check if a phase.ind.mm file exists
+        if os.path.isfile(output_prefix + '.phase.ind.mm'):
+
+            # Add the intermediate file to the list
+            shapeit_intermediate_files.append(output_prefix + '.phase.ind.mm')
+
+        # Check if a phase.snp.mm file exists
+        if os.path.isfile(output_prefix + '.phase.snp.mm'):
+
+            # Add the intermediate file to the list
+            shapeit_intermediate_files.append(output_prefix + '.phase.snp.mm')
+
+        # Check if a haps file exists
+        if os.path.isfile(output_prefix + '.haps'):
+
+            # Add the intermediate file to the list
+            shapeit_intermediate_files.append(output_prefix + '.haps')
+
+        # Check if a sample file exists
+        if os.path.isfile(output_prefix + '.sample'):
+
+            # Add the intermediate file to the list
+            shapeit_intermediate_files.append(output_prefix + '.sample')
+
+        raise Exception('shapeit intermediate files exist (%s)' % ', '.join(shapeit_intermediate_files))
 
 def standard_shapeit_call (shapeit_call_args, output_prefix):
     '''
