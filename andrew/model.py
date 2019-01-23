@@ -166,7 +166,6 @@ class ModelFile(dict):
 
         return model_file_json
 
-
 class Model:
     def __init__ (self, name):
         self.name = name
@@ -176,6 +175,9 @@ class Model:
         self.nind = defaultdict(int)
         self.pop_files = []
         self.ind_file = ''
+
+    def __str__ (self):
+        return self.name
 
     @property
     def npop (self):
@@ -277,6 +279,8 @@ class Model:
             # Save the population filename
             self.pop_files.append(pop_filename)
 
+        logging.info('Population files created for %s' % self)
+
     def delete_pop_files (self):
         # Check if pop files were created
         if len(self.pop_files) != 0:
@@ -288,6 +292,8 @@ class Model:
 
             # Remove the filenames
             self.pop_files = []
+
+            logging.info('Population files deleted for %s' % self)
 
     def create_ind_file (self, file_ext = '', file_path = '', overwrite = False):
         # Assign the filename for the population file
@@ -311,6 +317,8 @@ class Model:
         # Save the individuals filename
         self.ind_file = ind_filename
 
+        logging.info('Individuals file created for %s' % self)
+
     def delete_ind_file (self):
         # Check if an individuals file was created
         if self.ind_file:
@@ -320,6 +328,8 @@ class Model:
 
             # Remove the filename
             self.ind_file = ''
+
+            logging.info('Individuals file deleted for %s' % self)
 
     def to_json (self):
 
