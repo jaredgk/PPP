@@ -1,6 +1,5 @@
 import os
 import sys
-import random
 import argparse
 import itertools
 import logging
@@ -61,7 +60,7 @@ def sampler_parser(passed_arguments):
     sampler_parser.add_argument('--sample-size', help="Total sample size. If using the uniform sampling scheme, this number must be divisible by the bins", type = int)
 
     # Random options
-    sampler_parser.add_argument('--random-seed', help="Defines the random seed value for the random number generator", type = int, default = random.randint(1, 1000000000))
+    sampler_parser.add_argument('--random-seed', help="Defines the random seed value for the random number generator", type = int, default = np.random.randint(1, high = 1000000000))
 
     # Output arguents
     sampler_parser.add_argument('--out', help = 'Specifies the filename of the sampled statistic file', type = str)

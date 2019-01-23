@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
 from logging_module import initLogger, logArgs
 
-def vcf_calc_parser(passed_arguments):
+def vcf_utility_parser(passed_arguments):
     '''VCF Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -128,7 +128,7 @@ def run (passed_arguments = []):
         Specifies the input VCF filename
     --utility : str
         Specifies the utility to be used. Choices: chr-list,
-        sample-list (Default)
+        sample-list, concatenate, merge, sort
     --out-prefix : str
         Specifies the output filename prefix
     --out : str
@@ -152,7 +152,7 @@ def run (passed_arguments = []):
     '''
 
     # Grab VCF arguments from command line
-    vcf_args = vcf_calc_parser(passed_arguments)
+    vcf_args = vcf_utility_parser(passed_arguments)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(vcf_args, func_name = 'vcf_utilities')
