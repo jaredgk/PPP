@@ -107,116 +107,6 @@ def vcf_calc_parser(passed_arguments):
     else:
         return vcf_parser.parse_args()
 
-def create_stat_output (vcf_args, vcftools_call_args, vcftools_pop_files, vcftools_output_filename):
-    '''
-    Statistic output creation function
-
-    Automates the creation of the various statistic output files. This function
-    is required to for the creation of non-standard vcftools output, multi-file
-    vcftools output, and standard vcftools output.
-
-    Parameters
-    ----------
-    vcf_args : argparse Namespace
-        Holds arguments from the command-line
-    vcftools_call_args : list
-        List of the vcftools arguments
-    vcftools_pop_files : list
-        List of the relevant population files (if required)
-    vcftools_output_filename : str
-         Expected vcftools output filename
-
-    Raises
-    ------
-    Exception
-        Error calling vcftools
-    '''
-
-    # Assigns the file argument for vcftools
-    vcfname_arg = assign_vcftools_input_arg(vcf_args.vcf)
-
-    logging.info('Input file assigned')
-
-    # Run vcftools once if the statistic isn't het-fis
-    if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) > 2:
-
-        def return_filename (filepath):
-            return os.path.basename(filepath).split(os.extsep)[0]
-
-        # Create the output directory
-        if not os.path.exists(vcf_args.out_dir):
-            os.makedirs(vcf_args.out_dir)
-
-        # Loop each population file
-        for first_pop_filepath, second_pop_filepath in itertools.combinations(vcftools_pop_files, 2):
-
-            # Create the population-specific call
-            pop_call_args = copy.deepcopy(vcftools_call_args)
-
-            # Assign the population files
-            pop_call_args.extend(['--weir-fst-pop', first_pop_filepath, '--weir-fst-pop', second_pop_filepath])
-
-            # Extract filename from first filepath
-            first_pop_filename = return_filename(first_pop_filepath)
-            # Extract filename from second filepath
-            second_pop_filename = return_filename(second_pop_filepath)
-
-            # Create the population prefix, and join to the output directory
-            pop_prefix = os.path.join(vcf_args.out_dir, vcf_args.out_prefix)
-
-            # Update the population prefix with the population names
-            pop_prefix += '.%s.%s' % (first_pop_filename, second_pop_filename)
-
-            # Assign the output argument
-            pop_call_args.extend(['--out', pop_prefix])
-
-            # vcftools subprocess call, with stdout
-            vcftools_err = call_vcftools(vcfname_arg + pop_call_args)
-
-            # Check if the user specifed the complete output filename (only log-based)
-            if vcf_args.out:
-                produce_vcftools_log(vcftools_err, vcf_args.out, append_mode = True)
-            else:
-                produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
-
-    elif vcf_args.calc_statistic == 'het-fis':
-
-        # Loop each population file
-        for vcftools_pop_file in vcftools_pop_files:
-
-            # Create the population-specific call
-            pop_call_args = vcftools_call_args + ['--keep', str(vcftools_pop_file)]
-
-            # vcftools subprocess call
-            vcftools_err = call_vcftools(vcfname_arg + pop_call_args, output_format = vcf_args.calc_statistic, output_filename = vcftools_output_filename)
-
-            # Check if the user specifed the complete output filename
-            if vcf_args.out:
-                os.rename(vcftools_output_filename, vcf_args.out)
-                produce_vcftools_log(vcftools_err, vcf_args.out, append_mode = True)
-            else:
-                produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
-
-    else:
-
-        # Check if either Fst statistic is specified
-        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) == 2:
-
-            # Assigns the population files to the vcftools call
-            vcftools_call_args.extend([pop_args for pop_file in vcftools_pop_files for pop_args in ['--weir-fst-pop', pop_file]])
-
-        # Add the output argument
-        vcftools_call_args.extend(['--out', vcf_args.out_prefix])
-
-        # vcftools subprocess call
-        vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
-
-        # Check if the user specifed the complete output filename
-        if vcf_args.out:
-            os.rename(vcftools_output_filename, vcf_args.out)
-            produce_vcftools_log(vcftools_err, vcf_args.out)
-        else:
-            produce_vcftools_log(vcftools_err, vcftools_output_filename)
 
 def run (passed_arguments = []):
     '''
@@ -263,6 +153,17 @@ def run (passed_arguments = []):
     IOError
         Output file already exists
     '''
+
+    def calc_exception (selected_model, exc_type, exc_value, exc_traceback):
+
+        # Check if the selected model was correctly assigned
+        if selected_model: 
+            logging.info('Delete temporary files due to exception')
+            selected_model.delete_pop_files()
+            selected_model.delete_ind_file()
+
+        # Report the original error    
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
 
     # Grab VCF arguments from command line
     vcf_args = vcf_calc_parser(passed_arguments)
@@ -311,6 +212,8 @@ def run (passed_arguments = []):
         # Select model, might change this in future versions
         selected_model = models_in_file[vcf_args.model]
 
+        logging.info('%s assigned as model' % selected_model)
+
         # Check if the specified statistic is fst-based or fis-based
         if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis']:
 
@@ -328,6 +231,12 @@ def run (passed_arguments = []):
 
             # Assign the individuals file to vcftools
             vcftools_call_args.extend(['--keep', selected_model.ind_file])
+
+        # Create a lambda function to pass the selected model along with the exception
+        lambda_excepthook = lambda exc_type, exc_value, exc_traceback: calc_exception(selected_model, exc_type, exc_value, exc_traceback)
+
+        # Set the special escape hook
+        sys.excepthook = lambda_excepthook
 
     # Performs actions related to --pop-file argument
     if vcf_args.pop_file:
@@ -479,38 +388,123 @@ def run (passed_arguments = []):
 
     logging.info('vcftools parameters assigned')
 
-    # The filename vcftools assigns to the statistic output
-    vcftools_output_filename = vcf_args.out_prefix + vcftools_out_suffix
+    # Check if the user has specified a output filename
+    if vcf_args.out:
+
+        # Assign the vcftools output filename, using the output filename
+        vcftools_output_filename = vcf_args.out
+
+    else:
+
+        # Assign the vcftools output filename, using the prefix and suffix
+        vcftools_output_filename = vcf_args.out_prefix + vcftools_out_suffix
 
     # Check if previous output should be overwritten
     if vcf_args.overwrite:
 
-        if vcf_args.out:
-            # Confirm the vcftools-renamed output and log file do not exist
-            delete_vcftools_output(vcf_args.out)
-        else:
-            # Confirm the vcftools output and log file do not exist
-            delete_vcftools_output(vcftools_output_filename)
+        # Check if the ouput will require the output directory
+        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) > 2:
+            
+            # Check if the output directory is present
+            if os.path.exists(vcf_args.out_dir):
 
-        # Check if the output directory is present
-        if os.path.exists(vcf_args.out_dir):
-            shutil.rmtree(vcf_args.out_dir)
+                # Remove the output directory
+                shutil.rmtree(vcf_args.out_dir)
 
     # If not to be overwritten, check if previous output exists
     else:
+
+        # Confirm the vcftools output and log file do not exist
+        check_for_vcftools_output(vcftools_output_filename)
+
+        # Check if the ouput will require the output directory
+        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) > 2:
+
+            # Check if the output directory is present and report the error
+            if os.path.exists(vcf_args.out_dir):
+                raise IOError('Statistic Directory already exists')
+
+    # Assigns the file argument for vcftools
+    vcfname_arg = assign_vcftools_input_arg(vcf_args.vcf)
+
+    logging.info('Input file assigned')
+
+    # Run vcftools once if the statistic isn't het-fis
+    if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) > 2:
+
+        def return_filename (filepath):
+            return os.path.basename(filepath).split(os.extsep)[0]
+
+        # Create the output directory
+        if not os.path.exists(vcf_args.out_dir):
+            os.makedirs(vcf_args.out_dir)
+
+        # Loop each population file
+        for first_pop_filepath, second_pop_filepath in itertools.combinations(vcftools_pop_files, 2):
+
+            # Create the population-specific call
+            pop_call_args = copy.deepcopy(vcftools_call_args)
+
+            # Assign the population files
+            pop_call_args.extend(['--weir-fst-pop', first_pop_filepath, '--weir-fst-pop', second_pop_filepath])
+
+            # Extract filename from first filepath
+            first_pop_filename = return_filename(first_pop_filepath)
+
+            # Extract filename from second filepath
+            second_pop_filename = return_filename(second_pop_filepath)
+
+            # Create the population prefix, and join to the output directory
+            pop_prefix = os.path.join(vcf_args.out_dir, vcf_args.out_prefix)
+
+            # Update the population prefix with the population names
+            pop_prefix += '.%s.%s' % (first_pop_filename, second_pop_filename)
+
+            # The filename population file
+            pop_filename = pop_prefix + vcftools_out_suffix
+
+            # vcftools subprocess call, with stdout
+            vcftools_err = call_vcftools(vcfname_arg + pop_call_args, output_filename = pop_filename)
+
+            # Produce the vcftools log file, in append mode
+            produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
+
+    elif vcf_args.calc_statistic == 'het-fis':
+
+        # Loop each population file
+        for vcftools_pop_file in vcftools_pop_files:
+
+            # Create the population-specific call
+            pop_call_args = vcftools_call_args + ['--keep', str(vcftools_pop_file)]
+
+            # vcftools subprocess call
+            vcftools_err = call_vcftools(vcfname_arg + pop_call_args, output_filename = vcftools_output_filename, append_mode = True)
+
+            # Produce the vcftools log file, in append mode
+            produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
+
+    else:
+
+        # Check if either Fst statistic is specified
+        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) == 2:
+
+            # Assigns the population files to the vcftools call
+            vcftools_call_args.extend([pop_args for pop_file in vcftools_pop_files for pop_args in ['--weir-fst-pop', pop_file]])
+
+        # Check if the user has not specified an output filename
         if vcf_args.out:
-            # Confirm the vcftools-renamed output and log file do not exist
-            check_for_vcftools_output(vcf_args.out)
-        else:
-            # Confirm the vcftools output and log file do not exist
-            check_for_vcftools_output(vcftools_output_filename)
 
-        # Check if the output directory is present
-        if os.path.exists(vcf_args.out_dir):
-            raise IOError('Statistic Directory already exists')
+            # Assign a unique output prefix 
+            vcf_args.out_prefix = assign_vcftools_unique_prefix(vcf_args.out_prefix, vcftools_output_suffix)
 
-    # Create the output files for the specified statistic and other arguments
-    create_stat_output(vcf_args, vcftools_call_args, vcftools_pop_files, vcftools_output_filename)
+        # Add the output argument
+        vcftools_call_args.extend(['--out', vcf_args.out_prefix])
+
+        # vcftools subprocess call
+        vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
+
+        # Produce the vcftools log file
+        produce_vcftools_log(vcftools_err, vcftools_output_filename)
 
     # Delete any files that were created for vcftools
     if vcf_args.model_file:
