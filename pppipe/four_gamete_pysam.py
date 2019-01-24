@@ -43,11 +43,12 @@
 import sys
 import argparse
 import logging
-from logging_module import initLogger
 import random
-from gene_region import Region, RegionList
 import pysam
-from vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, VcfReader
+
+from pppipe.logging_module import initLogger
+from pppipe.gene_region import Region, RegionList
+from pppipe.vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, VcfReader
 
 
 class BaseData():

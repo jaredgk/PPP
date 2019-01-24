@@ -2,8 +2,8 @@ import sys
 import argparse
 import gzip
 import io
-from vcf_reader_func import VcfReader
-from model import Model, read_model_file
+from pppipe.vcf_reader_func import VcfReader
+from pppipe.model import Model, read_model_file
 
 def createParser():
     parser = argparse.ArgumentParser()

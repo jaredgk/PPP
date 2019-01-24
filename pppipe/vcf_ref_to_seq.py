@@ -3,11 +3,12 @@ import pysam
 import argparse
 import os.path
 import logging
-from logging_module import initLogger, logArgs
 from random import sample
-from gene_region import Region, RegionList
-import vcf_reader_func as vf
-from parse_functions import defaultsDictForFunction, getConfigFilename, makeRequiredList, getArgsWithConfig
+
+from pppipe.logging_module import initLogger, logArgs
+from pppipe.gene_region import Region, RegionList
+import pppipe.vcf_reader_func as vf
+from pppipe.parse_functions import defaultsDictForFunction, getConfigFilename, makeRequiredList, getArgsWithConfig
 #from tabix_wrapper import prepVcf
 
 #Input: VCF file, reference sequence, region list (possibly .bed file)

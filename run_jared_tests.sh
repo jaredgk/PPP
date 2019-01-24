@@ -1,3 +1,3 @@
-cd jared
-python tests.py
+cd tests
+python tests_jared.py
 return $?

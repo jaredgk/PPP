@@ -1,9 +1,9 @@
 import pysam
 import argparse
 import sys
-from logging_module import initLogger
-from model import read_model_file
-from vcf_reader_func import VcfReader
+from pppipe.logging_module import initLogger
+from pppipe.model import read_model_file
+from pppipe.vcf_reader_func import VcfReader
 
 
 def createParser():
