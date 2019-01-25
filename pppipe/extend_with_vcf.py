@@ -1,8 +1,9 @@
 import sys
 import pysam
 from math import ceil,floor
-from vcf_reader_func import VcfReader
-from gene_region import Region, RegionList
+from pppipe.vcf_reader_func import VcfReader
+from pppipe.gene_region import Region, RegionList
+import logging
 
 def findPrevLastSnps(vcfr,region,window=1000):
     left_out = 0

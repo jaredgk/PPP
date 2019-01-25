@@ -3,21 +3,21 @@ import pysam
 import argparse
 import os
 import logging
-from logging_module import initLogger, logArgs
 from random import sample
 from collections import OrderedDict
-from gene_region import Region, RegionList
-import vcf_reader_func as vf
-from parse_functions import defaultsDictForFunction, getConfigFilename, makeRequiredList, getArgsWithConfig
 
+import pppipe.vcf_reader_func as vf
+from pppipe.logging_module import initLogger, logArgs
+from pppipe.gene_region import Region, RegionList
+from pppipe.parse_functions import defaultsDictForFunction, getConfigFilename, makeRequiredList, getArgsWithConfig
+from pppipe.model import Model, read_model_file
 #from tabix_wrapper import prepVcf
 
 #Input: VCF file, reference sequence, region list (possibly .bed file)
 #Output: Sequences with reference genome overlayed with VCF SNP calls
 
-sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
+#sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
 
-from model import Model, read_model_file
 
 class locus():
     #Name, pops, store for seqs, length, mut model, scalar, mutrate
@@ -224,7 +224,6 @@ def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
 
     for vcf_record in rec_list:
         issnp = vf.checkRecordIsSnp(vcf_record)
-        logging.info(str(ref_seq)+'\t'+str(len(ref_seq)))
         if not args.indel_flag and not issnp:
             continue
 

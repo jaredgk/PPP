@@ -1,14 +1,14 @@
 import sys
-from vcf_reader_func import getPassSites, VcfReader
-from gene_region import Region, RegionList
 import pysam
 import argparse
-from logging_module import initLogger
 import os
 
-sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
+#sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
 
-from model import Model, read_model_file
+from pppipe.vcf_reader_func import getPassSites, VcfReader
+from pppipe.gene_region import Region, RegionList
+from pppipe.logging_module import initLogger
+from pppipe.model import Model, read_model_file
 
 def createParser():
     parser = argparse.ArgumentParser(description="Given a VCF file and a list of intervals (BED style), will output regions that have over a certain number of qualifying variants in the region")

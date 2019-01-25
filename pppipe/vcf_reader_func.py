@@ -7,8 +7,9 @@ from collections import defaultdict
 import os
 import gzip
 
-sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
-from model import read_model_file
+#sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
+from pppipe.logging_module import initLogger
+from pppipe.model import read_model_file
 
 def checkIfGzip(filename):
     try:

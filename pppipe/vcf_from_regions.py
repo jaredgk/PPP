@@ -2,13 +2,12 @@ import sys
 import pysam
 import argparse
 import logging
-from logging_module import initLogger
-from gene_region import Region, RegionList
-import vcf_reader_func as vf
 import os
-sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
-
-from model import Model, read_model_file
+#sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
+from pppipe.logging_module import initLogger
+from pppipe.gene_region import Region, RegionList
+import pppipe.vcf_reader_func as vf
+from pppipe.model import Model, read_model_file
 
 
 def createParser():

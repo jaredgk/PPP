@@ -1,7 +1,7 @@
 import sys
 import pysam
-from gene_region import Region, RegionList, getIntervalsBetween
-import argparse_sets
+from pppipe.gene_region import Region, RegionList, getIntervalsBetween
+import pppipe.argparse_sets
 import argparse
 
 
