@@ -6,6 +6,7 @@ Required input files:
 
 import sys
 import os
+import graph_plotter
 #Insert ../jared into python path's first position so imports start from there
 sys.path.insert(0,os.path.abspath(os.path.join(os.pardir,'jared')))
 
@@ -26,6 +27,8 @@ vcf_dir = work_dir+'great_ape_genome/'
 if not os.path.exists(vcf_dir):
     os.makedirs(vcf_dir)
     os.makedirs(vcf_dir+'four_gamete/')
+    os.makedirs(vcf_dir + 'Sampled_nonmissing/')
+    os.makedirs(vcf_dir + 'Phased/')
 
 main_vcf_name = data_dir+'merged.vcf.gz'
 
@@ -36,15 +39,15 @@ stat_file_pref = work_dir+'great_ape_genome/fst.calc'
 #Uncomment for logging/debugging
 #initLogger()
 
-# vcf_filter.run(['--vcf', main_vcf_name, '--filter-max-missing', '1.0', '--filter-include-indv-file', data_dir+'PaniscusTroglodytes.txt', '--filter-min-alleles', '2', '--filter-max-alleles', '2', '--out-format', 'vcf.gz', '--out-prefix', filtered_vcf_pref, '--filter-exclude-chr', 'chrX', 'chrY', '--overwrite'])
-#
-# vcf_calc.run(['--vcf', filtered_vcf_pref + '.recode.vcf.gz', '--out-prefix', stat_file_pref, '--calc-statistic', 'windowed-weir-fst', '--model', '2Pop', '--statistic-window-size', '10000', '--statistic-window-step', '20000', '--model-file', data_dir + 'input.model', '--overwrite'])
-#
-# vcf_sampler.run(['--vcf', filtered_vcf_pref + '.recode.vcf.gz', '--statistic-file', stat_file_pref + '.windowed.weir.fst', '--out-format', 'vcf.gz', '--calc-statistic', 'windowed-weir-fst', '--sampling-scheme', 'random', '--uniform-bins', '5', '--out-dir', work_dir + 'great_ape_genome/Sample_Files', '--overwrite'])
+vcf_filter.run(['--vcf', main_vcf_name, '--filter-max-missing', '1.0', '--filter-include-indv-file', data_dir+'PaniscusTroglodytes.txt', '--filter-min-alleles', '2', '--filter-max-alleles', '2', '--out-format', 'vcf.gz', '--out-prefix', filtered_vcf_pref, '--filter-exclude-chr', 'chrX', 'chrY', '--overwrite'])
+
+vcf_calc.run(['--vcf', filtered_vcf_pref + '.recode.vcf.gz', '--out-prefix', stat_file_pref, '--calc-statistic', 'windowed-weir-fst', '--model', '2Pop', '--statistic-window-size', '10000', '--statistic-window-step', '20000', '--model-file', data_dir + 'input.model', '--overwrite'])
+
+vcf_sampler.run(['--vcf', filtered_vcf_pref + '.recode.vcf.gz', '--statistic-file', stat_file_pref + '.windowed.weir.fst', '--out-format', 'vcf.gz', '--calc-statistic', 'windowed-weir-fst', '--sampling-scheme', 'random', '--uniform-bins', '5', '--out-dir', work_dir + 'great_ape_genome/Sample_Files', '--overwrite'])
 
 valid_files = []
 
-for i in range(200):
+for i in range(3):
     try:
         sampfn = work_dir+'great_ape_genome/Sample_Files/Sample_'+str(i)+'.vcf.gz'
         nomiss_sampfn = work_dir+'great_ape_genome/Sampled_nonmissing/Sample_nomissing_'+str(i)
@@ -54,7 +57,6 @@ for i in range(200):
         vcf_filter.run(['--vcf', sampfn, '--filter-max-missing', '1.0', '--out-format', 'vcf.gz', '--out-prefix', nomiss_sampfn, '--overwrite'])
         vcf_phase.run(['--vcf', nomiss_sampfn+'.recode.vcf.gz', '--beagle-path', data_dir, '--out-prefix', phased_sampfn, '--phase-algorithm', 'beagle', '--beagle-burn-iter', '12', '--beagle-iter', '24', '--beagle-states', '320', '--beagle-window', '20.0', '--beagle-overlap', '2.0', '--beagle-error', '0.0005', '--beagle-step', '0.05', '--beagle-nsteps', '5', '--random-seed', '100', '--overwrite'])
         four_gamete_pysam.sample_fourgametetest_intervals(['--vcfname', phased_sampfn+'.vcf.gz', '--out', fgamfn, '--4gcompat', '--reti', '--right', '--numinf', '2'])
-        print(i)
     except IndexError:
         continue
     valid_files.append(fgamfn)
@@ -66,4 +68,6 @@ ima_args.extend(valid_files)
 ima_args.extend(['--pop', data_dir + 'input.model', '--out', work_dir + 'ima_all_loci.ima.u'])
 
 vcf_to_ima.vcf_to_ima(ima_args)
+
+graph_plotter.do_plots(work_dir + 'ima_all_loci.ima.u')
 
