@@ -11,8 +11,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 from vcf_reader_func import checkFormat
 from logging_module import initLogger, logArgs
 from model import read_model_file
-from beagle import call_beagle
-from shapeit import call_shapeit, remove_intermediate_files
+from beagle import call_beagle, check_for_beagle_intermediate_files
+from shapeit import call_shapeit, remove_shapeit_intermediate_files, check_for_shapeit_intermediate_files
 from bcftools import get_unique_chrs, chr_subset_file, concatenate, check_for_index, create_index
 
 def phase_argument_parser(passed_arguments):
@@ -136,6 +136,58 @@ def assign_vcf_extension (filename):
     else:
         raise Exception('Unknown file format')
 
+def assign_filename_prefix (output_prefix, output_format, output_filename):
+
+    '''
+        Assigns a prefix using a filename
+
+        Used to assign a unique prefix for jobs using the user specified
+        filename. This is to avoid output file with the same prefix, 
+        either from previous or ongoing jobs. This function is only used 
+        if no prefix has been specified by the user.
+
+        Parameters
+        ----------
+        output_prefix : str
+            Specifies the filename prefix
+        output_format : str
+            Specifies the file format suffix
+        output_filename : str
+            Specifies the filename specified by the user
+
+        Returns
+        -------
+        unique_prefix: str
+            Specifies the unqiue prefix
+
+        Raises
+        ------
+        Exception
+            If unable to assign a unique filename
+
+    '''
+
+    # List to hold the complete file path
+    file_path_list = []
+
+    # Split the filename
+    split_file_path = os.path.split(output_filename)
+
+    while split_file_path[1]:
+
+        # Add the split path section to the file path list
+        file_path_list = [split_file_path[1]] + file_path_list
+
+        # Split the filename
+        split_file_path = os.path.split(split_file_path[0])
+
+    # Save the updated prefix
+    updated_prefix = ''.join(file_path_list).replace('.','')
+
+    # Check if the file already exists 
+    if os.path.isfile(updated_prefix + output_format):
+        raise Exception('Unable to assign prefix output. %s already exists' % (updated_prefix + output_format))
+
 def run (passed_arguments = []):
     '''
         Phaser for VCF files.
@@ -196,6 +248,12 @@ def run (passed_arguments = []):
 
     # bool to check if an include file was created
     include_file_created = False
+
+    # Check if the has specified the output filename, without a prefix
+    if phase_args.out and '--out-prefix' not in passed_arguments and '--out-prefix' not in sys.argv:
+
+        # Assign a prefix based on the output filename
+        phase_args.out_prefix = assign_filename_prefix(phase_args.out_prefix, phase_args.out_format, phase_args.out)
 
     # Assign expected phased output filename
     phased_output = '%s.%s' % (phase_args.out_prefix, phase_args.out_format)
@@ -288,6 +346,9 @@ def run (passed_arguments = []):
 
     # Assign general arguments and call beagle
     if phase_args.phase_algorithm == 'beagle':
+
+        # Check for the presence of intermediate files from beagle
+        check_for_beagle_intermediate_files(phase_args.out_prefix, phase_args.out_format)
 
         # Assigns the input and output arguments
         phase_call_args.extend(['gt=' + phase_args.vcf,
@@ -409,6 +470,9 @@ def run (passed_arguments = []):
         # Check if only a single shapeit run is required
         if phase_args.phase_chr or len(chrs_in_vcf) == 1:
 
+            # Check for the presence of intermediate files from shapeit
+            check_for_shapeit_intermediate_files(phase_args.out_prefix)
+
             # Holds shapeit input filename, as a temp file may be required
             shapeit_input_vcf = None
 
@@ -421,12 +485,9 @@ def run (passed_arguments = []):
                 shapeit_input_vcf = chr_input_prefix + '.vcf.gz'
 
                 # Create the chromosome-specific input
-                chr_subset_file(phase_args.vcf,
-                                phase_args.phase_chr,
-                                chr_input_prefix,
-                                'vcf.gz',
-                                from_bp = phase_args.phase_from_bp,
-                                to_bp = phase_args.phase_to_bp)
+                chr_subset_file(phase_args.vcf, phase_args.phase_chr, chr_input_prefix, 'vcf.gz', 
+                                from_bp = phase_args.phase_from_bp, to_bp = phase_args.phase_to_bp, 
+                                overwrite = phase_args.overwrite)
 
                 logging.info('Chr %s subset created' % phase_args.phase_chr)
 
@@ -468,7 +529,7 @@ def run (passed_arguments = []):
                 logging.info('Chr %s subset deleted' % phase_args.phase_chr)
 
             # Remove intermediate files created by shapeit
-            remove_intermediate_files(phase_args.out_prefix)
+            remove_shapeit_intermediate_files(phase_args.out_prefix)
 
         # Check if multiple shapeit runs are required
         else:
@@ -491,6 +552,9 @@ def run (passed_arguments = []):
                 # Assign the chromosome-specific output prefix
                 chr_out_prefix = phase_args.out_prefix + '.' + chr_in_vcf
 
+                # Check for the presence of intermediate files from shapeit
+                check_for_shapeit_intermediate_files(chr_out_prefix)
+
                 # Assign the expected chromosome-specific output filename
                 chr_out_filename = '%s.%s' % (chr_out_prefix, phase_args.out_format)
 
@@ -501,16 +565,14 @@ def run (passed_arguments = []):
                 chr_input_prefix = phase_args.vcf + '.' + chr_in_vcf
 
                 # Assign the expected chromosome-specific input filename
-                chr_in_filename = chr_input_prefix + '.vcf.gz'
+                chr_input_filename = chr_input_prefix + '.vcf.gz'
 
                 # Create the chromosome-specific input
-                chr_subset_file(phase_args.vcf,
-                                chr_in_vcf,
-                                chr_input_prefix,
-                                'vcf.gz')
+                chr_subset_file(phase_args.vcf, chr_in_vcf, chr_input_prefix, 'vcf.gz', 
+                                overwrite = phase_args.overwrite)
 
                 # Assigns the input and output arguments for shapeit
-                chr_call_args.extend(['--input-vcf', chr_in_filename,
+                chr_call_args.extend(['--input-vcf', chr_input_filename,
                                       '--output-max', chr_out_prefix,
                                       '--output-log', chr_out_prefix + '.phase.log'])
 
@@ -524,10 +586,10 @@ def run (passed_arguments = []):
                 phased_log_list.append(chr_out_filename + '.log')
 
                 # Delete the chromosome-specific input
-                os.remove(chr_in_filename)
+                os.remove(chr_input_filename)
 
                 # Remove intermediate files created by shapeit
-                remove_intermediate_files(chr_out_prefix)
+                remove_shapeit_intermediate_files(chr_out_prefix)
 
             # Concatenate the vcf files
             concatenate(phased_filename_list, phase_args.out_prefix, phase_args.out_format)
