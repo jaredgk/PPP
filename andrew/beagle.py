@@ -91,7 +91,7 @@ def check_for_beagle_intermediate_files (output_prefix, output_format, overwrite
         if not overwrite:
 
             # Check if an intermediate file exists and riase error
-            if os.path.isfile(output_prefix + '.vcf.gz')
+            if os.path.isfile(output_prefix + '.vcf.gz'):
                 raise Exception('Beagle intermediate (%s) found')
 
 def standard_beagle_call (beagle_path, beagle_call_args, output_prefix):

@@ -136,25 +136,23 @@ def assign_vcf_extension (filename):
     else:
         raise Exception('Unknown file format')
 
-def assign_filename_prefix (output_prefix, output_format, output_filename):
+def assign_filename_prefix (output_filename, output_format):
 
     '''
         Assigns a prefix using a filename
 
         Used to assign a unique prefix for jobs using the user specified
-        filename. This is to avoid output file with the same prefix, 
+        filename. This is to avoid output files with the same prefix, 
         either from previous or ongoing jobs. This function is only used 
         if no prefix has been specified by the user.
 
         Parameters
         ----------
-        output_prefix : str
-            Specifies the filename prefix
-        output_format : str
-            Specifies the file format suffix
         output_filename : str
             Specifies the filename specified by the user
-
+        output_format : str
+            Specifies the file format suffix
+        
         Returns
         -------
         unique_prefix: str
@@ -167,26 +165,15 @@ def assign_filename_prefix (output_prefix, output_format, output_filename):
 
     '''
 
-    # List to hold the complete file path
-    file_path_list = []
-
-    # Split the filename
-    split_file_path = os.path.split(output_filename)
-
-    while split_file_path[1]:
-
-        # Add the split path section to the file path list
-        file_path_list = [split_file_path[1]] + file_path_list
-
-        # Split the filename
-        split_file_path = os.path.split(split_file_path[0])
-
     # Save the updated prefix
-    updated_prefix = ''.join(file_path_list).replace('.','')
+    updated_prefix = copy.deepcopy(output_filename)
 
     # Check if the file already exists 
     if os.path.isfile(updated_prefix + output_format):
         raise Exception('Unable to assign prefix output. %s already exists' % (updated_prefix + output_format))
+
+    # Return the updated prefix
+    return updated_prefix
 
 def run (passed_arguments = []):
     '''
@@ -253,7 +240,7 @@ def run (passed_arguments = []):
     if phase_args.out and '--out-prefix' not in passed_arguments and '--out-prefix' not in sys.argv:
 
         # Assign a prefix based on the output filename
-        phase_args.out_prefix = assign_filename_prefix(phase_args.out_prefix, phase_args.out_format, phase_args.out)
+        phase_args.out_prefix = assign_filename_prefix(phase_args.out, phase_args.out_format)
 
     # Assign expected phased output filename
     phased_output = '%s.%s' % (phase_args.out_prefix, phase_args.out_format)

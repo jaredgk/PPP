@@ -129,7 +129,9 @@ def check_for_shapeit_intermediate_files (output_prefix, overwrite = False):
             # Add the intermediate file to the list
             shapeit_intermediate_files.append(output_prefix + '.sample')
 
-        raise Exception('shapeit intermediate files exist (%s)' % ', '.join(shapeit_intermediate_files))
+        # Check if intermediate_files were found, and report the error
+        if shapeit_intermediate_files:
+            raise Exception('shapeit intermediate files exist (%s)' % ', '.join(shapeit_intermediate_files))
 
 def standard_shapeit_call (shapeit_call_args, output_prefix):
     '''
