@@ -67,12 +67,13 @@ def filter_bed_regions(sys_args):
                          randomize=randomize)
     if args.filter_xy:
         regions.filterOutXY()
+    remove_cpg = (True if args.refname is not None else False)
     regions_output = 0
     for region in regions.regions:
         if len(region) < args.min_length:
             continue
         rec_list = vcf_reader.getRecordList(region)
-        pass_list = getPassSites(rec_list, remove_cpg=True,
+        pass_list = getPassSites(rec_list, remove_cpg=remove_cpg,
                     remove_indels=args.remove_indels,
                     remove_multiallele=args.remove_multiallele,
                     remove_missing=args.remove_missing,
