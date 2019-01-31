@@ -208,7 +208,7 @@ def run (passed_arguments = []):
     logArgs(vcf_args, func_name = 'vcf_filter')
 
     # Argument container for vcftools
-    vcftools_call_args = ['--out', vcf_args.out_prefix]
+    vcftools_call_args = []
 
     # Check if the user has specified a model file
     if vcf_args.model_file and vcf_args.model:
@@ -242,31 +242,51 @@ def run (passed_arguments = []):
         # Assign the individuals file to vcftools
         vcftools_call_args.extend(['--keep', selected_model.ind_file])
 
-    # Holds the filename vcftools assigns to the filtered output
-    vcftools_output_filename = None
+    # Holds the filename suffix vcftools assigns to the filtered output
+    vcftools_out_suffix = None
 
-    # Used to assign the output format to the vcftools call, and assign vcftools output filename
+    # Used to assign the output format to the vcftools call, and assign vcftools output suffix
     if vcf_args.out_format == 'removed_sites':
         vcftools_call_args.append('--removed-sites')
-        vcftools_output_filename = vcf_args.out_prefix + '.removed.sites'
+        vcftools_out_suffix = '.removed.sites'
     elif vcf_args.out_format == 'kept_sites':
         vcftools_call_args.append('--kept-sites')
-        vcftools_output_filename = vcf_args.out_prefix + '.kept.sites'
+        vcftools_out_suffix = '.kept.sites'
     elif vcf_args.out_format == 'removed_bed':
         vcftools_call_args.append('--removed-sites')
-        vcftools_output_filename = vcf_args.out_prefix + '.removed.bed'
+        vcftools_out_suffix = '.removed.bed'
     elif vcf_args.out_format == 'kept_bed':
         vcftools_call_args.append('--kept-sites')
-        vcftools_output_filename = vcf_args.out_prefix + '.kept.bed'
+        vcftools_out_suffix = '.kept.bed'
     elif vcf_args.out_format == 'bcf':
         vcftools_call_args.append('--recode')
-        vcftools_output_filename = vcf_args.out_prefix + '.recode.bcf'
+        vcftools_out_suffix = '.recode.bcf'
     elif vcf_args.out_format == 'vcf':
         vcftools_call_args.append('--recode')
-        vcftools_output_filename = vcf_args.out_prefix + '.recode.vcf'
+        vcftools_out_suffix = '.recode.vcf'
     elif vcf_args.out_format == 'vcf.gz':
         vcftools_call_args.append('--recode')
-        vcftools_output_filename = vcf_args.out_prefix + '.recode.vcf.gz'
+        vcftools_out_suffix = '.recode.vcf.gz'
+
+    # Assign expected vcftools output filename
+    vcftools_output_filename = vcf_args.out_prefix + vcftools_out_suffix
+
+    # Check if the user has specified a output filename
+    if vcf_args.out:
+
+        # Assign the vcftools output filename, using the output filename
+        vcftools_output_filename = vcf_args.out
+
+    else:
+
+        # Assign the vcftools output filename, using the prefix and suffix
+        vcftools_output_filename = vcf_args.out_prefix + vcftools_out_suffix
+
+    # Check if previous output should be overwritten
+    if not vcf_args.overwrite:
+
+        # Confirm the vcftools output and log file do not exist
+        check_for_vcftools_output(vcftools_output_filename)
 
     # Individuals-based filters
     if vcf_args.filter_include_indv_file or vcf_args.filter_exclude_indv_file:
@@ -385,28 +405,22 @@ def run (passed_arguments = []):
 
     logging.info('vcftools parameters assigned')
 
-    # Check if previous output should be overwritten
-    if not vcf_args.overwrite:
-        if vcf_args.out:
-            # Confirm the vcftools-renamed output and log file do not exist
-            check_for_vcftools_output(vcf_args.out)
-        else:
-            # Confirm the vcftools output and log file do not exist
-            check_for_vcftools_output(vcftools_output_filename)
-
     # Assigns the file argument for vcftools
     vcfname_arg = assign_vcftools_input_arg(vcf_args.vcf)
     logging.info('Input file assigned')
 
-    # Call vcftools with the specifed arguments
-    vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)
+    # Check if the output format is vcf
+    if vcf_args.out_format == 'vcf':
 
-    # Check if the user specifed the complete output filename
-    if vcf_args.out:
-        os.rename(vcftools_output_filename, vcf_args.out)
-        produce_vcftools_log(vcftools_err, vcf_args.out)
+        # Call vcftools with the specifed arguments
+        vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)
+
     else:
-        produce_vcftools_log(vcftools_err, vcftools_output_filename)
+
+        # Call vcftools with the specifed arguments
+        vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)
+
+    produce_vcftools_log(vcftools_err, vcftools_output_filename)
 
     # Delete any files that were created for vcftools
     if vcf_args.model_file:

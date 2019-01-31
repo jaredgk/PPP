@@ -2,6 +2,8 @@ import os
 import sys
 import logging
 import subprocess
+import string
+import random
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
 
@@ -162,37 +164,6 @@ def cvt_vcftools_site_to_bed (vcftools_out_str):
         # Remove the header
         return ''
 
-def pipe_vcftools (vcftools_call_args):
-    '''
-        Calls vcftools with pipe output
-
-        The output of this function is the stdout and stderr of vcftools. This
-        function should only be used if vcftools is being used as the stdin of
-        another function. Please note that this function does not check the for
-        errors in the vcftools call. Please check for errors after the call is
-        closed using check_vcftools_for_errors.
-
-        Parameters
-        ----------
-        vcftools_call_args : list
-            vcftools arguments
-
-        Returns
-        -------
-        vcftools_call : subprocess.Popen
-            vcftools subprocess call
-        vcftools_call.stdout : PIPE
-            vcftools stdout PIPE (Results)
-        vcftools_call.stderr : PIPE
-            vcftools stderr PIPE (Log)
-
-    '''
-
-    # vcftools subprocess call
-    vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    return vcftools_call
-
 def pipe_vcftools_to_bed_file (vcftools_call_args, output_filename):
 
     '''
@@ -210,8 +181,9 @@ def pipe_vcftools_to_bed_file (vcftools_call_args, output_filename):
             Filename of the bed file
 
     '''
+
     # Open vcftools pipe
-    vcftools_call = pipe_vcftools(vcftools_call_args)
+    vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Create the bed file
     bed_output = open(output_filename, 'w')
@@ -266,7 +238,7 @@ def pipe_vcftools_bgzip (vcftools_call_args, output_filename):
 
     '''
 
-    vcftools_call = pipe_vcftools(vcftools_call_args)
+    vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Create bgzip output file
     bgzip_output = open(output_filename, 'wb')
@@ -330,16 +302,16 @@ def pipe_vcftools_bcftools (vcftools_call_args, output_filename):
 
     '''
 
-    vcftools_call = pipe_vcftools(vcftools_call_args)
+    vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Holds the arguments to convert to BCF format
     convert_args = ['view', '-O', 'b']
 
-    # Assigns the output file to the arguments
-    convert_args.extend(['-o', output_filename])
+    # Create bgzip output file
+    bcftools_output = open(output_filename, 'wb')
 
     # bcftools subprocess call
-    bcftools_call = subprocess.Popen(['bcftools'] + convert_args, stdin = vcftools_call.stdout, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    bcftools_call = subprocess.Popen(['bcftools'] + convert_args, stdin = vcftools_call.stdout, stdout = bcftools_output, stderr = subprocess.PIPE)
 
     # Wait for vctools to finish
     vcftools_call.wait()
@@ -403,7 +375,7 @@ def pipe_vcftools_to_file (vcftools_call_args, output_filename, append_output = 
     '''
 
     # Open vcftools pipe
-    vcftools_call = pipe_vcftools(vcftools_call_args)
+    vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Check if the output should be opened in append mode
     if append_output:
@@ -412,7 +384,6 @@ def pipe_vcftools_to_file (vcftools_call_args, output_filename, append_output = 
     else:
         # Create the output file (in write mode)
         output_file = open(output_filename, 'w')
-
 
     try:
         # Create iterator of the vcftools stdout
@@ -508,7 +479,7 @@ def standard_vcftools_call (vcftools_call_args):
 
     return vcftools_stderr
 
-def call_vcftools (vcftools_call_args, output_format = None, output_filename = None):
+def call_vcftools (vcftools_call_args, output_format = None, output_filename = None, append_mode = False):
     '''
         Calls vcftools
 
@@ -519,15 +490,19 @@ def call_vcftools (vcftools_call_args, output_format = None, output_filename = N
         ----------
         vcftools_call_args : list
             vcftools arguments
-        output_format : str
-            The output format
-        output_filename : str
-            The output filename assigned by vcftools (for piped calls)
+        output_format : str, optional
+            Allows for specific formats to be given which may result in
+            the stdout of vcftools being piped to another script or 
+            program
+        output_filename : str, optional
+            The output filename to be assigned if the stdout of vcftools 
+            is piped
+        append_mode : bool, optional
+            Allows for vcftools stdout to append a file. Currently 
+            incompatible with output_format
 
         Returns
         -------
-        vcftools_out : str
-            vcftools call output
         vcftools_err : str
             vcftools log output
 
@@ -535,23 +510,53 @@ def call_vcftools (vcftools_call_args, output_format = None, output_filename = N
         ------
         Exception
             If vcftools stderr returns an error
-    '''
+    ''' 
 
-    # Check if the output is a bgzipped vcf
-    if output_format == 'vcf.gz':
-        # Pipe vcftools stdout to bgzip to create a bgzipped vcf
-        vcftools_err = pipe_vcftools_bgzip(vcftools_call_args, output_filename)
-    # Check if the output is a bcf
-    elif output_format == 'bcf':
-        # Pipe vcftools stdout to bgzip to create a bgzipped vcf
-        vcftools_err = pipe_vcftools_bcftools(vcftools_call_args, output_filename)
-    elif output_format == 'removed_bed' or output_format == 'kept_bed':
-        # Pipe vcftools stdout to bed file
-        vcftools_err = pipe_vcftools_to_bed_file(vcftools_call_args, output_filename)
-    elif output_format == 'het-fis':
-        vcftools_err = pipe_vcftools_to_file(vcftools_call_args, output_filename, append_output = True)
+    # Check if an output format was specified
+    if output_format and output_filename: 
+
+        # Check if the output is a bgzipped vcf
+        if output_format == 'vcf.gz':
+
+            # Pipe vcftools stdout to bgzip to create a bgzipped vcf
+            vcftools_err = pipe_vcftools_bgzip(vcftools_call_args, output_filename)
+
+        # Check if the output is a bcf
+        elif output_format == 'bcf':
+
+            # Pipe vcftools stdout to bgzip to create a bgzipped vcf
+            vcftools_err = pipe_vcftools_bcftools(vcftools_call_args, output_filename)
+
+        # Check if the output is a bed-based file
+        elif output_format in ['removed_bed','kept_bed']:
+
+            # Pipe vcftools stdout to bed file
+            vcftools_err = pipe_vcftools_to_bed_file(vcftools_call_args, output_filename)
+
+        # Check if the output is another format, that does not require a pipe
+        else:
+            
+            # Pipe the vcftools stdout to a standard file
+            vcftools_err = pipe_vcftools_to_file(vcftools_call_args, output_filename)
+
+    # Check if a filename but no format was specified 
+    elif output_filename:
+
+        # Check if the output should be written in append mode
+        if append_mode:
+
+            # Pipe the vcftools stdout to a standard file and allow appending
+            vcftools_err = pipe_vcftools_to_file(vcftools_call_args, output_filename, append_output = True)
+
+        else:
+
+            # Pipe the vcftools stdout to a standard file
+            vcftools_err = pipe_vcftools_to_file(vcftools_call_args, output_filename)
+
+    # If no format or filename is given, run vcftools with just the passed arguments
     else:
-        # Call vcftools under standard conditions
+
+        # Call vcftools under standard conditions, if not 
         vcftools_err = standard_vcftools_call(vcftools_call_args)
 
     # Return the log
@@ -587,6 +592,138 @@ def check_for_vcftools_output (vcftools_output):
         raise IOError('Log file already exists')
 
     logging.info('Log file assigned')
+
+def assign_vcftools_unique_prefix (output_prefix, output_format, random_seed = None, string_size = 6, string_limit = 10, assignment_limit = 100):
+
+    '''
+        Assigns a unique vcftools filename prefix
+
+        Used to assign a unique filename prefix for vcftools jobs. If an
+        output file with the same prefix and suffix, either from previous 
+        or ongoing jobs, this function will generate a unique prefix. This 
+        function is only used if no prefix has been specified by the user.
+
+        Parameters
+        ----------
+        output_prefix : str
+            Specifies the filename prefix
+        output_format : str
+            Specifies the file format suffix
+        random_seed : int, str, optional
+            Specifies the random seed
+        string_size : int, optional
+            Specifies the number of character in the random string
+        string_limit  : int, optional
+            Specifies the character limit of the random string
+        assignment_limit : int, optional
+            Specifies a limit the number of assignment attempts
+
+        Returns
+        -------
+        updated_prefix: str
+            Specifies the unqiue prefix
+
+
+        Raises
+        ------
+        Exception
+            If unable to assign a unique filename
+
+    '''
+
+    # Assign the random seed, with a string or int
+    random.seed(random_seed)
+
+    # Assign the assignment counter, used to avoid infinite loops
+    assignment_counter = 0
+
+    # Generate a random string
+    random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for digit in range(string_size))
+
+    # Holds the updated prefix that will be returned when unique
+    updated_prefix = output_prefix + '.' + random_string
+
+    # Loop until a unique filename is created
+    while os.path.isfile(updated_prefix + output_format):
+
+        # Add to the assignment counter
+        assignment_counter += 1
+
+        # Check if assignment counter has reached it's limit
+        if assignment_counter > assignment_limit:
+
+            # Set the assignment counter to zero
+            assignment_counter = 0
+
+            # Add to the string size
+            string_size += 1
+
+            # Check if string size has reached it's limit and report the error
+            if string_size > string_limit:
+                raise Exception('Unable to assign unique intermediate output')
+
+        # Generate a random string
+        random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for digit in range(string_size))
+
+        # Holds the updated prefix that will be returned when unique
+        updated_prefix = output_prefix + '.' + random_string
+
+    # Return the intermediate output filename
+    return updated_prefix
+
+def assign_vcftools_filename_prefix (output_prefix, output_format, output_filename):
+
+    '''
+        Assigns a vcftools prefix using a filename
+
+        Used to assign a unique prefix for vcftools jobs using the user
+        specified filename. This is to avoid output file with the same 
+        prefix, either from previous or ongoing jobs. This function is 
+        only used if no prefix has been specified by the user.
+
+        Parameters
+        ----------
+        output_prefix : str
+            Specifies the filename prefix
+        output_format : str
+            Specifies the file format suffix
+        output_filename : str
+            Specifies the filename specified by the user
+
+        Returns
+        -------
+        unique_prefix: str
+            Specifies the unqiue prefix
+
+        Raises
+        ------
+        Exception
+            If unable to assign a unique filename
+
+    '''
+
+    # List to hold the complete file path
+    file_path_list = []
+
+    # Split the filename
+    split_file_path = os.path.split(output_filename)
+
+    while split_file_path[1]:
+
+        # Add the split path section to the file path list
+        file_path_list = [split_file_path[1]] + file_path_list
+
+        # Split the filename
+        split_file_path = os.path.split(split_file_path[0])
+
+    # Save the updated prefix
+    updated_prefix = ''.join(file_path_list).replace('.','')
+
+    # Check if the file already exists 
+    if os.path.isfile(updated_prefix + output_format):
+        raise Exception('Unable to assign prefix output. %s already exists' % (updated_prefix + output_format))
+
+    return updated_prefix
 
 def delete_vcftools_output (vcftools_output):
     '''
