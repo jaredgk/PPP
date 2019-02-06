@@ -27,7 +27,8 @@ def admix_filter_parser(passed_arguments):
     admix_parser.add_argument('--threads', help='No. of threads to be used for computation', type=int)
     admix_parser.add_argument('--method', help='Algorithm to be used (em or block)', type=str, choices={"em", "block"})
     admix_parser.add_argument('--acceleration', help='Set acceleration(sqs<X> or qn<X>)', type=str)
-    admix_parser.add_argument('--convergence', help='Set convergence criterion (major or minor)', type=int)
+    admix_parser.add_argument('--major-converge', help='set major convergence criterion (for point estimation)', type=int)
+    admix_parser.add_argument('--minor-converge', help='set minor convergence criterion (for bootstrap and CV reestimates)', type=int)
     admix_parser.add_argument('--bootstrap', help='Bootstrapping [with X replicates]', type=int)
 
 
@@ -79,8 +80,11 @@ def run(passed_arguments = []):
         admix_call_args.extend(['-a', admix_args.acceleration])
 
     # Add convergence(int) to the list
-    if admix_args.convergence:
-        admix_call_args.extend(['-C=' + str(admix_args.convergence)])
+    if admix_args.major_converge:
+        admix_call_args.extend(['-C=' + str(admix_args.major_converge)])
+
+    if admix_args.minor_converge:
+        admix_call_args.extend(['-c=' + str(admix_args.minor_converge)])
 
     # Add bootstrap(int) to the list
     if admix_args.bootstrap:

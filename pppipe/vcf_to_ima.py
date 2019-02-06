@@ -263,9 +263,10 @@ def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
 
 
 
-def writeHeader(popmodel, loci_count, out_f, header="Test IMa input",
+def writeHeader(popmodel, loci_count, out_f, mutrate, header="Test IMa input",
                 pop_string=None):
     out_f.write(header+'\n')
+    out_f.write('#Mutation rate: '+str(mutrate)+'\n')
     out_f.write(str(popmodel.npop)+'\n')
     pops = ''
     for p in popmodel.pop_list:
@@ -458,7 +459,7 @@ def vcf_to_ima(sys_args):
         logging.info('Total regions: %d' % (len(region_list.regions)))
     total_regions = (len(region_list.regions) if regions_provided else len(args.vcflist))
     if not args.fasta:
-        writeHeader(popmodel, total_regions, output_file)
+        writeHeader(popmodel, total_regions, output_file, args.mutrate)
     if not single_file:
         vcf_reader.reader.close()
     for i in range(total_regions):
