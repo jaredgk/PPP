@@ -3,7 +3,7 @@ import sys
 import logging
 import subprocess
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'pppipe')))
 
 from vcf_reader_func import checkFormat
 

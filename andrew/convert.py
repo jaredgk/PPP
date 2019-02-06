@@ -6,7 +6,8 @@ import argparse
 import glob
 import logging
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
+
 
 # Import PPP modules and scripts
 import vcftools
@@ -59,7 +60,7 @@ def convert_argument_parser(passed_arguments):
 
     # Output arguments.
     output_formats = ['vcf', 'vcf.gz', 'bcf', 'fasta', 'im', 'ped', 'binary-ped']
-    convert_parser.add_argument('--out-format', metavar = metavar_list(output_formats), help = 'Specifies the output format', type = str, choices = output_formats)
+    convert_parser.add_argument('--out-format', metavar = metavar_list(output_formats), help = 'Specifies the output format', type = str, choices = output_formats, required = True)
     convert_parser.add_argument('--out', help = 'Defines the output filename')
     convert_parser.add_argument('--out-prefix', help = 'Defines the output filename prefix', default = 'out')
 

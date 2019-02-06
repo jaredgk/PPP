@@ -1,0 +1,16 @@
+
+VCFtools - 0.1.17
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf chr11.unfiltered.M.vcf
+	--mac 1
+	--max-mac 1
+	--kept-sites
+	--stdout
+
+Warning: Expected at least 2 parts in INFO entry: ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">
+After filtering, kept 20 out of 20 Individuals
+Outputting Kept Sites...
+After filtering, kept 4 out of a possible 21 Sites
+Run Time = 0.00 seconds

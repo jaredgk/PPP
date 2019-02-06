@@ -8,7 +8,7 @@ import copy
 import logging
 
 # Call PPP-based scripts
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'pppipe')))
 
 from logging_module import initLogger, logArgs
 from plink import *

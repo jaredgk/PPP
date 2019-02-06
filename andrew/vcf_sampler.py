@@ -12,7 +12,7 @@ import pandas as pd
 from collections import defaultdict
 
 # Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 
 # Import log initializer
 from logging_module import initLogger, logArgs

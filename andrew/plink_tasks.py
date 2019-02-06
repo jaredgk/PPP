@@ -8,7 +8,7 @@ import copy
 import logging
 
 # Call PPP-based scripts
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'jared')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 
 from logging_module import initLogger, logArgs
 from plink import *
@@ -160,7 +160,7 @@ def run (passed_arguments = []):
     plink_output_args = assign_plink_output_args(plink_args.out_prefix, plink_args.out_format)
 
     # Assign the expect output filename
-    plink_expected_output = '%s.%s' % (plink_args.out_prefix, plink_args.out_format
+    plink_expected_output = '%s.%s' % (plink_args.out_prefix, plink_args.out_format)
 
     # Check if previous output should not be overwritten
     if not plink_args.overwrite:

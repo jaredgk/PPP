@@ -1,0 +1,167 @@
+-------------------
+VCF-based functions
+-------------------
+
+General Order
+-------------
+
+vcf_filter -> vcf_calc -> stat_sampler (optional) -> vcf_split -> vcf_phase
+
+Note (1): It should be possible to run the vcf_filter function before/after any
+          other vcf-based function (i.e. excluding stat_sampler).
+Note (2): It should be possible to run vcf_filter multiple times.
+
+
+Expected arguments
+------------------
+
+vcf_filter: Almost all argument combinations should be possible. There are some
+            exceptions, such as arguments that include/exclude the same data.
+
+vcf_calc: Argument combinations will be based on the built-in statistics. A list
+          of these statistics and their associated arguments can be found below.
+
+          1) Window Fst
+          Requires 2+ populations to compare, a window size to calculate Fst,
+          and a step size between the calculations.
+          --calc-statistic windowed-weir-fst
+          --model-file example/input/input.model
+          --model 2Pop
+          --statistic-window-size 10000
+          --statistic-window-step 20000
+
+          2) Site Fst
+          In comparison the window Fst, site Fst only requires 2+ populations.
+          --calc-statistic weir-fst
+          --model-file example/input/input.model
+          --model 2Pop
+
+          3) Tajima's D
+          Only requires a window size for calculations.
+          --calc-statistic TajimaD
+          --statistic-window-size 10000
+
+          4) Window Pi (i.e. Nucleotide diversity)
+          Requires a window size to calculate Pi and a step size between the
+          calculations.
+          --calc-statistic window-pi
+          --statistic-window-size 10000
+          --statistic-window-step 20000
+
+          5) Site Pi
+          In comparison the window Pi, only the statistic argument is required.
+          --calc-statistic site-pi
+
+          6) Allele frequency
+          Only the statistic argument is required.
+          --calc-statistic freq
+
+          7) Fit
+          Only the statistic argument is required.
+          --calc-statistic het-fit
+
+          8) Fis
+          Requires 1+ population ant the statistic argument.
+          --calc-statistic het-fis
+          --model-file example/input/input.model
+          --model 2Pop
+
+stat_sampler: This optional function is used to sub-sample the statistic files
+              produced by vcf_calc. Currently it is only setup to function with
+              the window-based statistics, but that will likely be resolved in
+              a future update. Currently, the sampler has two schemes, uniform
+              and random.
+
+              Note: The statistic is selected using the --calc-statistic
+              argument. So, each of the supported statistics should be tested.
+              The supported statistics may be found below with an appropriate
+              input file. Please note that the example files are based on chimp
+              data, if you need human-based files, let me know.
+
+              a) Window Fst
+              --calc-statistic windowed-weir-fst
+              --statistic-file merged_chr1_10000.windowed.weir.fst
+
+              b) Tajima's D
+              --calc-statistic TajimaD
+              --statistic-file merged_chr1_10000.Tajima.D
+
+              c) Window Pi
+              --calc-statistic window-pi
+              --statistic-file merged_chr1_10000.windowed.pi
+
+              1) Uniform sampling
+              The following arguments with one of the statistics from above.
+              --sampling-scheme uniform
+              --uniform-bins 5
+              --sample-size 20
+              --random-seed 100
+
+              2) Random sampling
+              The following arguments with one of the statistics from above.
+              --sampling-scheme random
+              --sample-size 20
+              --random-seed 100
+
+
+vcf_split: Argument combinations will be based on the selected splitting scheme.
+
+           1) Split by a window-based statistic file
+           This will split the specified vcf file into the windows given in the
+           statistic file. A model may also be given to only keep specific
+           individuals.
+           --vcf merged_chr1_10000.vcf.gz
+           --model-file input.model
+           --model 2Pop
+           --split-file merged_chr1_10000.windowed.weir.fst
+           --split-method statistic-file
+
+           2) Split by a bed-file
+           This will be added in a future update. 
+
+vcf_phase: Argument combinations will be based on the selected phase algorithm.
+           Both algorithms may accept a genetic map, if you need a map file, let
+           me know.
+
+           1) Beagle (Basic)
+           The only required argument for beagle to operate is the algorithm.
+           --phase-algorithm beagle
+
+           2) Beagle (Advanced)
+           The majority of optional beagle arguments are algorithm-specific, but
+           some general arguments are used by both algorithms.
+           --phase-algorithm beagle
+           --beagle-burn-iter 12
+           --beagle-iter 24
+           --beagle-states 320
+           --beagle-window 20.0
+           --beagle-overlap 2.0
+           --beagle-error 0.0005
+           --beagle-step 0.05
+           --beagle-nsteps 5
+           --Ne 1500000
+           --random-seed 100
+           --genetic-map map_filename
+           --phase-chr 21
+           --phase-from-bp 25000000
+           --phase-to-bp 25500000
+
+           3) shapeit (Basic)
+           The only required argument for shapeit to operate is the algorithm.
+           --phase-algorithm shapeit
+
+           4) shapeit (Advanced)
+           Similar to beagle, most optional shapeit arguments are
+           algorithm-specific.
+           --phase-algorithm shapeit
+           --shapeit-burn-iter 10
+           --shapeit-prune-iter 10
+           --shapeit-main-iter 50
+           --shapeit-states 200
+           --shapeit-window 0.5
+           --Ne 1500000
+           --random-seed 100
+           --genetic-map map_filename
+           --phase-chr 21
+           --phase-from-bp 25000000
+           --phase-to-bp 25500000
