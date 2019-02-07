@@ -83,7 +83,8 @@ def pca_plot(in_file):
 # Function for plotting graphs for admixture output data set
 def bar_plot(in_file):
     try:
-        df = pd.read_table(in_file, header=None, delim_whitespace=True)
+        a = in_file
+        df = pd.read_table(a, header=None, delim_whitespace=True)
         df.plot.bar(stacked=True, figsize=(23, 5), color=CB_color_cycle)
         plt.savefig(in_file + ".pdf", bbox_inches='tight')
     except FileNotFoundError as e:
@@ -135,3 +136,6 @@ def do_plots(in_file):
     except:
         print(in_file + ": No such file or directory")
 
+
+
+bar_plot('great_ape.17.Q')
