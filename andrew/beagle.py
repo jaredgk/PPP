@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 from vcf_reader_func import checkFormat
 from logging_module import initLogger, logArgs
 from vcftools import bgzip_decompress_vcfgz
-from bcftools import convert_to_bcf, check_for_index, create_index
+from bcftools import convert_vcf, check_for_index, create_index
 
 def delete_beagle_log (output_prefix):
     '''
@@ -92,7 +92,7 @@ def check_for_beagle_intermediate_files (output_prefix, output_format, overwrite
 
             # Check if an intermediate file exists and riase error
             if os.path.isfile(output_prefix + '.vcf.gz'):
-                raise Exception('Beagle intermediate (%s) found')
+                raise Exception('Beagle intermediate (%s) found. Use --overwrite to ignore')
 
 def standard_beagle_call (beagle_path, beagle_call_args, output_prefix):
     '''
@@ -159,16 +159,19 @@ def call_beagle (beagle_path, beagle_call_args, output_prefix, output_format):
     # Standard call to beagle
     standard_beagle_call(beagle_path, beagle_call_args, output_prefix)
 
-    # Decompress if a VCF files is requested
+    # Check if the desired format is VCF
     if output_format == 'vcf':
+
+        # Decompress the VCF file
         bgzip_decompress_vcfgz(output_prefix + '.vcf.gz')
 
-    # Convert to BCF if requested
+    # Check if the desired format is BCF
     elif output_format == 'bcf':
 
         # Check if there is an index file
         if check_for_index(output_prefix + '.vcf.gz') == False:
             # Create an index if not found
             create_index(output_prefix + '.vcf.gz')
+        
         # Convert vcf.gz to bcf
-        convert_to_bcf(output_prefix + '.vcf.gz', output_prefix)
+        convert_vcf(output_prefix + '.vcf.gz', output_prefix, output_format, overwrite = True)

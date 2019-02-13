@@ -7,6 +7,33 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'pppipe')))
 
 from vcf_reader_func import checkFormat
 
+def log_bcftools_reference (out_filename, append_mode = False, ref_header = True):
+
+    # Check if the file is to be written in append mode
+    if append_mode:
+
+        # Open the file
+        log_file = open(out_filename + '.log', 'a')
+
+        # Check if the ref header should be added
+        if ref_header:
+            log_file.write('\nPlease Reference alongside the PPP:\n')
+
+    else:
+
+        # Open the file
+        log_file = open(out_filename + '.log', 'w')
+
+        # Check if the ref header should be added
+        if ref_header:
+            log_file.write('Please Reference alongside the PPP:\n')
+
+    log_file.write('Li, H. et al. The Sequence Alignment/Map format and '
+                   'SAMtools. Bioinformatics (2009). doi:10.1093/bioinformatics/btp352')
+    log_file.close()
+
+    logging.info('Reference assigned')
+
 def return_output_format_args (output_format):
     '''
         Return bcftools arguments for output format
@@ -56,207 +83,6 @@ def check_bcftools_for_errors (bcftools_stderr):
     # Report errors that are not warnings
     elif bcftools_stderr:
         raise Exception(bcftools_stderr)
-
-def pipe_bcftools (bcftools_call_args):
-    '''
-        Calls bcftools with pipe output
-
-        The output of this function is the stdout and stderr of bcftools. This
-        function should only be used if bcftools is being used as the stdin of
-        another function. Please note that this function does not check the for
-        errors in the bcftools call. Please check for errors after the call is
-        closed using check_bcftools_for_errors.
-
-        Parameters
-        ----------
-        bcftools_stderr : str
-            bcftools stderr
-
-        Returns
-        -------
-        bcftools_call : PIPE
-            Pipe of subprocess call, including both stdout and stderr
-
-    '''
-
-    # bcftools subprocess call
-    bcftools_call = subprocess.Popen(['bcftools'] + list(map(str, bcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    return bcftools_call
-
-def pipe_bcftools_to_list (bcftools_call_args):
-    '''
-        Pipes output of bcftools to a set
-
-        The purpose of this function is to return a set of the output of
-        various bcftools commands, this will result in the removal of duplicate
-        entries.
-
-        Parameters
-        ----------
-        bcftools_call_args : list
-            bcftools arguments
-
-        Returns
-        -------
-        set_to_return : set
-            Set of unique elements from the bcftools output
-    '''
-
-    # Open bcftools pipe
-    bcftools_call = pipe_bcftools(bcftools_call_args)
-
-    # Create a list to hold unique elements
-    list_to_return = []
-
-    try:
-
-        # Iterate the bcftools stdout unless error occurs
-        for bcftools_stdout_line in iter(bcftools_call.stdout.readline, b''):
-
-            # Check if code is running in python 3
-            if sys.version_info[0] == 3:
-                # Convert bytes to string
-                bcftools_stdout_line = bcftools_stdout_line.decode()
-
-            # Remove the newline character
-            bcftools_line = bcftools_stdout_line.strip()
-            # Save the line to the list
-            list_to_return.append(bcftools_line)
-
-    except:
-        raise Exception('bcftools call error')
-
-    # Close the bcftools stdout
-    bcftools_call.stdout.close()
-
-    # Wait for bctools to finish
-    bcftools_call.wait()
-
-    # Read the bcftools stderr
-    bcftools_stderr = bcftools_call.stderr.read()
-
-    # Check if code is running in python 3
-    if sys.version_info[0] == 3:
-        # Convert bytes to string
-        bcftools_stderr = bcftools_stderr.decode()
-
-    # Check that the log file was created correctly
-    check_bcftools_for_errors(bcftools_stderr)
-
-    logging.info('bcftools call complete')
-
-    return list_to_return
-
-def pipe_bcftools_to_set (bcftools_call_args):
-    '''
-        Pipes output of bcftools to a set
-
-        The purpose of this function is to return a set of the output of
-        various bcftools commands, this will result in the removal of duplicate
-        entries.
-
-        Parameters
-        ----------
-        bcftools_call_args : list
-            bcftools arguments
-
-        Returns
-        -------
-        set_to_return : set
-            Set of unique elements from the bcftools output
-    '''
-
-    # Open bcftools pipe
-    bcftools_call = pipe_bcftools(bcftools_call_args)
-
-    # Create a set to hold unique elements
-    set_to_return = set()
-
-    try:
-
-        # Current element, reduces duplicates if VCF is sorted
-        previous_element = None
-
-        # Iterate the bcftools stdout unless error occurs
-        for bcftools_stdout_line in iter(bcftools_call.stdout.readline, b''):
-
-            # Check if code is running in python 3
-            if sys.version_info[0] == 3:
-                # Convert bytes to string
-                bcftools_stdout_line = bcftools_stdout_line.decode()
-
-            # Remove the newline character
-            bcftools_line = bcftools_stdout_line.strip()
-            # Check if the element is different from the previous element
-            if bcftools_line != previous_element:
-                # Store the new element for comparisons to reduce duplicates
-                previous_element = bcftools_line
-                # Save the element in the set
-                set_to_return.add(bcftools_line)
-
-    except:
-        raise Exception('bcftools call error')
-
-    # Close the bcftools stdout
-    bcftools_call.stdout.close()
-
-    # Wait for bctools to finish
-    bcftools_call.wait()
-
-    # Read the bcftools stderr
-    bcftools_stderr = bcftools_call.stderr.read()
-
-    # Check if code is running in python 3
-    if sys.version_info[0] == 3:
-        # Convert bytes to string
-        bcftools_stderr = bcftools_stderr.decode()
-
-    # Check that the log file was created correctly
-    check_bcftools_for_errors(bcftools_stderr)
-
-    logging.info('bcftools call complete')
-
-    return set_to_return
-
-def call_bcftools (bcftools_call_args):
-    '''
-        Calls bcftools
-
-        The function calls bcftools.
-
-        Parameters
-        ----------
-        bcftools_call_args : list
-            bcftools arguments
-
-        Returns
-        -------
-        vcftools_err : str
-            vcftools log output
-
-        Raises
-        ------
-        Exception
-            If bcftools stderr returns an error
-    '''
-
-    # bcftools subprocess call
-    bcftools_call = subprocess.Popen(['bcftools'] + list(map(str, bcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    # Wait for bcftools to finish
-    bcftools_stdout, bcftools_stderr = bcftools_call.communicate()
-
-    # Check if code is running in python 3
-    if sys.version_info[0] == 3:
-        # Convert bytes to string
-        bcftools_stderr = bcftools_stderr.decode()
-
-    check_bcftools_for_errors(bcftools_stderr)
-
-    logging.info('bcftools call complete')
-
-    return bcftools_stderr
 
 def get_unique_chrs (filename):
 
@@ -640,52 +466,7 @@ def merge (filenames, output_prefix, output_format, keep_original = False, optio
             # Delete the file
             os.remove(filename)
 
-def convert_to_bcf (filename, output_prefix, keep_original = False):
-    '''
-        Converts a VCF-formatted file to BCF
-
-        This function will convert a VCF-formatted file to BCF with the
-        specified filename prefix. The function also has the option to keep or
-        delete the input file once the BCF file has been created.
-
-        Parameters
-        ----------
-        filename : str
-            Filename of VCF-formatted input
-        output_prefix : str
-            Prefix of the BCF output (i.e. without file extension)
-        keep_original : bool, optional
-            If the input file should be kept once converted
-    '''
-
-    # Holds the arguments to convert to BCF format
-    convert_args = ['convert', '-O', 'b']
-
-    # Stores the specified output_prefix to the BCF file
-    bcf_output = '%s.bcf' % output_prefix
-
-    # Assigns the output file to the arguments
-    convert_args.extend(['-o', bcf_output])
-
-    # Assigns the specified input to the arguments
-    convert_args.append(filename)
-
-    # Call bcftools
-    call_bcftools(convert_args)
-
-    # Delete the original file once the bcf file is created
-    if not keep_original:
-        
-        # Check if the file has an index
-        if check_for_index(filename) == True:
-
-            # Delete the index
-            delete_index(filename)
-
-        # Delete the file
-        os.remove(filename)
-
-def convert_to_vcf (filename, output_prefix, keep_original = False):
+def convert_vcf (filename, out_prefix, out_format, overwrite = False, keep_original = False):
     '''
         Converts a VCF-formatted file to VCF
 
@@ -697,17 +478,49 @@ def convert_to_vcf (filename, output_prefix, keep_original = False):
         ----------
         filename : str
             Filename of VCF-formatted input
-        output_prefix : str
+        out_prefix : str
             Prefix of the VCF output (i.e. without file extension)
+        out_format: str
+            VCF-based file format for the output
         keep_original : bool, optional
             If the input file should be kept once converted
     '''
 
-    # Holds the arguments to convert to VCF format
-    convert_args = ['view', '-O', 'v']
+    logging.info('Beginning VCF conversion')
 
-    # Stores the specified output_prefix to the VCF file
-    vcf_output = '%s.vcf' % output_prefix
+    # Check if the output format is VCF
+    if out_format == 'vcf':
+
+        # Stores the specified output_prefix to the VCF file
+        vcf_output = '%s.vcf' % out_prefix
+
+        # Holds the arguments to convert to VCF format
+        convert_args = ['view', '-O', 'v']
+
+    # Check if the output format is VCFGZ
+    elif out_format == 'vcf.gz':
+
+        # Stores the specified output_prefix to the VCFGZ file
+        vcf_output = '%s.vcf.gz' % out_prefix
+
+        # Holds the arguments to convert to VCFGZ format
+        convert_args = ['view', '-O', 'z']
+
+    # Check if the output format is BCF
+    elif out_format == 'bcf':
+
+        # Holds the arguments to convert to BCF format
+        convert_args = ['convert', '-O', 'b']
+
+        # Stores the specified output_prefix to the BCF file
+        vcf_output = '%s.bcf' % out_prefix
+
+    # Check if the previous output should not be overwritten
+    if not overwrite:
+
+        # Check if the file exists
+        if os.path.isfile(vcf_output):
+            raise Exception('%s already exists. Add --overwrite to ignore' % vcf_output)
 
     # Assigns the output file to the arguments
     convert_args.extend(['-o', vcf_output])
@@ -730,7 +543,320 @@ def convert_to_vcf (filename, output_prefix, keep_original = False):
         # Delete the file
         os.remove(filename)
 
-def convert_to_vcfgz (filename, output_prefix, keep_original = False):
+    logging.info('Finished conversion')
+
+def pipe_bcftools (bcftools_call_args):
+    '''
+        Calls bcftools with pipe output
+
+        The output of this function is the stdout and stderr of bcftools. This
+        function should only be used if bcftools is being used as the stdin of
+        another function. Please note that this function does not check the for
+        errors in the bcftools call. Please check for errors after the call is
+        closed using check_bcftools_for_errors.
+
+        Parameters
+        ----------
+        bcftools_stderr : str
+            bcftools stderr
+
+        Returns
+        -------
+        bcftools_call : PIPE
+            Pipe of subprocess call, including both stdout and stderr
+
+    '''
+
+    # bcftools subprocess call
+    bcftools_call = subprocess.Popen(['bcftools'] + list(map(str, bcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    return bcftools_call
+
+def pipe_bcftools_to_list (bcftools_call_args):
+    '''
+        Pipes output of bcftools to a set
+
+        The purpose of this function is to return a set of the output of
+        various bcftools commands, this will result in the removal of duplicate
+        entries.
+
+        Parameters
+        ----------
+        bcftools_call_args : list
+            bcftools arguments
+
+        Returns
+        -------
+        set_to_return : set
+            Set of unique elements from the bcftools output
+    '''
+
+    # Open bcftools pipe
+    bcftools_call = pipe_bcftools(bcftools_call_args)
+
+    # Create a list to hold unique elements
+    list_to_return = []
+
+    try:
+
+        # Iterate the bcftools stdout unless error occurs
+        for bcftools_stdout_line in iter(bcftools_call.stdout.readline, b''):
+
+            # Check if code is running in python 3
+            if sys.version_info[0] == 3:
+                # Convert bytes to string
+                bcftools_stdout_line = bcftools_stdout_line.decode()
+
+            # Remove the newline character
+            bcftools_line = bcftools_stdout_line.strip()
+            # Save the line to the list
+            list_to_return.append(bcftools_line)
+
+    except:
+        raise Exception('bcftools call error')
+
+    # Close the bcftools stdout
+    bcftools_call.stdout.close()
+
+    # Wait for bctools to finish
+    bcftools_call.wait()
+
+    # Read the bcftools stderr
+    bcftools_stderr = bcftools_call.stderr.read()
+
+    # Check if code is running in python 3
+    if sys.version_info[0] == 3:
+        # Convert bytes to string
+        bcftools_stderr = bcftools_stderr.decode()
+
+    # Check that the log file was created correctly
+    check_bcftools_for_errors(bcftools_stderr)
+
+    logging.info('bcftools call complete')
+
+    return list_to_return
+
+def pipe_bcftools_to_set (bcftools_call_args):
+    '''
+        Pipes output of bcftools to a set
+
+        The purpose of this function is to return a set of the output of
+        various bcftools commands, this will result in the removal of duplicate
+        entries.
+
+        Parameters
+        ----------
+        bcftools_call_args : list
+            bcftools arguments
+
+        Returns
+        -------
+        set_to_return : set
+            Set of unique elements from the bcftools output
+    '''
+
+    # Open bcftools pipe
+    bcftools_call = pipe_bcftools(bcftools_call_args)
+
+    # Create a set to hold unique elements
+    set_to_return = set()
+
+    try:
+
+        # Current element, reduces duplicates if VCF is sorted
+        previous_element = None
+
+        # Iterate the bcftools stdout unless error occurs
+        for bcftools_stdout_line in iter(bcftools_call.stdout.readline, b''):
+
+            # Check if code is running in python 3
+            if sys.version_info[0] == 3:
+                # Convert bytes to string
+                bcftools_stdout_line = bcftools_stdout_line.decode()
+
+            # Remove the newline character
+            bcftools_line = bcftools_stdout_line.strip()
+            # Check if the element is different from the previous element
+            if bcftools_line != previous_element:
+                # Store the new element for comparisons to reduce duplicates
+                previous_element = bcftools_line
+                # Save the element in the set
+                set_to_return.add(bcftools_line)
+
+    except:
+        raise Exception('bcftools call error')
+
+    # Close the bcftools stdout
+    bcftools_call.stdout.close()
+
+    # Wait for bctools to finish
+    bcftools_call.wait()
+
+    # Read the bcftools stderr
+    bcftools_stderr = bcftools_call.stderr.read()
+
+    # Check if code is running in python 3
+    if sys.version_info[0] == 3:
+        # Convert bytes to string
+        bcftools_stderr = bcftools_stderr.decode()
+
+    # Check that the log file was created correctly
+    check_bcftools_for_errors(bcftools_stderr)
+
+    logging.info('bcftools call complete')
+
+    return set_to_return
+
+def call_bcftools (bcftools_call_args):
+    '''
+        Calls bcftools
+
+        The function calls bcftools.
+
+        Parameters
+        ----------
+        bcftools_call_args : list
+            bcftools arguments
+
+        Returns
+        -------
+        vcftools_err : str
+            vcftools log output
+
+        Raises
+        ------
+        Exception
+            If bcftools stderr returns an error
+    '''
+
+    # bcftools subprocess call
+    bcftools_call = subprocess.Popen(['bcftools'] + list(map(str, bcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Wait for bcftools to finish
+    bcftools_stdout, bcftools_stderr = bcftools_call.communicate()
+
+    # Check if code is running in python 3
+    if sys.version_info[0] == 3:
+        # Convert bytes to string
+        bcftools_stderr = bcftools_stderr.decode()
+
+    check_bcftools_for_errors(bcftools_stderr)
+
+    logging.info('bcftools call complete')
+
+'''
+Deprecated Code
+'''
+
+def convert_to_bcf (filename, output_prefix, overwrite = False, keep_original = False):
+    '''
+        Converts a VCF-formatted file to BCF
+
+        This function will convert a VCF-formatted file to BCF with the
+        specified filename prefix. The function also has the option to keep or
+        delete the input file once the BCF file has been created.
+
+        Parameters
+        ----------
+        filename : str
+            Filename of VCF-formatted input
+        output_prefix : str
+            Prefix of the BCF output (i.e. without file extension)
+        keep_original : bool, optional
+            If the input file should be kept once converted
+    '''
+
+    logging.warning('Deprecated Code - Please use convert_vcf instead')
+
+    # Stores the specified output_prefix to the BCF file
+    bcf_output = '%s.bcf' % output_prefix
+
+    # Check if the previous output should not be overwritten
+    if not overwrite:
+
+        # Check if the file exists
+        if os.path.isfile(bcf_output):
+            raise Exception('%s already exists. Add --overwrite to ignore' % bcf_output)
+
+    # Holds the arguments to convert to BCF format
+    convert_args = ['convert', '-O', 'b']
+
+    # Assigns the output file to the arguments
+    convert_args.extend(['-o', bcf_output])
+
+    # Assigns the specified input to the arguments
+    convert_args.append(filename)
+
+    # Call bcftools
+    call_bcftools(convert_args)
+
+    # Delete the original file once the bcf file is created
+    if not keep_original:
+        
+        # Check if the file has an index
+        if check_for_index(filename) == True:
+
+            # Delete the index
+            delete_index(filename)
+
+        # Delete the file
+        os.remove(filename)
+
+def convert_to_vcf (filename, output_prefix, overwrite = False, keep_original = False):
+    '''
+        Converts a VCF-formatted file to VCF
+
+        This function will convert a VCF-formatted file to VCF with the
+        specified filename prefix. The function also has the option to keep or
+        delete the input file once the VCF file has been created.
+
+        Parameters
+        ----------
+        filename : str
+            Filename of VCF-formatted input
+        output_prefix : str
+            Prefix of the VCF output (i.e. without file extension)
+        keep_original : bool, optional
+            If the input file should be kept once converted
+    '''
+
+    logging.warning('Deprecated Code - Please use convert_vcf instead')
+
+    # Stores the specified output_prefix to the VCF file
+    vcf_output = '%s.vcf' % output_prefix
+
+    # Check if the previous output should not be overwritten
+    if not overwrite:
+
+        # Check if the file exists
+        if os.path.isfile(vcf_output):
+            raise Exception('%s already exists. Add --overwrite to ignore' % vcf_output)
+
+    # Holds the arguments to convert to VCF format
+    convert_args = ['view', '-O', 'v']
+
+    # Assigns the output file to the arguments
+    convert_args.extend(['-o', vcf_output])
+
+    # Assigns the specified input to the arguments
+    convert_args.append(filename)
+
+    # Call bcftools
+    call_bcftools(convert_args)
+
+    # Delete the original file once the vcf file is created
+    if not keep_original:
+
+        # Check if the file has an index
+        if check_for_index(filename) == True:
+
+            # Delete the index
+            delete_index(filename)
+
+        # Delete the file
+        os.remove(filename)
+
+def convert_to_vcfgz (filename, output_prefix, overwrite = False, keep_original = False):
     '''
         Converts a VCF-formatted file to bgzipped-VCF
 
@@ -748,11 +874,20 @@ def convert_to_vcfgz (filename, output_prefix, keep_original = False):
             If the input file should be kept once converted
     '''
 
-    # Holds the arguments to convert to VCFGZ format
-    convert_args = ['view', '-O', 'z']
+    logging.warning('Deprecated Code - Please use convert_vcf instead')
 
     # Stores the specified output_prefix to the VCFGZ file
     vcfgz_output = '%s.vcf.gz' % output_prefix
+
+    # Check if the previous output should not be overwritten
+    if not overwrite:
+
+        # Check if the file exists
+        if os.path.isfile(vcfgz_output):
+            raise Exception('%s already exists. Add --overwrite to ignore' % vcfgz_output)
+
+    # Holds the arguments to convert to VCFGZ format
+    convert_args = ['view', '-O', 'z']
 
     # Assigns the output file to the arguments
     convert_args.extend(['-o', vcfgz_output])

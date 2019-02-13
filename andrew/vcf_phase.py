@@ -223,8 +223,14 @@ def run (passed_arguments = []):
 
     # Confirm input has correct file extension
     if vcfname_ext not in phase_args.vcf:
+
+        # Confirm the file has been renamed
         vcfname_renamed = True
+
+        # Rename the file
         os.rename(phase_args.vcf, phase_args.vcf + vcfname_ext)
+        
+        # Update the vcf argument with the updated name
         phase_args.vcf += vcfname_ext
 
     # List to hold beagle/shapeit arguments
@@ -308,34 +314,20 @@ def run (passed_arguments = []):
     # Get the list of chromosomes within the VCF
     chrs_in_vcf = get_unique_chrs(phase_args.vcf)
 
-    # Check if the user specified a specific chromosome
-    if phase_args.phase_chr:
+    # Check if the user specified chromosome is within the file
+    if phase_args.phase_chr and (phase_args.phase_chr not in chrs_in_vcf):
+        raise Exception('--phase-chr %s not found in %s' % (phase_args.phase_chr, phase_args.vcf))
 
-        # Check if the chromosome is within the file
-        if phase_args.phase_chr not in chrs_in_vcf:
-            raise Exception('--phase-chr %s not found in %s' % (phase_args.phase_chr, phase_args.vcf))
-
-    # Check that a chr was specified if a bp-based argument was specified
-    if (phase_args.phase_from_bp or phase_args.phase_to_bp) and not phase_args.phase_chr:
-        # Check if the file has a single chromosome
-        if len(chrs_in_vcf) == 1:
-            # Check if the beagle algorithm is being used
-            if phase_args.phase_algorithm == 'beagle':
-                # Assign the chromosome, as beagle requires it to be assigned
-                phase_args.phase_chr = chrs_in_vcf[0]
-
-                logging.info('Assigned chr %s for beagle' % chrs_in_vcf[0])
-        # Report error if multiple chromosomes are within the file
-        else:
-            raise Exception('The --phase-from-bp and --phase-to-bp arguments '
-                            'require the --phase-chr argument to function if '
-                            'multiple chrs are within %s' % phase_args.vcf)
+    # Check if bp-based arguments are possible
+    if (phase_args.phase_from_bp or phase_args.phase_to_bp) and (not phase_args.phase_chr and len(chrs_in_vcf) != 1):
+        raise Exception('The --phase-from-bp and --phase-to-bp arguments require the --phase-chr '
+                        'argument to function if multiple chrs are within %s' % phase_args.vcf)
 
     # Assign general arguments and call beagle
     if phase_args.phase_algorithm == 'beagle':
 
         # Check for the presence of intermediate files from beagle
-        check_for_beagle_intermediate_files(phase_args.out_prefix, phase_args.out_format)
+        check_for_beagle_intermediate_files(phase_args.out_prefix, phase_args.out_format, overwrite = phase_args.overwrite)
 
         # Assigns the input and output arguments
         phase_call_args.extend(['gt=' + phase_args.vcf,
@@ -384,6 +376,14 @@ def run (passed_arguments = []):
         # Assign the random seed, if specified
         if phase_args.random_seed:
             phase_call_args.append('seed=' + str(phase_args.random_seed))
+
+        # Check if the file has a single chromosome
+        if not phase_args.phase_chr and len(chrs_in_vcf) == 1:
+                    
+            # Assign the chromosome, as beagle requires it to be assigned
+            phase_args.phase_chr = chrs_in_vcf[0]
+
+            logging.info('Assigned chr %s for beagle' % chrs_in_vcf[0])
 
         # Assign the chromosome to phase, if specified
         if phase_args.phase_chr:
@@ -458,13 +458,14 @@ def run (passed_arguments = []):
         if phase_args.phase_chr or len(chrs_in_vcf) == 1:
 
             # Check for the presence of intermediate files from shapeit
-            check_for_shapeit_intermediate_files(phase_args.out_prefix)
+            check_for_shapeit_intermediate_files(phase_args.out_prefix, overwrite = phase_args.overwrite)
 
-            # Holds shapeit input filename, as a temp file may be required
-            shapeit_input_vcf = None
+            # Assign the default shapeit input filename
+            shapeit_input_vcf = phase_args.vcf
 
             # Check if a single chromosome is selected
             if phase_args.phase_chr and len(chrs_in_vcf) > 1:
+
                 # Assign the chromosome-specific input prefix
                 chr_input_prefix = phase_args.vcf + '.' + phase_args.phase_chr
 
@@ -477,10 +478,6 @@ def run (passed_arguments = []):
                                 overwrite = phase_args.overwrite)
 
                 logging.info('Chr %s subset created' % phase_args.phase_chr)
-
-            else:
-                # Assign the shapeit input filename
-                shapeit_input_vcf = phase_args.vcf
 
             # Assigns the input and output arguments for shapeit
             phase_call_args.extend(['--input-vcf', shapeit_input_vcf,

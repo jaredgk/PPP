@@ -28,7 +28,7 @@ def check_bgzip_for_errors (bgzip_stderr):
     if bgzip_stderr:
         raise IOError('Error occured while compressing the vcf file')
 
-def bgzip_decompress_vcfgz (vcfgz_filename, out_prefix = '', keep_original = False):
+def bgzip_decompress_vcfgz (vcfgz_filename, out_prefix = None, keep_original = False):
         '''
             Converts a vcf.gz to vcf
 
