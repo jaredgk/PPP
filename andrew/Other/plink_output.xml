@@ -1,0 +1,7 @@
+<outputs>
+  <data name="output" format="gd_ped">
+    <actions>
+      <action type="metadata" name="base_name" default="admix" />
+    </actions>
+  </data>
+</outputs>

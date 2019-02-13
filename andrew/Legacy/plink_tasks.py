@@ -51,7 +51,7 @@ def plink_argument_parser(passed_arguments):
     plink_prefix.add_argument("--ped-prefix", help = "Input PED filename prefix", type = str)
 
     # Input BED arguments
-    plink_parser.add_argument("--bed", dest = 'bed_filename', help = "Input BED filename", type = str, action = parser_confirm_file())
+    plink_parser.add_argument("--binary-ped", dest = 'bed_filename', help = "Input BED filename", type = str, action = parser_confirm_file())
     plink_parser.add_argument("--fam", dest = 'fam_filename', help = "Input FAM filename. Called alongside --bed", type = str, action = parser_confirm_file())
     plink_parser.add_argument("--bim", dest = 'bim_filename', help = "Input BIM filename. Called alongside --bed", type = str, action = parser_confirm_file())
     plink_prefix.add_argument("--bed-prefix", help = "Input BED filename prefix", type = str)
@@ -160,7 +160,10 @@ def run (passed_arguments = []):
     plink_output_args = assign_plink_output_args(plink_args.out_prefix, plink_args.out_format)
 
     # Assign the expect output filename
-    plink_expected_output = '%s.%s' % (plink_args.out_prefix, plink_args.out_format)
+    if plink_args.out_format == 'binary-ped':
+        plink_expected_output = plink_args.out_prefix + '.bed'
+    else:
+        plink_expected_output = '%s.%s' % (plink_args.out_prefix, plink_args.out_format)
 
     # Check if previous output should not be overwritten
     if not plink_args.overwrite:
@@ -173,6 +176,9 @@ def run (passed_arguments = []):
 
     # Call plink with the selected arguments
     call_plink(plink_input_args + plink_output_args + plink_general_args, plink_args.out_prefix, plink_args.out_format)
+
+    # Add reference to log file
+    log_plink_reference(plink_args.out_prefix + '.log')
 
     # Rename output to plink_args.out, if specified
     if plink_args.out:
