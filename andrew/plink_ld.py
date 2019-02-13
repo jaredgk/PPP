@@ -56,10 +56,10 @@ def plink_argument_parser(passed_arguments):
     plink_prefix.add_argument("--ped-prefix", help = "Input PED filename prefix", type = str)
 
     # Input BED arguments
-    plink_parser.add_argument("--bed", dest = 'bed_filename', help = "Input BED filename", type = str, action = parser_confirm_file())
+    plink_parser.add_argument("--binary-ped", dest = 'bed_filename', help = "Input Binary-PED (i.e. BED) filename", type = str, action = parser_confirm_file())
     plink_parser.add_argument("--fam", dest = 'fam_filename', help = "Input FAM filename. Called alongside --bed", type = str, action = parser_confirm_file())
     plink_parser.add_argument("--bim", dest = 'bim_filename', help = "Input BIM filename. Called alongside --bed", type = str, action = parser_confirm_file())
-    plink_prefix.add_argument("--bed-prefix", help = "Input BED filename prefix", type = str)
+    plink_prefix.add_argument("--binary-ped-prefix", dest = 'bed_prefix', help = "Input Binary-PED (i.e. BED) filename prefix", type = str)
 
     # Method arguments
     ld_statistics = ['r', 'r2']
@@ -242,17 +242,27 @@ def run (passed_arguments = []):
 
     if plink_args.ped_prefix:
 
-        # Assign the ped based files
-        plink_input_args = assign_plink_input_from_prefix(plink_args.ped_prefix, 'ped')
+        # Assign the ped input from a prefix
+        plink_input_args = assign_ped_from_prefix(plink_args.ped_prefix)
 
     elif plink_args.bed_prefix:
 
-        # Assign the bed based files
-        plink_input_args = assign_plink_input_from_prefix(plink_args.bed_prefix, 'binary-ped')
+        # Assign the bed input from a prefix
+        plink_input_args = assign_bed_from_prefix(plink_args.bed_prefix)
+
+    elif plink_args.ped_filename:
+
+        # Assign the ped input from files
+        plink_input_args = assign_ped_from_files(plink_args.ped_filename, plink_args.map_filename)
+
+    elif plink_args.bed_filename:
+
+        # Assign the bed input from files
+        plink_input_args = assign_bed_from_files(plink_args.bed_filename, plink_args.bim_filename, plink_args.fam_filename)
 
     else:
-        # Assign the general input
-        plink_input_args = assign_plink_input_from_command_args(**vars(plink_args))
+        raise Exception('No PED or Binary-PED input assigned')
+
 
     logging.info('Input parameters assigned')
 

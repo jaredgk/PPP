@@ -12,8 +12,36 @@ import re
 sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'pppipe')))
 
 from vcf_reader_func import checkFormat
-from bcftools import convert_to_bcf
+from bcftools import convert_vcf
 from logging_module import initLogger, logArgs
+
+def log_plink_reference (out_filename, append_mode = False, ref_header = True):
+
+    # Check if the file is to be written in append mode
+    if append_mode:
+
+        # Open the file
+        log_file = open(out_filename + '.log', 'a')
+
+        # Check if the ref header should be added
+        if ref_header:
+            log_file.write('\nPlease Reference alongside the PPP:\n')
+
+    else:
+
+        # Open the file
+        log_file = open(out_filename + '.log', 'w')
+
+        # Check if the ref header should be added
+        if ref_header:
+            log_file.write('Please Reference alongside the PPP:\n')
+
+    log_file.write('Chang, C. C. et al. Second-generation PLINK: Rising to ' 
+                   'the challenge of larger and richer datasets. Gigascience ' 
+                   '(2015). doi:10.1186/s13742-015-0047-8')
+    log_file.close()
+
+    logging.info('Reference assigned')
 
 def assign_delim_from_ids (filename, id_column = 0, default_delim = '_'):
 
@@ -44,6 +72,341 @@ def assign_delim_from_ids (filename, id_column = 0, default_delim = '_'):
 
     raise IOError('Cannot assign plink delimiter')
 
+def assign_plink_output_args (out_prefix, out_format, overwrite = True):
+    '''
+        Assigns the output arguments
+
+        Parameters
+        ----------
+        filename : str
+            Specifies the input filename of unknown format
+
+        Returns
+        -------
+        list
+            Returns vcftools input command for `filename`
+
+        Raises
+        ------
+        IOError
+            If filename is an unknown file format
+    '''
+    # Check if previous output should be overwritten
+    if not overwrite:
+
+        # Check if the output is only a single file
+        if out_format in ['vcf', 'vcf.gz', 'bcf']:
+
+            # Save the filename of the expected output
+            out_filename = out_prefix + '.' + out_format
+
+            # Check if intermediate already exists
+            if out_format == 'bcf':
+
+                # Save the filename of the expected intermediate
+                intermediate_filename = out_prefix + '.vcf.gz'
+                raise Exception('%s intermediate exists. Add --overwrite to ignore' % intermediate_filename)
+
+            # Check if the output already exists
+            if os.path.isfile(out_filename):
+                raise Exception('%s already exists. Add --overwrite to ignore' % out_filename)
+
+        # Check if the output if a ped or bed file-set
+        elif out_format in ['ped', 'binary-ped']:
+
+            if out_format == 'ped':
+
+                # List of the output suffixes for ped files
+                out_suffixes = ['ped', 'map']
+
+            elif out_format == 'binary-ped':
+
+                # List of the output suffixes for bed files
+                out_suffixes = ['bed', 'bim', 'fam']
+
+            # Loop the suffixes
+            for out_suffix in out_suffixes:
+
+                # Save the filename of the expected output
+                out_filename = out_prefix + '.' + out_suffix
+
+                # Check if the output already exists
+                if os.path.isfile(out_filename):
+                    raise Exception('%s already exists. Add --overwrite to ignore' % out_filename)
+
+    # Check if the output is only a single file
+    if out_format in ['vcf', 'vcf.gz', 'bcf']:
+
+        if out_format == 'vcf':
+            return ['--recode', 'vcf-iid', '--out', out_prefix]
+
+        if out_format == 'vcf.gz':
+            return ['--recode', 'vcf-iid', 'bgz', '--out', out_prefix]
+
+        if out_format == 'bcf':
+            return ['--recode', 'vcf-iid', 'bgz', '--out', out_prefix]
+
+    # Check if the output if a ped or bed file-set
+    elif out_format in ['ped', 'binary-ped']:
+
+        if out_format == 'ped':
+            return ['--recode', '--out', out_prefix]
+
+        if out_format == 'binary-ped':
+            return ['--make-bed', '--out', out_prefix]
+
+    else:
+        raise IOError('Unknown file format. This error should NOT show up')
+
+def assign_ped_from_files (ped_filename = None, map_filename = None, **kwargs):
+
+    # Check if a bed file is assigned
+    if not ped_filename:
+        raise IOError('Unable to assign ped file. Please confirm the file is named correctly')
+
+    # Check if bim and fam file are not assigned
+    if not map_filename:
+        raise IOError('Unable to assign map file. Please confirm the map file (i.e. --map) is assigned')
+
+    # Return the ped associated args
+    return ['--ped', ped_filename, '--map', map_filename]
+
+def assign_ped_from_prefix (ped_prefix = None, **kwargs):
+
+    # Check if the a prefix was assigned
+    if not ped_prefix:
+        raise IOError('No PED prefix specified. Please confirm the prefix is specified correctly')
+    
+    # Determine the input files from the prefix
+    ped_prefix_filenames = glob.glob(ped_prefix + '*')
+
+    # Check if files were identified, if not return error message
+    if not ped_prefix_filenames:
+        raise IOError('Unable to assign input files from PED prefix. Please confirm the prefix is specified correctly')
+    
+    # Check if expected files are found
+    for ped_prefix_filename in ped_prefix_filenames:
+
+        # Check for PED and MAP files
+        if ped_prefix_filename.endswith('.ped'):
+            ped_filename = ped_prefix_filename
+        elif ped_prefix_filename.endswith('.map'):
+            map_filename = ped_prefix_filename
+
+    # Check that input files included a ped file
+    if not ped_filename:
+        # Return error message if no ped input was found
+        raise IOError('Unable to assign ped file. Please confirm the prefix and/or command is specified correctly')
+
+    if not map_filename:
+        # Return error message if no map input was found
+        raise IOError('Unable to assign map file. Please confirm the file is named correctly')
+
+    # Return the ped associated args
+    return ['--file', ped_filename[:-4]]
+
+def assign_bed_from_files (bed_filename = None, bim_filename = None, fam_filename = None, **kwargs):
+
+    # Check if a bed file is assigned
+    if not bed_filename:
+        raise IOError('Unable to assign binary-ped file. Please confirm the file is named correctly')
+
+    # Check if the bim and fam files are not assigned
+    if not bim_filename and not fam_filename:
+        raise IOError('Unable to assign the bim and fam files. Please confirm the files (i.e. --bim, --fam) are assigned')
+
+    # Check if the bim is not assigned
+    if not bim_filename:
+        raise IOError('Unable to assign bim file. Please confirm the bim file (i.e. --bim) is assigned')
+
+    # Check if the fam file is not assigned
+    if not fam_filename:
+        raise IOError('Unable to assign fam file. Please confirm the fam file (i.e. --fam) is assigned')
+
+    # Return the bed associated args
+    return ['--bed', bed_filename, '--bim', bim_filename, '--fam', fam_filename]
+
+def assign_bed_from_prefix (bed_prefix = None, **kwargs):
+
+    # Check if the a prefix was assigned
+    if not bed_prefix:
+        raise IOError('No Binary-PED prefix specified. Please confirm the prefix is specified correctly')
+    
+    # Determine the input files from the prefix
+    bed_prefix_filenames = glob.glob(bed_prefix + '*')
+
+    # Check if files were identified, if not return error message
+    if not bed_prefix_filenames:
+        raise IOError('Unable to assign input files from Binary-PED prefix. Please confirm the prefix is specified correctly')
+    
+    # Check if expected files are found
+    for bed_prefix_filename in bed_prefix_filenames:
+
+        # Check for BED and associated files
+        if bed_prefix_filename.endswith('.bed'):
+            bed_filename = bed_prefix_filename
+        elif bed_prefix_filename.endswith('.bim'):
+            bim_filename = bed_prefix_filename
+        elif bed_prefix_filename.endswith('.fam'):
+            fam_filename = bed_prefix_filename
+
+    # Check that input files included a bed file
+    if not bed_filename:
+        # Return error message if no ped/bed input was found
+        raise IOError('Unable to assign bed file. Please confirm the prefix and/or command is specified correctly')
+
+    # Check that input files included a bed file
+    if not bim_filename:
+        # Return error message if no bim input was found
+        raise IOError('Unable to assign bim file. Please confirm the file is named correctly')
+
+    # Check that input files included a bed file
+    if not fam_filename:
+        # Return error message if no fam input was found
+        raise IOError('Unable to assign fam file. Please confirm the file is named correctly')
+
+    # Return the binary-ped args
+    return ['--bfile', bed_filename[:-4]]
+    
+def convert_vcf_to_plink (vcf_filename, vcf_fid, out_prefix, out_format, threads = 1, overwrite = False):
+
+    logging.info('Beginning VCF conversion')
+
+    # List of arguments for bed converions
+    convert_vcf_args = []
+
+    # Check if a specific number of threads have been assigned
+    if threads:
+
+        convert_vcf_args.extend(['--threads', threads])
+
+    # Assign the vcf file format
+    vcfname_format = checkFormat(vcf_filename)
+
+    # Check if a family ID was assigned for the vcf file
+    if vcf_fid:
+
+        # Assign the family id
+        convert_vcf_args.extend(['--const-fid', vcf_fid])
+
+    # If no family ID was assigned, use double IDs
+    else:
+
+        convert_vcf_args.append('--double-id')
+
+    convert_vcf_args.append('--allow-extra-chr')
+
+    # Assign the associated input command, or return an error.
+    if vcfname_format == 'vcf' or vcfname_format == 'bgzip':
+
+        # Add the bed associated commands
+        convert_vcf_args.extend(['--vcf', vcf_filename])
+
+    elif vcfname_format == 'bcf':
+
+        # Add the bed associated commands
+        convert_vcf_args.extend(['--bcf', vcf_filename])
+
+    else:
+        raise Exception('Unknown VCF file format')
+
+    # Assign the output arguments
+    vcf_output_args = assign_plink_output_args(out_prefix, out_format, overwrite)
+
+    # Add the output args to the ped call
+    convert_vcf_args.extend(vcf_output_args)
+
+    # Call plink with the selected arguments
+    call_plink(convert_vcf_args, out_prefix, out_format)
+
+    logging.info('Finished conversion')
+
+def convert_ped (ped_filename = None, map_filename = None, ped_prefix = None, out_prefix = None, out_format = None, threads = 1, overwrite = False, **kwargs):
+    
+    logging.info('Beginning PED conversion')
+
+    # List of arguments for bed converions
+    convert_ped_args = []
+
+    # Check if a specific number of threads have been assigned
+    if threads:
+
+        convert_ped_args.extend(['--threads', threads])
+
+    # Create blank list to hold ped input arguments
+    ped_prefix_args = []
+
+    # Check if the a prefix was assigned
+    if ped_prefix:
+    
+        # Assign bed input arguments from a prefix
+        ped_prefix_args = assign_ped_from_prefix(ped_prefix)
+
+    # Check if a bed file is assigned
+    elif ped_filename:
+
+        # Assign bed input arguments from files
+        ped_prefix_args = assign_ped_from_files(ped_filename, map_filename)
+
+    # Add the ped input arguments
+    convert_ped_args.extend(ped_prefix_args)
+
+    # Assign the output arguments
+    ped_output_args = assign_plink_output_args(out_prefix, out_format, overwrite)
+
+    # Add the output args to the ped call
+    convert_ped_args.extend(ped_output_args)
+
+    # Call plink with the selected arguments
+    call_plink(convert_ped_args, out_prefix, out_format)
+
+    logging.info('Finished conversion')
+
+def convert_bed (bed_filename = None, bim_filename = None, fam_filename = None, bed_prefix = None, out_prefix = None, out_format = None, threads = 1, overwrite = False, **kwargs):
+        
+    logging.info('Beginning Binary-PED (i.e. BED) conversion')
+
+    # List of arguments for bed converions
+    convert_bed_args = []
+
+    # Check if a specific number of threads have been assigned
+    if threads:
+
+        convert_bed_args.extend(['--threads', threads])
+
+    # Create blank list to hold bed input arguments
+    bed_prefix_args = []
+
+    # Check if the a prefix was assigned
+    if bed_prefix:
+    
+        # Assign bed input arguments from a prefix
+        bed_prefix_args = assign_bed_from_prefix(bed_prefix)
+
+    # Check if a bed file is assigned
+    elif bed_filename:
+
+        # Assign bed input arguments from files
+        bed_prefix_args = assign_bed_from_files(bed_filename, bim_filename, fam_filename)
+
+    # Confirm input arguments were assigned
+    if not bed_prefix_args:
+        raise Exception('Unable to assign Binary-PED input arguments. Please confirm the arguments are specified correctly')
+
+    # Add the bed input arguments
+    convert_bed_args.extend(bed_prefix_args)
+
+    # Assign the output arguments
+    bed_output_args = assign_plink_output_args(out_prefix, out_format, overwrite)
+
+    # Add the output args to the ped call
+    convert_bed_args.extend(bed_output_args)
+
+    # Call plink with the selected arguments
+    call_plink(convert_bed_args, out_prefix, out_format)
+
+    logging.info('Finished conversion')
+
 def convert_haps_to_vcf (haps_prefix, output_format, output_prefix = ''):
 
     # Check that input files included a haps file
@@ -64,25 +427,23 @@ def convert_haps_to_vcf (haps_prefix, output_format, output_prefix = ''):
 
     plink_delim = assign_delim_from_ids(haps_prefix + '.sample')
 
-    if output_format == 'vcf':
-        haps_output_args = ['--recode', 'vcf-iid', 'id-delim=' + plink_delim, '--out', output_prefix]
+    # Assign general command line arguments
+    haps_output_args = ['--recode', 'vcf-iid', 'id-delim=' + plink_delim, '--out', output_prefix]
 
-    elif output_format == 'vcf.gz':
-        haps_output_args = ['--recode', 'vcf-iid', 'bgz', 'id-delim=' + plink_delim, '--out', output_prefix]
+    # Check if a compressed file should be created
+    if output_format in ['vcf.gz', 'bcf']:
 
-    elif output_format == 'bcf':
-        haps_output_args = ['--recode', 'vcf-iid', 'bgz', 'id-delim=' + plink_delim, '--out', output_prefix]
-
-    else:
-        raise IOError('Unknown file format. This error should NOT show up')
+        # Insert the compression argument
+        haps_output_args.insert(2, 'bgz')
 
     # Call plink2
     standard_plink2_call(haps_input_args + haps_output_args)
 
     # Convert VCFGZ to BCF, as PLINK cannot directly create a BCF
     if output_format == 'bcf':
+
         # Convert to BCF
-        convert_to_bcf(output_prefix + '.vcf.gz', output_prefix)
+        convert_vcf(output_prefix + '.vcf.gz', output_prefix, output_format, overwrite = True)
 
 def check_plink_for_errors (plink_stderr):
     '''
@@ -174,7 +535,7 @@ def standard_plink_call (plink_call_args):
     # Check that the log file was created correctly
     check_plink_for_errors(plink_err)
 
-def call_plink (plink_call_args, output_prefix = '', output_format = ''):
+def call_plink (plink_call_args, output_prefix = None, output_format = None):
     '''
         Determines which version of plink (plink1.9 vs. plink2a) to call
 
@@ -196,6 +557,7 @@ def call_plink (plink_call_args, output_prefix = '', output_format = ''):
     # Check if the call requries plink2 to operate. This function should be
     # removed once plink2 is out of alpha
     if '--haps' in plink_call_args:
+
         # Convert vcf id system for plink 1.9 to plink 2
         if 'vcf-iid' in plink_call_args:
             format_index = plink_call_args.index('vcf-iid')
@@ -206,261 +568,12 @@ def call_plink (plink_call_args, output_prefix = '', output_format = ''):
 
     # Call plink1.9
     else:
+
         # Call the plink subprocess function
         standard_plink_call(plink_call_args)
 
     # Convert VCFGZ to BCF, as PLINK cannot directly create a BCF
     if output_format == 'bcf':
+
         # Convert to BCF
-        convert_to_bcf(output_prefix + '.vcf.gz', output_format)
-
-def assign_plink_output_args (output_prefix, output_format):
-    '''
-        Assigns the output arguments
-
-        Parameters
-        ----------
-        filename : str
-            Specifies the input filename of unknown format
-
-        Returns
-        -------
-        list
-            Returns vcftools input command for `filename`
-
-        Raises
-        ------
-        IOError
-            If filename is an unknown file format
-    '''
-
-    # Check if the output is only a single file
-    if output_format in ['vcf', 'vcf.gz', 'bcf']:
-
-        if output_format == 'vcf':
-            return ['--recode', 'vcf-iid', '--out', output_prefix]
-
-        if output_format == 'vcf.gz':
-            return ['--recode', 'vcf-iid', 'bgz', '--out', output_prefix]
-
-        if output_format == 'bcf':
-            return ['--recode', 'vcf-iid', 'bgz', '--out', output_prefix]
-
-    # Check if the output if a ped or bed file-set
-    elif output_format in ['ped', 'binary-ped']:
-
-        if output_format == 'ped':
-            return ['--recode', '--out', output_prefix]
-
-        if output_format == 'binary-ped':
-            return ['--make-bed', '--out', output_prefix]
-
-    else:
-        raise IOError('Unknown file format. This error should NOT show up')
-
-def assign_plink_input_from_prefix (input_prefix, input_format):
-    '''
-        Assigns input arguments based on the specified files
-
-        Parameters
-        ----------
-        filename : str
-            Specifies the input filename of unknown format
-
-        Returns
-        -------
-        list
-            Returns vcftools input command for `filename`
-
-        Raises
-        ------
-        IOError
-            If filename is an unknown file format
-    '''
-
-    # Determine the input files from the prefix
-    prefix_files = glob.glob(input_prefix + '*')
-
-    # Check if files were identified, if not return error message
-    if not prefix_files:
-        raise IOError('Unable to assign input files Please confirm the prefix is specified correctly')
-
-    # Check for ped input
-    if input_format == 'ped':
-
-        # Plink PED and Map files
-        plink_ped = None
-        plink_map = None
-
-        # Check if expected files are found
-        for plink_filename in prefix_files:
-
-            # Check for PED and MAP files
-            if '.ped' in plink_filename:
-                plink_ped = plink_filename
-            elif '.map' in plink_filename:
-                plink_map = plink_filename
-
-        # Check that input files included a ped file
-        if not plink_ped:
-            # Return error message if no ped input was found
-            raise IOError('Unable to assign ped file. Please confirm the prefix and/or command is specified correctly')
-
-        if not plink_map:
-            # Return error message if no map input was found
-            raise IOError('Unable to assign map file. Please confirm the file is named correctly')
-
-        # Return the ped-based files
-        return ['--file', plink_ped[:-4]]
-
-    # Check for binary-ped input
-    elif input_format == 'binary-ped':
-
-        # Plink BED, BIM, and FAM files
-        plink_bed = None
-        plink_bim = None
-        plink_fam = None
-
-        # Check if expected files are found
-        for plink_filename in prefix_files:
-
-            # Check for BED and associated files
-            if '.bed' in plink_filename:
-                plink_bed = plink_filename
-            elif '.bim' in plink_filename:
-                plink_bim = plink_filename
-            elif '.fam' in plink_filename:
-                plink_fam = plink_filename
-
-        # Check that input files included a bed file
-        if not plink_bed:
-            # Return error message if no ped/bed input was found
-            raise IOError('Unable to assign bed file. Please confirm the prefix and/or command is specified correctly')
-
-        # Check that input files included a bed file
-        if not plink_bim:
-            # Return error message if no bim input was found
-            raise IOError('Unable to assign bim file. Please confirm the file is named correctly')
-
-        # Check that input files included a bed file
-        if not plink_fam:
-            # Return error message if no fam input was found
-            raise IOError('Unable to assign fam file. Please confirm the file is named correctly')
-
-        # Return the binary-ped files
-        return ['--bfile', plink_bed[:-4]]
-
-    # Check for haps input
-    elif input_format == 'haps':
-
-        # Plink haps and sample files
-        plink_haps = None
-        plink_sample = None
-
-        # Check if expected files are found
-        for plink_filename in prefix_files:
-
-            # Check for haps and associated files
-            if '.haps' in plink_filename:
-                plink_haps = plink_filename
-            elif '.sample' in plink_filename:
-                plink_sample = plink_filename
-
-        # Check that input files included a haps file
-        if not plink_haps:
-            # Return error message if no haps input was found
-            raise IOError('Unable to assign haps file. Please confirm the prefix and/or command is specified correctly')
-
-        # Check that input files included a sample file
-        if not plink_sample:
-            # Return error message if no sample input was found
-            raise IOError('Unable to assign sample file. Please confirm the file is named correctly')
-
-        # Return the haps-based files
-        return ['--haps', plink_haps, 'ref-first', '--sample', plink_sample]
-
-def assign_plink_input_from_command_args (ped_filename = None, map_filename = None,
-                                          bed_filename = None, bim_filename = None, fam_filename = None,
-                                          haps_filename = None, sample_filename = None,
-                                          vcf_filename = None, vcf_fid = None, **kwargs):
-
-    input_command_args = []
-
-    # Check if a ped file is assigned
-    if ped_filename:
-
-        # Check if map file is also assigned
-        if ped_filename and map_filename:
-
-            # Add the ped associated commands
-            input_command_args.extend(['--ped', ped_filename, '--map', map_filename])
-            # Return the input command
-            return input_command_args
-
-        else:
-            raise IOError('Unable to assign ped file. Please confirm the file is named correctly')
-
-    # Check if a bed file is assigned
-    elif bed_filename:
-
-        # Check if bim and fam file are also assigned
-        if bed_filename and bim_filename and fam_filename:
-
-            # Add the bed associated commands
-            input_command_args.extend(['--bed', bed_filename, '--bim', bim_filename, '--fam', fam_filename])
-            # Return the input command
-            return input_command_args
-
-        else:
-            raise IOError('Unable to assign bim and/or fam files. Please confirm the files are named correctly')
-
-    # Check if a haps file is assigned
-    elif haps_filename:
-
-        # Check if bim and fam file are also assigned
-        if haps_filename and sample_filename:
-
-            # Add the bed associated commands
-            input_command_args.extend(['--haps', haps_filename, 'ref-first', '--sample', sample_filename])
-            # Return the input command
-            return input_command_args
-
-        else:
-            raise IOError('Unable to assign sample file. Please confirm the file is named correctly')
-
-    # Check if a vcf file is assigned
-    elif vcf_filename:
-
-        # Assign the vcf file format
-        vcfname_format = checkFormat(vcf_filename)
-
-        # Check if a fmaily ID was assigned for the vcf file
-        if vcf_fid:
-            # Assign the family id
-            input_command_args.extend(['--const-fid', vcf_fid])
-
-        # If no family ID was assigned, use double IDs
-        else:
-            input_command_args.append('--double-id')
-
-        input_command_args.append('--allow-extra-chr')
-
-        # Assign the associated input command, or return an error.
-        if vcfname_format == 'vcf' or vcfname_format == 'bgzip':
-
-            # Add the bed associated commands
-            input_command_args.extend(['--vcf', vcf_filename])
-            # Return the input command
-            return input_command_args
-
-        elif vcfname_format == 'bcf':
-
-            # Add the bed associated commands
-            input_command_args.extend(['--bcf', vcf_filename])
-            # Return the input command
-            return input_command_args
-
-        else:
-            raise Exception('Unknown VCF file format')
-
-    raise Exception('No input specified')
+        convert_vcf(output_prefix + '.vcf.gz', output_prefix, output_format)
