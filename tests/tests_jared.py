@@ -309,11 +309,11 @@ class fourgameteTest(unittest.TestCase):
 class imaTest(unittest.TestCase):
     def test_ima(self):
         vcf_to_ima(['--vcf','input/chr11.subsamples.vcf.gz',
-                    '--ref','input/human_g1k_chr11.fasta',
+                    '--reference-fasta','input/human_g1k_chr11.fasta',
                     '--bed','input/snp_region.txt',
-                    '--pop','input/testmodel.model',
+                    '--model-file','input/testmodel.model',
                     '--zero-ho',
-                    '--output','input/chr11.subsamples.ima.u'])
+                    '--out','input/chr11.subsamples.ima.u'])
         self.assertTrue(filecmp.cmp('input/chr11.ima.u',
                         'input/chr11.subsamples.ima.u'))
 
