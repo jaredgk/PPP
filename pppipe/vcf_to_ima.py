@@ -104,27 +104,39 @@ def createParser():
                                      "and a population info file."),
                                      fromfile_prefix_chars="@")
     parser.add_argument("--vcf", dest="vcfname", help="Input VCF filename")
-    parser.add_argument("--vcfs", dest="vcflist", nargs="+")
-    parser.add_argument("--ref", dest="refname", help="Reference FASTA file")
-    parser.add_argument("--bed", dest="genename",
-                        help="Name of gene region file")
-    parser.add_argument("--pop", dest="popname", help=("Filename of pop "
-                        "model file"))
+    parser.add_argument("--vcfs", dest="vcflist", metavar="VCF",nargs="+",
+                        help=("Input VCF per loci"))
+    parser.add_argument("--reference-fasta", dest="refname", help="Reference FASTA file")
+    parser.add_argument("--bed", dest="genename", help=("If using a single "
+                        "VCF, list of regions to generate loci from"))
+    parser.add_argument("--bed-column-index", dest="gene_col", help= (
+                        "Comma-separated list of columns for gene region "
+                        " data, format is start/end if no chromosome "
+                        " data, start/end/chrom if so"))
+    parser.add_argument("--model-file", dest="popname", help=("Filename of "
+                        "pop model file"))
+    parser.add_argument("--model",dest="poptag",help=("If model file has "
+                        "multiple models, use model with this name"))
     parser.add_argument("--zero-ho", dest="zeroho", action="store_true",
                         help="Region coordinates are zero-based, half-open")
-    parser.add_argument("--zero-closed", dest="zeroclosed", action="store_true")
+    parser.add_argument("--zero-closed", dest="zeroclosed",action="store_true",
+                        help="Region coordinates are zero-based, closed")
     parser.add_argument("--keep-indels", dest="indel_flag", action="store_true",
                         help="Include indels when reporting sequences")
     parser.add_argument("--remove-multiallele",dest="remove_multiallele",
                         action="store_true", help=("Remove sites with more "
                         "than two alleles"))
-    #parser.add_argument("--remove-missing", dest="remove_missing", default=-1,
-    #                   help=("Will filter out site if more than the given "
-    #                    "number of individuals (not genotypes) are missing "
-    #                    "data. 0 removes sites with any missing data, -1 "
-    #                    "(default) removes nothing"),type=int)
-    parser.add_argument("--drop-missing-sites",dest="remove_missing",action="store_const",const=0,default=-1,help=("Will remove sites with missing data instead of throwing error"))
-    parser.add_argument("--parsecpg",dest="parsecpg",action="store_true")
+    #Need to figure out exactly how this option is working
+    parser.add_argument("--drop-missing-sites",dest="remove_missing",
+                        action="store_const",const=0,default=-1,help=("Will "
+                        "use reference allele for sites where more than n "
+                        "individuals are missing data. Missing data will "
+                        "by default cause an error."))
+    parser.add_argument("--drop-missing-inds",dest="drop_inds",action="store_true",
+                        help="Drop individuals from loci if they are missing any data")
+    parser.add_argument("--remove-cpg",dest="parsecpg",action="store_true",
+                        help=("Will replace CpG sites with reference allele"
+                        ", requires --reference-fasta"))
     parser.add_argument("--noseq",dest="printseq",action="store_false",
                         help=("Will only print variants when reference is "
                         "provided. Used so CpG filtering can be done if "
@@ -133,12 +145,8 @@ def createParser():
                         action="store_true",
                         help=("Trims sequences if indels cause them to be "
                         "longer than reference"))
-    parser.add_argument("--output", dest="output_name", default="input.ima.u",
+    parser.add_argument("--out", dest="output_name", default="input.ima.u",
                         help= ("Optional name for output other than default"))
-    parser.add_argument("--gene-col", dest="gene_col", help= (
-                        "Comma-separated list of columns for gene region "
-                        " data, format is start/end if no chromosome "
-                        " data, start/end/chrom if so"))
     parser.add_argument("--compress-vcf", dest="compress_flag",
                         action="store_true", help=("If input VCF is not "
                         "compressed, will compress and use zip search"))
@@ -148,16 +156,18 @@ def createParser():
                         action="store_false", help=("Prevents exception "
                         "generated by mismatched reference alleles from "
                         "VCF file compared to reference"))
-    parser.add_argument("--poptag",dest="poptag",help=("If model file has "
-                        "multiple models, use model with this name"))
     parser.add_argument("--mutrate",dest="mutrate",type=float,default=1e-9,
                         help="Mutation rate per base pair (default is 1e-9)")
     parser.add_argument("--inheritance-scalar",dest="inhet_sc",type=float,
-                        default=None)
-    parser.add_argument("--fasta",dest="fasta",action="store_true")
-    parser.add_argument("--multi-out",dest="multi_out",type=str)
-    parser.add_argument("--drop-missing-inds",dest="drop_inds",action="store_true",
-                        help="Drop individuals from loci if they are missing any data")
+                        default=None,help=("Sets inheritance scalar for all "
+                        "chromosomes (default is 1 for autosomes, .75 for X,"
+                        " .25 for Y/MT)"))
+    parser.add_argument("--output-fasta",dest="fasta",action="store_true",
+                        help=("Output fasta file(s) instead of IMa input. "
+                        "Only vaguely supported."))
+    parser.add_argument("--out-prefix",dest="multi_out",type=str,
+                        help=("If output is fasta, generate one file"
+                        "per loci."))
     return parser
 
 
@@ -169,9 +179,9 @@ def checkArgs(args):
     if args.vcfname is not None and args.genename is None:
         raise Exception("If using --vcf, must provide a BED file with --bed")
     if args.refname is None and args.parsecpg:
-        raise Exception("CpG parsing requires reference genome (--ref)")
+        raise Exception("CpG parsing requires reference genome (--reference-fasta)")
     if args.popname is None and not args.fasta:
-        raise Exception("IMa file requires model input with --pop")
+        raise Exception("IMa file requires model input with --model-file [filename]")
 
 
 def validateFiles(args):
@@ -333,67 +343,92 @@ def hasMissingData(rec_list, indiv_idx):
 
 
 def vcf_to_ima(sys_args):
-    """Returns a FASTA file with seqs from individuals in given gene regions
+    """Returns an IMa input file given four-gamete filtered loci in one or 
+    multiple VCFs.
 
-    Given an input VCF file, a reference FASTA file, and a list of gene
-    regions, will output a FASTA file with sequence data for all individuals
-    in the regions given. The reference FASTA file must be a full file from
-    one or multiple chromosomes, starting at the first base. The gene
-    region file must have start and end coordinates (half-open), with an
-    optional column for chromosome data if the VCF input has multiple
-    chromosomes.
+    An IM analysis requires a file with variants for a set of individuals at
+    multiple loci. These loci must be checked so that there are no 
+    recombination events between SNPs, as determined by a four-gamete test.
+    Variant input can be either a single VCF with a BED file listing regions
+    that correspond to loci, or a single VCF per locus. Also required is a
+    model file that lists what individuals in the VCF header correspond to
+    which population. Filtering can be done in this step, for indels,
+    multiallelic variants, sites with missing data, and CpGs (reference
+    required). Mutation rate and inheritance scalars can also be set via
+    commandline. 
 
     Parameters
     ----------
     --vcf : str
         Filename for VCF input file. If it does not end with extension
         'vcf(.gz)', a value for --ext must be provided.
-    --ref : str
-        Filename for FASTA reference file. This file can contain multiple
-        chromosomes but must start from the first base, as there is currently
-        no way to offset the sequences when pulling from a Region
-    --rl : str
-        Filename for gene region file. Requires columns for start and end
-        coordinates, with option for chromosome. Additional data may be
-        included, the columns with relevant data can be specified with the
-        --gene-col option
-    --indels : bool, optional
-        If set, indels will be included in the output sequences
-    --output : str, optional
-        If set, the default output name of (inputprefix).fasta will be
-        replaced with the given string
-    --gene-col : str, optional
-        Comma-separated string with two or three elements (chromosome is
-        optional). If length is 2, elements are the indices for columns
-        in the input gene region file corresponding to the start/end
-        coordinates of a region. If length 3, the third element
-        specifies the index of the chromosome column. Default is "1,2,0",
-        to match column order in a BED file.
+    --vcfs : str (1+)
+        Filenames for VCF locus files. Can also call '--vcfs @[filename.txt]'
+        where filename.txt has paths for all desired VCF files.
+    --reference-fasta : str
+        Filename for FASTA reference file. File must contain entirety of 
+        chromosomes specified. By default this will put invaraint sites 
+        in the output loci. Required for CpG filtering.
+    --model-file : str
+        Filename for model file. This file contains population designations
+        for individuals to be used in IM analysis. 
+    --model : str
+        If model file has more than one population, use model with this name
+    --bed : str
+        Filename for loci file with single VCF input. Requires columns with
+        start, end, and chromosome of each locus.
+    --bed-column-index : ints
+        Comma-separated list of length 3 with 0-based indexes of start, end,
+        and chromosome data in input BED file. Default for normal BED is
+        "1,2,0".
+    --zero-ho : bool
+        If set, treats regions in BED file as 0-based, (h)alf (o)pen
+        coordinates rather than 1-based, closed. 
+    --out : str
+        Name for output file. Defaults to 'input.ima.u"
+    --remove-multiallele : bool
+        If set, will set all multiallelic sites found as reference allele
+    --drop-missing-inds : bool
+        If set, if an individual at a locus is missing data, that individual
+        will not be included at the locus.
+    --remove-cpg : bool
+        If set, will replace CpG sites with reference allele. Requires
+        --reference-fasta.
+    --noseq : bool
+        If set and --reference-fasta is called, will only use for CpG
+        checking and not output invariant sites in output file.
 
 
 
     Other Parameters
     ----------------
-    --gr1 : bool, optional (False)
-        If set, indicates that the genome coordinate data is in base 1
+    --remove-multiallele : bool
+        If set, will set all multiallelic sites found as reference allele
+    --drop-missing-inds : bool
+        If set, if an individual at a locus is missing data, that individual
+        will not be included at the locus.
+    --remove-cpg : bool
+        If set, will replace CpG sites with reference allele. Requires
+        --reference-fasta.
+    --noseq : bool
+        If set and --reference-fasta is called, will only use for CpG
+        checking and not output invariant sites in output file.
     --trim-to-ref-length: bool, optional (False)
         If set, the sequences output will always match the length of the
         region they are found in. For example, a sequence with an insertion
         will cause the sequence to be an additional length of n-1, with n
         being the length of the insertion.
-    --compress-vcf : bool, optional
-        If set, will use bgzip and tabix to compress and index given VCF
-        file
-    --subsamp-list : str, optional
-        Name of single-column file with names of individuals to subsample
-        from input VCF file.
-    --subsamp-num : int, optional
-        Number of individuals to be randomly subsampled from VCF file
+    --mutrate : float
+        Use custom mutation rate for file (default is 1e-9)
+    --inheritance-scalar : float
+        Use fixed inheritance scalar for every output loci. Default is
+        1 for autosomal chromosomes, .75 for X and .25 for Y/MT.
+
 
     Output
     ------
     IMa file
-        Will be named either '--output' value or (vcfinput).ima.u.
+        Will be named either '--out' value or (vcfinput).ima.u.
         Contains variants in designated loci for IMa run.
     """
     parser = createParser()
@@ -487,6 +522,7 @@ def vcf_to_ima(sys_args):
             else:
                 region = Region(rec_list[0].pos-1,rec_list[-1].pos,rec_list[0].chrom)
         if filter_recs:
+            #Make this modify rec list in place
             t = vf.filterSites(rec_list,remove_cpg=args.parsecpg,remove_indels=(not args.indel_flag),remove_multiallele=args.remove_multiallele,remove_missing=args.remove_missing,inform_level=1,fasta_ref=fasta_ref)
             rec_list = t
         if len(rec_list) == 0:
