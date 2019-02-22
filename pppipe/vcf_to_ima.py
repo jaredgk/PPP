@@ -10,7 +10,7 @@ import pppipe.vcf_reader_func as vf
 from pppipe.logging_module import initLogger, logArgs
 from pppipe.gene_region import Region, RegionList
 from pppipe.parse_functions import defaultsDictForFunction, getConfigFilename, makeRequiredList, getArgsWithConfig
-from pppipe.model import Model, read_model_file
+from pppipe.model import Model, read_single_model
 #from tabix_wrapper import prepVcf
 
 #Input: VCF file, reference sequence, region list (possibly .bed file)
@@ -360,8 +360,7 @@ def vcf_to_ima(sys_args):
     Parameters
     ----------
     --vcf : str
-        Filename for VCF input file. If it does not end with extension
-        'vcf(.gz)', a value for --ext must be provided.
+        Filename for VCF input file. 
     --vcfs : str (1+)
         Filenames for VCF locus files. Can also call '--vcfs @[filename.txt]'
         where filename.txt has paths for all desired VCF files.
@@ -449,12 +448,7 @@ def vcf_to_ima(sys_args):
     popmodel = None
     use_allpop = False
     if args.popname is not None:
-        popmodels = read_model_file(args.popname)
-        if len(popmodels) != 1:
-            popmodel = popmodels[args.poptag]
-        else:
-            pp = list(popmodels.keys())
-            popmodel = popmodels[pp[0]]
+        popmodel = read_single_model(args.popname,args.poptag)
     else:
         use_allpop = True
 

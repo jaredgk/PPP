@@ -423,7 +423,6 @@ def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
 
 def checkRecordIsSnp(rec):
     """Checks if this record is a single nucleotide variant, returns bool."""
-    logging.info(str(rec.pos))
     if len(rec.ref) != 1:
         return False
     if rec.alts is None:
