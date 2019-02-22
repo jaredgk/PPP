@@ -1,3 +1,123 @@
+'''
+    Statistic calculation using VCFTools.
+
+    Automates the calculation of site/windowed fixation index (Fst), Tajima's D,
+    nucleotide diversity (Pi), allele frequency, and heterozygosity using
+    VCFTools. If no statistic is specified, windowed Fst is used by default.
+    
+    ############################
+    Input Command-line Arguments
+    ############################
+    **--vcf** *<input_filename>*
+        Argument used to define the filename of the VCF file for calculations.
+    **--model-file** *<model_filename>*
+        Argument used to define the model file. Please note that this argument cannot be 
+        used with the **--pop-file** argument or individual-based filters.
+    **--model** *<model_str>*
+        Argument used to define the model (i.e. the individual(s) to include and/or the 
+        populations for relevant statistics). May be used with any statistic. Please note 
+        that this argument cannot be used with **--pop-file** argument or the 
+        individual-based filters.
+    
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**.
+        Cannot be used if multiple output files are created.
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--out-dir** *<output_dir_name>*
+        Argument used to define the output directory. Only used if multiple output files 
+        are created.
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+    
+    ####################################
+    Statistic Command-line Specification
+    ####################################
+    **--calc-statistic** *<weir-fst, windowed-weir-fst, TajimaD, site-pi, window-pi, freq, het-fit, het-fis, hardy-weinberg>*
+        Argument used to define the statistic to be calculated. Site Fst (weir-fst), 
+        windowed Fst (windowed-weir-fst), Tajima's D (TajimaD), site nucleotide 
+        diversity (site-pi), windowed nucleotide diversity (window-pi), allele frequency
+        (freq), Fit (het-fit), Fis (het-fis), and the hardy-weinberg equilibrium 
+        (hardy-weinberg).
+    
+    *******************************************
+    Additional Statistic Command-line Arguments
+    *******************************************
+    **--statistic-window-size** *<size_int>*
+        Defines the statistic window size. Not usable with all statistics.
+    **--statistic-window-step** *<step_int>*
+        Defines the statistic window step size. Not usable with all statistics.
+    **--pop-file** *<pop_filename>*
+        Population file. This argument may be used multiple times if desired. Please note
+        the this argument is not compatible with either the **--model** or **--model-file** 
+        command-line arguments.
+    
+    ***********************************
+    Statistic Command-line Requirements
+    ***********************************
+    It should be noted that some of the statistics in the VCF calculator require additional
+    arguments (i.e. **--pop-file**, **--statistic-window-size**, **--statistic-window-step**).
+    These statistics may be found below with their additional requirements. If a statistic is
+    not given, only the statistic specification (i.e. **--calc-statistic**) is required.
+
+    **--calc-statistic** *weir-fst*
+        Requires: **--pop-file**/**--model**.
+
+    **--calc-statistic** *windowed-weir-fst*
+        Requires: **--pop-file**/**--model**, **--statistic-window-size**, and
+        **--statistic-window-step**.
+
+    **--calc-statistic** *TajimaD*
+        Requires: **--statistic-window-size**
+
+    **--calc-statistic** *windowed-pi*
+        Requires: **--statistic-window-size** and **--statistic-window-step**.
+
+    **--calc-statistic** *het-fis*
+        Requires: **--pop-file**/**--model**.
+    
+    #############################
+    Filter Command-line Arguments
+    #############################
+    If using an unfiltered VCF file (e.g. reduce the creation of unnecessary large files)
+    the VCF calculator is able to use either a kept or removed sites/BED file and the
+    individual-based paramemeters. 
+    
+    **************************
+    Individual-Based Arguments
+    **************************
+    Please note that all individual-based arguments are not compatible with either the 
+    **--model** or **--model-file** command-line arguments.
+
+    **--filter-include-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to include. This argument may be used 
+        multiple times if desired.
+    **--filter-exclude-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to exclude. This argument may be used 
+        multiple times if desired.
+    **--filter-include-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to include.
+    **--filter-exclude-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to exclude.
+    
+    ************************
+    Position-Based Arguments
+    ************************
+    **--filter-include-positions** *<position_filename>*
+        Argument used to define a file of positions to include within a tsv file 
+        (chromosome and position).
+    **--filter-exclude-positions** *<position_filename>*
+        Argument used to define a file of positions to exclude within a tsv file 
+        (chromosome and position).
+    **--filter-include-bed** *<position_bed_filename>*
+        Argument used to define a BED file of positions to include.
+    **--filter-exclude-bed** *<position_bed_filename>*
+        Argument used to define a BED file of positions to exclude.
+'''
+
 import os
 import sys
 import argparse
@@ -18,7 +138,22 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 from logging_module import initLogger, logArgs
 
 def vcf_calc_parser(passed_arguments):
-    '''VCF Argument Parser - Assigns arguments from command line'''
+    '''
+    VCF Calc Argument Parser
+
+    Assign the parameters for the VCF Calc using argparse.
+
+    Parameters
+    ----------
+    passed_arguments : list, optional
+        Parameters passed by another function. sys.argv is used if
+        not given. 
+
+    Raises
+    ------
+    IOError
+        If the input, or other specified files do not exist
+    '''
 
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
@@ -61,46 +196,45 @@ def vcf_calc_parser(passed_arguments):
     vcf_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments.
-    vcf_parser.add_argument('--vcf', help = "Input VCF filename", type = str, required = True, action = parser_confirm_file())
+    vcf_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
 
     # Model file arguments
-    vcf_parser.add_argument('--model-file', help = 'The model filename', type = str, action = parser_confirm_file())
-    vcf_parser.add_argument('--model', help = 'Model to analyze', type = str)
+    vcf_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
+    vcf_parser.add_argument('--model', help = 'Defines the model and the individual(s)/population(s) to include', type = str)
 
     # Non-model file arguments
-    vcf_parser.add_argument('--pop-file', help = 'Population file. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_confirm_file_list())
+    vcf_parser.add_argument('--pop-file', help = 'Population file. May be used multiple times', nargs = '+', type = str, action = parser_confirm_file_list())
 
     # Other file arguments. Expand as needed
-    vcf_parser.add_argument('--out', help = 'Output filename. Cannot be used if multiple output files are created', type = str)
-    vcf_parser.add_argument('--out-prefix', help = 'Output prefix (vcftools naming scheme)', type = str,  default = 'out')
-    vcf_parser.add_argument('--out-dir', help = "Output directory. Only used if multiple output files are created", default = 'Statistic_Files')
+    vcf_parser.add_argument('--out', help = 'Defines the complete output filename, overrides --out-prefix. Cannot be used if multiple output files are created', type = str)
+    vcf_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', type = str,  default = 'out')
+    vcf_parser.add_argument('--out-dir', help = "Defines the output directory. Only used if multiple output files are created", default = 'Statistic_Files')
 
     # General arguments
     vcf_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
 
     # Statistic based arguments
     statistic_list = ['weir-fst', 'windowed-weir-fst', 'TajimaD', 'site-pi', 'window-pi', 'freq', 'het-fit', 'het-fis', 'hardy-weinberg']
-    statistic_default = 'windowed-weir-fst'
 
-    vcf_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'The statistic to calculate', type = str, choices = statistic_list, default = statistic_default)
+    vcf_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'The statistic to calculate', type = str, choices = statistic_list)
 
     # Statistic window options
-    vcf_parser.add_argument('--statistic-window-size', help = 'Window size of relevant statistics', type = int)
-    vcf_parser.add_argument('--statistic-window-step', help = 'Step size between windows of relevant statistics', type = int)
+    vcf_parser.add_argument('--statistic-window-size', help = 'Statistic window size', type = int)
+    vcf_parser.add_argument('--statistic-window-step', help = 'Statistic window step size', type = int)
 
     # Position-based position filters
-    vcf_parser.add_argument('--filter-include-positions', help = 'Sites to include within a file', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-positions', help = 'Sites to exclude within a file', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-positions', help = 'Defines a file of positions to include within a tsv file (chromosome and position)', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-positions', help = 'Defines a file of positions to exclude within a tsv file (chromosome and position)', action = parser_confirm_file())
 
     # BED-based position filters
-    vcf_parser.add_argument('--filter-include-bed', help = 'Set of sites to include within a BED file', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-bed', help = 'Set of sites to exclude within a BED file', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-bed', help = 'Defines a BED file of positions to include', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-bed', help = 'Defines a BED file of positions to exclude', action = parser_confirm_file())
 
     # Non-model based filters
-    vcf_parser.add_argument('--filter-include-indv', help = 'Individual to include. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-indv', help = 'Individual to exclude. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-include-indv-file', help = 'Individuals to include in file. Cannont to be used alonside --model', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-indv-file', help = 'Individuals to exclude in file. Cannont to be used alonside --model', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-indv', help = 'Defines the individual(s) to include. This argument may be used multiple times if desired', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-indv', help = 'Defines the individual(s) to exclude. This argument may be used multiple times if desired', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-include-indv-file', help = 'Defines a file of individuals to include', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-indv-file', help = 'Defines a file of individuals to exclude', action = parser_confirm_file())
 
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)
@@ -112,46 +246,57 @@ def run (passed_arguments = []):
     '''
     Statistic calculation using VCFTools.
 
-    Automates the calculation of site/windowed fixation index (Fst), Tajima's D,
-    nucleotide diversity (Pi), allele frequency, and heterozygosity using
-    VCFTools. If no statistic is specified, windowed Fst is used by default.
+    This function uses the argparse-based function :py:func:`vcf_calc_parser`
+    to parse either sys.argv or passed_arguments to obtain the parameters below. 
+    The parameters are then translated to their VCFtools equivalent. Once all the
+    VCFtools-based parameters are assigned, VCFtools is called.
 
     Parameters
     ----------
     --vcf : str
-        Specifies the input VCF filename
+        Input VCF filename
     --out : str
-        Specifies the output filename
+        Complete output filename, overrides --out-prefix
+    --out-prefix : str
+        Output filename prefix
+    --out-dir : str
+        Output directory
+    --model-file : str
+        Model filename
+    --model : str
+        Model to use
     --pop-file : str
-        Defines a population file for calculating Fst-based statistics. May be
-        used multple times (i.e. once per file)
+        Defines a population file for relevant statistics. May be
+        used multple times
     --calc-statistic : str
-        Specifies the statistic to calculate. Choices: weir-fst,
-        windowed-weir-fst (Default), TajimaD, pi, freq, het
+        Specifies the statistic to calculate
     --statistic-window-size : int
         Specifies the window size for window-based statistics
     --statistic-window-step : int
         Specifies step size between windows for specific window-based statistics
-    --statistic-pvalue-cutoff : float
-        P-value cutoff for specific statistics
+    --filter-include-indv : list or str
+        Individual(s) to include. May be used multiple times. Not usable w/ --model
+    --filter-exclude-indv : list or str
+        Individual(s) to exclude. May be used multiple times. Not usable w/ --model
+    --filter-include-indv-file : str
+        File of individuals to include. Not usable w/ --model
+    --filter-exclude-indv-file : str
+        File of individuals to exclude.  Not usable w/ --model
     --filter-include-positions : str
-        Specifies a set of sites to include within a tsv file (chromosome and position)
+        File of positions to include (tsv: chromosome and position)
     --filter-exclude-positions : str
-        Specifies a set of sites to exclude within a tsv file (chromosome and position)
-
-    Returns
-    -------
-    output : file
-        Statistic file output
-    log : file
-        Log file output
-
+        File of positions to exclude (tsv: chromosome and position)
+    --filter-include-bed : str
+        BED file of positions to include 
+    --filter-exclude-bed : str
+        BED file of positions to exclude
+    
     Raises
     ------
     IOError
-        Input VCF file does not exist
-    IOError
-        Output file already exists
+        Output file already exists and --overwrite is not specified
+    Exception
+        Incompatible arguments
     '''
 
     def calc_exception (selected_model, exc_type, exc_value, exc_traceback):

@@ -1,3 +1,101 @@
+'''
+    Phaser for VCF files.
+
+    Automates the phasing process for a specified VCF file. The function
+    allows users to select between the beagle (default) and shapeit 
+    phasing algorithms.
+    
+    ############################
+    Input Command-line Arguments
+    ############################
+    **--vcf** *<input_filename>*
+        Argument used to define the filename of the VCF file to be phased.
+    **--model-file** *<model_filename>*
+        Argument used to define the model file. Please note that this argument cannot be 
+        used with the **--pop-file** argument or individual-based filters.
+    **--model** *<model_str>*
+        Argument used to define the model (i.e. the individual(s) to include and/or the 
+        populations for relevant statistics). May be used with any statistic. Please note 
+        that this argument cannot be used with **--pop-file** argument or the 
+        individual-based filters.
+
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**.
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--out-format** *<vcf, vcf.gz, bcf>*
+        Argument used to define the desired output format. Formats include: uncompressed 
+        VCF (vcf); compressed VCF (vcf.gz) [default]; and BCF (bcf).
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+    
+    ##############################
+    Phasing Command-line Arguments
+    ##############################
+    **--phase-algorithm** *<beagle, shapeit>*
+        Argument used to define the phasing algorithm. BEAGLE 5.0 (beagle) [default] and
+        SHAPEIT (shapeit). Please note: Both algorithms possess algorithm-specific 
+        arguments that may be found in their respective sections.
+    **--Ne** *<Ne_int>*
+        Argument used to define the effective population size.
+    **--genetic-map** *<genetic_map_filename>*
+        Argument used to define a genetic map file.
+    **--phase-chr** *<chr>*
+        Argument used to define a single chromosome to phase.
+    **--phase-from-bp**
+        Argument used to define the lower bound of positions to include. May only be 
+        used with a single chromosome.
+    **--phase-to-bp**
+        Argument used to define the upper bound of positions to include. May only be 
+        used with a single chromosome.
+    **--random-seed** *<seed_int>*
+        Argument used to define the seed value for the random number generator.
+
+    **************************************
+    SHAPEIT Phasing Command-line Arguments
+    **************************************
+    **--shapeit-burn-iter** *<iteration_int>*
+        Argument used to define the number of burn-in iterations.
+    **--shapeit-prune-iter** *<iteration_int>*
+        Argument used to define the number of pruning iterations.
+    **--shapeit-main-iter** *<iteration_int>*
+        Argument used to define the number of main iterations.
+    **--shapeit-states** *<state_int>*
+        Argument used to define the number of conditioning states for haplotype 
+        estimation.
+    **--shapeit-window** *<Mb_float>*
+        Argument used to define the model window size in Mb.
+
+    *************************************
+    BEAGLE Phasing Command-line Arguments
+    *************************************
+    **--beagle-burn-iter** *<iteration_int>*
+        Argument used to define the number of burn-in iterations.
+    **--beagle-iter** *<iteration_int>*
+        Argument used to define the number of main iterations
+    **--beagle-states** *<state_int>*
+        Argument used to define the number of model states for genotype 
+        estimation.
+    **--beagle-error** *<probability>*
+        Argument used to define the HMM allele mismatch probability.
+    **--beagle-window** *<cM_float>*
+        Argument used to define the sliding window size in cM.
+    **--beagle-overlap** *<cM_float>*
+        Argument used to define the overlap between neighboring windows in cM.
+    **--beagle-step** *<cM_float>*
+        Argument used to define the step length in cM used for identifying short 
+        IBS segments.
+    **--beagle-nsteps** *<windows_int>*
+        Argument used to define the number of consecutive **--beagle-steps** used 
+        for identifying long IBS segments.
+    **--beagle-path** *<path>*
+        Argument used to define the path to locate beagle.jar.
+    
+'''
+
 import os
 import sys
 import copy
@@ -16,8 +114,22 @@ from shapeit import call_shapeit, remove_shapeit_intermediate_files, check_for_s
 from bcftools import get_unique_chrs, chr_subset_file, concatenate, check_for_index, create_index
 
 def phase_argument_parser(passed_arguments):
-    '''Phase Argument Parser - Assigns arguments for vcftools from command line.
-    Depending on the argument in question, a default value may be specified'''
+    '''
+    VCF Phase Argument Parser
+
+    Assign the parameters for VCF Phase using argparse.
+
+    Parameters
+    ----------
+    passed_arguments : list, optional
+        Parameters passed by another function. sys.argv is used if
+        not given. 
+
+    Raises
+    ------
+    IOError
+        If the input, or other specified files do not exist
+    '''
 
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
@@ -35,15 +147,24 @@ def phase_argument_parser(passed_arguments):
     phase_parser = argparse.ArgumentParser()
 
     # Input arguments
-    phase_parser.add_argument('--vcf', help = "Input VCF filename", type = str, required = True, action = parser_confirm_file())
+    phase_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
+
+    # Output arguments
+    phase_parser.add_argument('--out', help = 'Defines the complete output filename, overrides --out-prefix')
+    phase_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', default = 'out')
+
+    out_format_list = ['vcf', 'vcf.gz', 'bcf']
+    out_format_default = 'vcf.gz'
+
+    phase_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Defines the desired output format', type = str, choices = out_format_list, default = out_format_default)
 
     # Model file arguments
     phase_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
-    phase_parser.add_argument('--model', help = 'Defines the model to analyze', type = str)
+    phase_parser.add_argument('--model', help = 'Defines the model and the individual(s) to include', type = str)
 
     # General arguments
     phase_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
-    phase_parser.add_argument('--beagle-path', help = "Defines path to locate beagle.jar", type = str, default = 'bin/')
+    phase_parser.add_argument('--beagle-path', help = "Defines the path to locate beagle.jar", type = str, default = 'bin/')
 
     # Phase algorithm argument
     phasing_list = ['beagle', 'shapeit']
@@ -52,11 +173,11 @@ def phase_argument_parser(passed_arguments):
 
     # Common phasing arguments
     phase_parser.add_argument('--Ne', help = 'Defines the effective population size', type = int)
-    phase_parser.add_argument('--random-seed', help="Defines the random seed value for the random number generator", type = int)
+    phase_parser.add_argument('--random-seed', help="Defines the seed value for the random number generator", type = int)
     phase_parser.add_argument('--genetic-map', help = 'Genetic map filename', type = str, action = parser_confirm_file())
     phase_parser.add_argument('--phase-chr', help = 'Selects a single chromosome to phase', type = str)
-    phase_parser.add_argument('--phase-from-bp', help = 'Lower bound of sites to include (Only usable with a single chromosome)', type = int)
-    phase_parser.add_argument('--phase-to-bp', help = 'Upper bound of sites to include (Only usable with a single chromosome)', type = int)
+    phase_parser.add_argument('--phase-from-bp', help = 'Lower bound of sites to include. May only be used with a single chromosome', type = int)
+    phase_parser.add_argument('--phase-to-bp', help = 'Upper bound of sites to include. May only be used with a single chromosome', type = int)
 
     # Shapeit-specific options
     phase_parser.add_argument('--shapeit-burn-iter', help = 'Number of the burn-in iterations (shapeit)', type = int)
@@ -74,15 +195,6 @@ def phase_argument_parser(passed_arguments):
     phase_parser.add_argument('--beagle-error', help = 'HMM allele mismatch probability (beagle)', type = float)
     phase_parser.add_argument('--beagle-step', help = 'Step length in cM used for identifying short IBS segments (beagle)', type = float)
     phase_parser.add_argument('--beagle-nsteps', help = 'Number of consecutive --beagle-steps used for identifying long IBS segments (beagle)', type = int)
-
-    # Output arguments
-    phase_parser.add_argument('--out', help = 'Defines the output filename')
-    phase_parser.add_argument('--out-prefix', help = 'Defines the output prefix (used by phasing algorithms)', default = 'out')
-
-    out_format_list = ['vcf', 'vcf.gz', 'bcf']
-    out_format_default = 'vcf.gz'
-
-    phase_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Specifies the output format.', type = str, choices = out_format_list, default = out_format_default)
 
     if passed_arguments:
         return phase_parser.parse_args(passed_arguments)
@@ -177,34 +289,77 @@ def assign_filename_prefix (output_filename, output_format):
 
 def run (passed_arguments = []):
     '''
-        Phaser for VCF files.
+    Phaser for VCF files.
 
-        Automates the phasing process for a specified VCF file. The function
-        allows users to select between multiple phasing algorithms: beagle
-        (default) and shapit.
+    This function uses the argparse-based function :py:func:`phase_argument_parser`
+    to parse either sys.argv or passed_arguments to obtain the parameters below. 
+    The parameters are then translated to their BEAGLE/SHAPEIT equivalent. Once all 
+    the parameters are assigned, BEAGLE or SHAPEIT is called.
 
-        Parameters
-        ----------
-        --vcf : str
-            Specifies the input VCF filename
-        --phase-algorithm : str
-            Specifies the algorithm to be used. Choices: beagle (default) and
-            shapit
-        --out : str
-            Specifies the output filename
+    Parameters
+    ----------
+    --vcf : str
+       Filename of the VCF
+    --out : str
+        Complete output filename, overrides --out-prefix
+    --out-prefix : str
+        Output prefix
+    --out-format : str
+        Desired output format
+    --model-file : str
+        Model filename
+    --model : str
+        Model to use
+    --phase-algorithm : str
+        The phase algorithm to use
+    --Ne : int
+        Effective population size
+    --random-seed : int
+        Seed value for the random number generator
+    --genetic-map : str
+        Genetic map filename
+    --phase-chr : str
+        Chromosome to phase
+    --phase-from-bp : int
+        Lower bound of sites to include. Only usable with a single 
+        chromosome
+    --phase-to-bp : int
+        Upper bound of sites to include. Only usable with a single 
+        chromosome
+    --shapeit-burn-iter : int
+        Number of burn-in iterations
+    --shapeit-prune-iter : int
+        Number of pruning iterations
+    --shapeit-main-iter : int
+        Number of main iterations
+    --shapeit-states : int
+        Number of conditioning states for haplotype estimation
+    --shapeit-window : float
+        Model window size in Mb
+    --beagle-burn-iter : int
+        Number of the burn-in iterations
+    --beagle-iter : int
+        Number of main iterations
+    --beagle-states : int
+        Number of model states for genotype estimation
+    --beagle-window : float
+        Sliding window size in cM
+    --beagle-overlap : float
+        Overlap between neighboring sliding windows in cM
+    --beagle-error : float
+        HMM allele mismatch probability
+    --beagle-step : float
+        Step length in cM used for identifying short IBS segments
+    --beagle-nsteps : int
+        Number of consecutive --beagle-steps used for identifying 
+        long IBS segments
 
-        Returns
-        -------
-        output : file
-            Phased VCF file
-
-        Raises
-        ------
-        IOError
-            Input VCF file does not exist
-        IOError
-            Output file already exists
-
+    Raises
+    ------
+    IOError
+        Output file already exists and --overwrite is not specified
+    Exception
+        Incompatible arguments
     '''
 
     # Grab VCF arguments from command line
