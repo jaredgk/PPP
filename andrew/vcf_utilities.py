@@ -1,3 +1,54 @@
+'''
+    Utilites for VCF-formatted files
+
+    Automates various utilites for VCF-formatted files. This currently includes:
+    obtain list of chromosomes and obtain list of samples.
+    
+    ############################
+    Input Command-line Arguments
+    ############################
+    **--vcf** *<input_filename>*
+        Argument used to define the filename of the VCF file.
+    **--vcfs** *<input_filename>* *<input1_filename, input2_filename, etc.>*
+        Argument used to define the filename of the VCF file(s). May be used multiple 
+        times.
+    
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**.
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+    
+    ##################################
+    Utility Command-line Specification
+    ##################################
+    **--utility** *<sample-list, chr-list, concatenate, merge, sort>*
+        Argument used to define the desired utility. Current utilities include: creation
+        of a file of the samples within the VCF (sample-list); creation of a file of the 
+        chromosomes within the VCF (chr-list); combine multiple VCF files with different
+        variants but the same samples (concatenate); combine multiple VCF files with 
+        different samples but the same variants (merge); or sort a single VCF file (sort).
+
+    *****************************************
+    Additional Utility Command-line Arguments
+    *****************************************
+    **--record-merge-mode** *<none, snps, indels, both, all, id>*
+        Argument used to define the type of multiallelic records to create. Only usable with 
+        the merge utility.
+    **--record-missing-as-ref**
+        Argument used to define that missing records should be converted to the reference
+        allele. Only usable with the merge and concatenate utilites.
+    **--out-format** *<vcf, vcf.gz, bcf>*
+        Argument used to define the desired output format. Formats include: uncompressed 
+        VCF (vcf); compressed VCF (vcf.gz) [default]; and BCF (bcf). Only usable with the 
+        merge and concatenate utilites.
+
+'''
+
 import os
 import sys
 import argparse
@@ -16,7 +67,22 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 from logging_module import initLogger, logArgs
 
 def vcf_utility_parser(passed_arguments):
-    '''VCF Argument Parser - Assigns arguments from command line'''
+    '''
+    VCF Utility Argument Parser
+
+    Assign the parameters for VCF Utility using argparse.
+
+    Parameters
+    ----------
+    passed_arguments : list, optional
+        Parameters passed by another function. sys.argv is used if
+        not given. 
+
+    Raises
+    ------
+    IOError
+        If the input, or other specified files do not exist
+    '''
 
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
@@ -59,33 +125,28 @@ def vcf_utility_parser(passed_arguments):
     vcf_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments.
-    vcf_parser.add_argument('--vcf', help = "Input VCF filename (may be used multiple times)", type = str, nargs = '+', required = True, action = parser_confirm_file_list())
-
-    # Model file arguments - Add later if needed
-    #vcf_parser.add_argument('--model-file', help = 'The model filename', type = str, action = parser_confirm_file())
-    #vcf_parser.add_argument('--model', help = 'Model to analyze', type = str)
-
-    # Utility based arguments
-    utility_list = ['sample-list', 'chr-list', 'concatenate', 'merge', 'sort']
-    vcf_parser.add_argument('--utility', metavar = metavar_list(utility_list), help = 'The utility to use', type = str, choices = utility_list)
-
-    # Record merging argument
-    merge_list = ['none', 'snps', 'indels', 'both', 'all', 'id']
-    vcf_parser.add_argument('--record-merge-mode', metavar = metavar_list(merge_list), help = 'Types of multiallelic records to create. Only usable with the merge and concatenate utilites', type = str, choices = merge_list)
-
-    # Missing Record argument
-    vcf_parser.add_argument('--record-missing-as-ref', help = 'Convert missing records as the default. Only usable with the merge and concatenate utilites', action = 'store_true')
+    vcf_input = vcf_parser.add_mutually_exclusive_group()
+    vcf_input.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
+    vcf_input.add_argument('--vcfs', help = "Defines the filenames of the VCFs (may be used multiple times)", type = str, nargs = '+', required = True, action = parser_confirm_file_list())
 
     # Output file arguments
+    vcf_parser.add_argument('--out', help = 'Defines the complete output filename, overrides --out-prefix', type = str)
+    vcf_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', default = 'out')
+    vcf_parser.add_argument('--overwrite', help = "Defines that previous output files should be overwritten", action = 'store_true')
+    
+    # Utility based arguments
+    utility_list = ['sample-list', 'chr-list', 'concatenate', 'merge', 'sort']
+    vcf_parser.add_argument('--utility', metavar = metavar_list(utility_list), help = 'Defines the utility to use', type = str, choices = utility_list)
+    
+    merge_list = ['none', 'snps', 'indels', 'both', 'all', 'id']
+    vcf_parser.add_argument('--record-merge-mode', metavar = metavar_list(merge_list), help = 'Defines the type of multiallelic records to create. Only usable with the merge utility', type = str, choices = merge_list)
+    
+    vcf_parser.add_argument('--record-missing-as-ref', help = 'Defines that missing records should be converted to the reference allele. Only usable with the merge and concatenate utilites', action = 'store_true')
+    
     out_format_list = ['vcf', 'vcf.gz', 'bcf']
     out_format_default = 'vcf.gz'
-
-    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Specifies the format of vcf-based output', type = str, choices = out_format_list, default = out_format_default)
-
-    vcf_parser.add_argument('--out', help = 'Output filename. If used, overrides --out-prefix', type = str)
-    vcf_parser.add_argument('--out-prefix', help = 'Defines the output prefix', default = 'out')
-    vcf_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
-
+    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Defines the desired output format', type = str, choices = out_format_list, default = out_format_default)
+    
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)
     else:
@@ -119,34 +180,34 @@ def run (passed_arguments = []):
     '''
     Utilites for VCF-formatted files
 
-    Automates various utilites for VCF-formatted files. This currently includes:
-    obtain list of chromosomes and obtain list of samples.
+    This function uses the argparse-based function :py:func:`vcf_utility_parser`
+    to parse either sys.argv or passed_arguments to obtain the parameters below. 
+    The parameters are then translated to their BCFtools equivalent. Once all the 
+    parameters are assigned, BCFtools is called.
 
     Parameters
     ----------
     --vcf : str
-        Specifies the input VCF filename
+        Filename of the VCF
+    --vcfs : list
+        List of VCF filenames
     --utility : str
-        Specifies the utility to be used. Choices: chr-list,
-        sample-list, concatenate, merge, sort
-    --out-prefix : str
-        Specifies the output filename prefix
+        Utility to be used
     --out : str
-        Specifies the output filename. Overrides --out-prefix
+        Complete output filename, overrides --out-prefix
+    --out-prefix : str
+        Output prefix
+    --out-format : str
+        Desired output format
     --overwrite
         Species if previous output should be overwriten
-
-    Returns
-    -------
-    output : file
-        Statistic file output
-    log : file
-        Log file output
+    --record-merge-mode : str
+        Type of multiallelic records to create
+    --record-missing-as-ref : bool
+        Convert missing records to the reference allele
 
     Raises
     ------
-    IOError
-        Input VCF file does not exist
     IOError
         Output file already exists
     '''
@@ -161,18 +222,15 @@ def run (passed_arguments = []):
     if vcf_args.utility in ['chr-list', 'sample-list', 'sort']:
 
         # Check if multiple vcf files have been assigned
-        if len(vcf_args.vcf) != 1:
+        if vcf_args.vcfs:
             raise Exception('Utility (%s) only supports a single VCF file' % vcf_args.utility)
-
-        # Convert the VCF argument to a string if no error is found
-        vcf_args.vcf = vcf_args.vcf[0]
 
     # Check if the function does not support a single vcf file
     if vcf_args.utility in ['merge', 'concatenate']:
 
         # Check if multiple vcf files have been assigned
-        if len(vcf_args.vcf) <= 1:
-            raise Exception('Utility (%s) only supports multiple VCF files' % vcf_args.utility)
+        if vcf_args.vcf:
+            raise Exception('Utility (%s) requires multiple VCF files' % vcf_args.utility)
 
     # Assign the standard output filename
     utility_output_filename = vcf_args.out_prefix
@@ -264,13 +322,13 @@ def run (passed_arguments = []):
     elif vcf_args.utility == 'concatenate':
 
         # Concatenate the VCF files
-        concatenate(vcf_args.vcf, vcf_args.out_prefix, vcf_args.out_format, keep_original = True, optional_args = utility_optional_args)
+        concatenate(vcf_args.vcfs, vcf_args.out_prefix, vcf_args.out_format, keep_original = True, optional_args = utility_optional_args)
 
     # Check if the user has requested a concatenated VCF
     elif vcf_args.utility == 'merge':
 
         # Concatenate the VCF files
-        merge(vcf_args.vcf, vcf_args.out_prefix, vcf_args.out_format, keep_original = True, optional_args = utility_optional_args)
+        merge(vcf_args.vcfs, vcf_args.out_prefix, vcf_args.out_format, keep_original = True, optional_args = utility_optional_args)
 
     # Check if the user has requested a concatenated VCF
     elif vcf_args.utility == 'sort':
@@ -280,6 +338,9 @@ def run (passed_arguments = []):
 
         # Assign the output format arguments
         sort_arguments += return_output_format_args(vcf_args.out_format)
+
+        # Append the input VCF
+        sort_arguments.append(vcf_args.vcf)
 
         # Concatenate the VCF files
         call_bcftools(sort_argumentse)

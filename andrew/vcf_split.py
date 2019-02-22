@@ -1,3 +1,93 @@
+'''
+    Split VCF file into multiple VCFs.
+
+    Splits a single VCF file into multiple VCF files using either a statistic or
+    bed file. The statistic/bed file must contain loci-based (i.e. window-based)
+    data for the function to operate. If the specified statistic file does not
+    contain a BIN_END column, the --statistic-window-size argument may be used.
+
+    ############################
+    Input Command-line Arguments
+    ############################
+    **--vcf** *<input_filename>*
+        Argument used to define the filename of the VCF file to be split.
+    **--split-file** *<split_filename>*
+        Argument used to define the file to be split
+    **--model-file** *<model_filename>*
+        Argument used to define the model file. Please note that this argument cannot be 
+        used with the **--pop-file** argument or individual-based filters.
+    **--model** *<model_str>*
+        Argument used to define the model (i.e. the individual(s) to include and/or the 
+        populations for relevant statistics). May be used with any statistic. Please note 
+        that this argument cannot be used with **--pop-file** argument or the 
+        individual-based filters.
+
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--out-format** *<vcf, vcf.gz, bcf>*
+        Argument used to define the desired output format. Formats include: uncompressed 
+        VCF (vcf); compressed VCF (vcf.gz) [default]; and BCF (bcf).
+    **--out-dir** *<output_dir_name>*
+        Argument used to define the output directory.
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+
+    ############################
+    Split Command-line Arguments
+    ############################
+    **--split-method** *<statistic-file, bed>*
+        Argument used to define the splitting method. Users may spilit using either 
+        a statistic-file (statistic-file) from VCF Calc (or other methods) or a BED 
+        file (bed).
+    **--statistic-window-size** *<statistic_window_int>*
+        Argument used to define the size of window calculations. This argument is only 
+        required if the BIN_END column is absent within the file.
+    **--no-window-correction**
+        Argument used to define if a window should not be corrected to avoid 
+        an overlap of a single position (i.e. 100-200/200-300 vs. 100-199/200-299).
+
+    #############################
+    Filter Command-line Arguments
+    #############################
+    If using an unfiltered VCF file (e.g. reduce the creation of unnecessary large files)
+    the VCF calculator is able to use either a kept or removed sites/BED file and the
+    individual-based paramemeters. 
+    
+    **************************
+    Individual-Based Arguments
+    **************************
+    Please note that all individual-based arguments are not compatible with either the 
+    **--model** or **--model-file** command-line arguments.
+
+    **--filter-include-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to include. This argument may be used 
+        multiple times if desired.
+    **--filter-exclude-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to exclude. This argument may be used 
+        multiple times if desired.
+    **--filter-include-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to include.
+    **--filter-exclude-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to exclude.
+    
+    ************************
+    Position-Based Arguments
+    ************************
+    **--filter-include-positions** *<position_filename>*
+        Argument used to define a file of positions to include within a tsv file 
+        (chromosome and position).
+    **--filter-exclude-positions** *<position_filename>*
+        Argument used to define a file of positions to exclude within a tsv file 
+        (chromosome and position).
+    **--filter-include-bed** *<position_bed_filename>*
+        Argument used to define a BED file of positions to include.
+    **--filter-exclude-bed** *<position_bed_filename>*
+        Argument used to define a BED file of positions to exclude.
+'''
+
 import os
 import sys
 import copy
@@ -19,7 +109,22 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 from logging_module import initLogger, logArgs
 
 def vcf_split_parser(passed_arguments):
-    '''VCF Argument Parser - Assigns arguments from command line'''
+    '''
+    VCF Split Argument Parser
+
+    Assign the parameters for VCF Split using argparse.
+
+    Parameters
+    ----------
+    passed_arguments : list, optional
+        Parameters passed by another function. sys.argv is used if
+        not given. 
+
+    Raises
+    ------
+    IOError
+        If the input, or other specified files do not exist
+    '''
 
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
@@ -47,55 +152,44 @@ def vcf_split_parser(passed_arguments):
     vcf_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments.
-    vcf_parser.add_argument('--vcf', help = "Input VCF filename", type = str, required = True, action = parser_confirm_file())
+    vcf_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
 
     # Model file arguments.
     vcf_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
-    vcf_parser.add_argument('--model', help = 'Defines the model to analyze', type = str)
+    vcf_parser.add_argument('--model', help = 'Defines the model and the individual(s) to include', type = str)
 
     # Split arguments
-    vcf_parser.add_argument('--split-file', help='Specifies the file used for splitting', required = True, type = str, action = parser_confirm_file())
+    vcf_parser.add_argument('--split-file', help='Defines the file to split', required = True, type = str, action = parser_confirm_file())
 
     split_list = ['statistic-file', 'bed']
-    split_default = 'statistic-file'
-
-    vcf_parser.add_argument('--split-method', metavar = metavar_list(split_list), help = 'Specifies the splitting method', type=str, choices = split_list, default = split_default)
-
-    vcf_parser.add_argument('--statistic-window-size', help = 'Size of window calculations (use if BIN_END is absent in file)', type = int)
-
-    vcf_parser.add_argument('--window-correction', help = 'If the window should be corrected to avoid single-position overlap (i.e. n-1)', type = bool, default = True)
+    vcf_parser.add_argument('--split-method', metavar = metavar_list(split_list), help = 'Defines the splitting method', type=str, choices = split_list)
+    vcf_parser.add_argument('--statistic-window-size', help = 'Defines the size of window calculations (if BIN_END is absent in file)', type = int)
+    vcf_parser.add_argument('--no-window-correction', help = 'Defines if the window correction should not be used', action = 'store_true')
 
     # Output file arguments
     out_format_list = ['vcf', 'vcf.gz', 'bcf']
     out_format_default = 'vcf.gz'
-
-    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Specifies the VCF output format', type = str, choices = out_format_list, default = out_format_default)
-
-    vcf_parser.add_argument('--out-dir', help = 'Specifies the output directory', type = str,  default = 'Split_VCFs')
-    vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix', type = str,  default = 'out')
-
-    vcf_parser.add_argument('--log-prefix', help = 'Specifies the log file file prefix', type = str,  default = 'out.split')
-
+    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Defines the desired output format', type = str, choices = out_format_list, default = out_format_default)
+    vcf_parser.add_argument('--out-dir', help = 'Defines the output directory', type = str,  default = 'Split_VCFs')
+    vcf_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', type = str,  default = 'out')
 
     # General arguments.
-    vcf_parser.add_argument('--overwrite', help = "overwrite previous output files", action = 'store_true')
+    vcf_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
 
-    ### Filters
-
-    # Non-model file arguments
-    vcf_parser.add_argument('--filter-include-indv', help = 'Individual to include. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-indv', help = 'Individual to exclude. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-include-indv-file', help = 'Individuals to include in file. Cannont to be used alonside --model', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-indv-file', help = 'Individuals to exclude in file. Cannont to be used alonside --model', action = parser_confirm_file())
-
+    ## Filters
     # Position-based position filters
-    vcf_parser.add_argument('--filter-include-positions', help = 'Sites to include within a chr/pos tab-sperated file', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-positions', help = 'Sites to exclude within a chr/pos tab-sperated file', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-positions', help = 'Defines a file of positions to include within a tsv file (chromosome and position)', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-positions', help = 'Defines a file of positions to exclude within a tsv file (chromosome and position)', action = parser_confirm_file())
 
     # BED-based position filters
-    vcf_parser.add_argument('--filter-include-bed', help = 'Set of sites to include within a BED file', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-bed', help = 'Set of sites to exclude within a BED file', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-bed', help = 'Defines a BED file of positions to include', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-bed', help = 'Defines a BED file of positions to exclude', action = parser_confirm_file())
 
+    # Non-model based filters
+    vcf_parser.add_argument('--filter-include-indv', help = 'Defines the individual(s) to include. This argument may be used multiple times if desired', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-indv', help = 'Defines the individual(s) to exclude. This argument may be used multiple times if desired', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-include-indv-file', help = 'Defines a file of individuals to include', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-indv-file', help = 'Defines a file of individuals to exclude', action = parser_confirm_file())
 
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)
@@ -118,66 +212,58 @@ def run (passed_arguments = []):
     '''
     Split VCF file into multiple VCFs.
 
-    Splits a single VCF file into multiple VCF files using either a statistic or
-    bed file. The statistic/bed file must contain loci-based (i.e. window-based)
-    data for the function to operate. If the specified statistic file does not
-    contain a BIN_END column, the --statistic-window-size argument may be used.
+    This function uses the argparse-based function :py:func:`vcf_split_parser`
+    to parse either sys.argv or passed_arguments to obtain the parameters below. 
+    The parameters are then translated to their VCFtools equivalent. Once all 
+    the parameters are assigned, VCFtools is called.
 
     Parameters
     ----------
     --vcf : str
-        Specifies the input VCF filename
-    --model-file
-        Specifies the model filename
-    --model
-        Specifies the model
-    --split-file : str
-        Specifies the file used for splitting
-    --split-method : str
-        Specifies the method being used to split {statistic-file, bed} (Default: statistic-file)
-    --statistic-window-size : int
-        Specifies the size of window calculations (use if BIN_END is absent)
-    --out-format : str
-        Specifies the output format {vcf, vcf.gz, bcf} (Default: vcf.gz)
-    --out-dir : str
-        Specifies the output directory
+        Filename of the VCF
     --out-prefix : str
-        Specifies the output prefix
+        Output prefix
+    --out-dir : str
+        Output directory
+    --out-format : str
+        Desired output format
+    --model-file : str
+        Model filename
+    --model : str
+        Model to use
+    --split-file : str
+        Filename of file to split
+    --split-method : str
+        Splitting method
+    --statistic-window-size : int
+        Size of window calculations (if BIN_END column is absent)
+    --no-window-correction : bool
+        If the window correction should not be used
+    --overwrite : bool
+        If previous output should be overwritten    
     --filter-include-indv : list or str
-        Individual to include. Note: This argument may be used multiple times
-        and cannont to be used alonside --model
+        Individual(s) to include. May be used multiple times. Not usable w/ --model
     --filter-exclude-indv : list or str
-        Individual to exclude. Note: This argument may be used multiple times
-        and cannont to be used alonside --model
+        Individual(s) to exclude. May be used multiple times. Not usable w/ --model
     --filter-include-indv-file : str
-        Individuals to include in file. Cannont to be used alonside --model
+        File of individuals to include. Not usable w/ --model
     --filter-exclude-indv-file : str
-        Individuals to exclude in file. Cannont to be used alonside --model
+        File of individuals to exclude.  Not usable w/ --model
     --filter-include-positions : str
-        Specifies a set of sites to include within a tsv file (chromosome and position)
+        File of positions to include (tsv: chromosome and position)
     --filter-exclude-positions : str
-        Specifies a set of sites to exclude within a tsv file (chromosome and position)
+        File of positions to exclude (tsv: chromosome and position)
     --filter-include-bed : str
-        Specifies a set of sites to include within a BED file
+        BED file of positions to include 
     --filter-exclude-bed : str
-        Specifies a set of sites to exclude within a BED file
-
-    Returns
-    -------
-    output : directory
-        Directory of split VCF files
-    log : file
-        Log file output
+        BED file of positions to exclude
 
     Raises
     ------
     IOError
-        Input VCF file does not exist
-    IOError
-        Model file does not exist
-    IOError
         Output file already exists and --overwrite is not specified
-
+    Exception
+        Incompatible arguments
     '''
 
     # Grab VCF arguments from command line
@@ -320,12 +406,13 @@ def run (passed_arguments = []):
         window_size = vcf_args.statistic_window_size
 
         # Check if the overlap correction has been specified
-        if vcf_args.window_correction:
+        if not vcf_args.no_window_correction:
+
             # Correct the window size
             window_size -= 1
 
             logging.info('Applied window correction. To disable the correction '
-                         "use '--window-correction False'")
+                         "use '--no-window-correction'")
 
         # Create the 'BIN_END' column
         split_samples['BIN_END'] = split_samples['BIN_START'] + window_size
@@ -361,7 +448,7 @@ def run (passed_arguments = []):
         vcftools_err = call_vcftools(vcfname_arg + sample_call_args, output_format = vcf_args.out_format, output_filename = vcftools_sample_filename)
 
         # Produce the log file (in append mode, will create a single log)
-        produce_vcftools_log(vcftools_err, vcf_args.log_prefix, append_mode = True)
+        produce_vcftools_log(vcftools_err, vcf_args.out_prefix + '.split', append_mode = True)
 
 
 if __name__ == "__main__":
