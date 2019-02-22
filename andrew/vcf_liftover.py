@@ -1,3 +1,59 @@
+'''
+    Liftover for VCF-formatted files
+
+    Automates the liftover function from picard for VCF-formatted files.
+    
+    ############################
+    Input Command-line Arguments
+    ############################
+    **--vcf** *<input_filename>*
+        Argument used to define the filename of the VCF file for liftover.
+    **--chain** *<chain_filename>*
+        Argument used to define the filename of the chain file required
+        for liftover.
+    **--ref** *<ref_filename>*
+        Argument used to define the filename of the reference FASTA.
+    **--ref-dict** *<dict_filename>*
+        Argument used to define the filename of the reference dictionary, 
+        if the naming scheme is non-standard.
+
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**.
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--out-format** *<vcf, vcf.gz, bcf>*
+        Argument used to define the desired output format. Formats include: uncompressed 
+        VCF (vcf); compressed VCF (vcf.gz) [default]; and BCF (bcf).
+    **--reject** *<reject_filename>*
+        Argument used to define the complete reject filename, overrides 
+        **--reject-prefix**. The reject file containsrecords that could not be lifted 
+        over.   
+    **--reject-prefix** *<reject_prefix>*
+        Argument used to define the reject prefix (i.e. filename without file extension)
+    **--reject-format** *<vcf, vcf.gz, bcf>*
+        Argument used to define the desired format of the reject output. Formats include: 
+        uncompressed VCF (vcf); compressed VCF (vcf.gz); and BCF (bcf). If no format is
+        given, the format defined in **--out-format** is used.
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+
+    ###############################
+    Liftover Command-line Arguments
+    ###############################
+    **--liftover-min-matchs** *<match_float>*
+        Argument used to define the minimum percentage required for liftover of a variant.
+    **--picard-max-records** *<record_int>*
+        Argument used to define the number of records to store in memory for picard.
+    **--keep-index**
+        Argument used to define if the output VCF index created by picard should be kept.
+    **--picard-path** *<path>*
+        Argument used to define the path to locate picard.jar.
+
+'''
+
 import os
 import sys
 import argparse
@@ -15,7 +71,22 @@ from picard import call_picard, get_ref_dictonary, check_ref_file_association, r
 from fasta import check_format
 
 def vcf_liftover_parser(passed_arguments):
-    '''VCF Argument Parser - Assigns arguments from command line'''
+    '''
+    VCF Liftover Argument Parser
+
+    Assign the parameters for VCF Liftover using argparse.
+
+    Parameters
+    ----------
+    passed_arguments : list, optional
+        Parameters passed by another function. sys.argv is used if
+        not given. 
+
+    Raises
+    ------
+    IOError
+        If the input, or other specified files do not exist
+    '''
 
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
@@ -33,31 +104,31 @@ def vcf_liftover_parser(passed_arguments):
     vcf_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments.
-    vcf_parser.add_argument('--vcf', help = "Input VCF filename (may be used multiple times)", type = str, required = True, action = parser_confirm_file())
-    vcf_parser.add_argument('--ref', help = 'Reference fasta of target file for liftover', type = str, required = True, action = parser_confirm_file())
-    vcf_parser.add_argument('--ref-dict', help = 'Reference fasta dictionary, if filename differs', type = str, action = parser_confirm_file())
-    vcf_parser.add_argument('--chain', help = 'Chain file for liftover', type = str, required = True, action = parser_confirm_file())
+    vcf_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
+    vcf_parser.add_argument('--ref', help = 'Defines the filename of the reference fasta (target assembly)', type = str, required = True, action = parser_confirm_file())
+    vcf_parser.add_argument('--ref-dict', help = 'Defines the filename of the reference fasta dictionary, if filename scheme differs', type = str, action = parser_confirm_file())
+    vcf_parser.add_argument('--chain', help = 'Defines the filename of the chain file for liftover', type = str, required = True, action = parser_confirm_file())
 
     # Output file arguments
+    vcf_parser.add_argument('--out', help = 'Defines the complete output filename, overrides --out-prefix', type = str)
+    vcf_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', default = 'out')
     out_format_list = ['vcf', 'vcf.gz', 'bcf']
     out_format_default = 'vcf.gz'
-    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Format of the output', type = str, choices = out_format_list, default = out_format_default)
-    vcf_parser.add_argument('--out', help = 'Output filename. If used, overrides --out-prefix', type = str)
-    vcf_parser.add_argument('--out-prefix', help = 'Defines the output prefix', default = 'out')
+    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Defines the desired output format', type = str, choices = out_format_list, default = out_format_default)
 
-    # Output file arguments
+    # Reject file arguments
+    vcf_parser.add_argument('--reject', help = 'Defines the complete reject filename, overrides --out-prefix', type = str)
+    vcf_parser.add_argument('--reject-prefix', help = 'Defines the reject prefix (i.e. filename without file extension)', default = 'reject')
     reject_format_list = ['vcf', 'vcf.gz', 'bcf']
-    vcf_parser.add_argument('--reject-format', metavar = metavar_list(reject_format_list), help = 'Format of the reject. Same as --out-format by default', type = str, choices = reject_format_list)
-    vcf_parser.add_argument('--reject', help = 'Reject filename. If used, overrides --reject-prefix', type = str)
-    vcf_parser.add_argument('--reject-prefix', help = 'Defines the reject prefix', default = 'reject')
-
+    vcf_parser.add_argument('--reject-format', metavar = metavar_list(reject_format_list), help = 'Defines the desired output format. If not defined, **--out-format** is used', type = str, choices = reject_format_list)
+    
     # Optional arguments
-    vcf_parser.add_argument('--liftover-min-match', help = 'Minimum percentage required for liftover of a variant', type = float) 
+    vcf_parser.add_argument('--liftover-min-match', help = 'Defines the minimum percentage required for liftover of a variant', type = float) 
 
     # General arguments
     vcf_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
-    vcf_parser.add_argument('--keep-index', help = "Keep the output VCF index created by picard", action = 'store_true')
-    vcf_parser.add_argument('--picard-max-records', help = 'Number of records to store in memory for picard', type = int)
+    vcf_parser.add_argument('--keep-index', help = "Defines if the output VCF index created by picard should be kept", action = 'store_true')
+    vcf_parser.add_argument('--picard-max-records', help = 'Defines the number of records to store in memory for picard', type = int)
     vcf_parser.add_argument('--picard-path', help = "Defines path to locate picard.jar", type = str, default = 'bin/')
 
     if passed_arguments:
@@ -96,35 +167,39 @@ def assign_ref_extension (filename):
     else:
         raise Exception('%s - Unknown file format' % filename)
 
-
 def run (passed_arguments = []):
     '''
     Liftover for VCF-formatted files
 
-    Automates the liftover function from picard for VCF-formatted files.
+    This function uses the argparse-based function :py:func:`vcf_liftover_parser`
+    to parse either sys.argv or passed_arguments to obtain the parameters below. 
+    The parameters are then translated to their PICARD equivalent. Once all the 
+    parameters are assigned, PICARD is called.
 
     Parameters
     ----------
     --vcf : str
-        Input VCF filename (from origin assembly)
+        Filename of the VCF
     --ref : str
         Target assembly reference fasta
     --ref-dict
         Dictionary file of reference fasta
     --chain : str
         Chain file from origin assembly to target assembly
-    --out-format : str
-        Format of the output file
-    --out-prefix : str
-        Output filename prefix
     --out : str
-        Output filename. Overrides --out-prefix
-    --reject-format : str
-        Format of the reject file, same as --out-format by default
-    --reject-prefix : str
-        Reject filename prefix
+        Complete output filename, overrides --out-prefix
+    --out-prefix : str
+        Output prefix
+    --out-format : str
+        Desired output format
     --reject : str
-        Reject filename. Overrides --reject-prefix
+        Complete reject filename. Overrides --reject-prefix
+    --reject-prefix : str
+        Reject prefix
+    --reject-format : str
+        Desired reject format, same as --out-format if not defined
+    -- liftover-min-match : float
+        Minimum percentage required for liftover of a variant
     --overwrite
         If previous output should be overwriten
     --keep-index
@@ -133,18 +208,9 @@ def run (passed_arguments = []):
         Number of records to store in memory for picard
     --picard-path : str
         Defines path to locate picard.jar
-        
-    Returns
-    -------
-    output : file
-        Statistic file output
-    log : file
-        Log file output
 
     Raises
     ------
-    IOError
-        Input VCF file does not exist
     IOError
         Output file already exists
     '''

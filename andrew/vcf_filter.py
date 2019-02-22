@@ -1,3 +1,134 @@
+'''
+    Filter VCF files using VCFTools.
+
+    Automates various filters to VCF files using VCFtools.
+	
+	############################
+    Input Command-line Arguments
+    ############################
+    **--vcf** *<input_filename>*
+        Argument used to define the filename of the VCF file to be filtered.
+    **--model-file** *<model_filename>*
+    	Argument used to define the model file. Please note that this argument cannot be 
+    	used with the individual-based filters.
+    **--model** *<model_str>*
+    	Argument used to define the model (i.e. the individual(s) to include). Please note
+    	that this argument cannot be used with the individual-based filters.
+	
+	#############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--out-format** *<vcf, vcf.gz, bcf, removed_sites, kept_sites, removed_bed, kept_bed>*
+        Argument used to define the desired output format. Formats include: uncompressed 
+        VCF (vcf); compressed VCF (vcf.gz) [default]; BCF (bcf); removed or kept variants
+        in sites format (removed_sites, kept_sites); or removed or kept variants in bed
+        format (removed_bed, kept_bed).
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+	
+	#############################
+    Filter Command-line Arguments
+    #############################
+    The filtering arguments below are roughly seperated into catagoires. Please not that
+    mulitple filters are seperated into two opposing function types **include** and 
+    **exclude**.
+	
+	**************************
+    Individual-Based Arguments
+    **************************
+    Please note that all individual-based arguments are not compatible with either the 
+    **--model** or **--model-file** command-line arguments.
+
+    **--filter-include-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to include. This argument may be used 
+        multiple times if desired.
+    **--filter-exclude-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to exclude. This argument may be used 
+        multiple times if desired.
+    **--filter-include-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to include.
+    **--filter-exclude-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to exclude.
+	
+	*******************************
+	Allele/Genotype-Based Arguments
+    *******************************
+    **--filter-min-alleles** *min_int*
+    	Argument used to include positions with a number of allele >= to the 
+    	given number.
+    **--filter-max-alleles** *max_int*
+        Argument used to include positions with a number of allele <= to the 
+        given number.
+    **--filter-maf-min** *maf_proportion*
+		Argument used to include sites with equal or greater MAF values.
+    **--filter-maf-max** *maf_proportion*
+    	Argument used to include sites with equal or lesser MAF values.
+    **--filter-mac-min** *mac_int*
+    	Argument used to include sites with equal or greater MAC values.
+    **--filter-mac-max** *mac_int*
+    	Argument used to include sites with equal or lesser MAC values.
+   	**--filter-include-indels**
+    	Argument used to include positions if they contain an insertion or a deletion. 
+    **--filter-exclude-indels**
+    	Argument used to exclude positions if they contain an insertion or a deletion. 
+ 	**--filter-include-snp** *<rs#>* *<rs#1, rs#2, etc.>*
+ 		Argument used to include SNP(s) with the matching ID. This argument may be used 
+        multiple times if desired.
+    **--filter-include-snp-file** *<snp_filename>*
+    	Argument used to define a file of SNP IDs to include.
+    **--filter-exclude-snp-file** *<snp_filename>*
+    	Argument used to define a file of SNP IDs to exclude.
+    **--filter-max-missing** *proportion_float*
+		Argument used to filter positions by their proportion of missing data, a value of 
+		0.0 will ignore missing data whereas a value of 1.0 will allow no missing data.
+	
+	************************
+	Position-Based Arguments
+    ************************
+    **--filter-include-chr** *<chr>* *<chr1, chr2, etc.>*
+        Argument used to define the chromosome(s) to include. This argument may be used 
+        multiple times if desired.
+    **--filter-exclude-chr** *<chr>* *<chr1, chr2, etc.>*
+        Argument used to define the chromosome(s) to exclude. This argument may be used 
+        multiple times if desired.
+    **--filter-from-bp** *<bp_int>*
+        Argument used to define the lower bound of positions to include. May only be used 
+        with a single chromosome.
+    **--filter-to-bp** *<bp_int>*
+        Argument used to define the upper bound of positions to include. May only be used 
+        with a single chromosome.
+    **--filter-distance** *<bp_int>*
+    	Argument used to define the distance that no two sites may be within
+    **--filter-include-positions** *<position_filename>*
+        Argument used to define a file of positions to include within a tsv file 
+        (chromosome and position).
+    **--filter-exclude-positions** *<position_filename>*
+        Argument used to define a file of positions to exclude within a tsv file 
+        (chromosome and position).
+    **--filter-include-bed** *<position_bed_filename>*
+        Argument used to define a BED file of positions to include.
+    **--filter-exclude-bed** *<position_bed_filename>*
+        Argument used to define a BED file of positions to exclude.
+	
+	********************
+    Flag-Based Arguments
+    ********************
+    **--filter-include-passed**
+        Argument used to include positions with the 'PASS' filter flag.
+    **--filter-include-filtered** *FILTER_FLAG*
+        Argument used to include positions with the specified filter flag.
+    **--filter-exclude-filtered** *FILTER_FLAG*
+        Argument used to exclude positions with the specified filter flag.
+    **--filter-include-info** *INFO_FLAG*
+        Argument used to include positions with the specified info flag.
+    **--filter-exclude-info** *INFO_FLAG*
+        Argument used to exclude positions with the specified info flag.
+'''
+
 import os
 import sys
 import subprocess
@@ -16,7 +147,22 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 from logging_module import initLogger, logArgs
 
 def vcf_filter_parser(passed_arguments):
-    '''VCF Argument Parser - Assigns arguments from command line'''
+    '''
+    VCF Filter Argument Parser
+
+    Assign the parameters for the VCF Filter using argparse.
+
+    Parameters
+    ----------
+	passed_arguments : list, optional
+		Parameters passed by another function. sys.argv is used if
+		not given. 
+
+	Raises
+    ------
+    IOError
+        If the input, or other specified files do not exist
+    '''
 
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
@@ -44,74 +190,74 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments.
-    vcf_parser.add_argument('--vcf', help = "Input VCF filename", type = str, required = True, action = parser_confirm_file())
+    vcf_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
 
     # Model file arguments.
     vcf_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
-    vcf_parser.add_argument('--model', help = 'Defines the model to analyze', type = str)
+    vcf_parser.add_argument('--model', help = 'Defines the model and the individual(s) to include', type = str)
 
     # Other file arguments. Expand as needed
-    vcf_parser.add_argument('--out', help = 'Specifies the complete output filename', type = str)
-    vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out')
+    vcf_parser.add_argument('--out', help = 'Defines the complete output filename, overrides --out-prefix', type = str)
+    vcf_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', type = str,  default = 'out')
     #vcf_parser.add_argument('--log', help = "Specifies if the vcftools log should be saved", action = 'store_false')
 
     out_format_list = ['vcf', 'vcf.gz', 'bcf', 'removed_sites', 'kept_sites', 'removed_bed', 'kept_bed']
-    out_format_default = 'removed_sites'
+    out_format_default = 'vcf.gz'
 
-    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Specifies the output format.', type = str, choices = out_format_list, default = out_format_default)
+    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Defines the desired output format', type = str, choices = out_format_list, default = out_format_default)
 
     # General arguments.
-    vcf_parser.add_argument('--overwrite', help = "overwrite previous output files", action = 'store_true')
+    vcf_parser.add_argument('--overwrite', help = "Overwrite previous output", action = 'store_true')
 
     ### Filters
 
     # Non-model file arguments
-    vcf_parser.add_argument('--filter-include-indv', help = 'Individual to include. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-indv', help = 'Individual to exclude. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-include-indv-file', help = 'Individuals to include in file. Cannont to be used alonside --model', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-indv-file', help = 'Individuals to exclude in file. Cannont to be used alonside --model', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-indv', help = 'Defines the individual(s) to include. This argument may be used multiple times if desired', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-indv', help = 'Defines the individual(s) to exclude. This argument may be used multiple times if desired', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-include-indv-file', help = 'Defines a file of individuals to include', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-indv-file', help = 'Defines a file of individuals to exclude', action = parser_confirm_file())
 
     # Allele count filters
-    vcf_parser.add_argument('--filter-min-alleles', help = 'Only sites with a number of allele >= to the number given should be included', type = int)
-    vcf_parser.add_argument('--filter-max-alleles', help = 'Only sites with a number of allele <= to the number given should be included', type = int)
+    vcf_parser.add_argument('--filter-min-alleles', help = 'Include positions with a number of allele >= to the given number', type = int)
+    vcf_parser.add_argument('--filter-max-alleles', help = 'Include positions with a number of allele <= to the given number', type = int)
 
     # Missing data filter
-    vcf_parser.add_argument('--filter-max-missing', help = 'Exclude sites by the proportion of missing data (0.0: include all, 1.0: no missing data)', type = float)
+    vcf_parser.add_argument('--filter-max-missing', help = 'Filter positions by their proportion of missing data (0.0: include all, 1.0: no missing data)', type = float)
 
     # Indel filters
     indel_filters = vcf_parser.add_mutually_exclusive_group()
-    indel_filters.add_argument('--filter-include-only-indels', help = 'Include only sites that contain an indel', action = 'store_true')
-    indel_filters.add_argument('--filter-exclude-indels', help = 'Exclude sites that contain an indel', action = 'store_true')
+    indel_filters.add_argument('--filter-include-indels', help = 'Include positions if they contain an insertion or a deletion', action = 'store_true')
+    indel_filters.add_argument('--filter-exclude-indels', help = 'Exclude positions if they contain an insertion or a deletion', action = 'store_true')
 
     # Chromosome filters
-    vcf_parser.add_argument('--filter-include-chr', help = 'Chromosome to include. Note: This argument may be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-chr', help = 'Chromosome to exclude. Note: This argument may be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-include-chr', help = 'The chromosome(s) to include. This argument may be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-chr', help = 'The chromosome(s) to exclude. This argument may be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
 
     # Basic position filters
-    vcf_parser.add_argument('--filter-from-bp', help = 'Lower bound of sites to include (Only usable with a single chromosome)', type = int)
-    vcf_parser.add_argument('--filter-to-bp', help = 'Upper bound of sites to include (Only usable with a single chromosome)', type = int)
+    vcf_parser.add_argument('--filter-from-bp', help = 'Defines the lower bound of positions to include. May only be used with a single chromosome', type = int)
+    vcf_parser.add_argument('--filter-to-bp', help = 'Defines the upper bound of positions to include. May only be used with a single chromosome', type = int)
 
     # Position-based position filters
-    vcf_parser.add_argument('--filter-include-positions', help = 'Sites to include within a chr/pos tab-sperated file', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-positions', help = 'Sites to exclude within a chr/pos tab-sperated file', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-positions', help = 'Defines a file of positions to include within a tsv file (chromosome and position)', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-positions', help = 'Defines a file of positions to exclude within a tsv file (chromosome and position)', action = parser_confirm_file())
 
     # BED-based position filters
-    vcf_parser.add_argument('--filter-include-bed', help = 'Set of sites to include within a BED file', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-bed', help = 'Set of sites to exclude within a BED file', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-bed', help = 'Defines a BED file of positions to include', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-bed', help = 'Defines a BED file of positions to exclude', action = parser_confirm_file())
 
     # Filter-flag filters
-    vcf_parser.add_argument('--filter-include-passed', help = "Include only sites with the filter flag 'PASS'", action = 'store_true')
-    vcf_parser.add_argument('--filter-include-flag', help = 'Include all sites with the given filter flag', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-flag', help = 'Exclude all sites with the given filter flag', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-include-passed', help = "Include positions with the 'PASS' filter flag", action = 'store_true')
+    vcf_parser.add_argument('--filter-include-flag', help = 'Include positions with the specified filter flag', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-flag', help = 'Exclude positions with the specified filter flag', nargs = '+', type = str, action = parser_add_to_list())
 
     # Info-flag filters
-    vcf_parser.add_argument('--filter-include-info', help = 'Include all sites with the given info flag', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-info', help = 'Exclude all sites with the given info flag', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-include-info', help = 'Include positions with the specified info flag', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-info', help = 'Exclude positions with the specified info flag', nargs = '+', type = str, action = parser_add_to_list())
 
     # SNP filters
-    vcf_parser.add_argument('--filter-include-snp', help = 'Include SNP(s) with matching ID. Note: This argument may be used multiple times.', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-include-snps', help = 'Include all SNPs with matching ID within a file.', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-snps', help = 'Include all SNPs with matching ID within a file.', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-snp', help = 'Include SNP(s) with the matching ID. This argument may be used multiple times.', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-include-snp-file', help = 'Defines a file of SNP IDs to include', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-snp-file', help = 'Defines a file of SNP IDs to exclude', action = parser_confirm_file())
 
     # MAF Filter
     vcf_parser.add_argument('--filter-maf-min', help = 'Include sites with equal or greater MAF values', type = float)
@@ -122,7 +268,7 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument('--filter-mac-max', help = 'Include sites with equal or lesser MAC values', type = int)
 
     # Additional Filters
-    vcf_parser.add_argument('--filter-distance', help = 'Specifies a distance that no two sites may be within', type = int)
+    vcf_parser.add_argument('--filter-distance', help = 'Distance that no two sites may be within', type = int)
 
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)
@@ -131,73 +277,92 @@ def vcf_filter_parser(passed_arguments):
 
 def run (passed_arguments = []):
     '''
-    Filter VCF files using VCFTools.
+    Filter function for the PPP
 
-    Automates various filters to VCF files using VCFtools.
+    This function uses the argparse-based function :py:func:`vcf_filter_parser`
+    to parse either sys.argv or passed_arguments to obtain the parameters below. 
+    The parameters are then translated to their VCFtools equivalent. Once all the
+    VCFtools-based parameters are assigned, VCFtools is called.
 
     Parameters
     ----------
     --vcf : str
-        Specifies the input VCF filename
+        Input VCF filename
     --out : str
-        Specifies the output filename
+        Complete output filename, overrides --out-prefix
+    --out-prefix : str
+        Output filename prefix
     --out-format : str
-        Specifies the output format {vcf, bcf, removed_sites, kept_sites}
-        (Default: removed_sites)
+        Output format
+	--model-file : str
+		Model filename
+	--model : str
+		Model to use
     --filter-include-indv : list or str
-        Individual to include. Note: This argument may be used multiple times
-        and cannont to be used alonside --model
+        Individual(s) to include. May be used multiple times. Not usable w/ --model
     --filter-exclude-indv : list or str
-        Individual to exclude. Note: This argument may be used multiple times
-        and cannont to be used alonside --model
+        Individual(s) to exclude. May be used multiple times. Not usable w/ --model
     --filter-include-indv-file : str
-        Individuals to include in file. Cannont to be used alonside --model
+        File of individuals to include. Not usable w/ --model
     --filter-exclude-indv-file : str
-        Individuals to exclude in file. Cannont to be used alonside --model
-    --filter-include-chr : list or str
-        Specifies the chromosome(s) to include
-    --filter-exclude-chr : list or str
-        Specifies the chromosome(s) to exclude
+        File of individuals to exclude.  Not usable w/ --model
+    --filter-min-alleles : int
+        Include positions with a number of allele >= to the given number
+    --filter-max-alleles : int
+        Include positions with a number of allele <= to the given number
+    --filter-maf-min
+		Include sites with equal or greater MAF values
+    --filter-maf-max
+    	Include sites with equal or lesser MAF values
+    --filter-mac-min
+    	Include sites with equal or greater MAC values
+    --filter-mac-max
+    	Include sites with equal or lesser MAC values
+   	--filter-include-indels
+    	Include positions if they contain an insertion or a deletion
+    --filter-exclude-indels
+    	Exclude positions if they contain an insertion or a deletion
+ 	--filter-include-snp
+ 		Include SNP(s) with the matching ID. May be used multiple times
+    --filter-include-snp-file
+    	File of SNP IDs to include
+    --filter-exclude-snp-file
+    	File of SNP IDs to exclude
+    --filter-max-missing
+		Filter positions by their proportion of missing data. (0.0: include all, 1.0: no missing data)
+    --filter-include-chr
+        Chromosome(s) to include. May be used multiple times.
+    --filter-exclude-chr
+        Chromosome(s) to exclude. May be used multiple times.
     --filter-from-bp : int
-        Specifies the lower bound of sites to include. May only be used with a single chromosome
+        Lower bound of positions to include. Only usable with a single chromosome
     --filter-to-bp : int
-        Specifies the upper bound of sites to include. May only be used with a single chromosome
+        Upper bound of positions to include. Only usable with a single chromosome
     --filter-include-positions : str
-        Specifies a set of sites to include within a tsv file (chromosome and position)
+        File of positions to include (tsv: chromosome and position)
     --filter-exclude-positions : str
-        Specifies a set of sites to exclude within a tsv file (chromosome and position)
+        File of positions to exclude (tsv: chromosome and position)
     --filter-include-bed : str
-        Specifies a set of sites to include within a BED file
+        BED file of positions to include 
     --filter-exclude-bed : str
-        Specifies a set of sites to exclude within a BED file
+        BED file of positions to exclude
     --filter-include-passed : bool
-        Specifies that only sites with the filter flag 'PASS' should be included (Default: False)
+        Include positions with the 'PASS' filter flag
     --filter-include-filtered : list or str
-        Specifies that all sites with the given filter flag should be included
+        Include positions with the specified filter flag
     --filter-exclude-filtered : list or str
-        Specifies that all sites with the given filter flag should be excluded
+        Exclude positions with the specified filter flag
     --filter-include-info : list or str
-        Specifies that all sites with the given info flag should be included
+        Include positions with the specified info flag
     --filter-exclude-info : list or str
-        Specifies that all sites with the given info flag should be excluded
-    --filter-min-alleles : int
-        Specifies that only sites with a number of allele >= to the number given should be included (Default: 2)
-    --filter-min-alleles : int
-        Specifies that only sites with a number of allele <= to the number given should be included (Default: 2)
-
-    Returns
-    -------
-    output : file
-        Filtered file output
-    log : file
-        Log file output
+        Exclude positions with the specified info flag
 
     Raises
     ------
     IOError
-        Input VCF file does not exist
-    IOError
         Output file already exists and --overwrite is not specified
+    Exception
+        Incompatible arguments
 
     '''
 
@@ -308,8 +473,8 @@ def run (passed_arguments = []):
                 vcftools_call_args.extend(['--remove-indv', indv_to_exclude])
 
     # Indel-based filters
-    if vcf_args.filter_include_only_indels or vcf_args.filter_exclude_indels:
-        if vcf_args.filter_include_only_indels:
+    if vcf_args.filter_include_indels or vcf_args.filter_exclude_indels:
+        if vcf_args.filter_include_indels:
             vcftools_call_args.append('--keep-only-indels')
         if vcf_args.filter_exclude_indels:
             vcftools_call_args.append('--remove-indels')
@@ -376,14 +541,14 @@ def run (passed_arguments = []):
         vcftools_call_args.extend(['--max-missing', vcf_args.filter_max_missing])
 
     # SNP-based filters
-    if vcf_args.filter_include_snp or vcf_args.filter_include_snps or vcf_args.filter_exclude_snps:
+    if vcf_args.filter_include_snp or vcf_args.filter_include_snp_file or vcf_args.filter_exclude_snp_file:
         if vcf_args.filter_include_snp:
             for snp_to_include in vcf_args.filter_include_snp:
                 vcftools_call_args.extend(['--snp', snp_to_include])
-        if vcf_args.filter_include_snps:
-            vcftools_call_args.extend(['--snps', vcf_args.filter_include_snps])
-        if vcf_args.filter_exclude_snps:
-            vcftools_call_args.extend(['--exclude', vcf_args.filter_exclude_snps])
+        if vcf_args.filter_include_snp_file:
+            vcftools_call_args.extend(['--snps', vcf_args.filter_include_snp_file])
+        if vcf_args.filter_exclude_snp_file:
+            vcftools_call_args.extend(['--exclude', vcf_args.filter_exclude_snp_file])
 
     # MAF-based filters
     if vcf_args.filter_maf_min or vcf_args.filter_maf_max:

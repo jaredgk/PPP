@@ -1,3 +1,62 @@
+'''
+    Utilites for VCF-formatted files
+
+    Automates various utilites for VCF-formatted files. This currently includes:
+    obtain list of chromosomes and obtain list of samples.
+    
+    ############################
+    Input Command-line Arguments
+    ############################
+    **--vcf** *<vcf_filename>*
+        Argument used to define the filename of the VCF file.
+    **--vcf-fid** *<fid_str>*
+        Argument used to define the family ID for all VCF samples.
+    **--ped-prefix** *<ped_prefix>*
+        Argument used to define the filename prefix of both PED and MAP files.
+    **--ped** *<ped_filename>*
+        Argument used to define the filename of the PED file. Called alongside
+        **--map**.
+    **--map** *<map_filename>*
+        Argument used to define the filename of the MAP file. Called alongside
+        **--ped**.
+    **--binary-ped-prefix** *<binary_ped_prefix>*
+        Argument used to define the filename prefix of the Binary-PED, FAM,
+        and BIM files.
+    **--binary-ped** *<ped_filename>*
+        Argument used to define the filename of the Binary-PED (i.e. BED) file. 
+        Called alongside **--fam** and **--bim**.
+    **--fam** *<fam_filename>*
+        Argument used to define the filename of the FAM file. Called alongside
+        **--binary-ped** and **--bim**.
+    **--bim** *<bim_filename>*
+        Argument used to define the filename of the BIM file. Called alongside
+        **--binary-ped** and **--fam**.
+   
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**.
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension).
+    **--out-format** *<vcf, vcf.gz, bcf, ped, binary-ped>*
+        Argument used to define the desired output format. Formats include: uncompressed 
+        VCF (vcf); compressed VCF (vcf.gz) [default]; and BCF (bcf). Only usable with the 
+        merge and concatenate utilites.
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+
+    ############################
+    Other Command-line Arguments
+    ############################
+    **--delete-original**
+        Argument used to define that the original file should be deleted once converted.
+    **--threads** *<thread_int>*
+        Argument used to define the number of threads. This argument is currently only 
+        supported by conversions to/from PED and Binary-PED.
+    
+'''
+
 import os
 import sys
 import subprocess
@@ -15,8 +74,22 @@ from vcf_reader_func import checkFormat
 from logging_module import initLogger, logArgs
 
 def convert_argument_parser(passed_arguments):
-    '''Convert Argument Parser - Assigns arguments from command line.
-    Depending on the argument in question, a default value may be specified'''
+    '''
+    Convert Argument Parser
+
+    Assign the parameters for the convert function using argparse.
+
+    Parameters
+    ----------
+    passed_arguments : list, optional
+        Parameters passed by another function. sys.argv is used if
+        not given. 
+
+    Raises
+    ------
+    IOError
+        If the input, or other specified files do not exist
+    '''
 
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
@@ -31,43 +104,42 @@ def convert_argument_parser(passed_arguments):
         '''Create a formmated metavar list for the help output'''
         return '{' + ', '.join(var_list) + '}'
 
-    convert_parser = argparse.ArgumentParser()
-
     # Input VCF argument
-    convert_parser.add_argument("--vcf", help = "Input VCF filename", type = str, action = parser_confirm_file())
+    convert_parser.add_argument("--vcf", help = "Defines the filename of the VCF file", type = str, action = parser_confirm_file())
 
     # Sets a family ID for the samples in the VCF
-    convert_parser.add_argument("--vcf-fid", dest = 'vcf_fid', help = "Specifies the family ID for all samples", type = str)
+    convert_parser.add_argument("--vcf-fid", dest = 'vcf_fid', help = "Defines the family ID for all VCF samples", type = str)
 
     # Input FASTA argument
-    convert_parser.add_argument("--fasta", help = "Input FASTA filename", type = str, action = parser_confirm_file())
+    #convert_parser.add_argument("--fasta", help = "Input FASTA filename", type = str, action = parser_confirm_file())
 
     # Input IM argument
-    convert_parser.add_argument("--im", help = "Input IM filename", type = str, action = parser_confirm_file())
+    #convert_parser.add_argument("--im", help = "Input IM filename", type = str, action = parser_confirm_file())
 
     # Input PED arguments
-    convert_parser.add_argument("--ped", dest = 'ped_filename', help = "Input PED filename", type = str, action = parser_confirm_file())
-    convert_parser.add_argument("--map", dest = 'map_filename', help = "Input MAP filename. Composite file of --ped", type = str, action = parser_confirm_file())
+    convert_parser.add_argument("--ped", dest = 'ped_filename', help = "Defines the filename of the PED file. Called alongside --map", type = str, action = parser_confirm_file())
+    convert_parser.add_argument("--map", dest = 'map_filename', help = "Defines the filename of the MAP file. Called alongside --ped", type = str, action = parser_confirm_file())
 
     # Input BED arguments
-    convert_parser.add_argument("--binary-ped", dest = 'bed_filename', help = "Input Binary-PED (i.e. BED) filename", type = str, action = parser_confirm_file())
-    convert_parser.add_argument("--fam", dest = 'fam_filename', help = "Input FAM filename. Composite file of --binary-ped", type = str, action = parser_confirm_file())
-    convert_parser.add_argument("--bim", dest = 'bim_filename', help = "Input BIM filename. Composite file of --binary-ped", type = str, action = parser_confirm_file())
+    convert_parser.add_argument("--binary-ped", dest = 'bed_filename', help = "Defines the filename of the Binary-PED (i.e. BED) file. Called alongside --fam and --bim", type = str, action = parser_confirm_file())
+    convert_parser.add_argument("--fam", dest = 'fam_filename', help = "Defines the filename of the FAM file. Called alongside --binary-ped and --bim", type = str, action = parser_confirm_file())
+    convert_parser.add_argument("--bim", dest = 'bim_filename', help = "Defines the filename of the BIM file. Called alongside --binary-ped and --fam", type = str, action = parser_confirm_file())
 
     # Input PED/BED prefix arguments
     convert_prefix = convert_parser.add_mutually_exclusive_group()
-    convert_prefix.add_argument("--ped-prefix", help = "Input PED filename prefix", type = str)
-    convert_prefix.add_argument("--binary-ped-prefix", dest = 'bed_prefix', help = "Input Binary-PED (i.e. BED) filename prefix", type = str)
+    convert_prefix.add_argument("--ped-prefix", help = "Defines the filename prefix of both PED and MAP files", type = str)
+    convert_prefix.add_argument("--binary-ped-prefix", dest = 'bed_prefix', help = "Defines the filename prefix of the Binary-PED, FAM, and BIM files", type = str)
 
     # Output arguments.
-    output_formats = ['vcf', 'vcf.gz', 'bcf', 'fasta', 'im', 'ped', 'binary-ped']
-    convert_parser.add_argument('--out-format', metavar = metavar_list(output_formats), help = 'Specifies the output format', type = str, choices = output_formats, required = True)
-    convert_parser.add_argument('--out', help = 'Defines the output filename. Cannot be used with composite formats')
-    convert_parser.add_argument('--out-prefix', help = 'Defines the output filename prefix', default = 'out')
+    #output_formats = ['vcf', 'vcf.gz', 'bcf', 'fasta', 'im', 'ped', 'binary-ped']
+    output_formats = ['vcf', 'vcf.gz', 'bcf', 'ped', 'binary-ped']
+    convert_parser.add_argument('--out-format', metavar = metavar_list(output_formats), help = 'Defines the desired output format', type = str, choices = output_formats, required = True)
+    convert_parser.add_argument('--out', help = 'Defines the complete output filename, overrides --out-prefix')
+    convert_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', default = 'out')
 
     # Other basic arguments. Expand as needed
     convert_parser.add_argument('--delete-original', help = 'Defines that the original file should be deleted once converted', action='store_false')
-    convert_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
+    convert_parser.add_argument('--overwrite', help = "Defines if previous output should be overwritten", action = 'store_true')
     convert_parser.add_argument('--threads', help = "Set the number of threads. Only supported with ped", type = int, default = 1)
 
     if passed_arguments:
@@ -121,45 +193,42 @@ def check_conversion_support (out_format, supported_formats):
 
 def run (passed_arguments = []):
     '''
-        File conversion suite
+    File conversion suite
 
-        Allows for various file converions, using the most efficient methods.
+    This function uses the argparse-based function :py:func:`convert_argument_parser`
+    to parse either sys.argv or passed_arguments to obtain the parameters below. 
+    The parameters are then translated to their respective equivalent. Once all the 
+    parameters are assigned, the conversion function of choice is called.
 
-        Parameters
-        ----------
-        --vcf : str
-            Specifies the input VCF filename
-        --ped : str
-            Specifies the input PED filename
-        --map : str
-            Specifies the input MAP filename. Called alongside --ped
-        --bed : str
-            Specifies the input BED filename
-        --map : str
-            Specifies the input FAM filename. Called alongside --bed
-        --bim : str
-            Specifies the input BIM filename. Called alongside --bed
-        --ped-prefix : str
-            Specifies the input PED filename prefix
-        --bed-prefix : str
-            Specifies the input BED filename prefix
-        --out-prefix : str
-            Specifies the output filename prefix
-        --out-format : str
-            Specifies the output format {vcf, vcf.gz, bcf, ped, binary-ped}
+    Parameters
+    ----------
+    --vcf : str
+        Filename of the VCF
+    --ped : str
+        Filename of the PED
+    --map : str
+        Filename of the MAP
+    --bed : str
+        Filename of the Binary-PED
+    --map : str
+        Filename of the FAM
+    --bim : str
+        Filename of the BIM
+    --ped-prefix : str
+        PED file prefix
+    --binary-ped-prefix : str
+        Binary-PED file prefix
+    --out-prefix : str
+        Output filename prefix
+    --out-format : str
+        Output format
 
-        Returns
-        -------
-        output : file
-            Statistic file output
-        log : file
-            Log file output
-
-        Raises
-        ------
-        IOError
-            Input file does not exist
-
+    Raises
+    ------
+    Exception
+        Impossible conversion given
+    Exception
+        Conversion to same format given
     '''
 
     # Grab plink arguments from command line
