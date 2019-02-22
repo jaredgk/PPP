@@ -6,8 +6,9 @@ Required input files:
 
 import sys
 import os
-import graph_plotter
+# import graph_plotter
 import admixture
+import subprocess
 
 #Insert ../jared into python path's first position so imports start from there
 sys.path.insert(0,os.path.abspath(os.path.join(os.pardir,'pppipe')))
@@ -46,6 +47,8 @@ stat_file_pref = work_dir+'great_ape_genome/fst.calc'
 
 vcf_filter.run(['--vcf', main_vcf_name, '--filter-max-missing', '1.0', '--filter-include-indv-file', data_dir+'PaniscusTroglodytes.txt', '--filter-min-alleles', '2', '--filter-max-alleles', '2', '--out-format', 'vcf.gz', '--out-prefix', filtered_vcf_pref, '--filter-exclude-chr', 'chrX', 'chrY', '--overwrite'])
 
+print('--vcf', main_vcf_name, '--filter-max-missing', '1.0', '--filter-include-indv-file', data_dir+'PaniscusTroglodytes.txt', '--filter-min-alleles', '2', '--filter-max-alleles', '2', '--out-format', 'vcf.gz', '--out-prefix', filtered_vcf_pref, '--filter-exclude-chr', 'chrX', 'chrY', '--overwrite')
+
 vcf_calc.run(['--vcf', filtered_vcf_pref + '.recode.vcf.gz', '--out-prefix', stat_file_pref, '--calc-statistic', 'windowed-weir-fst', '--model', '2Pop', '--statistic-window-size', '10000', '--statistic-window-step', '20000', '--model-file', data_dir + 'input.model', '--overwrite'])
 
 vcf_sampler.run(['--vcf', filtered_vcf_pref + '.recode.vcf.gz', '--statistic-file', stat_file_pref + '.windowed.weir.fst', '--out-format', 'vcf.gz', '--calc-statistic', 'windowed-weir-fst', '--sampling-scheme', 'random', '--uniform-bins', '5', '--out-dir', work_dir + 'great_ape_genome/Sample_Files', '--overwrite'])
@@ -72,13 +75,13 @@ for i in range(200):
 
 phased_filenames = ' '.join([str(x) for x in phased_files])
 
-subprocess.Popen('vcf-merge ' + phased_filenames + ' | bgzip -c > ' + work_dir + 'great_ape_genome/Phased/phased_merged.vcf.gz', shell=True, stdout=subprocess.PIPE)
+subprocess.Popen('vcf-concat ' + phased_filenames + ' | bgzip -c > ' + work_dir + 'great_ape_genome/Phased/phased_merged.vcf.gz', shell=True, stdout=subprocess.PIPE)
 
 convert.run(['--vcf', work_dir + 'great_ape_genome/Phased/phased_merged.vcf.gz', '--out-format', 'binary-ped', '--out-prefix', work_dir+'great_ape_genome/great_ape'])
 
-admixture.run(['--file', work_dir+'great_ape_genome/great_ape.bed', '--pop', '17', ])
+admixture.run(['--file', work_dir+'great_ape_genome/great_ape.bed', '--pop', '2', ])
 
-graph_plotter.bar_plot('great_ape.17.Q')
+graph_plotter.bar_plot('great_ape.2.Q')
 
 ima_filenames = ' '.join([str(y) for y in valid_files])
 
@@ -86,9 +89,9 @@ ima_args = ['--vcfs']
 ima_args.extend(valid_files)
 ima_args.extend(['--pop', data_dir + 'input.model', '--out', work_dir + 'ima_all_loci.ima.u'])
 
-# print(ima_args)
+print(ima_args)
 
-# vcf_to_ima.vcf_to_ima(ima_args)
+vcf_to_ima.vcf_to_ima(ima_args)
 
-# graph_plotter.do_plots(work_dir + 'ima_all_loci.ima.u')
+graph_plotter.do_plots(work_dir + 'ima_all_loci.ima.u')
 
