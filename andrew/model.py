@@ -401,6 +401,20 @@ def read_model_file (filename):
     # Return the models
     return models_to_return
 
+def read_single_model(filename,popname=None):
+    #Returns single model from file, assumes either only one
+    #in file or popname is provided
+    popmodels = read_model_file(filename)
+    if popname is None:
+        if len(popmodels) > 1:
+            raise Exception("Model file %s has %d models, must specify which to use" % (filename,len(popmodels)))
+        pp = list(popmodels.keys())
+        return popmodels[pp[0]]
+    else:
+        if popname not in popmodels.keys():
+            raise Exception("Model %s not found in model file %s" % (popname,filename))
+        return popmodels[popname]
+
 def write_model_file (model_file, filename, overwrite = False):
 
     # Check if the file is to be overwritten
