@@ -6,7 +6,7 @@ import subprocess
 
 from logging_module import initLogger, logArgs
 
-def admix_filter_parser(passed_arguments):
+def admix_parser(passed_arguments):
     '''admix Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -40,12 +40,12 @@ def admix_filter_parser(passed_arguments):
 
 def run(passed_arguments = []):
     # Grab admixture arguments from command line
-    admix_args = admix_filter_parser(passed_arguments)
+    admix_args = admix_parser(passed_arguments)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(admix_args, func_name='admixture')
 
-    # Assign location of beagle jar file
+    # Assign location of admixture file
     admixture_exec = os.path.join(os.getcwd(), '', 'admixture')
 
     # Check that beagle.jar exists
