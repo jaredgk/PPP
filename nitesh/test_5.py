@@ -8,7 +8,7 @@ TIMEOUT = 60 * 15  # 15 minute timeout holder
 
 PERCENT = 2  # Random Run 2 % test cases from all combinations
 
-# VCF split testing script
+# VCF phase testing script
 
 inputFile = [['--vcf', 'merged_chr1_10000.vcf.gz']]
 outPrefix = [['--out-prefix', 'merge_chr1_10000']]
@@ -48,10 +48,10 @@ filterArgs1 = list(itertools.product(inputFile, model, outPrefix, splitFile, spl
 all_combinations = list_of_lists(filterArgs0) + list_of_lists(filterArgs1)
 
 
-@pytest.mark.parametrize('split_args', all_combinations, ids=id_func(all_combinations))
+@pytest.mark.parametrize('phase_args', all_combinations, ids=id_func(all_combinations))
 @pytest.mark.timeout(TIMEOUT)      # 15 minutes test case timeout
 def test_(split_args):
-    p = Popen(['python ' + os.getcwd() + '/vcf_split.py ' + ' '.join(flatten(split_args))], shell=True, stdin=PIPE,
+    p = Popen(['python ' + os.getcwd() + '/vcf_phase.py ' + ' '.join(flatten(split_args))], shell=True, stdin=PIPE,
               stdout=PIPE, stderr=STDOUT, close_fds=True)
 
     q = psutil.Process(p.pid)

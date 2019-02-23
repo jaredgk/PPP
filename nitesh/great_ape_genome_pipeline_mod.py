@@ -47,8 +47,6 @@ stat_file_pref = work_dir+'great_ape_genome/fst.calc'
 
 vcf_filter.run(['--vcf', main_vcf_name, '--filter-max-missing', '1.0', '--filter-include-indv-file', data_dir+'PaniscusTroglodytes.txt', '--filter-min-alleles', '2', '--filter-max-alleles', '2', '--out-format', 'vcf.gz', '--out-prefix', filtered_vcf_pref, '--filter-exclude-chr', 'chrX', 'chrY', '--overwrite'])
 
-print('--vcf', main_vcf_name, '--filter-max-missing', '1.0', '--filter-include-indv-file', data_dir+'PaniscusTroglodytes.txt', '--filter-min-alleles', '2', '--filter-max-alleles', '2', '--out-format', 'vcf.gz', '--out-prefix', filtered_vcf_pref, '--filter-exclude-chr', 'chrX', 'chrY', '--overwrite')
-
 vcf_calc.run(['--vcf', filtered_vcf_pref + '.recode.vcf.gz', '--out-prefix', stat_file_pref, '--calc-statistic', 'windowed-weir-fst', '--model', '2Pop', '--statistic-window-size', '10000', '--statistic-window-step', '20000', '--model-file', data_dir + 'input.model', '--overwrite'])
 
 vcf_sampler.run(['--vcf', filtered_vcf_pref + '.recode.vcf.gz', '--statistic-file', stat_file_pref + '.windowed.weir.fst', '--out-format', 'vcf.gz', '--calc-statistic', 'windowed-weir-fst', '--sampling-scheme', 'random', '--uniform-bins', '5', '--out-dir', work_dir + 'great_ape_genome/Sample_Files', '--overwrite'])
@@ -88,8 +86,6 @@ ima_filenames = ' '.join([str(y) for y in valid_files])
 ima_args = ['--vcfs']
 ima_args.extend(valid_files)
 ima_args.extend(['--pop', data_dir + 'input.model', '--out', work_dir + 'ima_all_loci.ima.u'])
-
-print(ima_args)
 
 vcf_to_ima.vcf_to_ima(ima_args)
 
