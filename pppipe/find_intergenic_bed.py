@@ -14,14 +14,14 @@ def createParser():
                 "to pad intervals by a fixed amount"))
     parser.add_argument('--bed', dest="region_name",
                         help="Name of gene region file")
+    parser.add_argument("--bed-column-index", dest="colstr",
+                        help=("Comma-separated list of length 3 with 0-based"
+                        " indexes of start, end, and chromosome data in input"
+                        " BED file. Default for normal BED is 1,2,0"))
     parser.add_argument('--zero-ho', dest="zeroho", action="store_true",
                         help="Region list is 1 indexed, not 0")
     parser.add_argument('--zero-closed', dest="zeroclosed", action="store_true",
-                        help="If set, use closed coordinates instead of half-open")
-    parser.add_argument('--regcol', dest='colstr', help= (
-                        "Comma-separated list of columns for gene region "
-                        " data, format is start/end if no chromosome "
-                        " data, start/end/chrom if so"))
+                        help="Use zero-based, closed coordinates")
     parser.add_argument('--pad', dest="pad_count", default=0,
                         help="Extend input regions by provided value")
     cg = parser.add_mutually_exclusive_group()
@@ -34,6 +34,46 @@ def createParser():
 
 
 def get_intergenic(sysargs):
+    """
+    Creates a BED file with regions that are not covered in the input BED.
+
+    This function is similar to 'bedtools compliment', except it doesn't 
+    require a chromosome end position file (which results in the last region 
+    of a chromosome being thrown out). A flanking distance from the ends of 
+    input regions can be set with --pad to truncate regions (for example, if 
+    trying to find regions that are outside a 5Kb window of a gene).
+    Additional options are included for dealing with zero-based, half-open
+    based BED files, and for adding/removing 'chr' from chromosome names. 
+    By default list will be sorted and overlapping regions will be merged.
+
+    Parameters
+    ----------
+    --bed : str (required)
+        Name of input BED file
+    --bed-column-index : ints (3)
+        Comma-separated list of length 3 with 0-based indexes of start, end,
+        and chromosome data in input BED file. Default for normal BED is
+        "1,2,0".
+    --zero-ho : bool
+        If set, treats regions in BED file as 0-based, (h)alf (o)pen 
+        coordinates rather than 1-based, closed
+    --pad : int
+        Distance to pad input windows. If padding between two 
+        consecutive regions cross, will not output region for area.
+    --out : str
+        Output filename
+
+    Other Parameters
+    ----------------
+    --addchr : bool
+        If set, will add 'chr' to all chromosome names
+    --removechr : bool
+        If set, will remove 'chr' from all chromosome names
+        starting with it
+    
+
+
+    """
     parser = createParser()
     args = parser.parse_args(sysargs)
     reg_list = RegionList(filename=args.region_name, colstr=args.colstr,
