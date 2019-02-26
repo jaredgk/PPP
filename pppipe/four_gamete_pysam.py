@@ -467,17 +467,20 @@ def createParser():
             " on 4 gamete tests"))
     #parser.add_argument("filename", help="Input filename")
     filetype_group = parser.add_mutually_exclusive_group(required=True)
+    filetype_group.add_argument("--vcfreg", dest = "vcfreg", nargs=2,
+            help = "VCF file and region list, in that order")
+    filetype_group.add_argument("--vcfs", dest="vcfname", nargs="+",
+                                help=("One or more input VCF files"))
     filetype_group.add_argument("--fasta", dest = "fasta",
             nargs="+", help = "fasta file(s) of"
             " multiple aligned sequences, all the same length")
     filetype_group.add_argument("--sit", dest = "sit",
             nargs="+", help = " SITES format file(s)")
-    filetype_group.add_argument("--vcfreg", dest = "vcfreg", nargs=2,
-            help = "VCF file and region list, in that order")
-    filetype_group.add_argument("--vcfname", dest="vcfname", nargs="+")
     output_group = parser.add_mutually_exclusive_group()
-    output_group.add_argument("--out", dest="out")
-    output_group.add_argument("--out-prefix", dest="out_prefix")
+    output_group.add_argument("--out", dest="out",help=("Output filename "
+                            "for single input"))
+    output_group.add_argument("--out-prefix", dest="out_prefix",help=("Prefix "
+                            "for multi-file output"))
     intervaltype_group = parser.add_mutually_exclusive_group(required=
             "--reti" in sys.argv)
     intervaltype_group.add_argument("--hk", dest="intervaltype",
@@ -533,7 +536,8 @@ def createParser():
     parser.add_argument("--ovlpi",dest="extend_inf",action="store_true",
                         help="Extend region to overlapping informative sites")
     #add checks for correct input type
-    parser.add_argument('--tbi', dest="tabix_index")
+    parser.add_argument('--tbi', dest="tabix_index",help=("Filepath for tabix "
+                        "index file if using a single bgzipped VCF"))
     return parser
 
 def logArgs(args):
@@ -732,7 +736,7 @@ def sample_fourgametetest_intervals(sys_args):
     --vcfreg : str, str
         Filename of input VCF file and BED file with list of
         regions to run tests on
-    --vcfname : str
+    --vcfs : str
         Filename(s) of VCF files, each corresponding to a region, that will be subsampled for compatible intervals
     --sit : str
         Filename(s) of input SITES format files for testing
@@ -766,6 +770,8 @@ def sample_fourgametetest_intervals(sys_args):
         Region will be randomly selected, with each region having equal chance of selection
     --ranb : bool
         Region will be randomly selected, with each region having selection odds proportional to size
+    --maxlen : bool
+        Region returned is that of one with most informative SNPs
 
     General options:
     --numinf : int
@@ -776,6 +782,10 @@ def sample_fourgametetest_intervals(sys_args):
         Seed for picking random interval from list
     --tbi : str
         Path to tabix index for input VCF file if it's name doesn't match
+    --ovlps : bool
+        Extend region to overlapping non-informative sites
+    --ovlpi : bool
+        Extend region to overlapping informative sites
 
     """
     parser = createParser()
@@ -888,46 +898,5 @@ def sample_fourgametetest_intervals(sys_args):
 if __name__ == '__main__':
     initLogger()
 
-    ### some testing command lines
-    #sample_fourgametetest_intervals([])
-    #exit()
-    if len(sys.argv) > 1:
-        print (sample_fourgametetest_intervals(sys.argv[1:]))
-        exit(0)
-    testlist = []
-    vcf_name = "example/chr11subsamples4gtest.vcf.gz"
-    fasta_name = "example/fourgfastatest.fasta"
-    testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
-                      "-", "--4gcompat", "--reti", "--ranseed", "123"])
-    testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
-                      "-", "--hk", "--retl"])
-    testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
-                      "-", "--hk", "--reti","--left"])
-    testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
-                      "-", "--4gcompat", "--retl"])
-    testlist.append( ["test #" + str(len(testlist)),"--vcf", vcf_name,
-                     "-", "--4gcompat", "--reti","--ranseed","123","--ranb"])
-    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name,
-                      "--4gcompat", "--retl"])
-    testlist.append( ["test #" + str(len(testlist)),"--fasta", fasta_name,
-                      "--4gcompat", "--retl","--incN","--b2"])
-    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name,
-                      "--hk","--retl"])
-    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--hk",
-            "--retl","--incN","--b2"])
-    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--hk",
-            "--reti","--incN","--left"])
-    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
-            "--reti","--incN","--numinf","2","--ranb"])
-    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
-            "--reti","--incN","--numinf","2","--rani"])
-    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
-            "--reti","--incN","--numinf","4","--ranb"])
-    testlist.append( ["test #" + str(len(testlist)), "--fasta", fasta_name, "--4gcompat",
-            "--reti","--incN","--numinf","100","--ranb"])
-    print ("%d test jobs"%(len(testlist))                   )
-    for tl in testlist:
-        sys.argv = tl
-        a = sample_fourgametetest_intervals(sys.argv[1:])
-        print(sys.argv[0],a)
-    exit()
+    sample_fourgametetest_intervals(sys.argv[1:])
+
