@@ -76,6 +76,8 @@ def get_intergenic(sysargs):
     """
     parser = createParser()
     args = parser.parse_args(sysargs)
+    if args.region_name is None:
+        raise Exception("BED input filename required")
     reg_list = RegionList(filename=args.region_name, colstr=args.colstr,
                           zeroho=args.zeroho, zeroclosed=args.zeroclosed)
     out_list = getIntervalsBetween(reg_list, int(args.pad_count))
