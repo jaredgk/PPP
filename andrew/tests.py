@@ -7,9 +7,9 @@ import shutil
 import numpy as np
 
 # Import scripts to test
-import vcftools
-import vcf_calc
-import vcf_sampler
+import pgpipe.vcftools
+import pgpipe.vcf_calc
+import pgpipe.vcf_sampler
 
 # Used to compare two files, returns bool
 def file_comp(test_output, expected_output):
