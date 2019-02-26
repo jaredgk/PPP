@@ -285,23 +285,23 @@ class fourgameteTest(unittest.TestCase):
     def test_hk(self):
         region_list = [[[192385, 196945], [198986, 202254], [202547, 202813],
          [206421, 207401], [207400, 215365], [217814, 218641]]]
-        test_list = sample_fourgametetest_intervals(["--vcfname","input/chr11subsamples4gtest.vcf.gz","--hk","--retl"])
+        test_list = sample_fourgametetest_intervals(["--vcfs","input/chr11subsamples4gtest.vcf.gz","--hk","--retl"])
         self.assertEqual(region_list, test_list)
 
     def test_comp(self):
         region_list = [[[192385, 196943], [192386, 202252], [198987, 202546],
          [201585, 202811], [202548, 207399], [206422, 215363], [207401, 218140],
           [207463, 218639], [217815, 221584]]]
-        test_list = sample_fourgametetest_intervals(["--vcfname","input/chr11subsamples4gtest.vcf.gz","--4gcompat","--retl",'--ovlpi','--ovlps'])
+        test_list = sample_fourgametetest_intervals(["--vcfs","input/chr11subsamples4gtest.vcf.gz","--4gcompat","--retl",'--ovlpi','--ovlps'])
         self.assertEqual(region_list,test_list)
 
     def test_vcf(self):
-        sample_fourgametetest_intervals(["--vcfname","input/chr11.subsamples.vcf.gz",'--4gcompat','--reti','--out','input/chr11.4g.vcf','--numinf','2'])
+        sample_fourgametetest_intervals(["--vcfs","input/chr11.subsamples.vcf.gz",'--4gcompat','--reti','--out','input/chr11.4g.vcf','--numinf','2'])
         self.assertTrue(filecmp.cmp('input/chr11.4gtest1.vcf','input/chr11.4g.vcf'))
         tryRemove('input/chr11.4g.vcf')
 
     def test_consecutive(self):
-        sample_fourgametetest_intervals(["--vcfname","input/chr11.4gsmall.vcf",'--4gcompat','--reti','--out','input/chr11.4g.vcf','--numinf','2','--ovlpi','--ovlps'])
+        sample_fourgametetest_intervals(["--vcfs","input/chr11.4gsmall.vcf",'--4gcompat','--reti','--out','input/chr11.4g.vcf','--numinf','2','--ovlpi','--ovlps'])
         self.assertTrue(filecmp.cmp('input/chr11.4gtest2.vcf','input/chr11.4g.vcf'))
         tryRemove('input/chr11.4g.vcf')
 
