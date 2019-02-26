@@ -4,16 +4,16 @@ import parser
 import filecmp
 import os
 import sys
-from pppipe.vcf_ref_to_seq import getMaxAlleleLength, getFastaFilename, \
+from pgpipe.vcf_ref_to_seq import getMaxAlleleLength, getFastaFilename, \
     vcf_to_seq, createParser, validateFiles
-from pppipe.vcf_from_regions import vcf_region_write
-from pppipe.vcf_reader_func import checkFormat, VcfReader
-from pppipe.gene_region import RegionList, Region
-from pppipe.logging_module import initLogger
-from pppipe.four_gamete_pysam import sample_fourgametetest_intervals
-from pppipe.vcf_to_ima import vcf_to_ima
-from pppipe.find_intergenic_bed import get_intergenic
-from pppipe.get_nonmissing_chunks import regionsWithData
+from pgpipe.vcf_from_regions import vcf_region_write
+from pgpipe.vcf_reader_func import checkFormat, VcfReader
+from pgpipe.gene_region import RegionList, Region
+from pgpipe.logging_module import initLogger
+from pgpipe.four_gamete_pysam import sample_fourgametetest_intervals
+from pgpipe.vcf_to_ima import vcf_to_ima
+from pgpipe.find_intergenic_bed import get_intergenic
+from pgpipe.get_nonmissing_chunks import regionsWithData
 
 def tryRemove(filename):
     try:
