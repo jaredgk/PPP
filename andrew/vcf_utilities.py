@@ -125,9 +125,9 @@ def vcf_utility_parser(passed_arguments):
     vcf_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments.
-    vcf_input = vcf_parser.add_mutually_exclusive_group()
-    vcf_input.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
-    vcf_input.add_argument('--vcfs', help = "Defines the filenames of the VCFs (may be used multiple times)", type = str, nargs = '+', required = True, action = parser_confirm_file_list())
+    vcf_input = vcf_parser.add_mutually_exclusive_group(required=True)
+    vcf_input.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, action = parser_confirm_file())
+    vcf_input.add_argument('--vcfs', help = "Defines the filenames of the VCFs (may be used multiple times)", type = str, nargs = '+', action = parser_confirm_file_list())
 
     # Output file arguments
     vcf_parser.add_argument('--out', help = 'Defines the complete output filename, overrides --out-prefix', type = str)
