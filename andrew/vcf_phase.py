@@ -111,7 +111,7 @@ from logging_module import initLogger, logArgs
 from model import read_model_file
 from beagle import call_beagle, check_for_beagle_intermediate_files
 from shapeit import call_shapeit, remove_shapeit_intermediate_files, check_for_shapeit_intermediate_files
-from bcftools import get_unique_chrs, chr_subset_file, concatenate, check_for_index, create_index
+from bcftools import get_unique_chrs, get_samples, chr_subset_file, concatenate, check_for_index, create_index
 
 def phase_argument_parser(passed_arguments):
     '''
@@ -140,6 +140,16 @@ def phase_argument_parser(passed_arguments):
                 setattr(args, self.dest, value)
         return customAction
 
+    def parser_add_to_list ():
+        '''Custom action to add items to a list'''
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, value, option_string=None):
+                if not getattr(args, self.dest):
+                    setattr(args, self.dest, value)
+                else:
+                    getattr(args, self.dest).extend(value)
+        return customAction
+
     def metavar_list (var_list):
         '''Create a formmated metavar list for the help output'''
         return '{' + ', '.join(var_list) + '}'
@@ -161,6 +171,12 @@ def phase_argument_parser(passed_arguments):
     # Model file arguments
     phase_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
     phase_parser.add_argument('--model', help = 'Defines the model and the individual(s) to include', type = str)
+
+    # Non-Model individual selection
+    phase_parser.add_argument('--filter-include-indv', help = 'Defines the individual(s) to include. This argument may be used multiple times if desired', nargs = '+', type = str, action = parser_add_to_list())
+    phase_parser.add_argument('--filter-exclude-indv', help = 'Defines the individual(s) to exclude. This argument may be used multiple times if desired', nargs = '+', type = str, action = parser_add_to_list())
+    phase_parser.add_argument('--filter-include-indv-file', help = 'Defines a file of individuals to include', action = parser_confirm_file())
+    phase_parser.add_argument('--filter-exclude-indv-file', help = 'Defines a file of individuals to exclude', action = parser_confirm_file())
 
     # General arguments
     phase_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
@@ -247,6 +263,37 @@ def assign_vcf_extension (filename):
 
     else:
         raise Exception('Unknown file format')
+
+def write_indv_file (filename, indv_list):
+
+    # Open the individual file
+    indv_file = open(filename, 'w')
+
+    # Loop the list of individuals
+    for indv in indv_list:
+
+        # Write the individual to the file
+        indv_file.write(indv + '\n')
+
+    # Close the file
+    indv_file.close()
+
+def read_indv_file (filename):
+
+    # List to hold individuals
+    indv_list = []
+
+    # Open the individual file
+    with open(filename, 'r') as indv_file:
+
+        # Read the individual lines
+        for indv_line in indv_file:
+
+            # Add the individual to the list
+            indv_list.append(indv_line.strip())
+
+    # Return the individuals
+    return indv_list
 
 def assign_filename_prefix (output_filename, output_format):
 
@@ -397,6 +444,9 @@ def run (passed_arguments = []):
     # bool to check if an include file was created
     include_file_created = False
 
+    # String to hold filename of filter individuals, if created
+    filter_indv_filename = ''
+
     # Check if the has specified the output filename, without a prefix
     if phase_args.out and '--out-prefix' not in passed_arguments and '--out-prefix' not in sys.argv:
 
@@ -465,6 +515,77 @@ def run (passed_arguments = []):
 
             # Confirm that the include file was created
             include_file_created = True
+
+    # Check if individuals to include or exclude were assigned
+    elif phase_args.filter_include_indv or phase_args.filter_exclude_indv or phase_args.filter_include_indv_file or phase_args.filter_exclude_indv_file:
+
+        # List of individuals to include
+        include_indv_list = []
+
+        # List of individuals to exclude
+        exclude_indv_list = []
+
+        # Check for individuals to include from the command-line
+        if phase_args.filter_include_indv:
+
+            # Add the individuals to the list
+            include_indv_list.extend(phase_args.filter_include_indv)
+
+        # Check for individuals to exclude from the command-line
+        if phase_args.filter_exclude_indv:
+
+            # Add the individuals to the list
+            exclude_indv_list.extend(phase_args.filter_exclude_indv)
+
+        # Check for individuals to include from a file
+        if phase_args.filter_include_indv_file:
+
+            # Read the individuals from the file
+            include_file_indvs = read_indv_file(phase_args.filter_include_indv_file)
+
+            # Add the individuals to the list
+            include_indv_list.extend(include_file_indvs)
+
+        # Check for individuals to exclude from a file
+        if phase_args.filter_exclude_indv_file:
+
+            # Read the individuals from the file
+            exclude_file_indvs = read_indv_file(phase_args.filter_exclude_indv_file)
+
+            # Add the individuals to the list
+            exclude_indv_list.extend(exclude_file_indvs)
+
+        # Assign the complete list of individuals within the file
+        indvs_in_vcf = get_samples(phase_args.vcf)
+
+        # Assign the individuals to include, checking both include/exclude lists
+        indvs_to_include = [include_indv for include_indv in include_indv_list if include_indv not in exclude_indv_list]
+
+        if phase_args.phase_algorithm == 'beagle':
+
+            # Assign a filename for the indv file
+            filter_indv_filename = 'filter_exclude_individuals'
+
+            # Assign the individuals to exclude, using indvs_in_vcf and indvs_to_include 
+            indvs_to_exclude = [indv_in_vcf for indv_in_vcf in indvs_in_vcf if indv_in_vcf not in indvs_to_include]
+
+            # Create the indv file
+            write_indv_file(filter_indv_filename, indvs_to_exclude)
+
+            # Assign exclude file
+            phase_call_args.append('excludesamples=' + filter_indv_filename)
+
+
+        elif phase_args.phase_algorithm == 'shapeit':
+
+            # Assign a filename for the indv file
+            filter_indv_filename = 'filter_include_individuals'
+
+            # Create the indv file
+            write_indv_file(filter_indv_filename, indvs_to_include)
+
+            # Assign exclude file
+            phase_call_args.extend(['--include-ind', filter_indv_filename])
 
     # Get the list of chromosomes within the VCF
     chrs_in_vcf = get_unique_chrs(phase_args.vcf)
@@ -748,6 +869,12 @@ def run (passed_arguments = []):
     # Reverts the VCF input file
     if vcfname_renamed:
         os.rename(phase_args.vcf, phase_args.vcf[:-len(vcfname_ext)])
+
+    # Check if a filter indv file was created
+    if filter_indv_filename:
+
+        # Delete the file
+        os.remove(filter_indv_filename)
 
 if __name__ == "__main__":
     initLogger()

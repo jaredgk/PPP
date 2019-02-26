@@ -10,6 +10,340 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 from vcf_reader_func import checkFormat
 from bcftools import check_bcftools_for_errors
 
+def log_vcftools_reference (out_filename, append_mode = False, ref_header = True):
+
+    # Check if the file is to be written in append mode
+    if append_mode:
+
+        # Open the file
+        log_file = open(out_filename + '.log', 'a')
+
+    else:
+
+        # Open the file
+        log_file = open(out_filename + '.log', 'w')
+
+    # Check if the ref header should be added
+    if ref_header:
+        log_file.write('Please Reference alongside the PPP:\n')
+
+    log_file.write('Danecek, P. et al. The variant call format and VCFtools. '
+                   'Bioinformatics 27, 2156–2158 (2011).')
+
+    log_file.close()
+
+    logging.info('Reference assigned')
+
+def check_for_vcftools_output (vcftools_output):
+    '''
+        Checks for the previous vcftools output
+
+        Confirms that neither a previous vcftools log or output file exists.
+
+        Parameters
+        ----------
+        vcftools_output : str
+            Specifies the output filename to be checked
+
+        Raises
+        ------
+        IOError
+            If the vcftools output file exists
+        IOError
+            If the vcftools log file exists
+
+    '''
+    # Check if output file already exists
+    if os.path.isfile(vcftools_output):
+        raise IOError('VCF output file already exists')
+
+    logging.info('Output file assigned')
+
+    # Check if log file already exists
+    if os.path.isfile(vcftools_output + '.log'):
+        raise IOError('Log file already exists')
+
+    logging.info('Log file assigned')
+
+def assign_vcftools_unique_prefix (output_prefix, output_format, random_seed = None, string_size = 6, string_limit = 10, assignment_limit = 100):
+
+    '''
+        Assigns a unique vcftools filename prefix
+
+        Used to assign a unique filename prefix for vcftools jobs. If an
+        output file with the same prefix and suffix, either from previous 
+        or ongoing jobs, this function will generate a unique prefix. This 
+        function is only used if no prefix has been specified by the user.
+
+        Parameters
+        ----------
+        output_prefix : str
+            Specifies the filename prefix
+        output_format : str
+            Specifies the file format suffix
+        random_seed : int, str, optional
+            Specifies the random seed
+        string_size : int, optional
+            Specifies the number of character in the random string
+        string_limit  : int, optional
+            Specifies the character limit of the random string
+        assignment_limit : int, optional
+            Specifies a limit the number of assignment attempts
+
+        Returns
+        -------
+        updated_prefix: str
+            Specifies the unqiue prefix
+
+
+        Raises
+        ------
+        Exception
+            If unable to assign a unique filename
+
+    '''
+
+    # Assign the random seed, with a string or int
+    random.seed(random_seed)
+
+    # Assign the assignment counter, used to avoid infinite loops
+    assignment_counter = 0
+
+    # Generate a random string
+    random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for digit in range(string_size))
+
+    # Holds the updated prefix that will be returned when unique
+    updated_prefix = output_prefix + '.' + random_string
+
+    # Loop until a unique filename is created
+    while os.path.isfile(updated_prefix + output_format):
+
+        # Add to the assignment counter
+        assignment_counter += 1
+
+        # Check if assignment counter has reached it's limit
+        if assignment_counter > assignment_limit:
+
+            # Set the assignment counter to zero
+            assignment_counter = 0
+
+            # Add to the string size
+            string_size += 1
+
+            # Check if string size has reached it's limit and report the error
+            if string_size > string_limit:
+                raise Exception('Unable to assign unique intermediate output')
+
+        # Generate a random string
+        random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for digit in range(string_size))
+
+        # Holds the updated prefix that will be returned when unique
+        updated_prefix = output_prefix + '.' + random_string
+
+    # Return the intermediate output filename
+    return updated_prefix
+
+def assign_vcftools_filename_prefix (output_prefix, output_format, output_filename):
+
+    '''
+        Assigns a vcftools prefix using a filename
+
+        Used to assign a unique prefix for vcftools jobs using the user
+        specified filename. This is to avoid output file with the same 
+        prefix, either from previous or ongoing jobs. This function is 
+        only used if no prefix has been specified by the user.
+
+        Parameters
+        ----------
+        output_prefix : str
+            Specifies the filename prefix
+        output_format : str
+            Specifies the file format suffix
+        output_filename : str
+            Specifies the filename specified by the user
+
+        Returns
+        -------
+        unique_prefix: str
+            Specifies the unqiue prefix
+
+        Raises
+        ------
+        Exception
+            If unable to assign a unique filename
+
+    '''
+
+    # List to hold the complete file path
+    file_path_list = []
+
+    # Split the filename
+    split_file_path = os.path.split(output_filename)
+
+    while split_file_path[1]:
+
+        # Add the split path section to the file path list
+        file_path_list = [split_file_path[1]] + file_path_list
+
+        # Split the filename
+        split_file_path = os.path.split(split_file_path[0])
+
+    # Save the updated prefix
+    updated_prefix = ''.join(file_path_list).replace('.','')
+
+    # Check if the file already exists 
+    if os.path.isfile(updated_prefix + output_format):
+        raise Exception('Unable to assign prefix output. %s already exists' % (updated_prefix + output_format))
+
+    return updated_prefix
+
+def check_vcftools_for_errors (vcftools_stderr):
+    '''
+        Checks the vcftools stderr for errors
+
+        Parameters
+        ----------
+        vcftools_stderr : str
+            vcftools stderr
+
+        Raises
+        ------
+        IOError
+            If vcftools stderr returns an error
+    '''
+
+    # Returns True if the job completed without error
+    if 'Run Time' in str(vcftools_stderr):
+        pass
+
+    # Print output for vcftools if error is detected
+    elif 'Error' in str(vcftools_stderr):
+        # Splits log into list of lines
+        vcftools_stderr_lines = vcftools_stderr.splitlines()
+        # Prints the error(s)
+        raise Exception('\n'.join((output_line for output_line in vcftools_stderr_lines if output_line.startswith('Error'))))
+
+    # Print output if not completed and no error found. Unlikely to be used, but included.
+    else:
+        raise Exception(vcftools_stderr)
+
+def produce_vcftools_output (output, filename, append_mode = False, strip_header = False):
+    '''
+        Creates the vcftools output file
+
+        This function will create an output file from the vcftools stdout.
+        Please run `check_vcftools_for_errors` prior to check that vcftools
+        finished without error.
+
+        Parameters
+        ----------
+        output : str
+            vcftools stdout
+        filename : str
+            Specifies the filename for the output file
+        append_mode : bool
+            Used to create a single output file from multiple calls
+        strip_header : bool
+            Used to remove the header if not needed
+
+        Returns
+        -------
+        output : file
+            vcftools output file
+
+    '''
+
+    # Check if the header should be stripped
+    if strip_header:
+        output = ''.join(output.splitlines(True)[1:])
+
+    # Check if single log file is required from multiple calls
+    if append_mode:
+        vcftools_log_file = open(filename,'a')
+    else:
+        vcftools_log_file = open(filename,'w')
+
+    vcftools_log_file.write(str(output))
+    vcftools_log_file.close()
+
+def produce_vcftools_log (output, filename, append_mode = False):
+    '''
+        Creates the vcftools log file
+
+        This function will create a log file from the vcftools stderr. Please
+        run `check_vcftools_for_errors` prior to check that vcftools finished
+        without error.
+
+        Parameters
+        ----------
+        output : str
+            vcftools stderr
+        filename : str
+            Specifies the filename for the log file
+        append_mode : bool
+            Used to create a single log file from multiple calls
+
+        Returns
+        -------
+        output : file
+            vcftools log file
+
+    '''
+    # Check if single log file is required from multiple calls
+    if append_mode:
+        vcftools_log_file = open(filename + '.log','a')
+    else:
+        vcftools_log_file = open(filename + '.log','w')
+
+    vcftools_log_file.write(str(output))
+    vcftools_log_file.close()
+
+def assign_vcftools_input_arg (filename):
+    '''
+        Confirms file format for vcftools
+
+        Parameters
+        ----------
+        filename : str
+            Specifies the input filename of unknown format
+
+        Returns
+        -------
+        list
+            Returns vcftools input command for `filename`
+
+        Raises
+        ------
+        IOError
+            If filename is an unknown file format
+    '''
+
+    # True if file extensions is recognized by vcftools
+    if filename.endswith('.vcf') or filename.endswith('.vcf.gz') or filename.endswith('.bcf'):
+        # Assign the associated input command
+        if filename.endswith('.vcf'):
+            return ['--vcf', filename]
+        elif filename.endswith('.vcf.gz'):
+            return ['--gzvcf', filename]
+        elif filename.endswith('.bcf'):
+            return ['--bcf', filename]
+
+    # True if file extension is unknown or not recognized
+    else:
+
+        # Checks if the file is unzipped, bgzipped, or gzipped
+        vcfname_format = checkFormat(filename)
+
+        # Assign the associated input command, or return an error.
+        if vcfname_format == 'vcf':
+            return ['--vcf', filename]
+        elif vcfname_format == 'bgzip':
+            return ['--gzvcf', filename]
+        elif vcfname_format == 'bcf':
+            return ['--bcf', filename]
+        else:
+            raise Exception('Unknown VCF file format')
+
 def check_bgzip_for_errors (bgzip_stderr):
     '''
         Checks the bgzip stderr for errors
@@ -562,351 +896,3 @@ def call_vcftools (vcftools_call_args, output_format = None, output_filename = N
     # Return the log
     return vcftools_err
 
-def check_for_vcftools_output (vcftools_output):
-    '''
-        Checks for the previous vcftools output
-
-        Confirms that neither a previous vcftools log or output file exists.
-
-        Parameters
-        ----------
-        vcftools_output : str
-            Specifies the output filename to be checked
-
-        Raises
-        ------
-        IOError
-            If the vcftools output file exists
-        IOError
-            If the vcftools log file exists
-
-    '''
-    # Check if output file already exists
-    if os.path.isfile(vcftools_output):
-        raise IOError('VCF output file already exists')
-
-    logging.info('Output file assigned')
-
-    # Check if log file already exists
-    if os.path.isfile(vcftools_output + '.log'):
-        raise IOError('Log file already exists')
-
-    logging.info('Log file assigned')
-
-def assign_vcftools_unique_prefix (output_prefix, output_format, random_seed = None, string_size = 6, string_limit = 10, assignment_limit = 100):
-
-    '''
-        Assigns a unique vcftools filename prefix
-
-        Used to assign a unique filename prefix for vcftools jobs. If an
-        output file with the same prefix and suffix, either from previous 
-        or ongoing jobs, this function will generate a unique prefix. This 
-        function is only used if no prefix has been specified by the user.
-
-        Parameters
-        ----------
-        output_prefix : str
-            Specifies the filename prefix
-        output_format : str
-            Specifies the file format suffix
-        random_seed : int, str, optional
-            Specifies the random seed
-        string_size : int, optional
-            Specifies the number of character in the random string
-        string_limit  : int, optional
-            Specifies the character limit of the random string
-        assignment_limit : int, optional
-            Specifies a limit the number of assignment attempts
-
-        Returns
-        -------
-        updated_prefix: str
-            Specifies the unqiue prefix
-
-
-        Raises
-        ------
-        Exception
-            If unable to assign a unique filename
-
-    '''
-
-    # Assign the random seed, with a string or int
-    random.seed(random_seed)
-
-    # Assign the assignment counter, used to avoid infinite loops
-    assignment_counter = 0
-
-    # Generate a random string
-    random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for digit in range(string_size))
-
-    # Holds the updated prefix that will be returned when unique
-    updated_prefix = output_prefix + '.' + random_string
-
-    # Loop until a unique filename is created
-    while os.path.isfile(updated_prefix + output_format):
-
-        # Add to the assignment counter
-        assignment_counter += 1
-
-        # Check if assignment counter has reached it's limit
-        if assignment_counter > assignment_limit:
-
-            # Set the assignment counter to zero
-            assignment_counter = 0
-
-            # Add to the string size
-            string_size += 1
-
-            # Check if string size has reached it's limit and report the error
-            if string_size > string_limit:
-                raise Exception('Unable to assign unique intermediate output')
-
-        # Generate a random string
-        random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for digit in range(string_size))
-
-        # Holds the updated prefix that will be returned when unique
-        updated_prefix = output_prefix + '.' + random_string
-
-    # Return the intermediate output filename
-    return updated_prefix
-
-def assign_vcftools_filename_prefix (output_prefix, output_format, output_filename):
-
-    '''
-        Assigns a vcftools prefix using a filename
-
-        Used to assign a unique prefix for vcftools jobs using the user
-        specified filename. This is to avoid output file with the same 
-        prefix, either from previous or ongoing jobs. This function is 
-        only used if no prefix has been specified by the user.
-
-        Parameters
-        ----------
-        output_prefix : str
-            Specifies the filename prefix
-        output_format : str
-            Specifies the file format suffix
-        output_filename : str
-            Specifies the filename specified by the user
-
-        Returns
-        -------
-        unique_prefix: str
-            Specifies the unqiue prefix
-
-        Raises
-        ------
-        Exception
-            If unable to assign a unique filename
-
-    '''
-
-    # List to hold the complete file path
-    file_path_list = []
-
-    # Split the filename
-    split_file_path = os.path.split(output_filename)
-
-    while split_file_path[1]:
-
-        # Add the split path section to the file path list
-        file_path_list = [split_file_path[1]] + file_path_list
-
-        # Split the filename
-        split_file_path = os.path.split(split_file_path[0])
-
-    # Save the updated prefix
-    updated_prefix = ''.join(file_path_list).replace('.','')
-
-    # Check if the file already exists 
-    if os.path.isfile(updated_prefix + output_format):
-        raise Exception('Unable to assign prefix output. %s already exists' % (updated_prefix + output_format))
-
-    return updated_prefix
-
-def delete_vcftools_output (vcftools_output):
-    '''
-        Deletes previous vcftools output
-
-        Confirms if previous vcftools output exists, and if so, deletes it
-
-        Parameters
-        ----------
-        vcftools_output : str
-            Specifies the output filename to be deleted
-
-        Raises
-        ------
-        IOError
-            If the vcftools output cannot be deleted
-        IOError
-            If the vcftools log cannot be deleted
-    '''
-
-    # Check if output file already exists
-    if os.path.isfile(vcftools_output):
-        try:
-            # Delete the output
-            os.remove(vcftools_output)
-        except:
-            raise IOError('VCF output file cannot be deleted')
-
-    logging.info('Output file assigned')
-
-    # Check if log file already exists
-    if os.path.isfile(vcftools_output + '.log'):
-        try:
-            # Delete the output
-            os.remove(vcftools_output + '.log')
-        except:
-            raise IOError('Log file cannot be deleted')
-
-    logging.info('Log file assigned')
-
-def check_vcftools_for_errors (vcftools_stderr):
-    '''
-        Checks the vcftools stderr for errors
-
-        Parameters
-        ----------
-        vcftools_stderr : str
-            vcftools stderr
-
-        Raises
-        ------
-        IOError
-            If vcftools stderr returns an error
-    '''
-
-    # Returns True if the job completed without error
-    if 'Run Time' in str(vcftools_stderr):
-        pass
-
-    # Print output for vcftools if error is detected
-    elif 'Error' in str(vcftools_stderr):
-        # Splits log into list of lines
-        vcftools_stderr_lines = vcftools_stderr.splitlines()
-        # Prints the error(s)
-        raise Exception('\n'.join((output_line for output_line in vcftools_stderr_lines if output_line.startswith('Error'))))
-
-    # Print output if not completed and no error found. Unlikely to be used, but included.
-    else:
-        raise Exception(vcftools_stderr)
-
-def produce_vcftools_output (output, filename, append_mode = False, strip_header = False):
-    '''
-        Creates the vcftools output file
-
-        This function will create an output file from the vcftools stdout.
-        Please run `check_vcftools_for_errors` prior to check that vcftools
-        finished without error.
-
-        Parameters
-        ----------
-        output : str
-            vcftools stdout
-        filename : str
-            Specifies the filename for the output file
-        append_mode : bool
-            Used to create a single output file from multiple calls
-        strip_header : bool
-            Used to remove the header if not needed
-
-        Returns
-        -------
-        output : file
-            vcftools output file
-
-    '''
-
-    # Check if the header should be stripped
-    if strip_header:
-        output = ''.join(output.splitlines(True)[1:])
-
-    # Check if single log file is required from multiple calls
-    if append_mode:
-        vcftools_log_file = open(filename,'a')
-    else:
-        vcftools_log_file = open(filename,'w')
-
-    vcftools_log_file.write(str(output))
-    vcftools_log_file.close()
-
-def produce_vcftools_log (output, filename, append_mode = False):
-    '''
-        Creates the vcftools log file
-
-        This function will create a log file from the vcftools stderr. Please
-        run `check_vcftools_for_errors` prior to check that vcftools finished
-        without error.
-
-        Parameters
-        ----------
-        output : str
-            vcftools stderr
-        filename : str
-            Specifies the filename for the log file
-        append_mode : bool
-            Used to create a single log file from multiple calls
-
-        Returns
-        -------
-        output : file
-            vcftools log file
-
-    '''
-    # Check if single log file is required from multiple calls
-    if append_mode:
-        vcftools_log_file = open(filename + '.log','a')
-    else:
-        vcftools_log_file = open(filename + '.log','w')
-
-    vcftools_log_file.write(str(output))
-    vcftools_log_file.close()
-
-def assign_vcftools_input_arg (filename):
-    '''
-        Confirms file format for vcftools
-
-        Parameters
-        ----------
-        filename : str
-            Specifies the input filename of unknown format
-
-        Returns
-        -------
-        list
-            Returns vcftools input command for `filename`
-
-        Raises
-        ------
-        IOError
-            If filename is an unknown file format
-    '''
-
-    # True if file extensions is recognized by vcftools
-    if filename.endswith('.vcf') or filename.endswith('.vcf.gz') or filename.endswith('.bcf'):
-        # Assign the associated input command
-        if filename.endswith('.vcf'):
-            return ['--vcf', filename]
-        elif filename.endswith('.vcf.gz'):
-            return ['--gzvcf', filename]
-        elif filename.endswith('.bcf'):
-            return ['--bcf', filename]
-
-    # True if file extension is unknown or not recognized
-    else:
-
-        # Checks if the file is unzipped, bgzipped, or gzipped
-        vcfname_format = checkFormat(filename)
-
-        # Assign the associated input command, or return an error.
-        if vcfname_format == 'vcf':
-            return ['--vcf', filename]
-        elif vcfname_format == 'bgzip':
-            return ['--gzvcf', filename]
-        elif vcfname_format == 'bcf':
-            return ['--bcf', filename]
-        else:
-            raise Exception('Unknown VCF file format')
