@@ -23,7 +23,7 @@ def createParser():
     region_group.add_argument("--r", dest="gene_str", help=("Comma "
                               "separated string, formatted \"start,end,"
                               "chrom\" or \"start,end\""))
-    region_group.add_argument("--rl", dest="genename", help=("Tab-delimited"
+    region_group.add_argument("--bed", dest="genename", help=("Tab-delimited"
                               " file with two (start-end) or three "
                               "(chromosome) columns"))
     parser.add_argument('--zero-ho', dest="zeroho", action="store_true")

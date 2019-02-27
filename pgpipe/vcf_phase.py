@@ -95,7 +95,7 @@
         Argument used to define the path to locate beagle.jar.
     
 '''
-
+#/usr/bin/env python
 import os
 import sys
 import copy
