@@ -28,9 +28,9 @@ def createParser():
                               "(chromosome) columns"))
     parser.add_argument('--zero-ho', dest="zeroho", action="store_true")
     parser.add_argument('--zero-closed', dest="zeroclosed", action="store_true")
-    parser.add_argument("--output", dest="output_name", help= (
+    parser.add_argument("--out", dest="output_name", help= (
                         "Optional name for output other than default"))
-    parser.add_argument("--gene-col", dest="gene_col", help= (
+    parser.add_argument("--bed-column-index", dest="gene_col", help= (
                         "Comma-separated list of columns for gene region "
                         " data, format is start/end if no chromosome "
                         " data, start/end/chrom if so"))

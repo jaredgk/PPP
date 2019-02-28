@@ -32,7 +32,7 @@ def createParser():
                               "longer than reference"))
     parser.add_argument("--output", dest="output_name", help= (
                         "Optional name for output other than default"))
-    parser.add_argument("--gene-col", dest="gene_col", help= (
+    parser.add_argument("--bed-column-index", dest="gene_col", help= (
                         "Comma-separated list of columns for gene region "
                         " data, format is start/end if no chromosome "
                         " data, start/end/chrom if so"))

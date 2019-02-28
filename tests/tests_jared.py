@@ -219,43 +219,43 @@ class reduceTest(unittest.TestCase):
 
     def test_vcf_region_write_simple(self):
         vcf_region_write(['input/chr11.subsamples.vcf.gz',
-                         '--rl','input/snp_region.txt',
-                         '--output','input/chr11.test.vcf.gz'])
+                         '--bed','input/snp_region.txt',
+                         '--out','input/chr11.test.vcf.gz'])
         self.assertTrue(filecmp.cmp('input/chr11.snp.sr.vcf.gz',
                         'input/chr11.test.vcf.gz'))
 
     def test_vcf_region_write_unzipped(self):
         vcf_region_write(['input/chr11.unzipped.vcf',
-                          '--rl','input/snp_region.txt',
-                          '--output','input/chr11.test.vcf'])
+                          '--bed','input/snp_region.txt',
+                          '--out','input/chr11.test.vcf'])
         self.assertTrue(filecmp.cmp('input/chr11.snp.sr.vcf',
                         'input/chr11.test.vcf'))
 
     def test_vcf_region_write_first(self):
         vcf_region_write(['input/chr11.unzipped.vcf',
-                          '--rl','input/first_region.txt',
-                          '--output','input/chr11.test.vcf'])
+                          '--bed','input/first_region.txt',
+                          '--out','input/chr11.test.vcf'])
         self.assertTrue(filecmp.cmp('input/chr11.first.vcf',
                         'input/chr11.test.vcf'))
 
     def test_vcf_region_write_last(self):
         vcf_region_write(['input/chr11.unzipped.vcf',
-                          '--rl','input/last_region.txt',
-                          '--output','input/chr11.test.vcf'])
+                          '--bed','input/last_region.txt',
+                          '--out','input/chr11.test.vcf'])
         self.assertTrue(filecmp.cmp('input/chr11.last.vcf',
                         'input/chr11.test.vcf'))
 
     def test_vcf_region_write_multi(self):
         vcf_region_write(['input/chr11.unzipped.vcf',
-                          '--rl','input/multi_big_region.txt',
-                          '--output','input/chr11.test.vcf'])
+                          '--bed','input/multi_big_region.txt',
+                          '--out','input/chr11.test.vcf'])
         self.assertTrue(filecmp.cmp('input/chr11.multi.big.vcf',
                         'input/chr11.test.vcf'))
 
     def test_vcf_region_write_adj(self):
         vcf_region_write(['input/chr11.unzipped.vcf',
-                          '--rl','input/adj_big_region.txt',
-                          '--output','input/chr11.test.vcf'])
+                          '--bed','input/adj_big_region.txt',
+                          '--out','input/chr11.test.vcf'])
         self.assertTrue(filecmp.cmp('input/chr11.adj.big.vcf',
                         'input/chr11.test.vcf'))
 

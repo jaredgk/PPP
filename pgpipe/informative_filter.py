@@ -17,6 +17,9 @@ def createParser():
     parser.add_argument("--vcf", dest="vcfname", help=("Input VCF name"))
     parser.add_argument("--bed", dest="bedname", help=("BED filename "
                         "with regions for inspection"))
+    parser.add_argument("--bed-column-index",dest="gene_col",help=("Three "
+                        "comma-separated integers indicating columns for "
+                        "start,end,and chromosme in BED file (default 1,2,0"))
     parser.add_argument("--zero-ho", dest="zeroho", action="store_true",
                         help="BED input in zero-based, half-open format")
     parser.add_argument("--zero-closed", dest="zeroclosed",action="store_true")
@@ -84,7 +87,7 @@ def filter_bed_regions(sys_args):
 
     regions = RegionList(filename=args.bedname,zeroho=args.zeroho,
                          zeroclosed=args.zeroclosed,sortlist=(not randomize),
-                         randomize=randomize)
+                         randomize=randomize,colstr=args.gene_col)
     if args.filter_xy:
         regions.filterOutXY()
     remove_cpg = (True if args.refname is not None else False)
