@@ -1,5 +1,0 @@
-=============
-vcf_phase.run
-=============
-
-.. autofunction:: vcf_phase.run

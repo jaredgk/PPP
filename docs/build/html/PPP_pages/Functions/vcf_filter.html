@@ -1,0 +1,365 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>VCF Filter Function &mdash; PPP 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="VCF Statistic Calculator Function" href="vcf_calc.html" />
+    <link rel="prev" title="VCF Functions" href="../vcf_functions.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../vcf_functions.html">VCF Functions</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../vcf_functions.html#functions">Functions</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">VCF Filter Function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#input-command-line-arguments">Input Command-line Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#output-command-line-arguments">Output Command-line Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#filter-command-line-arguments">Filter Command-line Arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vcf_calc.html">VCF Statistic Calculator Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vcf_split.html">VCF Split Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vcf_phase.html">VCF Phase Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="four_gamete.html">Four Gamete Test Function</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../conversions.html">File Conversions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Model File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../vcf_functions.html">VCF Functions</a> &raquo;</li>
+        
+      <li>VCF Filter Function</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Functions/vcf_filter.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-vcf_filter">
+<span id="vcf-filter-function"></span><h1>VCF Filter Function<a class="headerlink" href="#module-vcf_filter" title="Permalink to this headline">¶</a></h1>
+<p>Filter VCF files using VCFTools.</p>
+<p>Automates various filters to VCF files using VCFtools.</p>
+<div class="section" id="input-command-line-arguments">
+<h2>Input Command-line Arguments<a class="headerlink" href="#input-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt><strong>--vcf</strong> <em>&lt;input_filename&gt;</em></dt>
+<dd>Argument used to define the filename of the VCF file to be filtered.</dd>
+<dt><strong>--model-file</strong> <em>&lt;model_filename&gt;</em></dt>
+<dd>Argument used to define the model file. Please note that this argument cannot be 
+used with the individual-based filters.</dd>
+<dt><strong>--model</strong> <em>&lt;model_str&gt;</em></dt>
+<dd>Argument used to define the model (i.e. the individual(s) to include). Please note
+that this argument cannot be used with the individual-based filters.</dd>
+</dl>
+</div>
+<div class="section" id="output-command-line-arguments">
+<h2>Output Command-line Arguments<a class="headerlink" href="#output-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt><strong>--out</strong> <em>&lt;output_filename&gt;</em></dt>
+<dd>Argument used to define the complete output filename, overrides <strong>--out-prefix</strong></dd>
+<dt><strong>--out-prefix</strong> <em>&lt;output_prefix&gt;</em></dt>
+<dd>Argument used to define the output prefix (i.e. filename without file extension)</dd>
+<dt><strong>--out-format</strong> <em>&lt;vcf, vcf.gz, bcf, removed_sites, kept_sites, removed_bed, kept_bed&gt;</em></dt>
+<dd>Argument used to define the desired output format. Formats include: uncompressed 
+VCF (vcf); compressed VCF (vcf.gz) [default]; BCF (bcf); removed or kept variants
+in sites format (removed_sites, kept_sites); or removed or kept variants in bed
+format (removed_bed, kept_bed).</dd>
+<dt><strong>--overwrite</strong></dt>
+<dd>Argument used to define if previous output should be overwritten.</dd>
+</dl>
+</div>
+<div class="section" id="filter-command-line-arguments">
+<h2>Filter Command-line Arguments<a class="headerlink" href="#filter-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<p>The filtering arguments below are roughly seperated into catagoires. Please not that
+mulitple filters are seperated into two opposing function types <strong>include</strong> and 
+<strong>exclude</strong>.</p>
+<div class="section" id="individual-based-arguments">
+<h3>Individual-Based Arguments<a class="headerlink" href="#individual-based-arguments" title="Permalink to this headline">¶</a></h3>
+<p>Please note that all individual-based arguments are not compatible with either the 
+<strong>--model</strong> or <strong>--model-file</strong> command-line arguments.</p>
+<dl class="docutils">
+<dt><strong>--filter-include-indv</strong> <em>&lt;indv_str&gt;</em> <em>&lt;indv1_str, indv2_str, etc.&gt;</em></dt>
+<dd>Argument used to define the individual(s) to include. This argument may be used 
+multiple times if desired.</dd>
+<dt><strong>--filter-exclude-indv</strong> <em>&lt;indv_str&gt;</em> <em>&lt;indv1_str, indv2_str, etc.&gt;</em></dt>
+<dd>Argument used to define the individual(s) to exclude. This argument may be used 
+multiple times if desired.</dd>
+<dt><strong>--filter-include-indv-file</strong> <em>&lt;indv_filename&gt;</em></dt>
+<dd>Argument used to define a file of individuals to include.</dd>
+<dt><strong>--filter-exclude-indv-file</strong> <em>&lt;indv_filename&gt;</em></dt>
+<dd>Argument used to define a file of individuals to exclude.</dd>
+</dl>
+</div>
+<div class="section" id="allele-genotype-based-arguments">
+<h3>Allele/Genotype-Based Arguments<a class="headerlink" href="#allele-genotype-based-arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt><strong>--filter-min-alleles</strong> <em>min_int</em></dt>
+<dd>Argument used to include positions with a number of allele &gt;= to the 
+given number.</dd>
+<dt><strong>--filter-max-alleles</strong> <em>max_int</em></dt>
+<dd>Argument used to include positions with a number of allele &lt;= to the 
+given number.</dd>
+<dt><strong>--filter-maf-min</strong> <em>maf_proportion</em></dt>
+<dd>Argument used to include sites with equal or greater MAF values.</dd>
+<dt><strong>--filter-maf-max</strong> <em>maf_proportion</em></dt>
+<dd>Argument used to include sites with equal or lesser MAF values.</dd>
+<dt><strong>--filter-mac-min</strong> <em>mac_int</em></dt>
+<dd>Argument used to include sites with equal or greater MAC values.</dd>
+<dt><strong>--filter-mac-max</strong> <em>mac_int</em></dt>
+<dd>Argument used to include sites with equal or lesser MAC values.
+<strong>--filter-include-indels</strong>
+Argument used to include positions if they contain an insertion or a deletion.</dd>
+<dt><strong>--filter-exclude-indels</strong></dt>
+<dd>Argument used to exclude positions if they contain an insertion or a deletion.</dd>
+<dt><strong>--filter-include-snp</strong> <em>&lt;rs#&gt;</em> <em>&lt;rs#1, rs#2, etc.&gt;</em></dt>
+<dd>Argument used to include SNP(s) with the matching ID. This argument may be used 
+multiple times if desired.</dd>
+<dt><strong>--filter-include-snp-file</strong> <em>&lt;snp_filename&gt;</em></dt>
+<dd>Argument used to define a file of SNP IDs to include.</dd>
+<dt><strong>--filter-exclude-snp-file</strong> <em>&lt;snp_filename&gt;</em></dt>
+<dd>Argument used to define a file of SNP IDs to exclude.</dd>
+<dt><strong>--filter-max-missing</strong> <em>proportion_float</em></dt>
+<dd>Argument used to filter positions by their proportion of missing data, a value of 
+0.0 will ignore missing data whereas a value of 1.0 will allow no missing data.</dd>
+</dl>
+</div>
+<div class="section" id="position-based-arguments">
+<h3>Position-Based Arguments<a class="headerlink" href="#position-based-arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt><strong>--filter-include-chr</strong> <em>&lt;chr&gt;</em> <em>&lt;chr1, chr2, etc.&gt;</em></dt>
+<dd>Argument used to define the chromosome(s) to include. This argument may be used 
+multiple times if desired.</dd>
+<dt><strong>--filter-exclude-chr</strong> <em>&lt;chr&gt;</em> <em>&lt;chr1, chr2, etc.&gt;</em></dt>
+<dd>Argument used to define the chromosome(s) to exclude. This argument may be used 
+multiple times if desired.</dd>
+<dt><strong>--filter-from-bp</strong> <em>&lt;bp_int&gt;</em></dt>
+<dd>Argument used to define the lower bound of positions to include. May only be used 
+with a single chromosome.</dd>
+<dt><strong>--filter-to-bp</strong> <em>&lt;bp_int&gt;</em></dt>
+<dd>Argument used to define the upper bound of positions to include. May only be used 
+with a single chromosome.</dd>
+<dt><strong>--filter-distance</strong> <em>&lt;bp_int&gt;</em></dt>
+<dd>Argument used to define the distance that no two sites may be within</dd>
+<dt><strong>--filter-include-positions</strong> <em>&lt;position_filename&gt;</em></dt>
+<dd>Argument used to define a file of positions to include within a tsv file 
+(chromosome and position).</dd>
+<dt><strong>--filter-exclude-positions</strong> <em>&lt;position_filename&gt;</em></dt>
+<dd>Argument used to define a file of positions to exclude within a tsv file 
+(chromosome and position).</dd>
+<dt><strong>--filter-include-bed</strong> <em>&lt;position_bed_filename&gt;</em></dt>
+<dd>Argument used to define a BED file of positions to include.</dd>
+<dt><strong>--filter-exclude-bed</strong> <em>&lt;position_bed_filename&gt;</em></dt>
+<dd>Argument used to define a BED file of positions to exclude.</dd>
+</dl>
+</div>
+<div class="section" id="flag-based-arguments">
+<h3>Flag-Based Arguments<a class="headerlink" href="#flag-based-arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt><strong>--filter-include-passed</strong></dt>
+<dd>Argument used to include positions with the 'PASS' filter flag.</dd>
+<dt><strong>--filter-include-filtered</strong> <em>FILTER_FLAG</em></dt>
+<dd>Argument used to include positions with the specified filter flag.</dd>
+<dt><strong>--filter-exclude-filtered</strong> <em>FILTER_FLAG</em></dt>
+<dd>Argument used to exclude positions with the specified filter flag.</dd>
+<dt><strong>--filter-include-info</strong> <em>INFO_FLAG</em></dt>
+<dd>Argument used to include positions with the specified info flag.</dd>
+<dt><strong>--filter-exclude-info</strong> <em>INFO_FLAG</em></dt>
+<dd>Argument used to exclude positions with the specified info flag.</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="vcf_calc.html" class="btn btn-neutral float-right" title="VCF Statistic Calculator Function" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../vcf_functions.html" class="btn btn-neutral" title="VCF Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

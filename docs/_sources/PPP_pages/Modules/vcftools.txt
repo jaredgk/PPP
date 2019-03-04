@@ -1,8 +1,0 @@
-===============
-vcftools Module
-===============
-
-.. automodule:: vcftools
-    :members: 
-    :undoc-members:
-    :show-inheritance:

@@ -1,0 +1,16 @@
+=============
+VCF Functions
+=============
+
+The VCF functions were developed to perform many of the core operations typically used in population genetic analyses. Each of these functions were designed to perform a single operation (i.e. filtering, phasing, etc.) on a standard VCF, compressed VCF, or BCF.
+
+Functions
+---------
+.. toctree::
+   :maxdepth: 1
+
+   Functions/vcf_filter
+   Functions/vcf_calc
+   Functions/vcf_split
+   Functions/vcf_phase
+   Functions/four_gamete

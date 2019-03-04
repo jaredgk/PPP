@@ -1,5 +1,0 @@
-===============
-vcf_sampler.run
-===============
-
-.. autofunction:: vcf_sampler.run

@@ -1,0 +1,324 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>VCF Split Function &mdash; PPP 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="VCF Phase Function" href="vcf_phase.html" />
+    <link rel="prev" title="VCF Statistic Calculator Function" href="vcf_calc.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../vcf_functions.html">VCF Functions</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../vcf_functions.html#functions">Functions</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="vcf_filter.html">VCF Filter Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vcf_calc.html">VCF Statistic Calculator Function</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">VCF Split Function</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#input-command-line-arguments">Input Command-line Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#output-command-line-arguments">Output Command-line Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#split-command-line-arguments">Split Command-line Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#filter-command-line-arguments">Filter Command-line Arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="vcf_phase.html">VCF Phase Function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="four_gamete.html">Four Gamete Test Function</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../conversions.html">File Conversions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Model File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../vcf_functions.html">VCF Functions</a> &raquo;</li>
+        
+      <li>VCF Split Function</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Functions/vcf_split.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-vcf_split">
+<span id="vcf-split-function"></span><h1>VCF Split Function<a class="headerlink" href="#module-vcf_split" title="Permalink to this headline">¶</a></h1>
+<p>Split VCF file into multiple VCFs.</p>
+<p>Splits a single VCF file into multiple VCF files using either a statistic or
+bed file. The statistic/bed file must contain loci-based (i.e. window-based)
+data for the function to operate. If the specified statistic file does not
+contain a BIN_END column, the --statistic-window-size argument may be used.</p>
+<div class="section" id="input-command-line-arguments">
+<h2>Input Command-line Arguments<a class="headerlink" href="#input-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt><strong>--vcf</strong> <em>&lt;input_filename&gt;</em></dt>
+<dd>Argument used to define the filename of the VCF file to be split.</dd>
+<dt><strong>--split-file</strong> <em>&lt;split_filename&gt;</em></dt>
+<dd>Argument used to define the file to be split</dd>
+<dt><strong>--model-file</strong> <em>&lt;model_filename&gt;</em></dt>
+<dd>Argument used to define the model file. Please note that this argument cannot be 
+used with the <strong>--pop-file</strong> argument or individual-based filters.</dd>
+<dt><strong>--model</strong> <em>&lt;model_str&gt;</em></dt>
+<dd>Argument used to define the model (i.e. the individual(s) to include and/or the 
+populations for relevant statistics). May be used with any statistic. Please note 
+that this argument cannot be used with <strong>--pop-file</strong> argument or the 
+individual-based filters.</dd>
+</dl>
+</div>
+<div class="section" id="output-command-line-arguments">
+<h2>Output Command-line Arguments<a class="headerlink" href="#output-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt><strong>--out-prefix</strong> <em>&lt;output_prefix&gt;</em></dt>
+<dd>Argument used to define the output prefix (i.e. filename without file extension)</dd>
+<dt><strong>--out-format</strong> <em>&lt;vcf, vcf.gz, bcf&gt;</em></dt>
+<dd>Argument used to define the desired output format. Formats include: uncompressed 
+VCF (vcf); compressed VCF (vcf.gz) [default]; and BCF (bcf).</dd>
+<dt><strong>--out-dir</strong> <em>&lt;output_dir_name&gt;</em></dt>
+<dd>Argument used to define the output directory.</dd>
+<dt><strong>--overwrite</strong></dt>
+<dd>Argument used to define if previous output should be overwritten.</dd>
+</dl>
+</div>
+<div class="section" id="split-command-line-arguments">
+<h2>Split Command-line Arguments<a class="headerlink" href="#split-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt><strong>--split-method</strong> <em>&lt;statistic-file, bed&gt;</em></dt>
+<dd>Argument used to define the splitting method. Users may spilit using either 
+a statistic-file (statistic-file) from VCF Calc (or other methods) or a BED 
+file (bed).</dd>
+<dt><strong>--statistic-window-size</strong> <em>&lt;statistic_window_int&gt;</em></dt>
+<dd>Argument used to define the size of window calculations. This argument is only 
+required if the BIN_END column is absent within the file.</dd>
+<dt><strong>--no-window-correction</strong></dt>
+<dd>Argument used to define if a window should not be corrected to avoid 
+an overlap of a single position (i.e. 100-200/200-300 vs. 100-199/200-299).</dd>
+</dl>
+</div>
+<div class="section" id="filter-command-line-arguments">
+<h2>Filter Command-line Arguments<a class="headerlink" href="#filter-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<p>If using an unfiltered VCF file (e.g. reduce the creation of unnecessary large files)
+the VCF calculator is able to use either a kept or removed sites/BED file and the
+individual-based paramemeters.</p>
+<div class="section" id="individual-based-arguments">
+<h3>Individual-Based Arguments<a class="headerlink" href="#individual-based-arguments" title="Permalink to this headline">¶</a></h3>
+<p>Please note that all individual-based arguments are not compatible with either the 
+<strong>--model</strong> or <strong>--model-file</strong> command-line arguments.</p>
+<dl class="docutils">
+<dt><strong>--filter-include-indv</strong> <em>&lt;indv_str&gt;</em> <em>&lt;indv1_str, indv2_str, etc.&gt;</em></dt>
+<dd>Argument used to define the individual(s) to include. This argument may be used 
+multiple times if desired.</dd>
+<dt><strong>--filter-exclude-indv</strong> <em>&lt;indv_str&gt;</em> <em>&lt;indv1_str, indv2_str, etc.&gt;</em></dt>
+<dd>Argument used to define the individual(s) to exclude. This argument may be used 
+multiple times if desired.</dd>
+<dt><strong>--filter-include-indv-file</strong> <em>&lt;indv_filename&gt;</em></dt>
+<dd>Argument used to define a file of individuals to include.</dd>
+<dt><strong>--filter-exclude-indv-file</strong> <em>&lt;indv_filename&gt;</em></dt>
+<dd>Argument used to define a file of individuals to exclude.</dd>
+</dl>
+</div>
+<div class="section" id="position-based-arguments">
+<h3>Position-Based Arguments<a class="headerlink" href="#position-based-arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt><strong>--filter-include-positions</strong> <em>&lt;position_filename&gt;</em></dt>
+<dd>Argument used to define a file of positions to include within a tsv file 
+(chromosome and position).</dd>
+<dt><strong>--filter-exclude-positions</strong> <em>&lt;position_filename&gt;</em></dt>
+<dd>Argument used to define a file of positions to exclude within a tsv file 
+(chromosome and position).</dd>
+<dt><strong>--filter-include-bed</strong> <em>&lt;position_bed_filename&gt;</em></dt>
+<dd>Argument used to define a BED file of positions to include.</dd>
+<dt><strong>--filter-exclude-bed</strong> <em>&lt;position_bed_filename&gt;</em></dt>
+<dd>Argument used to define a BED file of positions to exclude.</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="vcf_phase.html" class="btn btn-neutral float-right" title="VCF Phase Function" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="vcf_calc.html" class="btn btn-neutral" title="VCF Statistic Calculator Function" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
