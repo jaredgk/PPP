@@ -28,7 +28,7 @@ def log_vcftools_reference (out_filename, append_mode = False, ref_header = True
         log_file.write('Please Reference alongside the PPP:\n')
 
     log_file.write('Danecek, P. et al. The variant call format and VCFtools. '
-                   'Bioinformatics 27, 2156–2158 (2011).')
+                   'Bioinformatics 27, 2156-2158 (2011).')
 
     log_file.close()
 
