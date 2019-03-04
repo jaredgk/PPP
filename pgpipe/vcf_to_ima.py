@@ -1,3 +1,102 @@
+'''
+    Create IMa input file from four-gamete filtered VCF files.
+
+    An IM analysis requires an IM-formatted input file that contains multiple 
+    loci, where each locus has sequence information for variant sites as 
+    determined by multiple individuals (which are grouped by population).
+    To produce this file, this script takes either a VCF file with a
+    BED file that indicates loci to be used or a VCF file per locus. A model
+    file will be used to split the samples in the VCF(s) into populations.
+
+    For each locus, a header line is created that contains several pieces of
+    information, including number of individuals per population at this locus,
+    number of sites in sequences provided, mutation model, inheritance scalar,
+    and mutation rate per year at locus (over locus, not per base pair). 
+    Population sizes and sequence ordering are handled internally, the 
+    inheritance scalar and mutation rate can be set via commandline.
+
+    Loci provided as input must pass the four-gamete filtering criteria. 
+    In addition, if filtering has not been previously done options are
+    available to filter out indels (default), multiallelic sites, and 
+    CpGs (with reference genome). Sites with missing data can either be
+    filtered by dropping individuals missing data from a locus from 
+    analysis at that locus, or by replacing the missing site with a 
+    reference allele. 
+
+    ###############
+    Input Arguments
+    ###############
+    **--vcf** *<input_filename>*
+        Filename for input VCF if using BED file with locus information
+    **--vcfs** *<vcf_filename_1>*...*<vcf_filename_n>*
+        One or multiple VCF input filenames where each file contains
+        sequences for a single locus. A file with lines corresponding
+        to filenames can be provided with **--vcfs** *@<vcf_filelist>*
+    **--model-file** *<model_filename>*
+        Filename of model file.
+    **--model** *<model name>*
+        If model file contains multiple models, use this argument
+        to specify name of population to use.
+    **--reference-fasta** *<reference_filename>*
+        Filename for reference FASTA file. File can be uncompressed or
+        bg-zipped, but must be indexed with faidx. When option is specified,
+        default options are to include sequence in output loci but not filter
+        for CpGs (use --parse-cpg)
+    **--bed** *<bed_filename>*
+        Filename for BED file specifying loci if only one VCF is provided. 
+        Can be used with multiple VCFs if line count aligns, used for getting
+        correct locus length.
+    
+    ################
+    Output Arguments
+    ################
+    **--out** *<out_filename>*
+        Output filename.
+    
+    #############
+    Model Options
+    #############
+    **--mutrate** *<mutation rate>*
+        Set mutation rate per base pair (default is 1e-9). This value is
+        multiplied by locus length to get mutation rate per locus.
+    **--inheritance-scalar** *<scalar>*
+        Sets inheritance scalar for all loci. Default behavior is to 
+        set scalar to 1 for non-X/Y/MT chromosomes, .75 for 'X' and
+        'chrX', and .25 for 'y', 'chrY', 'MT', and 'chrMT'.
+
+    #################
+    Filtering Options
+    #################
+    **--remove-multiallele**
+        Set all multiallelic sites to be reference. 
+    **--drop-missing-sites** *<individual_count>*
+        Drops all sites where more than 'individual_count' individuals
+        are missing data. Default is -1 (no dropping), and 0 will 
+        drop all sites missing data and replace them with the reference
+        allele. 
+    **--drop-missing-inds**
+        If set, if an individual is missing data at a locus, that 
+        individual will not be included at that locus and population
+        counts for that locus will be adjusted.
+    **--remove-cpg**
+        Requires --reference-fasta. If set, will replace CpG sites with
+        reference allele at site, setting them as invariant.
+
+    #############
+    Other Options
+    #############
+    **--zero-ho**
+        Use if input BED file uses zero-based, half-open coordinates instead
+        of one-based, closed.
+    **--bed-column-index** *<start_col,end_col,chrom_col>*
+        Comma-separated list of zero-based indexes of start, end, and 
+        chromosome name columns in input BED file. Default value for
+        traditionally structured BED is 1,2,0
+    **--noseq**
+        If set, and --reference-fasta is provided, will not output 
+        invariant sites to IM file.
+
+'''
 import sys
 import pysam
 import argparse
