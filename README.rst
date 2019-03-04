@@ -8,8 +8,5 @@ The current documentation may be found `here <https://ppp-devaw.readthedocs.io/>
 
 A PDF of the documentation is also available for `download <https://readthedocs.org/projects/ppp/downloads/pdf/latest/>`_. 
 
-|build-status|
-.. |build-status| image:: https://travis-ci.org/jaredgk/PPP.svg
-    :alt: build status
-    :scale: 100%
-    :target: https://travis-ci.org/jaredgk/PPP
+[![Build Status](your thttps://travis-ci.org/jaredgk/PPP.svg)](https://travis-ci.org/jaredgk/PPP)
+
