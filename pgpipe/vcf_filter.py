@@ -2,8 +2,8 @@
     Filter VCF files using VCFTools.
 
     Automates various filters to VCF files using VCFtools.
-	
-	############################
+
+    ############################
     Input Command-line Arguments
     ############################
     **--vcf** *<input_filename>*
@@ -14,8 +14,8 @@
     **--model** *<model_str>*
     	Argument used to define the model (i.e. the individual(s) to include). Please note
     	that this argument cannot be used with the individual-based filters.
-	
-	#############################
+
+    #############################
     Output Command-line Arguments
     #############################
     **--out** *<output_filename>*
@@ -29,15 +29,15 @@
         format (removed_bed, kept_bed).
     **--overwrite**
         Argument used to define if previous output should be overwritten.
-	
-	#############################
+
+    #############################
     Filter Command-line Arguments
     #############################
     The filtering arguments below are roughly seperated into catagoires. Please not that
     mulitple filters are seperated into two opposing function types **include** and 
     **exclude**.
-	
-	**************************
+
+    **************************
     Individual-Based Arguments
     **************************
     Please note that all individual-based arguments are not compatible with either the 
@@ -53,9 +53,9 @@
         Argument used to define a file of individuals to include.
     **--filter-exclude-indv-file** *<indv_filename>*
         Argument used to define a file of individuals to exclude.
-	
-	*******************************
-	Allele/Genotype-Based Arguments
+
+    *******************************
+    Allele/Genotype-Based Arguments
     *******************************
     **--filter-min-alleles** *min_int*
     	Argument used to include positions with a number of allele >= to the 
@@ -64,30 +64,30 @@
         Argument used to include positions with a number of allele <= to the 
         given number.
     **--filter-maf-min** *maf_proportion*
-		Argument used to include sites with equal or greater MAF values.
+    	Argument used to include sites with equal or greater MAF values.
     **--filter-maf-max** *maf_proportion*
     	Argument used to include sites with equal or lesser MAF values.
     **--filter-mac-min** *mac_int*
     	Argument used to include sites with equal or greater MAC values.
     **--filter-mac-max** *mac_int*
     	Argument used to include sites with equal or lesser MAC values.
-   	**--filter-include-indels**
+    	**--filter-include-indels**
     	Argument used to include positions if they contain an insertion or a deletion. 
     **--filter-exclude-indels**
     	Argument used to exclude positions if they contain an insertion or a deletion. 
- 	**--filter-include-snp** *<rs#>* *<rs#1, rs#2, etc.>*
- 		Argument used to include SNP(s) with the matching ID. This argument may be used 
+    **--filter-include-snp** *<rs#>* *<rs#1, rs#2, etc.>*
+    	Argument used to include SNP(s) with the matching ID. This argument may be used 
         multiple times if desired.
     **--filter-include-snp-file** *<snp_filename>*
     	Argument used to define a file of SNP IDs to include.
     **--filter-exclude-snp-file** *<snp_filename>*
     	Argument used to define a file of SNP IDs to exclude.
     **--filter-max-missing** *proportion_float*
-		Argument used to filter positions by their proportion of missing data, a value of 
-		0.0 will ignore missing data whereas a value of 1.0 will allow no missing data.
-	
-	************************
-	Position-Based Arguments
+    	Argument used to filter positions by their proportion of missing data, a value of 
+    	0.0 will ignore missing data whereas a value of 1.0 will allow no missing data.
+
+    ************************
+    Position-Based Arguments
     ************************
     **--filter-include-chr** *<chr>* *<chr1, chr2, etc.>*
         Argument used to define the chromosome(s) to include. This argument may be used 
@@ -113,8 +113,8 @@
         Argument used to define a BED file of positions to include.
     **--filter-exclude-bed** *<position_bed_filename>*
         Argument used to define a BED file of positions to exclude.
-	
-	********************
+
+    ********************
     Flag-Based Arguments
     ********************
     **--filter-include-passed**
