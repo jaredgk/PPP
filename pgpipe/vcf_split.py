@@ -1,6 +1,4 @@
 '''
-    Split VCF file into multiple VCFs.
-
     Splits a single VCF file into multiple VCF files using either a statistic or
     bed file. The statistic/bed file must contain loci-based (i.e. window-based)
     data for the function to operate. If the specified statistic file does not
@@ -86,6 +84,15 @@
         Argument used to define a BED file of positions to include.
     **--filter-exclude-bed** *<position_bed_filename>*
         Argument used to define a BED file of positions to exclude.
+
+    ##########################
+    Example Command-line Usage
+    ##########################
+    Command-line to split using a statistic file:
+
+    .. code-block:: bash
+        
+        vcf_split.py --vcf input.vcf --split-file input.windowed.weir.fst --split-method statistic-file
 '''
 
 import os

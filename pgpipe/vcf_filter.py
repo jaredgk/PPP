@@ -1,7 +1,10 @@
 '''
-    Filter VCF files using VCFTools.
+    Automates VCF file filering using VCFtools. Filters may be used independently or
+    combined to create complex filtering operations.        
 
-    Automates various filters to VCF files using VCFtools.
+    Please note, `VCFtools <https://vcftools.github.io/index.html>`_ should be cited
+    alonside the PPP when using this function. Please see the log file for the relevant 
+    citation.
 
     ############################
     Input Command-line Arguments
@@ -119,14 +122,35 @@
     ********************
     **--filter-include-passed**
         Argument used to include positions with the 'PASS' filter flag.
-    **--filter-include-filtered** *FILTER_FLAG*
+    **--filter-include-filtered** *<filter_flag>*
         Argument used to include positions with the specified filter flag.
-    **--filter-exclude-filtered** *FILTER_FLAG*
+    **--filter-exclude-filtered** *<filter_flag>*
         Argument used to exclude positions with the specified filter flag.
-    **--filter-include-info** *INFO_FLAG*
+    **--filter-include-info** *<info_flag>*
         Argument used to include positions with the specified info flag.
-    **--filter-exclude-info** *INFO_FLAG*
+    **--filter-exclude-info** *<info_flag>*
         Argument used to exclude positions with the specified info flag.
+
+    ##########################
+    Example Command-line Usage
+    ##########################
+    Command-line to only include biallelic sites:
+
+    .. code-block:: bash
+        
+        vcf_filter.py --vcf input.bcf --filter-min-alleles 2 --filter-max-alleles 2
+
+    Command-line to only include chromosome chr1:
+
+    .. code-block:: bash
+        
+        vcf_filter.py --vcf input.vcf.gz --filter-include-chr chr1
+
+    Command-line to remove indels and ouput a BCF file:
+
+    .. code-block:: bash
+        
+        vcf_filter.py --vcf input.vcf --filter-exclude-indels --out-format bcf
 '''
 
 import os
