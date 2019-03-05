@@ -1,45 +1,99 @@
+'''
+    Given input with individual variants over a region of the genome, 
+    generate an interval within those variants that passes the 
+    four-gamete filtering criteria, then return either that interval
+    or an output file with variants in that interval.
 
-"""
-    samples an interval based on four-gamete tests from aligned sequences
-"""
-"""
-    written for python 3.6
-    2 possible kinds of 4 gamete-based intervals:
-        HandK85, minimal parsimonious set of intervals, such that each contains
-            one or more recombination events:
-            each interval has endpoints that are informative sites that are
-            incompatible on the basis of 4gamete criterion
-            each is inferred to contain at least 1 recombination event
-            a set of intervals form a  parsimonious non-overlapping set that
-            are consistent with the data regions not in those intervals show no
-            evidence of recombination
-        CONTIG4GPASS, set of most inclusive intervals, such that all the sites
-            in each are fully compatible with each other:
-            each interval is a stretch of bases that contain zero incompatible
-            sites by the 4 gamete criterion
-            on each side,  the left and right,  the next polymorphic site that
-            is not in the interval must be incompatible with one of the
-            polymorphic sites that is in the interval.
+    The four-gamete test is a method for determining whether or not 
+    there has been recombination between a pair of variants. To do this, 
+    all individuals have haplotypes defined as the variants at the two
+    sites. Given two snps with ref/alt alleles A/G and C/T, if 
+    individuals in this sample have haplotypes AC, AT, and GT, it is
+    possible that there has been no recombination between these alleles.
+    If an additional individual has the GC haplotype, this means that 
+    a recombination event must have taken place between the sites. 
 
-    input filetypes:   FASTA, SITE, VCF
-    kinds of intervals:   HandK85  CONTIG4GPASS (default)
-    kinds of returns:
-            all intervals
-            single interval
-    single interval return options:
-            random interval - uniform over list of intervals
-            randombase interval - prob sampling proportional to interval length
-            leftmost
-            rightmost
-            interval with at least n informative sites:
-                random_n
-                randombase_n
-                leftmost_n
-                rightmost_n
-    Maximum number of informative SNPs is 1000
-        set in buildlistsofsites()
+    This test must be done on phased data.
 
-"""
+    Common usage for this function is to input a VCF file that contains
+    variants for individuals at a single locus, with output returned being
+    a VCF that contains a subsample of these variants. A full VCF can be 
+    used with --vcfreg, where the second argument is a BED file with one
+    or more regions, output will be either a VCF for four-gamete passing 
+    regions or a new BED file with the truncated regions.
+
+    ###############
+    Input Arguments
+    ###############
+    **--vcfs** *<input_vcf_1>*...*<input_vcf_n>*
+        Input name of one or more VCF files, where each VCF represents
+        a locus. 
+    **--vcfreg** *<input_vcf>* *<BED file>*
+        Input name of VCF file containing genome data and name of BED file
+        with regions to be analyzed.
+
+    ###############
+    Output Aguments
+    ###############
+    **--out** *<output_filename>*
+        Name for output file.
+    **--out-prefix** *<ouput_prefix>*
+        If multiple files are output, this option is required to set a 
+        prefix for the output files.
+
+    ##################
+    Interval Arguments
+    ##################
+    **--numinf** *<minimum informative site count>*
+        Region returned must have at least n informative sites, defaults to 1
+    **--hk**
+        If set, returns intervals with at least one recombination event 
+        instead of regions with no recombination.
+    **--reti**
+        This script will generate a list of valid regions with no
+        recombination. Selecting this option will return a single interval
+        as specified by other arguments
+    **--retl**
+        Returns all valid intervals, either as a list of intervals or 
+        multiple output files
+
+
+    ################################
+    Single Returned Region Arguments
+    ################################
+    Select one of:
+    **--rani**
+        Returns random interval (default)
+    **--ranb**
+        Returns random interval, with probability of interval 
+        proportional to interval length
+    **--left**
+        Return first interval with enough informative sites
+    **--right**
+        Return last interval with enough informative sites
+    **--maxlen**
+        Return interval with most informative sites
+
+    ###############
+    Other Arguments
+    ###############
+    **--remove-multiallele**
+        Removes multi-alleleic sites from analysis
+    **--include-missing**
+        Include sites with missing data in analysis
+    **--ovlps**
+        Extend region to include non-informative variants between
+        an edge variant and a variant that breaks the four-gamete
+        criteria
+    **--ovlpi**
+        Include informative variants from overlapping
+        regions
+
+
+
+
+'''
+
 import sys
 import argparse
 import logging
