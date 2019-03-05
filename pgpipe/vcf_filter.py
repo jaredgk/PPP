@@ -6,7 +6,6 @@
     ############################
     Input Command-line Arguments
     ############################
-
     **--vcf** *<input_filename>*
         Argument used to define the filename of the VCF file to be filtered.
     **--model-file** *<model_filename>*
@@ -19,7 +18,6 @@
     #############################
     Output Command-line Arguments
     #############################
-
     **--out** *<output_filename>*
         Argument used to define the complete output filename, overrides **--out-prefix**
     **--out-prefix** *<output_prefix>*
@@ -35,7 +33,6 @@
     #############################
     Filter Command-line Arguments
     #############################
-
     The filtering arguments below are roughly seperated into catagoires. Please not that
     mulitple filters are seperated into two opposing function types **include** and 
     **exclude**.
@@ -43,7 +40,6 @@
     **************************
     Individual-Based Arguments
     **************************
-
     Please note that all individual-based arguments are not compatible with either the 
     **--model** or **--model-file** command-line arguments.
 
@@ -61,7 +57,6 @@
     *******************************
     Allele/Genotype-Based Arguments
     *******************************
-
     **--filter-min-alleles** *min_int*
     	Argument used to include positions with a number of allele >= to the 
     	given number.
@@ -94,7 +89,6 @@
     ************************
     Position-Based Arguments
     ************************
-
     **--filter-include-chr** *<chr>* *<chr1, chr2, etc.>*
         Argument used to define the chromosome(s) to include. This argument may be used 
         multiple times if desired.
@@ -123,7 +117,6 @@
     ********************
     Flag-Based Arguments
     ********************
-
     **--filter-include-passed**
         Argument used to include positions with the 'PASS' filter flag.
     **--filter-include-filtered** *FILTER_FLAG*
