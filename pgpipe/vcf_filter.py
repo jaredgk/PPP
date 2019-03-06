@@ -138,19 +138,19 @@
 
     .. code-block:: bash
         
-        vcf_filter.py --vcf input.bcf --filter-min-alleles 2 --filter-max-alleles 2
+        python vcf_filter.py --vcf input.bcf --filter-min-alleles 2 --filter-max-alleles 2
 
     Command-line to only include chromosome chr1:
 
     .. code-block:: bash
         
-        vcf_filter.py --vcf input.vcf.gz --filter-include-chr chr1
+        python vcf_filter.py --vcf input.vcf.gz --filter-include-chr chr1
 
     Command-line to remove indels and ouput a BCF file:
 
     .. code-block:: bash
         
-        vcf_filter.py --vcf input.vcf --filter-exclude-indels --out-format bcf
+        python vcf_filter.py --vcf input.vcf --filter-exclude-indels --out-format bcf
 '''
 
 import os
