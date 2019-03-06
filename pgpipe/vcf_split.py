@@ -217,6 +217,45 @@ def return_missing_columns (sample_headers):
 
     return None
 
+def split_samples_iter (split_sample_data, split_method):
+
+    # Check if the split method is a statistic file
+    if split_method == 'statistic-file':
+
+        for sample_index, split_sample in split_sample_data.iterrows():
+
+            yield sample_index, split_sample
+
+    # Check if the split method is a bed file
+    elif split_method == 'bed':
+
+        for sample_index, split_sample in enumerate(split_sample_data):
+
+            yield sample_index, split_sample
+
+
+def assign_position_args (sample_data, split_method):
+
+    # Assignment variable list - chrom, start, end
+    assign_list = ['', '', '']
+
+    # Assign the statistic file columns
+    if split_method == 'statistic-file':
+
+        # Assign the headers
+        assign_list = ['CHROM', 'BIN_START', 'BIN_END']
+
+    # Assign the BED file columns
+    elif split_method == 'bed':
+
+        # Assign the headers
+        assign_list = ['chrom', 'start', 'end']
+
+    # Return the sample position information
+    return ['--chr', sample_data[assign_list[0]], 
+            '--from-bp', sample_data[assign_list[1]], 
+            '--to-bp', sample_data[assign_list[2]]]
+
 def run (passed_arguments = []):
     '''
     Split VCF file into multiple VCFs.
@@ -437,7 +476,7 @@ def run (passed_arguments = []):
         split_samples = BedTool(vcf_args.split_file)
 
     # Loop the rows of the sample to be split
-    for sample_index, split_sample in split_samples.iterrows():
+    for sample_index, split_sample in split_samples_iter(split_samples, vcf_args.split_method):
 
         # Copy common arguments for VCF call
         sample_call_args = copy.deepcopy(vcftools_call_args)
@@ -451,21 +490,11 @@ def run (passed_arguments = []):
         # Store the sample output prefix
         sample_call_args.extend(['--out', sample_path])
 
-        # Assign the statistic file columns
-        if vcf_args.split_method == 'statistic-file':
+        # Assign the position args using the split method
+        assigned_position_args = assign_position_args(split_sample, vcf_args.split_method)
 
-            # Store the sample position information
-            sample_call_args.extend(['--chr', split_sample['CHROM'],
-                                     '--from-bp', split_sample['BIN_START'],
-                                     '--to-bp', split_sample['BIN_END']])
-
-        # Assign the BED file columns
-        elif vcf_args.split_method == 'bed': 
-
-            # Store the sample position information
-            sample_call_args.extend(['--chr', split_sample['chrom'],
-                                     '--from-bp', split_sample['start'],
-                                     '--to-bp', split_sample['end']])
+        # Store the sample position args
+        sample_call_args.extend(assigned_position_args)
 
         # Assign the expected output filename
         vcftools_sample_filename = sample_path + vcftools_output_suffix
