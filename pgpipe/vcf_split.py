@@ -92,7 +92,7 @@
 
     .. code-block:: bash
         
-        vcf_split.py --vcf input.vcf --split-file input.windowed.weir.fst --split-method statistic-file
+        python vcf_split.py --vcf input.vcf --split-file input.windowed.weir.fst --split-method statistic-file
 '''
 
 import os
@@ -103,6 +103,8 @@ import logging
 import shutil
 import pandas as pd
 import numpy as np
+
+from pybedtools import BedTool
 
 # Import basic vcftools functions
 from pgpipe.vcftools import *
@@ -385,46 +387,54 @@ def run (passed_arguments = []):
 
     logging.info('Input file assigned')
 
-    # Read in the sample file
-    split_samples = pd.read_csv(vcf_args.split_file, sep = '\t')
+    # Check if a statistic file is the split method
+    if vcf_args.split_method == 'statistic-file':
 
-    logging.info('Split file assigned')
+        # Read in the sample file
+        split_samples = pd.read_csv(vcf_args.split_file, sep = '\t')
 
-    # Assign the columns
-    split_columns = list(split_samples)
+        logging.info('Statistic file for splitting assigned')
 
-    # Assign missing columns
-    missing_columns = return_missing_columns(split_columns)
+        # Assign the columns
+        split_columns = list(split_samples)
 
-    # Check for missing columns
-    if missing_columns:
+        # Assign missing columns
+        missing_columns = return_missing_columns(split_columns)
 
-        # Report error if too many or unexpected columns are missing
-        if len(missing_columns) != 1 or 'BIN_END' not in missing_columns:
-            raise ValueError('Cannot find %s column(s) in file specified by ' \
-                             '--split-file.' % ', '.join(missing_headers))
+        # Check for missing columns
+        if missing_columns:
 
-        # Check if statistic_window_size has been assigned
-        if not vcf_args.statistic_window_size:
-            raise ValueError("'BIN_END' column absent in %s. Please use " \
-                             '--statistic-window-size' % vcf_args.split_file)
+            # Report error if too many or unexpected columns are missing
+            if len(missing_columns) != 1 or 'BIN_END' not in missing_columns:
+                raise ValueError('Cannot find %s column(s) in file specified by ' \
+                                 '--split-file.' % ', '.join(missing_headers))
 
-        # Assign window size
-        window_size = vcf_args.statistic_window_size
+            # Check if statistic_window_size has been assigned
+            if not vcf_args.statistic_window_size:
+                raise ValueError("'BIN_END' column absent in %s. Please use " \
+                                 '--statistic-window-size' % vcf_args.split_file)
 
-        # Check if the overlap correction has been specified
-        if not vcf_args.no_window_correction:
+            # Assign window size
+            window_size = vcf_args.statistic_window_size
 
-            # Correct the window size
-            window_size -= 1
+            # Check if the overlap correction has been specified
+            if not vcf_args.no_window_correction:
 
-            logging.info('Applied window correction. To disable the correction '
-                         "use '--no-window-correction'")
+                # Correct the window size
+                window_size -= 1
 
-        # Create the 'BIN_END' column
-        split_samples['BIN_END'] = split_samples['BIN_START'] + window_size
+                logging.info('Applied window correction. To disable the correction '
+                             "use '--no-window-correction'")
 
-        logging.info("Calculated 'BIN_END' using --statistic-window-size")
+            # Create the 'BIN_END' column
+            split_samples['BIN_END'] = split_samples['BIN_START'] + window_size
+
+            logging.info("Calculated 'BIN_END' using --statistic-window-size")
+
+    elif vcf_args.split_method == 'bed':
+
+        # Read in the BED file
+        split_samples = BedTool(vcf_args.split_file)
 
     # Loop the rows of the sample to be split
     for sample_index, split_sample in split_samples.iterrows():
@@ -441,10 +451,21 @@ def run (passed_arguments = []):
         # Store the sample output prefix
         sample_call_args.extend(['--out', sample_path])
 
-        # Store the sample position information
-        sample_call_args.extend(['--chr', split_sample['CHROM'],
-                                 '--from-bp', split_sample['BIN_START'],
-                                 '--to-bp', split_sample['BIN_END']])
+        # Assign the statistic file columns
+        if vcf_args.split_method == 'statistic-file':
+
+            # Store the sample position information
+            sample_call_args.extend(['--chr', split_sample['CHROM'],
+                                     '--from-bp', split_sample['BIN_START'],
+                                     '--to-bp', split_sample['BIN_END']])
+
+        # Assign the BED file columns
+        elif vcf_args.split_method == 'bed': 
+
+            # Store the sample position information
+            sample_call_args.extend(['--chr', split_sample['chrom'],
+                                     '--from-bp', split_sample['start'],
+                                     '--to-bp', split_sample['end']])
 
         # Assign the expected output filename
         vcftools_sample_filename = sample_path + vcftools_output_suffix
