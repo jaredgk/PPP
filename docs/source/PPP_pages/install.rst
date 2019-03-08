@@ -25,7 +25,7 @@ Other Dependencies
 
 The PPP also requries a number of executables to be installed, including:
 
-* `vcftools <https://vcftools.github.io/index.html>`_
+* `VCFtools <https://vcftools.github.io/index.html>`_
 * `BCFtools, Samtools, and HTSlib <http://www.htslib.org/>`_
 * `plink 1.9 <https://www.cog-genomics.org/plink2/>`_
 * `plink 2.0 <https://www.cog-genomics.org/plink/2.0/>`_

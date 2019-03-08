@@ -1,6 +1,4 @@
 '''
-    Statistic calculation using VCFTools.
-
     Automates the calculation of site/windowed fixation index (Fst), Tajima's D,
     nucleotide diversity (Pi), allele frequency, and heterozygosity using
     VCFTools. If no statistic is specified, windowed Fst is used by default.
@@ -116,6 +114,21 @@
         Argument used to define a BED file of positions to include.
     **--filter-exclude-bed** *<position_bed_filename>*
         Argument used to define a BED file of positions to exclude.
+
+    ##########################
+    Example Command-line Usage
+    ##########################
+    Command-line to calculate Tajima's D:
+
+    .. code-block:: bash
+        
+        python vcf_calc.py --vcf input.vcf --calc-statistic TajimaD --statistic-window-size 10000
+
+    Command-line to calculate windowed Fst on the two populations within the model *2Pop*: 
+
+    .. code-block:: bash
+        
+        python vcf_calc.py --vcf input.vcf.gz --model-file input.model --model 2Pop --calc-statistic windowed-weir-fst --statistic-window-size 10000 --statistic-window-step 10000
 '''
 
 import os

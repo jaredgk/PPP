@@ -1,9 +1,9 @@
 '''
-    Utilites for VCF-formatted files
+    Automates various simple file conversions. Currently the function is 
+    capable of converting between VCF-based formats (i.e. VCF, compressed-VCF, 
+    and BCF) and PLINK-based formats (i.e. PED and Binary-PED). Additional 
+    formats will be added as needed. 
 
-    Automates various utilites for VCF-formatted files. This currently includes:
-    obtain list of chromosomes and obtain list of samples.
-    
     ############################
     Input Command-line Arguments
     ############################

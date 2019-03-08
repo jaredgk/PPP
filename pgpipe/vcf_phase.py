@@ -1,6 +1,4 @@
 '''
-    Phaser for VCF files.
-
     Automates the phasing process for a specified VCF file. The function
     allows users to select between the beagle (default) and shapeit 
     phasing algorithms.
@@ -93,6 +91,21 @@
         for identifying long IBS segments.
     **--beagle-path** *<path>*
         Argument used to define the path to locate beagle.jar.
+
+    ##########################
+    Example Command-line Usage
+    ##########################
+    Command-line to phase chromosome chr1 using Beagle:
+
+    .. code-block:: bash
+        
+        python vcf_phase.py --vcf input.vcf --phase-algorithm beagle --phase-chr chr1
+
+    Command-line to phase using SHAPEIT with 100 burn-in iterations:
+
+    .. code-block:: bash
+        
+        python vcf_phase.py --vcf input.vcf.gz --phase-algorithm shapeit --shapeit-burn-iter 100
     
 '''
 #/usr/bin/env python
