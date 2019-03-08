@@ -4,7 +4,7 @@ import logging
 import subprocess
 
 
-from logging_module import initLogger, logArgs
+from pgpipe.logging_module import initLogger, logArgs
 
 def admix_parser(passed_arguments):
     '''admix Argument Parser - Assigns arguments from command line'''

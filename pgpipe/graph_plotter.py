@@ -93,7 +93,7 @@ def bar_plot(in_file):
 
 # Function for plotting graphs for ima2p output data sets
 def do_plots(in_file):
-    try:
+    #try:
         output1 = subprocess.run("grep -B 1000 -m 1 \"SumP\" " + in_file + " | grep -v \"SumP\"", shell=True,
                                  stdout=subprocess.PIPE, universal_newlines=True)
         output2 = subprocess.run("grep -B 1000 -m 2 \"SumP\" " + in_file + " | grep -v \"SumP\" | tail -n1000",
@@ -133,8 +133,8 @@ def do_plots(in_file):
 
         plt.tight_layout()
         plt.savefig(in_file + ".pdf")
-    except:
-        print(in_file + ": No such file or directory")
+    #except:
+    #    print(in_file + ": No such file or directory")
 
 
 
