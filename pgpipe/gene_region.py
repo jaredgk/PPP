@@ -49,7 +49,7 @@ class Region:
     sort_method = "natural"
     sort_order = None
 
-    def __init__(self, start, end, chrom):
+    def __init__(self, start, end, chrom, fullline = None):
         """Zero-based, half open coordinates and chromosome info for
         a region in a genome. Coords will be formatted according to
         flags passed to RegionList, then stored in a single format.
@@ -57,6 +57,7 @@ class Region:
         self.start = start
         self.end = end
         self.chrom = chrom
+        self.fullline = fullline
         #if chrom[0:3] == 'chr':
         #    self.chrom = chrom[3:]
         #else:
@@ -129,6 +130,8 @@ class Region:
         return 'in'
 
     def toStr(self, zeroho=False, zeroclosed=False, sep=':'):
+        if self.fullline is not None:
+            return self.fullline
         start = self.start
         end = self.end
         if not zeroho:
@@ -150,7 +153,7 @@ class RegionList:
                  zeroclosed=False, zeroho=False,
                  colstr=None, sortlist=True, checkoverlap=None,
                  sortmethod=None, sortorder=None, chromfilter=None,
-                 list_template=None, randomize=False):
+                 list_template=None, randomize=False,keep_full_line=False):
         """Class for storing gene region information
 
         Will create a list that stores genomic regions imported from
@@ -243,6 +246,8 @@ class RegionList:
         self.zeroho = zeroho
         self.zeroclosed = zeroclosed
         self.chromfilter = chromfilter
+        self.keep_full_line = keep_full_line
+        self.header = None
         if sortmethod is not None:
             setRegionSort(sortmethod,sortlist=sortorder)
         if filename is not None:
@@ -267,11 +272,21 @@ class RegionList:
     def initFile(self,filename):
         """Initialize RegionList with a region file
         """
+        past_header = False
         with open(filename, 'r') as regionfile:
             for line in regionfile:
                 if line[0] == '#':
+                    self.header = line.strip()
+                    past_header = True
                     continue
                 la = line.strip().split()
+                if not past_header:
+                    past_header = True
+                    try:
+                        t = int(la[self.collist[0]])
+                    except ValueError as e:
+                        self.header = line.strip()
+                        continue
                 self.initRegion(la)
 
 
@@ -296,7 +311,8 @@ class RegionList:
             start -= 1
         elif self.zeroclosed:
             end += 1
-        self.regions.append(Region(start,end,chrom))
+        fullline = (('\t'.join(la)) if self.keep_full_line else None)
+        self.regions.append(Region(start,end,chrom,fullline))
 
 
     def parseCols(self,cols):
@@ -350,6 +366,9 @@ class RegionList:
         if return_str:
             out_str = ''
         for region in self.regions:
+            if region.fullline is not None:
+                file_handle.write(fullline+'\n')
+                continue
             start = region.start
             end = region.end
             if not self.zeroho:

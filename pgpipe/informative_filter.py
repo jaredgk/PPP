@@ -2,6 +2,7 @@ import sys
 import pysam
 import argparse
 import os
+from random import shuffle
 
 #sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
 
@@ -57,6 +58,12 @@ def createParser():
                         "selecting samples from VCF"))
     parser.add_argument("--model",dest="poptag",help="Name of pop if model "
                         "has more than one")
+    parser.add_argument("--keep-full-line",dest="keep_full_line",
+                        action="store_true",help=("Output BED line from "
+                        "original input BED file"))
+    parser.add_argument("--no-sorting",dest="sort_lists",action="store_false",
+                        help=("Guarantees output regions are in same order"
+                        "as input file"))
     return parser
 
 
@@ -64,6 +71,7 @@ def filter_bed_regions(sys_args):
     #parser = argparse.parse_args(sys_args)
     parser = createParser()
     args = parser.parse_args(sys_args)
+    outf = sys.stdout
 
     popmodel = None
     if args.modelname is not None:
@@ -86,13 +94,20 @@ def filter_bed_regions(sys_args):
         randomize = True
 
     regions = RegionList(filename=args.bedname,zeroho=args.zeroho,
-                         zeroclosed=args.zeroclosed,sortlist=(not randomize),
-                         randomize=randomize,colstr=args.gene_col)
+                         zeroclosed=args.zeroclosed,sortlist=args.sort_lists,
+                         colstr=args.gene_col,
+                         keep_full_line=args.keep_full_line)
     if args.filter_xy:
         regions.filterOutXY()
     remove_cpg = (True if args.refname is not None else False)
+    idx_list = [i for i in range(len(regions.regions))]
+    if args.randcount != -1:
+        shuffle(idx_list)
     regions_output = 0
-    for region in regions.regions:
+    idx_output = []
+    #for region in regions.regions:
+    for i in idx_list:
+        region = regions.regions[i]
         if len(region) < args.min_length:
             continue
         rec_list = vcf_reader.getRecordList(region)
@@ -103,7 +118,8 @@ def filter_bed_regions(sys_args):
                     inform_level=args.informative_count,
                     fasta_ref=fasta_seq)
         if pass_list.count(True) >= int(args.minsites):
-            print (region.toStr(sep='\t'))
+            #print (region.toStr(sep='\t'))
+            idx_output.append(i)
             regions_output += 1
         if args.randcount != -1 and regions_output == args.randcount:
             break
@@ -111,6 +127,14 @@ def filter_bed_regions(sys_args):
     if args.randcount != -1 and regions_output != args.randcount:
         sys.stderr.write("Only %d of %d regions found\n"%(regions_output,args.randcount))
         exit(1)
+
+    if randomize:
+        idx_output.sort()
+    
+    if regions.header is not None:
+        outf.write(regions.header+'\n')
+    for i in idx_output:
+        outf.write(regions.regions[i].toStr(sep='\t')+'\n')
 
 
 if __name__ == '__main__':

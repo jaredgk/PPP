@@ -517,9 +517,9 @@ def standard_plink_call (plink_call_args):
         Exception
             If plink stderr returns an error
     '''
-
+    plink_path = os.path.join(os.pardir(),'bin','plink')
     # plink subprocess call
-    plink_call = subprocess.Popen(['plink'] + list(map(str, plink_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    plink_call = subprocess.Popen([plink_path] + list(map(str, plink_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Wait for plink to finish
     plink_out, plink_err = plink_call.communicate()
