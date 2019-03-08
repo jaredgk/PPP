@@ -107,7 +107,6 @@ def convert_argument_parser(passed_arguments):
     # Create the parser
     convert_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
-    
     # Input VCF argument
     convert_parser.add_argument("--vcf", help = "Defines the filename of the VCF file", type = str, action = parser_confirm_file())
 
