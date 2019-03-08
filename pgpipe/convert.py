@@ -103,7 +103,10 @@ def convert_argument_parser(passed_arguments):
     def metavar_list (var_list):
         '''Create a formmated metavar list for the help output'''
         return '{' + ', '.join(var_list) + '}'
-    convert_parser = argparse.ArgumentParser()
+
+    # Create the parser
+    convert_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
+
     # Input VCF argument
     convert_parser.add_argument("--vcf", help = "Defines the filename of the VCF file", type = str, action = parser_confirm_file())
 

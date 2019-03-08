@@ -161,11 +161,11 @@ def assign_plink_output_args (out_prefix, out_format, overwrite = True):
 def assign_ped_from_files (ped_filename = None, map_filename = None, **kwargs):
 
     # Check if a bed file is assigned
-    if not ped_filename:
+    if not os.path.isfile(ped_filename):
         raise IOError('Unable to assign ped file. Please confirm the file is named correctly')
 
     # Check if bim and fam file are not assigned
-    if not map_filename:
+    if not os.path.isfile(map_filename):
         raise IOError('Unable to assign map file. Please confirm the map file (i.e. --map) is assigned')
 
     # Return the ped associated args
@@ -183,6 +183,10 @@ def assign_ped_from_prefix (ped_prefix = None, **kwargs):
     # Check if files were identified, if not return error message
     if not ped_prefix_filenames:
         raise IOError('Unable to assign input files from PED prefix. Please confirm the prefix is specified correctly')
+
+    # Empty filenames, required if not found
+    ped_filename = None
+    map_filename = None
     
     # Check if expected files are found
     for ped_prefix_filename in ped_prefix_filenames:
@@ -208,19 +212,19 @@ def assign_ped_from_prefix (ped_prefix = None, **kwargs):
 def assign_bed_from_files (bed_filename = None, bim_filename = None, fam_filename = None, **kwargs):
 
     # Check if a bed file is assigned
-    if not bed_filename:
+    if not os.path.isfile(bed_filename):
         raise IOError('Unable to assign binary-ped file. Please confirm the file is named correctly')
 
     # Check if the bim and fam files are not assigned
-    if not bim_filename and not fam_filename:
+    if not os.path.isfile(bim_filename) and not os.path.isfile(fam_filename):
         raise IOError('Unable to assign the bim and fam files. Please confirm the files (i.e. --bim, --fam) are assigned')
 
     # Check if the bim is not assigned
-    if not bim_filename:
+    if not os.path.isfile(bim_filename):
         raise IOError('Unable to assign bim file. Please confirm the bim file (i.e. --bim) is assigned')
 
     # Check if the fam file is not assigned
-    if not fam_filename:
+    if not os.path.isfile(fam_filename):
         raise IOError('Unable to assign fam file. Please confirm the fam file (i.e. --fam) is assigned')
 
     # Return the bed associated args
@@ -238,6 +242,11 @@ def assign_bed_from_prefix (bed_prefix = None, **kwargs):
     # Check if files were identified, if not return error message
     if not bed_prefix_filenames:
         raise IOError('Unable to assign input files from Binary-PED prefix. Please confirm the prefix is specified correctly')
+
+    # Empty filenames, required if not found
+    bed_filename = None
+    bim_filename = None
+    fam_filename = None
     
     # Check if expected files are found
     for bed_prefix_filename in bed_prefix_filenames:
