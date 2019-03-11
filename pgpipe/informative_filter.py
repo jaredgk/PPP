@@ -21,6 +21,8 @@ def createParser():
     parser.add_argument("--bed-column-index",dest="gene_col",help=("Three "
                         "comma-separated integers indicating columns for "
                         "start,end,and chromosme in BED file (default 1,2,0"))
+    parser.add_argument("--out",dest="outname",help=("Output filename,"
+                        "default is stdout"))
     parser.add_argument("--zero-ho", dest="zeroho", action="store_true",
                         help="BED input in zero-based, half-open format")
     parser.add_argument("--zero-closed", dest="zeroclosed",action="store_true")
@@ -71,7 +73,10 @@ def filter_bed_regions(sys_args):
     #parser = argparse.parse_args(sys_args)
     parser = createParser()
     args = parser.parse_args(sys_args)
-    outf = sys.stdout
+    if args.outname is not None:
+        outf = open(args.outname,'w')
+    else:
+        outf = sys.stdout
 
     popmodel = None
     if args.modelname is not None:

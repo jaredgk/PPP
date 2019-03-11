@@ -46,7 +46,7 @@ def run(passed_arguments = []):
     logArgs(admix_args, func_name='admixture')
 
     # Assign location of admixture file
-    admixture_exec = os.path.join(os.pardir(), 'bin', 'admixture')
+    admixture_exec = os.path.join(os.pardir, 'bin', 'admixture')
 
     # Check that admixture exists at specified path
     if not os.path.isfile(admixture_exec):
