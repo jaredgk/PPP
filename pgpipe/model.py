@@ -187,6 +187,18 @@ class Model:
     def inds (self):
         return list(itertools.chain.from_iterable(self.ind_dict.values()))
 
+    def return_pop (self, ind):
+
+        # Loop the pops within the model
+        for pop, inds in self.ind_dict.items():
+
+            # Check if the ind belongs to the pop
+            if ind in inds:
+
+                return pop
+
+        raise Exception('Individual (%s) not found within %s' % (ind, self.name))
+
     def assign_tree (self, tree):
         self.tree = str(tree)
 

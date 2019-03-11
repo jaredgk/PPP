@@ -7,10 +7,10 @@ import random
 import string
 import shutil
 
-from plink import *
-
-from logging_module import initLogger, logArgs
-
+# Import PPP modules and scripts
+from pgpipe.plink import *
+from pgpipe.model import read_model_file
+from pgpipe.logging_module import initLogger, logArgs
 
 def check_convertf_for_errors (convertf_stderr):
     '''
@@ -69,28 +69,26 @@ def call_convertf (convertf_call_args):
     # Check that the log file was created correctly
     check_convertf_for_errors(convertf_stderr)
 
-    print(convertf_stderr)
-
     return convertf_stderr
 
-def par_assign_filename (out_prefix, str_size = 10):
+def assign_unique_filename (out_prefix, out_suffix, str_size = 10):
 
     # Generate a random string for par filename
     random_str = ''.join(random.choice(string.ascii_uppercase + string.digits) for digit in range(str_size))
 
-    # Save the par filename
-    par_filename = '%s.%s.par' % (out_prefix, random_str)
+    # Save the unique filename
+    unique_filename = '%s.%s.%s' % (out_prefix, random_str, out_suffix)
 
-    # Loop until par filename is unique
-    while os.path.isfile(par_filename):
+    # Loop until filename is unique
+    while os.path.isfile(unique_filename):
 
         # Generate a random string for par filename
         random_str = ''.join(random.choice(string.ascii_uppercase + string.digits) for digit in range(str_size))
 
-        # Save the par filename
-        par_filename = '%s.%s.par' % (out_prefix, random_str)
+        # Save the unique filename
+        unique_filename = '%s.%s.%s' % (out_prefix, random_str, out_suffix)
 
-    return par_filename
+    return unique_filename
 
 def par_assign_input (gt_filename, snp_filename, ind_filename):
     
@@ -113,7 +111,7 @@ def par_assign_eigenstrat (out_prefix):
 
     # Assign the output filenames
     par_eigenstrat_str =  'outputformat:    EIGENSTRAT\n'
-    par_eigenstrat_str += 'genotypeoutname: %s.eigenstratgeno\n' % out_prefix
+    par_eigenstrat_str += 'genotypeoutname: %s.geno\n' % out_prefix
     par_eigenstrat_str += 'snpoutname:      %s.snp\n' % out_prefix
     par_eigenstrat_str += 'indivoutname:    %s.ind\n' % out_prefix
 
@@ -148,7 +146,7 @@ def ped_to_eigenstrat (ped_filename = None, map_filename = None, ped_prefix = No
         pass
 
     # Assign the par filename
-    par_filename = par_assign_filename(out_prefix)
+    par_filename = assign_unique_filename(out_prefix, 'par')
 
     # Assign the input files
     par_file_str = par_assign_input(ped_filename, map_filename, ped_filename)
@@ -193,7 +191,7 @@ def bed_to_eigenstrat (bed_filename = None, bim_filename = None, fam_filename = 
     fam_filename += '.pedind'
 
     # Assign the par filename
-    par_filename = par_assign_filename(out_prefix)
+    par_filename = assign_unique_filename(out_prefix, 'par')
 
     # Assign the input files
     par_file_str = par_assign_input(bed_filename, bim_filename, fam_filename)
@@ -221,6 +219,55 @@ def bed_to_eigenstrat (bed_filename = None, bim_filename = None, fam_filename = 
     # Update the fam filename
     fam_filename = fam_filename[:-7]
 
+def update_eigenstrat_pops (ind_filename, model):
+
+    # Create a filename for the temporary ind file
+    tmp_ind_filename = assign_unique_filename(ind_filename, 'tmp')
+
+    # Create a temporary file to replace the ind file
+    tmp_ind_file = open(tmp_ind_filename, 'w')
+
+    # Open the ind file
+    with open(ind_filename, 'r') as ind_file:
+
+        # Loop the ind file
+        for ind_line in ind_file:
+
+            # Split the ind line
+            ind_data = ind_line.strip().split()
+
+            # Assign the current ind
+            ind_name = ind_data[0]
+
+            # Assign the pop from the ind
+            pop_name = model.return_pop(ind_name)
+
+            # Update the ind data
+            ind_data[2] = pop_name
+            
+            # Write the updated line to the temporary file
+            tmp_ind_file.write(' '.join(ind_data) + '\n')
+
+    tmp_ind_file.close()
+
+    # Rename the ind file
+    shutil.move(tmp_ind_filename, ind_filename)
+
+def r_admixr (list1, list2):
+    import rpy2.robjects.numpy2ri
+    from rpy2.robjects.packages import importr
+    import rpy2.robjects as robjects
+    import numpy as np
+
+    rpy2.robjects.numpy2ri.activate()
+    rc = robjects.r['c']
+
+    r_grdevices = importr('grDevices')
+    r_cor = robjects.r['cor.test']
+    r_summary = robjects.r.summary
+
+    cor_output = r_cor(np.array(list1), np.array(list2), method = "pearson", alternative = "two.sided")
+    return cor_output[cor_output.names.index('estimate')][0], cor_output[cor_output.names.index('p.value')][0]
 
 def admixtools_parser(passed_arguments):
     '''admix Argument Parser - Assigns arguments from command line'''
@@ -232,6 +279,16 @@ def admixtools_parser(passed_arguments):
                 if not os.path.isfile(value):
                     raise IOError('%s not found' % value)
                 setattr(args, self.dest, value)
+        return customAction
+
+    def parser_add_to_list ():
+        '''Custom action to add items to a list'''
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, value, option_string=None):
+                if not getattr(args, self.dest):
+                    setattr(args, self.dest, value)
+                else:
+                    getattr(args, self.dest).extend(value)
         return customAction
 
     admixtools_parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -250,8 +307,36 @@ def admixtools_parser(passed_arguments):
     admixtools_prefix.add_argument("--ped-prefix", help = "Defines the filename prefix of both PED and MAP files", type = str)
     admixtools_prefix.add_argument("--binary-ped-prefix", dest = 'bed_prefix', help = "Defines the filename prefix of the Binary-PED, FAM, and BIM files", type = str)
 
+    # Model file arguments.
+    admixtools_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
+    admixtools_parser.add_argument('--model', help = 'Defines the model and the individual(s) to include', type = str)
 
     admixtools_prefix.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', default = 'out')
+
+    # Admix Pops
+    admixtools_prefix.add_argument('--admix-w-pop', help = 'W population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
+    admixtools_prefix.add_argument('--admix-w-pops', help = 'W populations for admixure analysis', type = str, action = parser_confirm_file())
+    
+    admixtools_prefix.add_argument('--admix-x-pop', help = 'X population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
+    admixtools_prefix.add_argument('--admix-x-pops', help = 'X populations for admixure analysis', type = str, action = parser_confirm_file())
+
+    admixtools_prefix.add_argument('--admix-y-pop', help = 'Y population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
+    admixtools_prefix.add_argument('--admix-y-pops', help = 'Y populations for admixure analysis', type = str, action = parser_confirm_file())
+
+    admixtools_prefix.add_argument('--admix-z-pop', help = 'Z population(s) for admixure analysiss', nargs = '+', type = str, action = parser_add_to_list())
+    admixtools_prefix.add_argument('--admix-z-pops', help = 'Z populations for admixure analysiss', type = str, action = parser_confirm_file())
+
+    admixtools_prefix.add_argument('--admix-a-pop', help = 'A population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
+    admixtools_prefix.add_argument('--admix-a-pops', help = 'A populations for admixure analysis', type = str, action = parser_confirm_file())
+
+    admixtools_prefix.add_argument('--admix-b-pop', help = 'B population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
+    admixtools_prefix.add_argument('--admix-b-pops', help = 'B populations for admixure analysis', type = str, action = parser_confirm_file())
+
+    admixtools_prefix.add_argument('--admix-c-pop', help = 'C population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
+    admixtools_prefix.add_argument('--admix-c-pops', help = 'C populations for admixure analysis', type = str, action = parser_confirm_file())
+
+    admixtools_prefix.add_argument('--admix-o-pop', help = 'Outgroup population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
+    admixtools_prefix.add_argument('--admix-o-pops', help = 'Outgroup populations for admixure analysis', type = str, action = parser_confirm_file())
 
     if passed_arguments:
         return admixtools_parser.parse_args(passed_arguments)
@@ -266,6 +351,16 @@ def run(passed_arguments = []):
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(admixtools_args, func_name='admixtools')
 
+    # Read in the models
+    models_in_file = read_model_file(admixtools_args.model_file)
+
+    # Check that the selected model was not found in the file
+    if admixtools_args.model not in models_in_file:
+        raise IOError('Selected model "%s" not found in: %s' % (admixtools_args.model, admixtools_args.model_file))
+
+    # Select model, might change this in future versions
+    selected_model = models_in_file[admixtools_args.model]
+
     # Check if ped-based files were assigned
     if admixtools_args.ped_prefix or (admixtools_args.ped_filename and admixtools_args.map_filename):
 
@@ -274,14 +369,9 @@ def run(passed_arguments = []):
     elif admixtools_args.bed_prefix or (admixtools_args.bed_filename and admixtools_args.bim_filename and admixtools_args.fam_filename):
 
         bed_to_eigenstrat(bed_filename = admixtools_args.bed_filename, bim_filename = admixtools_args.bim_filename, fam_filename = admixtools_args.fam_filename, bed_prefix = admixtools_args.bed_prefix, out_prefix = admixtools_args.out_prefix)
-
+        update_eigenstrat_pops(admixtools_args.out_prefix + '.ind', selected_model)
     
 
-    
-    
-            
-
-    
 if __name__ == "__main__":
     initLogger()
     run()
