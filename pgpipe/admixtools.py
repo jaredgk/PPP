@@ -7,9 +7,14 @@ import random
 import string
 import shutil
 
+import rpy2.robjects as robjects
+
+from rpy2.robjects.packages import importr
+from rpy2.robjects import pandas2ri
+
 # Import PPP modules and scripts
 from pgpipe.plink import *
-from pgpipe.model import read_model_file
+from pgpipe.model import read_model_file, pops_not_in_model
 from pgpipe.logging_module import initLogger, logArgs
 
 def check_convertf_for_errors (convertf_stderr):
@@ -132,19 +137,21 @@ def par_assign_family_ids (family_id):
 
     return family_id_str
 
-def ped_to_eigenstrat (ped_filename = None, map_filename = None, ped_prefix = None, family_id = False, out_prefix = None, overwrite = False, keep_original = True):
-    
-    # Check if the input is a specified by a ped prefix, and check that the files exist
-    if ped_prefix and assign_ped_from_prefix(ped_prefix):
+def ped_to_eigenstrat (ped_filename = None, map_filename = None, ped_prefix = None, out_prefix = None, family_id = False, overwrite = False, **kwargs):
+
+    # Check if ped-based files were assigned
+    if ped_prefix and confirm_ped_prefix(ped_prefix):
 
         # Assign the files
         ped_filename = ped_prefix + '.ped'
         map_filename = ped_prefix + '.map'
 
-    # Check that all the input files exist
-    elif assign_ped_from_files(ped_filename, map_filename):
-        pass
+    # Check that all the ped files are assigned
+    elif ped_filename and confirm_ped_files(ped_filename, map_filename):
 
+        # No action requried, just needs to pass
+        pass 
+   
     # Assign the par filename
     par_filename = assign_unique_filename(out_prefix, 'par')
 
@@ -168,21 +175,21 @@ def ped_to_eigenstrat (ped_filename = None, map_filename = None, ped_prefix = No
     # Remove the par file
     os.remove(par_filename)
 
-def bed_to_eigenstrat (bed_filename = None, bim_filename = None, fam_filename = None, bed_prefix = None, family_id = False, out_prefix = None, overwrite = False, keep_original = True):
+def bed_to_eigenstrat (bed_filename = None, bim_filename = None, fam_filename = None, bed_prefix = None, out_prefix = None, family_id = False, overwrite = False, **kwargs):
 
-    logging.info('Beginning eigenstrat conversion')
-
-    # Check if the input is a specified by a bed prefix, and check that the files exist
-    if bed_prefix and assign_bed_from_prefix(bed_prefix):
+    # Check if the ped prefix files exist
+    if bed_prefix and confirm_bed_prefix(bed_prefix):
 
         # Assign the files
         bed_filename = bed_prefix + '.bed'
         bim_filename = bed_prefix + '.bim'
         fam_filename = bed_prefix + '.fam'
 
-    # Check that all the input files exist
-    elif assign_bed_from_files(bed_filename, bim_filename, fam_filename):
-        pass
+    # Check that all the bed files are assigned
+    elif bed_filename and confirm_bed_files(bed_filename, bim_filename, fam_filename):
+        
+        # No action requried, just needs to pass
+        pass 
 
     # Rename the fam file
     shutil.copy(fam_filename, fam_filename + '.pedind')
@@ -219,13 +226,24 @@ def bed_to_eigenstrat (bed_filename = None, bim_filename = None, fam_filename = 
     # Update the fam filename
     fam_filename = fam_filename[:-7]
 
-def update_eigenstrat_pops (ind_filename, model):
+def assign_model_ind_filename (ind_filename, model, overwrite = False):
 
-    # Create a filename for the temporary ind file
-    tmp_ind_filename = assign_unique_filename(ind_filename, 'tmp')
+    # Assign a model-based ind filename
+    model_ind_filename = '%s.%s.ind' % (ind_filename, model.name)
+
+    # Check if the file should be overwritten
+    if not overwrite:
+
+        # Check if the output filename exists
+        if os.path.isfile(model_ind_filename):
+            raise Exception('Model-based individual file exists. Please use --overwrite to ignore.')
+
+    return model_ind_filename
+
+def create_ind_w_pops (ind_filename, model, out_filename):
 
     # Create a temporary file to replace the ind file
-    tmp_ind_file = open(tmp_ind_filename, 'w')
+    ind_pop_file = open(out_filename, 'w')
 
     # Open the ind file
     with open(ind_filename, 'r') as ind_file:
@@ -246,132 +264,177 @@ def update_eigenstrat_pops (ind_filename, model):
             ind_data[2] = pop_name
             
             # Write the updated line to the temporary file
-            tmp_ind_file.write(' '.join(ind_data) + '\n')
+            ind_pop_file.write(' '.join(ind_data) + '\n')
 
-    tmp_ind_file.close()
+    ind_pop_file.close()
+
+def update_ind_w_pops (ind_filename, model):
+
+    # Create a filename for the temporary ind file
+    tmp_ind_filename = assign_unique_filename(ind_filename, 'tmp')
+
+    # Create a temporary file that will replace the ind file
+    ind_pop_file = open(tmp_ind_filename, 'w')
+
+    # Open the ind file
+    with open(ind_filename, 'r') as ind_file:
+
+        # Loop the ind file
+        for ind_line in ind_file:
+
+            # Split the ind line
+            ind_data = ind_line.strip().split()
+
+            # Assign the current ind
+            ind_name = ind_data[0]
+
+            # Assign the pop from the ind
+            pop_name = model.return_pop(ind_name)
+
+            # Update the ind data
+            ind_data[2] = pop_name
+            
+            # Write the updated line to the temporary file
+            ind_pop_file.write(' '.join(ind_data) + '\n')
+
+    ind_pop_file.close()
 
     # Rename the ind file
     shutil.move(tmp_ind_filename, ind_filename)
 
-def r_admixr (list1, list2):
-    import rpy2.robjects.numpy2ri
-    from rpy2.robjects.packages import importr
-    import rpy2.robjects as robjects
-    import numpy as np
+def r_admixr_d (eigenstrat_prefix, out_prefix, w_pops, x_pops, y_pops, z_pops):
 
-    rpy2.robjects.numpy2ri.activate()
+    # Activate converions between pandas and R 
+    pandas2ri.activate()
+
+    # Activate the admixr library
+    try:
+        r_admixr_lib = importr('admixr')
+    except:
+        raise Exception('Please install the admixr R library')
+
+    # Create the c() R object
     rc = robjects.r['c']
 
-    r_grdevices = importr('grDevices')
-    r_cor = robjects.r['cor.test']
-    r_summary = robjects.r.summary
+    # Create the eigenstrat file object from admixr
+    r_eigenstrat = robjects.r.eigenstrat
 
-    cor_output = r_cor(np.array(list1), np.array(list2), method = "pearson", alternative = "two.sided")
-    return cor_output[cor_output.names.index('estimate')][0], cor_output[cor_output.names.index('p.value')][0]
-
-def admixtools_parser(passed_arguments):
-    '''admix Argument Parser - Assigns arguments from command line'''
-
-    def parser_confirm_file ():
-        '''Custom action to confirm file exists'''
-        class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
-                if not os.path.isfile(value):
-                    raise IOError('%s not found' % value)
-                setattr(args, self.dest, value)
-        return customAction
-
-    def parser_add_to_list ():
-        '''Custom action to add items to a list'''
-        class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
-                if not getattr(args, self.dest):
-                    setattr(args, self.dest, value)
-                else:
-                    getattr(args, self.dest).extend(value)
-        return customAction
-
-    admixtools_parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-    # Input PED arguments
-    admixtools_parser.add_argument("--ped", dest = 'ped_filename', help = "Defines the filename of the PED file. Called alongside --map", type = str, action = parser_confirm_file())
-    admixtools_parser.add_argument("--map", dest = 'map_filename', help = "Defines the filename of the MAP file. Called alongside --ped", type = str, action = parser_confirm_file())
-
-    # Input BED arguments
-    admixtools_parser.add_argument("--binary-ped", dest = 'bed_filename', help = "Defines the filename of the Binary-PED (i.e. BED) file. Called alongside --fam and --bim", type = str, action = parser_confirm_file())
-    admixtools_parser.add_argument("--fam", dest = 'fam_filename', help = "Defines the filename of the FAM file. Called alongside --binary-ped and --bim", type = str, action = parser_confirm_file())
-    admixtools_parser.add_argument("--bim", dest = 'bim_filename', help = "Defines the filename of the BIM file. Called alongside --binary-ped and --fam", type = str, action = parser_confirm_file())
-
-    # Input PED/BED prefix arguments
-    admixtools_prefix = admixtools_parser.add_mutually_exclusive_group()
-    admixtools_prefix.add_argument("--ped-prefix", help = "Defines the filename prefix of both PED and MAP files", type = str)
-    admixtools_prefix.add_argument("--binary-ped-prefix", dest = 'bed_prefix', help = "Defines the filename prefix of the Binary-PED, FAM, and BIM files", type = str)
-
-    # Model file arguments.
-    admixtools_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
-    admixtools_parser.add_argument('--model', help = 'Defines the model and the individual(s) to include', type = str)
-
-    admixtools_prefix.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', default = 'out')
-
-    # Admix Pops
-    admixtools_prefix.add_argument('--admix-w-pop', help = 'W population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admixtools_prefix.add_argument('--admix-w-pops', help = 'W populations for admixure analysis', type = str, action = parser_confirm_file())
+    # Create the statistic objects from admixr
+    r_d = robjects.r.d
     
-    admixtools_prefix.add_argument('--admix-x-pop', help = 'X population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admixtools_prefix.add_argument('--admix-x-pops', help = 'X populations for admixure analysis', type = str, action = parser_confirm_file())
+    # Load the eigenstrat file into R
+    r_eigenstrat_input = r_eigenstrat(eigenstrat_prefix)
 
-    admixtools_prefix.add_argument('--admix-y-pop', help = 'Y population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admixtools_prefix.add_argument('--admix-y-pops', help = 'Y populations for admixure analysis', type = str, action = parser_confirm_file())
+    # Run the D statistic
+    r_d_results = r_d(W = rc(w_pops), X = rc(x_pops), Y = rc(y_pops), Z = rc(z_pops), data = r_eigenstrat_input)
 
-    admixtools_prefix.add_argument('--admix-z-pop', help = 'Z population(s) for admixure analysiss', nargs = '+', type = str, action = parser_add_to_list())
-    admixtools_prefix.add_argument('--admix-z-pops', help = 'Z populations for admixure analysiss', type = str, action = parser_confirm_file())
+    # Convert the results into a Pandas dataframe
+    d_results = pandas2ri.ri2py(r_d_results)
 
-    admixtools_prefix.add_argument('--admix-a-pop', help = 'A population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admixtools_prefix.add_argument('--admix-a-pops', help = 'A populations for admixure analysis', type = str, action = parser_confirm_file())
+    # Change the datatype of the nsnps, ABBA, and BABA columns
+    d_results[['nsnps', 'BABA', 'ABBA']] = d_results[['nsnps', 'BABA', 'ABBA']].astype(int)
 
-    admixtools_prefix.add_argument('--admix-b-pop', help = 'B population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admixtools_prefix.add_argument('--admix-b-pops', help = 'B populations for admixure analysis', type = str, action = parser_confirm_file())
+    # Write the dataframe as a file
+    d_results.to_csv(out_prefix + '.d', sep = '\t', index = False)
 
-    admixtools_prefix.add_argument('--admix-c-pop', help = 'C population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admixtools_prefix.add_argument('--admix-c-pops', help = 'C populations for admixure analysis', type = str, action = parser_confirm_file())
+def r_admixr_f4 (eigenstrat_prefix, out_prefix, w_pops, x_pops, y_pops, z_pops):
 
-    admixtools_prefix.add_argument('--admix-o-pop', help = 'Outgroup population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admixtools_prefix.add_argument('--admix-o-pops', help = 'Outgroup populations for admixure analysis', type = str, action = parser_confirm_file())
+    # Activate converions between pandas and R 
+    pandas2ri.activate()
 
-    if passed_arguments:
-        return admixtools_parser.parse_args(passed_arguments)
-    else:
-        return admixtools_parser.parse_args()
+    # Activate the admixr library
+    try:
+        r_admixr_lib = importr('admixr')
+    except:
+        raise Exception('Please install the admixr R library')
 
-def run(passed_arguments = []):
+    # Create the c() R object
+    rc = robjects.r['c']
 
-    # Grab admixtools arguments from command line
-    admixtools_args = admixtools_parser(passed_arguments)
+    # Create the eigenstrat file object from admixr
+    r_eigenstrat = robjects.r.eigenstrat
 
-    # Adds the arguments (i.e. parameters) to the log file
-    logArgs(admixtools_args, func_name='admixtools')
-
-    # Read in the models
-    models_in_file = read_model_file(admixtools_args.model_file)
-
-    # Check that the selected model was not found in the file
-    if admixtools_args.model not in models_in_file:
-        raise IOError('Selected model "%s" not found in: %s' % (admixtools_args.model, admixtools_args.model_file))
-
-    # Select model, might change this in future versions
-    selected_model = models_in_file[admixtools_args.model]
-
-    # Check if ped-based files were assigned
-    if admixtools_args.ped_prefix or (admixtools_args.ped_filename and admixtools_args.map_filename):
-
-        ped_to_eigenstrat(ped_filename = admixtools_args.ped_filename, map_filename = admixtools_args.map_filename, ped_prefix = admixtools_args.ped_prefix, out_prefix = admixtools_args.out_prefix)
-
-    elif admixtools_args.bed_prefix or (admixtools_args.bed_filename and admixtools_args.bim_filename and admixtools_args.fam_filename):
-
-        bed_to_eigenstrat(bed_filename = admixtools_args.bed_filename, bim_filename = admixtools_args.bim_filename, fam_filename = admixtools_args.fam_filename, bed_prefix = admixtools_args.bed_prefix, out_prefix = admixtools_args.out_prefix)
-        update_eigenstrat_pops(admixtools_args.out_prefix + '.ind', selected_model)
+    # Create the statistic objects from admixr
+    r_f4 = robjects.r.f4
     
+    # Load the eigenstrat file into R
+    r_eigenstrat_input = r_eigenstrat(eigenstrat_prefix)
 
-if __name__ == "__main__":
-    initLogger()
-    run()
+    # Run the F4 statistic
+    r_f4_results = r_f4(W = rc(w_pops), X = rc(x_pops), Y = rc(y_pops), Z = rc(z_pops), data = r_eigenstrat_input)
+
+    # Convert the results into a Pandas dataframe
+    f4_results = pandas2ri.ri2py(r_f4_results)
+
+    # Change the datatype of the nsnps, ABBA, and BABA columns
+    f4_results[['nsnps', 'BABA', 'ABBA']] = f4_results[['nsnps', 'BABA', 'ABBA']].astype(int)
+
+    # Write the dataframe as a file
+    f4_results.to_csv(out_prefix + '.f4', sep = '\t', index = False)
+
+def r_admixr_f4ratio (eigenstrat_prefix, out_prefix, a_pops, b_pops, c_pops, x_pops, o_pops):
+
+    # Activate converions between pandas and R 
+    pandas2ri.activate()
+
+    # Activate the admixr library
+    try:
+        r_admixr_lib = importr('admixr')
+    except:
+        raise Exception('Please install the admixr R library')
+
+    # Create the c() R object
+    rc = robjects.r['c']
+
+    # Create the eigenstrat file object from admixr
+    r_eigenstrat = robjects.r.eigenstrat
+
+    # Create the statistic objects from admixr
+    r_f4ratio = robjects.r.f4ratio
+    
+    # Load the eigenstrat file into R
+    r_eigenstrat_input = r_eigenstrat(eigenstrat_prefix)
+
+    # Run the f4ratio statistic
+    r_f4ratio_results = r_f4ratio(A = rc(a_pops), B = rc(b_pops), C = rc(c_pops), X = rc(x_pops), O = rc(o_pops), data = r_eigenstrat_input)
+
+    # Convert the results into a Pandas dataframe
+    f4ratio_results = pandas2ri.ri2py(r_f4ratio_results)
+
+    # Write the dataframe as a file
+    f4ratio_results.to_csv(out_prefix + '.f4ratio', sep = '\t', index = False)
+
+def r_admixr_f3 (eigenstrat_prefix, out_prefix, a_pops, b_pops, c_pops):
+
+    # Activate converions between pandas and R 
+    pandas2ri.activate()
+
+    # Activate the admixr library
+    try:
+        r_admixr_lib = importr('admixr')
+    except:
+        raise Exception('Please install the admixr R library')
+
+    # Create the c() R object
+    rc = robjects.r['c']
+
+    # Create the eigenstrat file object from admixr
+    r_eigenstrat = robjects.r.eigenstrat
+
+    # Create the statistic objects from admixr
+    r_f3 = robjects.r.f3
+    
+    # Load the eigenstrat file into R
+    r_eigenstrat_input = r_eigenstrat(eigenstrat_prefix)
+
+    # Run the f3 statistic
+    r_f3_results = r_f3(A = rc(a_pops), B = rc(b_pops), C = rc(c_pops), data = r_eigenstrat_input)
+
+    # Convert the results into a Pandas dataframe
+    f3_results = pandas2ri.ri2py(r_f3_results)
+
+    # Change the datatype of the nsnps column
+    f3_results['nsnps'] = f3_results['nsnps'].astype(int)
+
+    # Write the dataframe as a file
+    f3_results.to_csv(out_prefix + '.f3', sep = '\t', index = False)

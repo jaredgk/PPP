@@ -158,7 +158,7 @@ def assign_plink_output_args (out_prefix, out_format, overwrite = True):
     else:
         raise IOError('Unknown file format. This error should NOT show up')
 
-def assign_ped_from_files (ped_filename = None, map_filename = None, **kwargs):
+def confirm_ped_files (ped_filename, map_filename):
 
     # Check if a bed file is assigned
     if not ped_filename:
@@ -168,10 +168,10 @@ def assign_ped_from_files (ped_filename = None, map_filename = None, **kwargs):
     if not map_filename:
         raise IOError('Unable to assign map file. Please confirm the map file (i.e. --map) is assigned')
 
-    # Return the ped associated args
-    return ['--ped', ped_filename, '--map', map_filename]
+    # Return True if all checks passed
+    return True
 
-def assign_ped_from_prefix (ped_prefix = None, **kwargs):
+def confirm_ped_prefix (ped_prefix):
 
     # Check if the a prefix was assigned
     if not ped_prefix:
@@ -206,10 +206,10 @@ def assign_ped_from_prefix (ped_prefix = None, **kwargs):
         # Return error message if no map input was found
         raise IOError('Unable to assign map file. Please confirm the file is named correctly')
 
-    # Return the ped associated args
-    return ['--file', ped_filename[:-4]]
+    # Return True if all checks passed
+    return True
 
-def assign_bed_from_files (bed_filename = None, bim_filename = None, fam_filename = None, **kwargs):
+def confirm_bed_files (bed_filename, bim_filename, fam_filename):
 
     # Check if a bed file is assigned
     if not bed_filename:
@@ -227,10 +227,10 @@ def assign_bed_from_files (bed_filename = None, bim_filename = None, fam_filenam
     if not fam_filename:
         raise IOError('Unable to assign fam file. Please confirm the fam file (i.e. --fam) is assigned')
 
-    # Return the bed associated args
-    return ['--bed', bed_filename, '--bim', bim_filename, '--fam', fam_filename]
+    # Return True if all the checks passed
+    return True
 
-def assign_bed_from_prefix (bed_prefix = None, **kwargs):
+def confirm_bed_prefix (bed_prefix):
 
     # Check if the a prefix was assigned
     if not bed_prefix:
@@ -274,8 +274,8 @@ def assign_bed_from_prefix (bed_prefix = None, **kwargs):
         # Return error message if no fam input was found
         raise IOError('Unable to assign fam file. Please confirm the file is named correctly')
 
-    # Return the binary-ped args
-    return ['--bfile', bed_filename[:-4]]
+    # Return True if all checks passed
+    return True
     
 def convert_vcf_to_plink (vcf_filename, vcf_fid, out_prefix, out_format, threads = 1, overwrite = False):
 
@@ -343,22 +343,22 @@ def convert_ped (ped_filename = None, map_filename = None, ped_prefix = None, ou
         convert_ped_args.extend(['--threads', threads])
 
     # Create blank list to hold ped input arguments
-    ped_prefix_args = []
+    ped_input_args = []
 
     # Check if the a prefix was assigned
-    if ped_prefix:
+    if ped_prefix and confirm_ped_prefix(ped_prefix):
     
         # Assign bed input arguments from a prefix
-        ped_prefix_args = assign_ped_from_prefix(ped_prefix)
+        ped_input_args = ['--file', ped_prefix]
 
     # Check if a bed file is assigned
-    elif ped_filename:
+    elif ped_filename and confirm_ped_files(ped_filename, map_filename):
 
         # Assign bed input arguments from files
-        ped_prefix_args = assign_ped_from_files(ped_filename, map_filename)
+        ped_input_args = ['--ped', ped_filename, '--map', map_filename] 
 
     # Add the ped input arguments
-    convert_ped_args.extend(ped_prefix_args)
+    convert_ped_args.extend(ped_input_args)
 
     # Assign the output arguments
     ped_output_args = assign_plink_output_args(out_prefix, out_format, overwrite)
@@ -384,26 +384,26 @@ def convert_bed (bed_filename = None, bim_filename = None, fam_filename = None, 
         convert_bed_args.extend(['--threads', threads])
 
     # Create blank list to hold bed input arguments
-    bed_prefix_args = []
+    bed_input_args = []
 
     # Check if the a prefix was assigned
-    if bed_prefix:
+    if bed_prefix and confirm_bed_prefix(bed_prefix):
     
         # Assign bed input arguments from a prefix
-        bed_prefix_args = assign_bed_from_prefix(bed_prefix)
+        bed_input_args =  ['--bfile', bed_prefix]
 
     # Check if a bed file is assigned
-    elif bed_filename:
+    elif bed_filename and confirm_bed_files(bed_filename, bim_filename, fam_filename):
 
         # Assign bed input arguments from files
-        bed_prefix_args = assign_bed_from_files(bed_filename, bim_filename, fam_filename)
+        bed_input_args = ['--bed', bed_filename, '--bim', bim_filename, '--fam', fam_filename]
 
     # Confirm input arguments were assigned
     if not bed_prefix_args:
         raise Exception('Unable to assign Binary-PED input arguments. Please confirm the arguments are specified correctly')
 
     # Add the bed input arguments
-    convert_bed_args.extend(bed_prefix_args)
+    convert_bed_args.extend(bed_input_args)
 
     # Assign the output arguments
     bed_output_args = assign_plink_output_args(out_prefix, out_format, overwrite)
@@ -526,7 +526,11 @@ def standard_plink_call (plink_call_args):
         Exception
             If plink stderr returns an error
     '''
-    plink_path = os.path.join(os.pardir(),'bin','plink')
+
+    # Create a string with the plink path
+
+    plink_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin', 'plink')
+
     # plink subprocess call
     plink_call = subprocess.Popen([plink_path] + list(map(str, plink_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

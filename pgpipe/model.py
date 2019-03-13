@@ -187,18 +187,6 @@ class Model:
     def inds (self):
         return list(itertools.chain.from_iterable(self.ind_dict.values()))
 
-    def return_pop (self, ind):
-
-        # Loop the pops within the model
-        for pop, inds in self.ind_dict.items():
-
-            # Check if the ind belongs to the pop
-            if ind in inds:
-
-                return pop
-
-        raise Exception('Individual (%s) not found within %s' % (ind, self.name))
-
     def assign_tree (self, tree):
         self.tree = str(tree)
 
@@ -361,6 +349,32 @@ class Model:
 
         return model_json
 
+    def return_pop (self, ind):
+
+        # Loop the pops within the model
+        for pop, inds in self.ind_dict.items():
+
+            # Check if the ind belongs to the pop
+            if ind in inds:
+
+                return pop
+
+        raise Exception('Individual (%s) not found within %s' % (ind, self.name))
+
+def pops_not_in_model (model, pops):
+
+    # Check if a pop in pops is not within model.pop_list
+    pops_not_found = set(pops) - set(model.pop_list)
+
+    # Check any pops were not found
+    if pops_not_found:
+        return pops_not_found
+
+    return None
+
+
+
+
 def read_model_file (filename):
 
     # Check that the file exists
@@ -413,7 +427,7 @@ def read_model_file (filename):
     # Return the models
     return models_to_return
 
-def read_single_model(filename,popname=None):
+def read_single_model(filename, popname = None):
     #Returns single model from file, assumes either only one
     #in file or popname is provided
     popmodels = read_model_file(filename)

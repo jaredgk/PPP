@@ -68,10 +68,12 @@ import logging
 #sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 
 # Import PPP modules and scripts
+from admixtools import *
 from pgpipe.bcftools import convert_vcf, log_bcftools_reference
 from pgpipe.plink import convert_ped, convert_bed, convert_vcf_to_plink, log_plink_reference
 from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.logging_module import initLogger, logArgs
+
 
 def convert_argument_parser(passed_arguments):
     '''
@@ -135,7 +137,7 @@ def convert_argument_parser(passed_arguments):
 
     # Output arguments.
     #output_formats = ['vcf', 'vcf.gz', 'bcf', 'fasta', 'im', 'ped', 'binary-ped']
-    output_formats = ['vcf', 'vcf.gz', 'bcf', 'ped', 'binary-ped']
+    output_formats = ['vcf', 'vcf.gz', 'bcf', 'ped', 'binary-ped', 'eigenstrat']
     convert_parser.add_argument('--out-format', metavar = metavar_list(output_formats), help = 'Defines the desired output format', type = str, choices = output_formats, required = True)
     convert_parser.add_argument('--out', help = 'Defines the complete output filename, overrides --out-prefix')
     convert_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', default = 'out')
@@ -309,50 +311,69 @@ def run (passed_arguments = []):
             log_plink_reference(expected_out_filename, append_mode = True)
 
     # Check if input is a specified as a ped
-    elif convert_args.ped_prefix or convert_args.ped_filename or convert_args.map_filename:
+    elif convert_args.ped_prefix or (convert_args.ped_filename or convert_args.map_filename):
 
         # Check that the input and output formats differ
         check_if_conversion('ped', convert_args.out_format)
 
         # List of formats that are supported from ped
-        supported_out_format = ['vcf', 'vcf.gz', 'bcf', 'binary-ped']
+        supported_out_format = ['vcf', 'vcf.gz', 'bcf', 'binary-ped', 'eigenstrat']
 
         # Check that the conversion is supported
         check_conversion_support(convert_args.out_format, supported_out_format)
 
         logging.info('Convertion method assigned')
 
-        # Convert the ped file
-        convert_ped(**vars(convert_args))
+        # Check if output format is not eigenstrat
+        if convert_args.out_format != 'eigenstrat':
 
-        # Rename the plink reference
-        shutil.move(convert_args.out_prefix + '.log', expected_out_filename + '.log')
+            # Convert the ped file using plink
+            convert_ped(**vars(convert_args))
 
-        # Add the reference to the log
-        log_plink_reference(expected_out_filename, append_mode = True)
+            # Rename the plink reference
+            shutil.move(convert_args.out_prefix + '.log', expected_out_filename + '.log')
+
+            # Add the reference to the log
+            log_plink_reference(expected_out_filename, append_mode = True)
+
+        # Check if output format is eigenstrat
+        else:
+
+            # Convert the ped file using admixtools
+            ped_to_eigenstrat(**vars(convert_args))
 
     # Check if input is a specified as a bed
-    elif convert_args.bed_prefix or convert_args.bed_filename or convert_args.fam_filename or convert_args.bim_filename:
+    elif convert_args.bed_prefix or (convert_args.bed_filename or convert_args.fam_filename or convert_args.bim_filename):
 
         # Check that the input and output formats differ
         check_if_conversion('binary-ped', convert_args.out_format)
 
         # List of formats that are supported from bed
-        supported_out_format = ['vcf', 'vcf.gz', 'bcf', 'ped']
+        supported_out_format = ['vcf', 'vcf.gz', 'bcf', 'ped', 'eigenstrat']
 
         # Check that the conversion is supported
         check_conversion_support(convert_args.out_format, supported_out_format)
 
         logging.info('Convertion method assigned')
 
-        # Convert the ped file
-        convert_bed(**vars(convert_args))
+        # Check if output format is not eigenstrat
+        if convert_args.out_format != 'eigenstrat':
 
-        # Rename the plink reference
-        shutil.move(convert_args.out_prefix + '.log', expected_out_filename + '.log')
+            # Convert the ped file using plink
+            convert_bed(**vars(convert_args))
 
-        # Add the reference to the log
-        log_plink_reference(expected_out_filename, append_mode = True)
+            # Rename the plink reference
+            shutil.move(convert_args.out_prefix + '.log', expected_out_filename + '.log')
+
+            # Add the reference to the log
+            log_plink_reference(expected_out_filename, append_mode = True)
+
+        # Check if output format is eigenstrat
+        else:
+
+            # Convert the ped file using admixtools
+            bed_to_eigenstrat(**vars(convert_args))
+            
 
 if __name__ == "__main__":
     initLogger()
