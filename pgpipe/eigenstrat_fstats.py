@@ -1,3 +1,160 @@
+'''
+    Automates the calculation of multiple admixture statistics, including: Patterson's D, 
+    F4 statistic, F4-ratio statistic, and F3 statistic.
+
+    ############################
+    Input Command-line Arguments
+    ############################
+    **--eigenstrat-prefix** *<input_prefix>*
+        Argument used to define the filename prefix shared by the genotype file (.geno), 
+        the individual file (.ind), and the SNP file (.snp). Should not be used alongside
+        the specific file arguments (e.g. --geno).
+    **--geno** *<geno_filename>*
+        Argument used to define the filename of the eigenstrat genotype file (.geno). 
+        Must be called alongside --ind and --snp. Cannot be called alongside 
+        --eigenstrat-prefix.
+    **--ind** *<ind_filename>*
+        Argument used to define the filename of the eigenstrat individual file (.ind). 
+        Must be called alongside --geno and --snp. Cannot be called alongside 
+        --eigenstrat-prefix.
+    **--snp** *<snp_filename>*
+        Argument used to define the filename of the eigenstrat SNP file (.snp). Must be
+        called alongside --geno and --ind. Cannot be called alongside --eigenstrat-prefix.
+    **--model-file** *<model_filename>*
+        Argument used to define the model file. Please note that this argument cannot be 
+        used with the individual-based filters.
+    **--model** *<model_str>*
+        Argument used to define the model (i.e. the individual(s) to include and/or the 
+        populations for relevant statistics). May be used with any statistic. Please note 
+        that this argument cannot be used with **--pop-file** argument or the 
+        individual-based filters.
+    
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**.
+        Cannot be used if multiple output files are created.
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+    
+    ####################################
+    Statistic Command-line Specification
+    ####################################
+    **--calc-admix-statistic** *<D, F4, F4-ratio, F3>*
+        Argument used to define the admix statistic to be calculated. Patterson's D (D), 
+        F4 statistic (F4), F4-ratio statistic (F4-ratio), and F3 statistic (F3). See below
+        for details on the arguments requried by each statistic .
+
+    ***********************************
+    Statistic Command-line Requirements
+    ***********************************
+    It should be noted that each admix statistic has a specific set of population labels
+    arguments. These labels are used to specify a representive population. For instance, 
+    the argument '--admix-w-pop CEU' will replace the W label of Patterson's D and the 
+    F4 statistic with the CEU population. These arguments may be found in the next section.
+ 
+    **--calc-admix-statistic** *D*
+        Requires: **--admix-w-pop**/**--admix-w-pop-file**, 
+        **--admix-x-pop**/**--admix-x-pop-file**,
+        **--admix-y-pop**/**--admix-y-pop-file**, 
+        and **--admix-z-pop**/**--admix-z-pop-file**.
+
+    **--calc-admix-statistic** *F4*
+        Requires: **--admix-w-pop**/**--admix-w-pop-file**, 
+        **--admix-x-pop**/**--admix-x-pop-file**,
+        **--admix-y-pop**/**--admix-y-pop-file**, 
+        and **--admix-z-pop**/**--admix-z-pop-file**.
+
+    **--calc-admix-statistic** *F4-ratio*
+        Requires: **--admix-a-pop**/**--admix-a-pop-file**,
+        **--admix-b-pop**/**--admix-b-pop-file**,
+        **--admix-c-pop**/**--admix-c-pop-file**, 
+        **--admix-x-pop**/**--admix-x-pop-file**,
+        and **--admix-o-pop**/**--admix-o-pop-file**.
+    **--calc-admix-statistic** *F3*
+        Requires: **--admix-a-pop**/**--admix-a-pop-file**,
+        **--admix-b-pop**/**--admix-b-pop-file**,
+        and **--admix-c-pop**/**--admix-c-pop-file**.
+
+    *******************************************
+    Additional Statistic Command-line Arguments
+    *******************************************
+    **--admix-w-pop** *<w_pop_str>* *<w_pop1_str, w_pop2_str, etc.>*
+        Argument used to define the population(s) to represent W in the supported admixure 
+        statistic. This argument may be used multiple times if desired. If multiple 
+        populations the statistic will be repeated until each population has represented W.
+    **--admix-w-pop-file** *<w_pop_filename>*
+        Argument used to define a file of population(s) to represent W in the supported 
+        admixure statistic. If multiple populations the statistic will be repeated until each 
+        population has represented W.
+    **--admix-x-pop** *<x_pop_str>* *<x_pop1_str, x_pop2_str, etc.>*
+        Argument used to define the population(s) to represent X in the supported admixure 
+        statistic. This argument may be used multiple times if desired. If multiple 
+        populations the statistic will be repeated until each population has represented X.
+    **--admix-x-pop-file** *<x_pop_filename>*
+        Argument used to define a file of population(s) to represent X in the supported 
+        admixure statistic. If multiple populations the statistic will be repeated until each 
+        population has represented X.
+    **--admix-y-pop** *<y_pop_str>* *<y_pop1_str, y_pop2_str, etc.>*
+        Argument used to define the population(s) to represent Y in the supported admixure 
+        statistic. This argument may be used multiple times if desired. If multiple 
+        populations the statistic will be repeated until each population has represented Y.
+    **--admix-y-pop-file** *<y_pop_filename>*
+        Argument used to define a file of population(s) to represent Y in the supported 
+        admixure statistic. If multiple populations the statistic will be repeated until each 
+        population has represented Y.
+    **--admix-z-pop** *<z_pop_str>* *<z_pop1_str, z_pop2_str, etc.>*
+        Argument used to define the population(s) to represent Z in the supported admixure 
+        statistic. This argument may be used multiple times if desired. If multiple 
+        populations the statistic will be repeated until each population has represented Z.
+    **--admix-z-pop-file** *<z_pop_filename>*
+        Argument used to define a file of population(s) to represent Z in the supported 
+        admixure statistic. If multiple populations the statistic will be repeated until each 
+        population has represented Z.
+    **--admix-a-pop** *<a_pop_str>* *<a_pop1_str, a_pop2_str, etc.>*
+        Argument used to define the population(s) to represent A in the supported admixure 
+        statistic. This argument may be used multiple times if desired. If multiple 
+        populations the statistic will be repeated until each population has represented A.
+    **--admix-a-pop-file** *<a_pop_filename>*
+        Argument used to define a file of population(s) to represent A in the supported 
+        admixure statistic. If multiple populations the statistic will be repeated until each 
+        population has represented A.
+    **--admix-b-pop** *<b_pop_str>* *<b_pop1_str, b_pop2_str, etc.>*
+        Argument used to define the population(s) to represent B in the supported admixure 
+        statistic. This argument may be used multiple times if desired. If multiple 
+        populations the statistic will be repeated until each population has represented B.
+    **--admix-b-pop-file** *<b_pop_filename>*
+        Argument used to define a file of population(s) to represent B in the supported 
+        admixure statistic. If multiple populations the statistic will be repeated until each 
+        population has represented B.
+    **--admix-c-pop** *<c_pop_str>* *<c_pop1_str, c_pop2_str, etc.>*
+        Argument used to define the population(s) to represent C in the supported admixure 
+        statistic. This argument may be used multiple times if desired. If multiple 
+        populations the statistic will be repeated until each population has represented C.
+    **--admix-c-pop-file** *<c_pop_filename>*
+        Argument used to define a file of population(s) to represent C in the supported 
+        admixure statistic. If multiple populations the statistic will be repeated until each 
+        population has represented C.
+    
+    ##########################
+    Example Command-line Usage
+    ##########################
+    Command-line to calculate Patterson's D:
+
+    .. code-block:: bash
+        
+        python eigenstrat_fstats.py --eigenstrat-prefix snps --calc-admix-statistic D --admix-w-pop French --admix-x-pop Yoruba --admix-y-pop Vindija --admix-z-pop Chimp 
+    
+    Command-line to calculate the F4-ratio: 
+
+    .. code-block:: bash
+        
+        python eigenstrat_fstats.py --eigenstrat-prefix snps --calc-admix-statistic F4-ratio --admix-a-pop Altai --admix-b-pop Vindija --admix-c-pop Yoruba --admix-x-pop French --admix-o-pop Chimp  
+'''
+
 import os
 import sys
 import argparse
@@ -44,13 +201,13 @@ def admix_parser (passed_arguments):
 
     admix_parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    # Input BED arguments
+    # Input Eigenstrat prefix arguments
+    admix_parser.add_argument("--eigenstrat-prefix", help = "Defines the filename prefix of the GENO, IND, and SNP files", type = str)
+
+    # Input Eigenstrat file arguments
     admix_parser.add_argument("--geno", dest = 'geno_filename', help = "Defines the filename of the GENO file. Called alongside --ind and --snp", type = str, action = parser_confirm_file())
     admix_parser.add_argument("--ind", dest = 'ind_filename', help = "Defines the filename of the IND file. Called alongside --geno and --snp", type = str, action = parser_confirm_file())
     admix_parser.add_argument("--snp", dest = 'snp_filename', help = "Defines the filename of the SNP file. Called alongside --geno and --ind", type = str, action = parser_confirm_file())
-
-    # Input Eigenstrat prefix arguments
-    admix_parser.add_argument("--eigenstrat-prefix", help = "Defines the filename prefix of the GENO, IND, and SNP files", type = str)
 
     # Model file arguments.
     admix_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
@@ -67,28 +224,28 @@ def admix_parser (passed_arguments):
     
     # Admix analysis pops
     admix_parser.add_argument('--admix-w-pop', dest = 'w_pops', help = 'W population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admix_parser.add_argument('--admix-w-pops', dest = 'w_file', help = 'W populations for admixure analysis', type = str, action = parser_confirm_file())
+    admix_parser.add_argument('--admix-w-pop-file', dest = 'w_file', help = 'W populations for admixure analysis', type = str, action = parser_confirm_file())
     
     admix_parser.add_argument('--admix-x-pop', dest = 'x_pops', help = 'X population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admix_parser.add_argument('--admix-x-pops', dest = 'x_file', help = 'X populations for admixure analysis', type = str, action = parser_confirm_file())
+    admix_parser.add_argument('--admix-x-pop-file', dest = 'x_file', help = 'X populations for admixure analysis', type = str, action = parser_confirm_file())
 
     admix_parser.add_argument('--admix-y-pop', dest = 'y_pops', help = 'Y population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admix_parser.add_argument('--admix-y-pops', dest = 'y_file', help = 'Y populations for admixure analysis', type = str, action = parser_confirm_file())
+    admix_parser.add_argument('--admix-y-pop-file', dest = 'y_file', help = 'Y populations for admixure analysis', type = str, action = parser_confirm_file())
 
     admix_parser.add_argument('--admix-z-pop', dest = 'z_pops', help = 'Z population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admix_parser.add_argument('--admix-z-pops', dest = 'z_file', help = 'Z populations for admixure analysiss', type = str, action = parser_confirm_file())
+    admix_parser.add_argument('--admix-z-pop-file', dest = 'z_file', help = 'Z populations for admixure analysiss', type = str, action = parser_confirm_file())
 
     admix_parser.add_argument('--admix-a-pop', dest = 'a_pops', help = 'A population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admix_parser.add_argument('--admix-a-pops', dest = 'a_file', help = 'A populations for admixure analysis', type = str, action = parser_confirm_file())
+    admix_parser.add_argument('--admix-a-pop-file', dest = 'a_file', help = 'A populations for admixure analysis', type = str, action = parser_confirm_file())
 
     admix_parser.add_argument('--admix-b-pop', dest = 'b_pops', help = 'B population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admix_parser.add_argument('--admix-b-pops', dest = 'b_file', help = 'B populations for admixure analysis', type = str, action = parser_confirm_file())
+    admix_parser.add_argument('--admix-b-pop-file', dest = 'b_file', help = 'B populations for admixure analysis', type = str, action = parser_confirm_file())
 
     admix_parser.add_argument('--admix-c-pop', dest = 'c_pops', help = 'C population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admix_parser.add_argument('--admix-c-pops', dest = 'c_file', help = 'C populations for admixure analysis', type = str, action = parser_confirm_file())
+    admix_parser.add_argument('--admix-c-pop-file', dest = 'c_file', help = 'C populations for admixure analysis', type = str, action = parser_confirm_file())
 
     admix_parser.add_argument('--admix-o-pop', dest = 'o_pops', help = 'O population(s) for admixure analysis', nargs = '+', type = str, action = parser_add_to_list())
-    admix_parser.add_argument('--admix-o-pops', dest = 'o_file', help = 'O populations for admixure analysis', type = str, action = parser_confirm_file())
+    admix_parser.add_argument('--admix-o-pop-file', dest = 'o_file', help = 'O populations for admixure analysis', type = str, action = parser_confirm_file())
 
     if passed_arguments:
         return admix_parser.parse_args(passed_arguments)
@@ -282,14 +439,40 @@ def run(passed_arguments = []):
         if pops_not_found:
             raise Exception('O population(s) not found in model: %s' % ', '.join(pops_not_found))
 
-    # Assign ind filename, update with better method
-    admix_args.ind_filename = admix_args.eigenstrat_prefix + '.ind'
+    # Bool to indicate if file names were changed
+    eigenstrat_filenames_changed = False
+
+    # Check if an eigenstrat prefix was assigned
+    if admix_args.eigenstrat_prefix:
+
+        # Confirm all eigenstrat files from prefix, will raise exception upon failure
+        confirm_eigenstrat_files_from_prefix(admix_args.eigenstrat_prefix)
+
+    # Check if the eigenstrat files were assigned separately
+    elif admix_args.geno_filename or admix_args.ind_filename or admix_args.snp_filename:
+
+        # Confirm that all eigenstrat files exist, will raise exception upon failure
+        confirm_eigenstrat_files(admix_args.geno_filename, admix_args.ind_filename, admix_args.snp_filename)
+
+        # Confirm that an eigenstrat prefix may be assigned
+        if check_eigenstrat_prefix(admix_args.geno_filename, admix_args.ind_filename, admix_args.snp_filename):
+
+            # Assign the prefix
+            admix_args.eigenstrat_prefix = os.path.splitext(admix_args.geno_filename)[0]
+
+        else:
+
+            # Confirm the eigenstrat filenames were changed
+            eigenstrat_filenames_changed = True
+
+            # Rename files and assign the prefix
+            admix_args.eigenstrat_prefix = assign_eigenstrat_prefix(admix_args.geno_filename, admix_args.ind_filename, admix_args.snp_filename)
 
     # Assign a ind filename with the model
-    model_ind_filename = assign_model_ind_filename(admix_args.ind_filename, selected_model, overwrite = admix_args.overwrite)
+    model_ind_filename = assign_model_ind_filename(admix_args.eigenstrat_prefix, selected_model, overwrite = admix_args.overwrite)
     
     # Create a population filename
-    create_ind_w_pops(admix_args.ind_filename, selected_model, model_ind_filename)
+    create_ind_w_pops(admix_args.eigenstrat_prefix, selected_model, model_ind_filename)
 
     # String to hold the expected statistic output
     expected_statistic_output = ''
@@ -346,6 +529,12 @@ def run(passed_arguments = []):
 
     # Remove the model ind file
     os.remove(model_ind_filename)
+
+    # Check if the eigenstrat filenames were changed
+    if eigenstrat_filenames_changed:
+
+        # Restore the filename if they were changed
+        restore_eigenstrat_files(admix_args.geno_filename, admix_args.ind_filename, admix_args.snp_filename)
 
 if __name__ == "__main__":
     initLogger()
