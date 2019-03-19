@@ -117,13 +117,22 @@ import argparse
 import glob
 import logging
 
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
+# Import vcf format check function
 from pgpipe.vcf_reader_func import checkFormat
+
+# Import logging module
 from pgpipe.logging_module import initLogger, logArgs
+
+# Import model reader
 from pgpipe.model import read_model_file
+
+# Import beagle functions
 from pgpipe.beagle import call_beagle, check_for_beagle_intermediate_files
+
+# Import shapeit functions
 from pgpipe.shapeit import call_shapeit, remove_shapeit_intermediate_files, check_for_shapeit_intermediate_files
+
+# Import bcftools functions
 from pgpipe.bcftools import get_unique_chrs, get_samples, chr_subset_file, concatenate, check_for_index, create_index
 
 def phase_argument_parser(passed_arguments):

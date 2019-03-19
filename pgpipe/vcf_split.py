@@ -112,9 +112,7 @@ from pgpipe.vcftools import *
 # Model file related functions
 from pgpipe.model import read_model_file
 
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
+# Import logging module
 from pgpipe.logging_module import initLogger, logArgs
 
 def vcf_split_parser(passed_arguments):
@@ -239,7 +237,6 @@ def split_samples_iter (split_sample_data, split_method):
         for sample_index, split_sample in enumerate(split_sample_data):
 
             yield sample_index, split_sample
-
 
 def assign_position_args (sample_data, split_method):
 
