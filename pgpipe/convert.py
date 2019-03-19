@@ -39,7 +39,7 @@
         Argument used to define the complete output filename, overrides **--out-prefix**.
     **--out-prefix** *<output_prefix>*
         Argument used to define the output prefix (i.e. filename without file extension).
-    **--out-format** *<vcf, vcf.gz, bcf, ped, binary-ped>*
+    **--out-format** *<vcf, vcf.gz, bcf, ped, binary-ped, eigenstrat>*
         Argument used to define the desired output format. Formats include: uncompressed 
         VCF (vcf); compressed VCF (vcf.gz) [default]; and BCF (bcf). Only usable with the 
         merge and concatenate utilites.

@@ -226,10 +226,103 @@ def bed_to_eigenstrat (bed_filename = None, bim_filename = None, fam_filename = 
     # Update the fam filename
     fam_filename = fam_filename[:-7]
 
-def assign_model_ind_filename (ind_filename, model, overwrite = False):
+def confirm_eigenstrat_files_from_prefix (eigenstrat_prefix):
+
+    # Assign expected filenames
+    geno_filename = eigenstrat_prefix + '.geno'
+    ind_filename = eigenstrat_prefix + '.ind'
+    snp_filename = eigenstrat_prefix + '.snp'
+
+    # Check if a genotype file is assigned
+    if not geno_filename:
+        raise IOError('Unable to assign genotype file (i.e. --geno). Please confirm the file is named correctly')
+
+    # Check if the ind and snp files are not assigned
+    if not ind_filename and not snp_filename:
+        raise IOError('Unable to assign the ind and snp files. Please confirm the files (i.e. --ind, --snp) are assigned')
+
+    # Check if the ind is not assigned
+    if not ind_filename:
+        raise IOError('Unable to assign ind file. Please confirm the ind file (i.e. --ind) is assigned')
+
+    # Check if the snp file is not assigned
+    if not snp_filename:
+        raise IOError('Unable to assign snp file. Please confirm the snp file (i.e. --snp) is assigned')
+
+def confirm_eigenstrat_files (geno_filename, ind_filename, snp_filename):
+
+    # Check if a genotype file is assigned
+    if not geno_filename:
+        raise IOError('Unable to assign genotype file (i.e. --geno). Please confirm the file is named correctly')
+
+    # Check if the ind and snp files are not assigned
+    if not ind_filename and not snp_filename:
+        raise IOError('Unable to assign the ind and snp files. Please confirm the files (i.e. --ind, --snp) are assigned')
+
+    # Check if the ind is not assigned
+    if not ind_filename:
+        raise IOError('Unable to assign ind file. Please confirm the ind file (i.e. --ind) is assigned')
+
+    # Check if the snp file is not assigned
+    if not snp_filename:
+        raise IOError('Unable to assign snp file. Please confirm the snp file (i.e. --snp) is assigned')
+
+def check_eigenstrat_prefix (geno_filename, ind_filename, snp_filename):
+
+    # Assign the base name of each file
+    geno_filename_wo_ext = os.path.splitext(geno_filename)[0]
+    ind_basename_wo_ext = os.path.splitext(ind_filename)[0]
+    snp_basename_wo_ext = os.path.splitext(snp_filename)[0]
+
+    # Check if a prefix may be assigned without any changes
+    if geno_filename_wo_ext == ind_basename_wo_ext == snp_basename_wo_ext:
+        
+        # Return True if a prefix may be assigned
+        return True
+
+    return False
+
+def assign_eigenstrat_prefix (geno_filename, ind_filename, snp_filename):
+
+    # Assign the base name of each file
+    geno_filename_wo_ext = os.path.splitext(geno_filename)[0]
+
+    # Check that the ind file needs to be changed
+    if ind_filename != geno_filename_wo_ext + '.ind':
+
+        # Rename the file
+        shutil.move(ind_filename, geno_filename_wo_ext + '.ind')
+
+    # Check that the ind file needs to be changed
+    if snp_filename != geno_filename_wo_ext + '.snp':
+
+        # Rename the file
+        shutil.move(snp_filename, geno_filename_wo_ext + '.snp')
+
+    # Return the prefix
+    return geno_filename_wo_ext
+
+def restore_eigenstrat_files (geno_filename, ind_filename, snp_filename):
+
+    # Assign the base name of each file
+    geno_filename_wo_ext = os.path.splitext(geno_filename)[0]
+
+    # Check that the ind file needs to be changed
+    if ind_filename != geno_filename_wo_ext + '.ind':
+
+        # Rename the file
+        shutil.move(geno_filename_wo_ext + '.ind', ind_filename)
+
+    # Check that the ind file needs to be changed
+    if snp_filename != geno_filename_wo_ext + '.snp':
+
+        # Rename the file
+        shutil.move(geno_filename_wo_ext + '.snp', snp_filename)
+
+def assign_model_ind_filename (eigenstrat_prefix, model, overwrite = False):
 
     # Assign a model-based ind filename
-    model_ind_filename = '%s.%s.ind' % (ind_filename, model.name)
+    model_ind_filename = '%s.%s.ind' % (eigenstrat_prefix, model.name)
 
     # Check if the file should be overwritten
     if not overwrite:
@@ -240,13 +333,13 @@ def assign_model_ind_filename (ind_filename, model, overwrite = False):
 
     return model_ind_filename
 
-def create_ind_w_pops (ind_filename, model, out_filename):
+def create_ind_w_pops (eigenstrat_prefix, model, out_filename):
 
     # Create a temporary file to replace the ind file
     ind_pop_file = open(out_filename, 'w')
 
     # Open the ind file
-    with open(ind_filename, 'r') as ind_file:
+    with open(eigenstrat_prefix + '.ind', 'r') as ind_file:
 
         # Loop the ind file
         for ind_line in ind_file:
@@ -268,16 +361,16 @@ def create_ind_w_pops (ind_filename, model, out_filename):
 
     ind_pop_file.close()
 
-def update_ind_w_pops (ind_filename, model):
+def update_ind_w_pops (eigenstrat_prefix, model):
 
     # Create a filename for the temporary ind file
-    tmp_ind_filename = assign_unique_filename(ind_filename, 'tmp')
+    tmp_ind_filename = assign_unique_filename(eigenstrat_prefix + '.ind', 'tmp')
 
     # Create a temporary file that will replace the ind file
     ind_pop_file = open(tmp_ind_filename, 'w')
 
     # Open the ind file
-    with open(ind_filename, 'r') as ind_file:
+    with open(eigenstrat_prefix + '.ind', 'r') as ind_file:
 
         # Loop the ind file
         for ind_line in ind_file:
@@ -300,7 +393,7 @@ def update_ind_w_pops (ind_filename, model):
     ind_pop_file.close()
 
     # Rename the ind file
-    shutil.move(tmp_ind_filename, ind_filename)
+    shutil.move(tmp_ind_filename, eigenstrat_prefix + '.ind')
 
 def r_admixr_d (eigenstrat_prefix, out_prefix, w_pops, x_pops, y_pops, z_pops):
 
