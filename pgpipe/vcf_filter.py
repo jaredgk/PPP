@@ -201,6 +201,10 @@ def vcf_filter_parser(passed_arguments):
         '''Custom action to add items to a list'''
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
+
+                # Clean up any commas
+                value = [item.strip(',') for item in value]
+                
                 if not getattr(args, self.dest):
                     setattr(args, self.dest, value)
                 else:
@@ -232,6 +236,9 @@ def vcf_filter_parser(passed_arguments):
 
     # General arguments.
     vcf_parser.add_argument('--overwrite', help = "Overwrite previous output", action = 'store_true')
+
+    # Galaxy Option to pipe log to stdout
+    vcf_parser.add_argument('--log-stdout', help = argparse.SUPPRESS, action = 'store_true')
 
     ### Filters
 
@@ -463,13 +470,8 @@ def run (passed_arguments = []):
     # Check if the user has specified a output filename
     if vcf_args.out:
 
-        # Assign the vcftools output filename, using the output filename
+        # Rename the vcftools output filename, using the output filename
         vcftools_output_filename = vcf_args.out
-
-    else:
-
-        # Assign the vcftools output filename, using the prefix and suffix
-        vcftools_output_filename = vcf_args.out_prefix + vcftools_out_suffix
 
     # Check if previous output should be overwritten
     if not vcf_args.overwrite:
@@ -609,7 +611,17 @@ def run (passed_arguments = []):
         # Call vcftools with the specifed arguments
         vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)
 
-    produce_vcftools_log(vcftools_err, vcftools_output_filename)
+    # Check if the log should be piped to the stdout
+    if vcf_args.log_stdout:
+
+        # Write the log to stdout
+        sys.stdout.write(vcftools_err)
+
+    # Check if log should be saved as a file
+    else:
+
+        # Create the log file
+        produce_vcftools_log(vcftools_err, vcftools_output_filename)
 
     # Delete any files that were created for vcftools
     if vcf_args.model_file:

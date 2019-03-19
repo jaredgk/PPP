@@ -40,19 +40,7 @@
         diversity (site-pi), windowed nucleotide diversity (window-pi), allele frequency
         (freq), Fit (het-fit), Fis (het-fis), and the hardy-weinberg equilibrium 
         (hardy-weinberg).
-    
-    *******************************************
-    Additional Statistic Command-line Arguments
-    *******************************************
-    **--statistic-window-size** *<size_int>*
-        Defines the statistic window size. Not usable with all statistics.
-    **--statistic-window-step** *<step_int>*
-        Defines the statistic window step size. Not usable with all statistics.
-    **--pop-file** *<pop_filename>*
-        Population file. This argument may be used multiple times if desired. Please note
-        the this argument is not compatible with either the **--model** or **--model-file** 
-        command-line arguments.
-    
+
     ***********************************
     Statistic Command-line Requirements
     ***********************************
@@ -76,6 +64,18 @@
 
     **--calc-statistic** *het-fis*
         Requires: **--pop-file**/**--model**.
+    
+    *******************************************
+    Additional Statistic Command-line Arguments
+    *******************************************
+    **--statistic-window-size** *<size_int>*
+        Defines the statistic window size. Not usable with all statistics.
+    **--statistic-window-step** *<step_int>*
+        Defines the statistic window step size. Not usable with all statistics.
+    **--pop-file** *<pop_filename>*
+        Population file. This argument may be used multiple times if desired. Please note
+        the this argument is not compatible with either the **--model** or **--model-file** 
+        command-line arguments.
     
     #############################
     Filter Command-line Arguments
@@ -196,6 +196,10 @@ def vcf_calc_parser(passed_arguments):
         '''Custom action to add items to a list'''
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
+
+                # Clean up any commas
+                value = [item.strip(',') for item in value]
+                
                 if not getattr(args, self.dest):
                     setattr(args, self.dest, value)
                 else:
@@ -226,10 +230,13 @@ def vcf_calc_parser(passed_arguments):
     # General arguments
     vcf_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
 
+    # Galaxy Option to pipe log to stdout
+    vcf_parser.add_argument('--log-stdout', help = argparse.SUPPRESS, action = 'store_true')
+
     # Statistic based arguments
     statistic_list = ['weir-fst', 'windowed-weir-fst', 'TajimaD', 'site-pi', 'window-pi', 'freq', 'het-fit', 'het-fis', 'hardy-weinberg']
 
-    vcf_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'The statistic to calculate', type = str, choices = statistic_list)
+    vcf_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'The statistic to calculate', required = True, type = str, choices = statistic_list)
 
     # Statistic window options
     vcf_parser.add_argument('--statistic-window-size', help = 'Statistic window size', type = int)
@@ -624,8 +631,17 @@ def run (passed_arguments = []):
             # vcftools subprocess call, with stdout
             vcftools_err = call_vcftools(vcfname_arg + pop_call_args, output_filename = pop_filename)
 
-            # Produce the vcftools log file, in append mode
-            produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
+            # Check if the log should be piped to the stdout
+            if vcf_args.log_stdout:
+
+                # Write the log to stdout
+                sys.stdout.write(vcftools_err)
+
+            # Check if log should be saved as a file
+            else:
+
+                # Produce the vcftools log file, in append mode
+                produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
 
     elif vcf_args.calc_statistic == 'het-fis':
 
@@ -638,8 +654,17 @@ def run (passed_arguments = []):
             # vcftools subprocess call
             vcftools_err = call_vcftools(vcfname_arg + pop_call_args, output_filename = vcftools_output_filename, append_mode = True)
 
-            # Produce the vcftools log file, in append mode
-            produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
+            # Check if the log should be piped to the stdout
+            if vcf_args.log_stdout:
+
+                # Write the log to stdout
+                sys.stdout.write(vcftools_err)
+
+            # Check if log should be saved as a file
+            else:
+
+                # Produce the vcftools log file, in append mode
+                produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
 
     else:
 
@@ -661,8 +686,17 @@ def run (passed_arguments = []):
         # vcftools subprocess call
         vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
 
-        # Produce the vcftools log file
-        produce_vcftools_log(vcftools_err, vcftools_output_filename)
+        # Check if the log should be piped to the stdout
+        if vcf_args.log_stdout:
+
+            # Write the log to stdout
+            sys.stdout.write(vcftools_err)
+
+        # Check if log should be saved as a file
+        else:
+
+            # Produce the vcftools log file
+            produce_vcftools_log(vcftools_err, vcftools_output_filename)
 
     # Delete any files that were created for vcftools
     if vcf_args.model_file:
