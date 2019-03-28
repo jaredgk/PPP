@@ -112,9 +112,7 @@ from pgpipe.vcftools import *
 # Model file related functions
 from pgpipe.model import read_model_file
 
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
+# Import logging module
 from pgpipe.logging_module import initLogger, logArgs
 
 def vcf_split_parser(passed_arguments):
@@ -148,6 +146,10 @@ def vcf_split_parser(passed_arguments):
         '''Custom action to add items to a list'''
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
+
+                # Clean up any commas
+                value = [item.strip(',') for item in value]
+                
                 if not getattr(args, self.dest):
                     setattr(args, self.dest, value)
                 else:
@@ -184,6 +186,9 @@ def vcf_split_parser(passed_arguments):
 
     # General arguments.
     vcf_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
+
+    # Galaxy Option to pipe log to stdout
+    vcf_parser.add_argument('--log-stdout', help = argparse.SUPPRESS, action = 'store_true')
 
     ## Filters
     # Position-based position filters
@@ -232,7 +237,6 @@ def split_samples_iter (split_sample_data, split_method):
         for sample_index, split_sample in enumerate(split_sample_data):
 
             yield sample_index, split_sample
-
 
 def assign_position_args (sample_data, split_method):
 
@@ -504,8 +508,17 @@ def run (passed_arguments = []):
         # Call vcftools with the specifed arguments
         vcftools_err = call_vcftools(vcfname_arg + sample_call_args, output_format = vcf_args.out_format, output_filename = vcftools_sample_filename)
 
-        # Produce the log file (in append mode, will create a single log)
-        produce_vcftools_log(vcftools_err, vcf_args.out_prefix + '.split', append_mode = True)
+        # Check if the log should be piped to the stdout
+        if vcf_args.log_stdout:
+
+            # Write the log to stdout
+            sys.stdout.write(vcftools_err)
+
+        # Check if log should be saved as a file
+        else:
+
+            # Produce the log file (in append mode, will create a single log)
+            produce_vcftools_log(vcftools_err, vcf_args.out_prefix + '.split', append_mode = True)
 
 
 if __name__ == "__main__":

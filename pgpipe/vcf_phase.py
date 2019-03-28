@@ -117,13 +117,22 @@ import argparse
 import glob
 import logging
 
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
+# Import vcf format check function
 from pgpipe.vcf_reader_func import checkFormat
+
+# Import logging module
 from pgpipe.logging_module import initLogger, logArgs
+
+# Import model reader
 from pgpipe.model import read_model_file
+
+# Import beagle functions
 from pgpipe.beagle import call_beagle, check_for_beagle_intermediate_files
+
+# Import shapeit functions
 from pgpipe.shapeit import call_shapeit, remove_shapeit_intermediate_files, check_for_shapeit_intermediate_files
+
+# Import bcftools functions
 from pgpipe.bcftools import get_unique_chrs, get_samples, chr_subset_file, concatenate, check_for_index, create_index
 
 def phase_argument_parser(passed_arguments):
@@ -157,6 +166,10 @@ def phase_argument_parser(passed_arguments):
         '''Custom action to add items to a list'''
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
+
+                # Clean up any commas
+                value = [item.strip(',') for item in value]
+                
                 if not getattr(args, self.dest):
                     setattr(args, self.dest, value)
                 else:
@@ -195,6 +208,9 @@ def phase_argument_parser(passed_arguments):
     phase_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
     phase_parser.add_argument('--beagle-path', help = "Defines the path to locate beagle.jar", type = str, default = 'bin/')
 
+    # Galaxy Option to pipe log to stdout
+    phase_parser.add_argument('--log-stdout', help = argparse.SUPPRESS, action = 'store_true')
+
     # Phase algorithm argument
     phasing_list = ['beagle', 'shapeit']
     phasing_default = 'beagle'
@@ -229,6 +245,35 @@ def phase_argument_parser(passed_arguments):
         return phase_parser.parse_args(passed_arguments)
     else:
         return phase_parser.parse_args()
+
+def log_to_stdout (log_filename):
+    '''
+        Write log file contents to stdout
+
+        Used to allow galaxy users to see the contents of the log file. 
+        Once completed, delete the log file.
+
+        Raises
+        ------
+        IOError
+            If a log file does not exist
+    '''
+
+    # Confirm the log file exists, raise an error if not
+    if not os.path.isfile(log_filename):
+        raise IOError('%s not found' % log_filename)
+
+    # Open the log file
+    log_file = open(log_filename)
+
+    # Write the log file to stdout
+    sys.stdout.write(log_file.readlines())
+
+    # Close the log file
+    log_file.close()
+
+    # Delete the log file
+    os.remove(log_filename)
 
 def concatenate_logs (log_files, new_log_filename):
     '''
@@ -588,7 +633,6 @@ def run (passed_arguments = []):
             # Assign exclude file
             phase_call_args.append('excludesamples=' + filter_indv_filename)
 
-
         elif phase_args.phase_algorithm == 'shapeit':
 
             # Assign a filename for the indv file
@@ -698,15 +742,8 @@ def run (passed_arguments = []):
         # Call beagle wrapper
         call_beagle(phase_args.beagle_path, list(map(str, phase_call_args)), phase_args.out_prefix, phase_args.out_format)
 
-        # Rename output to phase_args.out, if specified
-        if phase_args.out:
-            shutil.move(phased_output, phase_args.out)
-            shutil.move(phase_args.out_prefix + '.log', phase_args.out + '.log')
         # Rename log using phased_output
-        else:
-            shutil.move(phase_args.out_prefix + '.log', phased_output + '.log')
-
-        logging.info('beagle log file created')
+        shutil.move(phase_args.out_prefix + '.log', phased_output + '.log')
 
     # Assign general arguments and call shapeit
     elif phase_args.phase_algorithm == 'shapeit':
@@ -787,13 +824,6 @@ def run (passed_arguments = []):
             # Combine the log files
             concatenate_logs([phase_args.out_prefix + '.phase.log', phase_args.out_prefix + '.log'],  phased_output + '.log')
 
-            # Rename output to phase_args.out, if specified
-            if phase_args.out:
-                shutil.move(phased_output, phase_args.out)
-                shutil.move(phased_output + '.log',  phase_args.out + '.log')
-
-            logging.info('shapeit log file created')
-
             # Check if a chr subset file was created
             if phase_args.phase_chr and len(chrs_in_vcf) > 1:
                 # Delete the chromosome-specific input
@@ -872,12 +902,25 @@ def run (passed_arguments = []):
             # Combine the log files
             concatenate_logs(phased_log_list, phased_output + '.log')
 
-            # Rename output to phase_args.out, if specified
-            if phase_args.out:
-                shutil.move(phased_output, phase_args.out)
-                shutil.move(phased_output + '.log',  phase_args.out + '.log')
+    # Check if the log should be piped to the stdout
+    if phase_args.log_stdout:
 
-            logging.info('Multi-chr shapeit log created')
+        # Write the log to stdout
+        log_to_stdout(phased_output + '.log')
+
+        # Rename output to phase_args.out, if specified
+        if phase_args.out:
+            shutil.move(phased_output, phase_args.out)
+
+    # Check if log should be saved as a file
+    else:
+
+        # Rename output to phase_args.out, if specified
+        if phase_args.out:
+            shutil.move(phased_output, phase_args.out)
+            shutil.move(phase_args.out_prefix + '.log', phase_args.out + '.log')
+
+        logging.info('Log file created')
 
     # Reverts the VCF input file
     if vcfname_renamed:

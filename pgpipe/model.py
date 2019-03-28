@@ -11,9 +11,7 @@ import numpy as np
 
 from collections import defaultdict, OrderedDict
 
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
+# Import logging module
 from pgpipe.logging_module import initLogger
 
 class ModelFile(dict):
@@ -371,9 +369,6 @@ def pops_not_in_model (model, pops):
         return pops_not_found
 
     return None
-
-
-
 
 def read_model_file (filename):
 
