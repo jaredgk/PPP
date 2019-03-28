@@ -274,6 +274,7 @@ class VcfReader():
             raise Exception("Popmodel and allpop cannot both be specified")
         if compress_flag and self.file_uncompressed:
             vcfname = compressVcf(vcfname)
+        subsamp_list = None
         if subsamp_num is not None:
             if subsamp_list is not None:
                 raise Exception('Multiple subsampling options called in getVcfReader')
@@ -285,6 +286,32 @@ class VcfReader():
             subsamp_list = [l.strip() for l in subsamp_file.readlines()]
             subsamp_file.close()
 
+        #if index is None:
+        #    self.reader = pysam.VariantFile(vcfname)
+        #else:
+        #    self.reader = pysam.VariantFile(vcfname, index_filename=index)
+        #if popmodel is not None:
+        #    self.popmodel = popmodel
+        #    popsamp_list = popmodel.inds
+        #    vcf_names = [l for l in self.reader.header.samples]
+        #    present_list = crossModelAndVcf(popsamp_list,vcf_names)
+            #self.reader.subset_samples(popsamp_list)
+        #    self.reader.subset_samples(present_list)
+        #    self.setPopIdx(present_list)
+        #if use_allpop:
+        #    self.setAllPop()
+        #if subsamp_list is not None:
+        #    logging.debug('Subsampling %d individuals from VCF file' %
+        #    (len(subsamp_list)))
+        #    self.reader.subset_samples(subsamp_list)
+        self.openSetInds(vcfname,index,popmodel,use_allpop,subsamp_list)
+        self.info_rec = next(self.reader)
+        self.prev_last_rec = None #next(self.reader)
+        self.reader.close()
+        self.openSetInds(vcfname,index,popmodel,use_allpop,subsamp_list)
+        self.chr_in_chrom = (self.info_rec.chrom[0:3] == 'chr')
+
+    def openSetInds(self, vcfname, index, popmodel, use_allpop, subsamp_list):
         if index is None:
             self.reader = pysam.VariantFile(vcfname)
         else:
@@ -303,8 +330,6 @@ class VcfReader():
             logging.debug('Subsampling %d individuals from VCF file' %
             (len(subsamp_list)))
             self.reader.subset_samples(subsamp_list)
-        self.prev_last_rec = next(self.reader)
-        self.chr_in_chrom = (self.prev_last_rec.chrom[0:3] == 'chr')
 
     def fetch(self, chrom=None, start=None, end=None):
         return self.reader.fetch(chrom, start, end)
@@ -395,7 +420,7 @@ def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
     """
     lst = []
     if region is None:
-        lst.append(prev_last_rec)
+        #lst.append(prev_last_rec)
         for rec in vcf_reader:
             lst.append(rec)
         return lst, lst[-1]

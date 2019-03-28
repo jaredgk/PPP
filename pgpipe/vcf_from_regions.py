@@ -199,7 +199,8 @@ def vcf_region_write(sys_args):
                               index=args.tabix_index)
     logging.info('VCF file read')
     header = vcf_reader.reader.header
-    first_el = vcf_reader.prev_last_rec
+    #first_el = vcf_reader.prev_last_rec
+    first_el = vcf_reader.info_rec
     chrom = first_el.chrom
     if not args.multi_out:
         output_name = getOutputName(args)
@@ -218,7 +219,7 @@ def vcf_region_write(sys_args):
         raise Exception(("No value provided for region filename or "
                          "single region"))
     logging.info('Region read')
-    vcf_reader.prev_last_rec = first_el
+    #vcf_reader.prev_last_rec = first_el
     fasta_ref = None
     remove_cpg = (args.refname is not None)
     filter_sites = ((args.refname is not None)

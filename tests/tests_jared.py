@@ -85,7 +85,7 @@ class geneRegionTest(unittest.TestCase):
 
     def getARecord(self):
         vcfr = VcfReader('input/chr11.subsamples.vcf.gz')
-        return vcfr.prev_last_rec
+        return vcfr.info_rec
 
     def test_RL_collist(self):
         collist = '2,4,6'
@@ -260,8 +260,9 @@ class reduceTest(unittest.TestCase):
                         'input/chr11.test.vcf'))
 
     def tearDown(self):
-        tryRemove('input/chr11.test.vcf.gz')
-        tryRemove('input/chr11.test.vcf')
+        pass
+        #tryRemove('input/chr11.test.vcf.gz')
+        #tryRemove('input/chr11.test.vcf')
 
 
 

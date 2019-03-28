@@ -580,9 +580,9 @@ def vcf_to_ima(sys_args):
     if args.refname is not None:
         fasta_ref = pysam.FastaFile(args.refname)
     record_count = 1
-    first_el = vcf_reader.prev_last_rec
+    first_el = vcf_reader.info_rec
 
-    logging.info('Total individuals: %d' % (len(vcf_reader.prev_last_rec.samples)))
+    logging.info('Total individuals: %d' % (len(vcf_reader.info_rec.samples)))
     if regions_provided:
         logging.info('Total regions: %d' % (len(region_list.regions)))
     total_regions = (len(region_list.regions) if regions_provided else len(args.vcflist))
