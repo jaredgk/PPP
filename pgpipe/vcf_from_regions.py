@@ -30,6 +30,9 @@ def createParser():
     parser.add_argument('--zero-closed', dest="zeroclosed", action="store_true")
     parser.add_argument("--out", dest="output_name", help= (
                         "Optional name for output other than default"))
+    parser.add_argument("--out-prefix",dest="out_prefix",help=("Specifies"
+                        " output sent to multiple files starting with "
+                        "given prefix"))
     parser.add_argument("--bed-column-index", dest="gene_col", help= (
                         "Comma-separated list of columns for gene region "
                         " data, format is start/end if no chromosome "
@@ -37,8 +40,8 @@ def createParser():
     parser.add_argument("--compress-vcf", dest="compress_flag",
                         action="store_true", help=("If input VCF is not "
                         "compressed, will compress and use fetch search"))
-    parser.add_argument("--multi-out", dest="multi_out", action="store_true",
-                        help="Produces multiple output VCFs instead of one")
+    #parser.add_argument("--multi-out", dest="multi_out", action="store_true",
+    #                    help="Produces multiple output VCFs instead of one")
     parser.add_argument("--parsecpg", dest="refname")
     parser.add_argument("--compress-out", dest="compress", action="store_true")
     parser.add_argument("--remove-indels", dest="remove_indels", 
@@ -107,6 +110,49 @@ def getMultiFileName(pref, rc, compress):
     if compress:
         ext += '.gz'
     return pref+'region'+str(rc)+ext
+
+def writeRegion(args, vcf_reader, region, rc, filter_sites, remove_cpg, 
+                fasta_ref,header,vcf_out=None):
+    rec_list = vcf_reader.getRecordList(region)
+    out_p = getOutputPrefix(args)
+    if len(rec_list) == 0:
+        if args.forceempty:
+            logging.warning(("Region %s has no variants "
+                        "in VCF file") % (region.toStr()))
+        else:
+            raise Exception("Region %s has no variants" % (region.toStr()))
+    outname = getMultiFileName(out_p,rc,args.compress)
+    if vcf_out is None:
+
+        vcf_t = pysam.VariantFile(outname,'w',header=header) #check
+    else:
+        vcf_t = vcf_out
+    if filter_sites:
+        pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg,
+                        remove_indels=args.remove_indels,
+                        remove_multiallele=args.remove_multiallele,
+                        remove_missing=args.remove_missing,
+                        inform_level=args.informative_count,
+                        fasta_ref=fasta_ref)
+    for i in range(len(rec_list)):
+        if (not filter_sites) or pass_list[i]:
+            vcf_t.write(rec_list[i])
+    if vcf_out is None:
+        vcf_t.close()
+
+def writeFile(args, vcf_reader, filter_sites, remove_cpg, fasta_ref, header):
+    outname = getOutputName(args)
+    outfile = pysam.VariantFile(outname,'w',header=header)
+    for rec in vcf_reader.reader:
+        if (not filter_sites) or vf.checkRecordPass(rec,
+                                 remove_cpg=remove_cpg,
+                                 remove_indels=args.remove_indels,
+                                 remove_multiallele=args.remove_multiallele,
+                                 remove_missing=args.remove_missing,
+                                 inform_level=args.informative_count,
+                                 fasta_ref=fasta_ref):
+            outfile.write(rec)
+
 
 def vcf_region_write(sys_args):
     """Returns a VCF file with variants from regions in a list
@@ -202,11 +248,13 @@ def vcf_region_write(sys_args):
     #first_el = vcf_reader.prev_last_rec
     first_el = vcf_reader.info_rec
     chrom = first_el.chrom
-    if not args.multi_out:
+    full_fileread = False
+    vcf_out = None
+    if args.out_prefix is None:
         output_name = getOutputName(args)
         vcf_out = pysam.VariantFile(output_name, 'w', header=header)
-    else:
-        out_p = getOutputPrefix(args)
+    #else:
+    #    out_p = getOutputPrefix(args)
 
     if args.gene_str is not None:
         region_list = RegionList(genestr=args.gene_str,zeroho=args.zeroho,
@@ -216,8 +264,9 @@ def vcf_region_write(sys_args):
                                  zeroclosed=args.zeroclosed,
                                  colstr=args.gene_col,sortlist=False)
     else:
-        raise Exception(("No value provided for region filename or "
-                         "single region"))
+        full_fileread=True
+        #raise Exception(("No value provided for region filename or "
+        #                 "single region"))
     logging.info('Region read')
     #vcf_reader.prev_last_rec = first_el
     fasta_ref = None
@@ -232,33 +281,41 @@ def vcf_region_write(sys_args):
         remove_cpg = True
 
     logging.info('Total individuals: %d' % (len(first_el.samples)))
-    logging.info('Total regions: %d' % (len(region_list.regions)))
-    for rc,region in enumerate(region_list.regions,start=1):
-        rec_list = vcf_reader.getRecordList(region)
-        if len(rec_list) == 0:
-            if args.forceempty:
-                logging.warning(("Region %s has no variants "
-                            "in VCF file") % (region.toStr()))
-            else:
-                raise Exception("Region %s has no variants" % (region.toStr()))
-        if args.multi_out:
-            try:
-                vcf_out.close()
-            except:
-                pass
-            outname = getMultiFileName(out_p, rc, args.compress)
-            vcf_out = pysam.VariantFile(outname, 'w', header=header)
-        if filter_sites:
-            pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg,
-                          remove_indels=args.remove_indels, 
-                          remove_multiallele=args.remove_multiallele,
-                          remove_missing=args.remove_missing,
-                          inform_level=args.informative_count,
-                          fasta_ref=fasta_ref)
-        for i in range(len(rec_list)):
+
+    if full_fileread:
+        writeFile(args,vcf_reader,filter_sites,remove_cpg,fasta_ref,header)
+    else:
+        logging.info('Total regions: %d' % (len(region_list.regions)))
+        for rc,region in enumerate(region_list.regions,start=1):
+            #if args.multi_out:
+            writeRegion(args,vcf_reader,region,rc,filter_sites,remove_cpg,
+                        fasta_ref,header,vcf_out)
+                #continue
+        #rec_list = vcf_reader.getRecordList(region)
+        #if len(rec_list) == 0:
+        #    if args.forceempty:
+        #        logging.warning(("Region %s has no variants "
+        #                    "in VCF file") % (region.toStr()))
+        #    else:
+        #        raise Exception("Region %s has no variants" % (region.toStr()))
+        #if args.multi_out:
+        #    try:
+        #        vcf_out.close()
+        #    except:
+        #        pass
+        #    outname = getMultiFileName(out_p, rc, args.compress)
+        #    vcf_out = pysam.VariantFile(outname, 'w', header=header)
+        #if filter_sites:
+        #    pass_list = vf.getPassSites(rec_list, remove_cpg=remove_cpg,
+        #                  remove_indels=args.remove_indels, 
+        #                  remove_multiallele=args.remove_multiallele,
+        #                  remove_missing=args.remove_missing,
+        #                  inform_level=args.informative_count,
+        #                  fasta_ref=fasta_ref)
+        #for i in range(len(rec_list)):
             #make filter_sites an option
-            if (not filter_sites) or pass_list[i]:
-                vcf_out.write(rec_list[i])
+        #    if (not filter_sites) or pass_list[i]:
+        #        vcf_out.write(rec_list[i])
 
 
 if __name__ == '__main__':

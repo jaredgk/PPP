@@ -219,6 +219,25 @@ def getPassSites(record_list, remove_cpg=False, remove_indels=True,
     #    logging.info(ppp)
     return pass_list
 
+def checkRecordPass(rec, remove_cpg=False, remove_indels=True, 
+                    remove_multiallele=True, remove_missing=0,
+                    inform_level=2,fasta_ref=None):
+    if remove_cpg and fasta_ref is None:
+        raise Exception("CpG removal requires a reference")
+    if inform_level > 2 or inform_level < 0:
+        raise Exception("Inform level %d must be between 0 and 2" % inform_level)
+    if remove_indels and not checkRecordIsSnp(rec):
+        return False
+    if remove_cpg and checkIfCpG(rec,fasta_ref):
+        return False
+    alleles,total_sites,missing_inds = getAlleleStats(rec)
+    if remove_missing != -1 and missing_inds > int(remove_missing):
+        return False
+    if inform_level != 0 and not isInformative(rec,mincount=inform_level,
+                alleles=alleles):
+        return False
+    return True
+
 
 def filterSites(record_list, remove_cpg=False, remove_indels=True,
                 remove_multiallele=True, remove_missing=0, inform_level=2,
