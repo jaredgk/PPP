@@ -918,7 +918,7 @@ def run (passed_arguments = []):
         # Rename output to phase_args.out, if specified
         if phase_args.out:
             shutil.move(phased_output, phase_args.out)
-            shutil.move(phase_args.out_prefix + '.log', phase_args.out + '.log')
+            shutil.move(phased_output + '.log', phase_args.out + '.log')
 
         logging.info('Log file created')
 
