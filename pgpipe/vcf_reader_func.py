@@ -25,6 +25,8 @@ def checkIfGzip(filename):
             return 'other'
     except OSError:
         return 'nozip'
+    except IOError:
+        return 'nozip'
 
 def checkHeader(filename):
     f = open(filename,'rb')

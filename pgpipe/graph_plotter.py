@@ -21,7 +21,7 @@ def manhattan_plot(in_file):
         ax.set_xlabel('Position')
         fig.savefig(in_file + ".pdf", bbox_inches='tight')
     except FileNotFoundError as e:
-        print(e)
+        print(e+' not found')
 
 
 def admixture_barplot(in_file, numinds):
@@ -135,7 +135,3 @@ def do_plots(in_file):
         plt.savefig(in_file + ".pdf")
     #except:
     #    print(in_file + ": No such file or directory")
-
-
-
-bar_plot('great_ape.17.Q')
