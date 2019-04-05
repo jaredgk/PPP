@@ -23,7 +23,7 @@ def checkIfGzip(filename):
             return checkHeader(filename)
         else:
             return 'other'
-    except:
+    except OSError:
         return 'nozip'
 
 def checkHeader(filename):
@@ -230,12 +230,13 @@ def checkRecordPass(rec, remove_cpg=False, remove_indels=True,
         return False
     if remove_cpg and checkIfCpG(rec,fasta_ref):
         return False
-    alleles,total_sites,missing_inds = getAlleleStats(rec)
-    if remove_missing != -1 and missing_inds > int(remove_missing):
-        return False
-    if inform_level != 0 and not isInformative(rec,mincount=inform_level,
+    if remove_missing != -1 or inform_level != 0:
+        alleles,total_sites,missing_inds = getAlleleStats(rec)
+        if remove_missing != -1 and missing_inds > int(remove_missing):
+            return False
+        if inform_level != 0 and not isInformative(rec,mincount=inform_level,
                 alleles=alleles):
-        return False
+            return False
     return True
 
 

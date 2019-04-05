@@ -153,8 +153,11 @@ def standard_shapeit_call (shapeit_call_args, output_prefix):
     '''
 
     logging.info('shapeit phasing parameters assigned')
-    shapeit_path = pkg_resources.resource_filename('shapeit','../bin/shapeit')
+    #shapeit_path = '../bin/shapeit'
+    shapeit_path='shapeit'
+    #shapeit_path = pkg_resources.resource_filename('shapeit','../bin/shapeit')
     # Phasing subprocess call
+    shapeit_path='shapeit'
     sys.stderr.write(str(shapeit_path)+'\n')
     phase_call = subprocess.Popen([shapeit_path] + shapeit_call_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     phase_stdout, phase_stderr = phase_call.communicate()
