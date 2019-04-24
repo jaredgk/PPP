@@ -206,7 +206,7 @@ def phase_argument_parser(passed_arguments):
 
     # General arguments
     phase_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
-    phase_parser.add_argument('--beagle-path', help = "Defines the path to locate beagle.jar", type = str, default = 'bin/')
+    phase_parser.add_argument('--beagle-path', help = "Defines the path to locate beagle.jar", type = str)
 
     # Galaxy Option to pipe log to stdout
     phase_parser.add_argument('--log-stdout', help = argparse.SUPPRESS, action = 'store_true')
@@ -659,6 +659,10 @@ def run (passed_arguments = []):
     # Assign general arguments and call beagle
     if phase_args.phase_algorithm == 'beagle':
 
+        if phase_args.beagle_path is not None:
+            beagle_path = phase_args.beagle_path
+        else:
+            beagle_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin')
         # Check for the presence of intermediate files from beagle
         check_for_beagle_intermediate_files(phase_args.out_prefix, phase_args.out_format, overwrite = phase_args.overwrite)
 
@@ -740,7 +744,7 @@ def run (passed_arguments = []):
             phase_call_args.append(chr_arg)
 
         # Call beagle wrapper
-        call_beagle(phase_args.beagle_path, list(map(str, phase_call_args)), phase_args.out_prefix, phase_args.out_format)
+        call_beagle(beagle_path, list(map(str, phase_call_args)), phase_args.out_prefix, phase_args.out_format)
 
         # Rename log using phased_output
         shutil.move(phase_args.out_prefix + '.log', phased_output + '.log')

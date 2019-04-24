@@ -688,13 +688,13 @@ def sampleinterval(picktype,numinf,intervals,infcounts):
         okints = [i for i in range(len(infcounts)) if infcounts[i] >= numinf ]
     else:
         okints = [i for i in range(len(intervals))]
+    n = len(okints)
+    if n == 0: # no intervals with that many informative sites
+        return None
     if picktype == "leftinterval":
         return intervals[okints[0]]
     if picktype == "rightinterval":
         return intervals[okints[-1]]
-    n = len(okints)
-    if n == 0: # no intervals with that many informative sites
-        return None
     if picktype == "randominterval":
         return  intervals[ okints[ random.randint(0,n-1)]]
     if picktype == "randombase":
@@ -752,6 +752,8 @@ def outputSubregion(args, interval, basedata, region=None, filename=None):
     """
     Outputs records in identified sub-interval to desired output file
     """
+    if interval is None:
+        return
     if region is None:
         subregion = Region(interval[0]-1,interval[1],basedata.records[0].chrom)
     else:
@@ -909,7 +911,7 @@ def sample_fourgametetest_intervals(sys_args):
         for vcfname in args.vcfname:
             basedata = BaseData(args, "VCF",vcfname)
             intervals = getIntervalList(args,basedata)
-            sys.stderr.write(str(intervals)+'\n')
+            #sys.stderr.write(str(intervals)+'\n')
             interval_list.append(intervals)
             if args.out_prefix is not None:
                 if args.returntype == 'returnlist':

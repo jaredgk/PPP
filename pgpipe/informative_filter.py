@@ -131,7 +131,7 @@ def filter_bed_regions(sys_args):
 
     if args.randcount != -1 and regions_output != args.randcount:
         sys.stderr.write("Only %d of %d regions found\n"%(regions_output,args.randcount))
-        exit(1)
+        #exit(1)
 
     if randomize:
         idx_output.sort()

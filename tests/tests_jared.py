@@ -14,6 +14,7 @@ from pgpipe.four_gamete_pysam import sample_fourgametetest_intervals
 from pgpipe.vcf_to_ima import vcf_to_ima
 from pgpipe.find_intergenic_bed import get_intergenic
 from pgpipe.get_nonmissing_chunks import regionsWithData
+from pgpipe import vcf_phase
 
 def tryRemove(filename):
     try:
@@ -317,6 +318,28 @@ class imaTest(unittest.TestCase):
                     '--out','input/chr11.subsamples.ima.u'])
         self.assertTrue(filecmp.cmp('input/chr11.ima.u',
                         'input/chr11.subsamples.ima.u'))
+
+class phaseTest(unittest.TestCase):
+    def test_shapeit(self):
+        vcf_phase.run(['--vcf','input/chr11.adj.big.vcf',
+                   '--out','input/chr11.test.vcf',
+                   '--out-format','vcf',
+                   '--phase-algorithm','shapeit',
+                   '--random-seed','123','--overwrite'])
+        self.assertTrue(filecmp.cmp('input/chr11.test.vcf',
+                        'input/chr11.shapeit.test.vcf'))
+
+    def test_beagle(self):
+        vcf_phase.run(['--vcf','input/chr11.adj.big.vcf',
+                   '--out','input/chr11.test.vcf',
+                   '--out-format','vcf',
+                   '--phase-algorithm','beagle',
+                   '--random-seed','123','--overwrite'])
+        self.assertTrue(filecmp.cmp('input/chr11.test.vcf',
+                        'input/chr11.beagle.test.vcf'))
+
+    def tearDown(self):
+        tryRemove('input/chr11.test.vcf')
 
 
 

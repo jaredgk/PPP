@@ -96,6 +96,8 @@ def getOutputName(args):
                      "an extension of vcf or vcf.gz"))
 
 def getOutputPrefix(args):
+    if args.out_prefix is not None:
+        return args.out_prefix
     if args.output_name is not None:
         return args.output_name
     for ext in ['vcf.gz','vcf']:
