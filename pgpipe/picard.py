@@ -212,7 +212,10 @@ def standard_picard_call (picard_path, picard_call_args, output_filename):
     '''
 
     # Assign location of picard jar file
-    picard_jar = os.path.join(picard_path, 'picard.jar')
+    if picard_path is None:
+        picard_jar = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','picard.jar')
+    else:
+        picard_jar = os.path.join(picard_path, 'picard.jar')
 
     # Check that picard.jar exists
     if not os.path.isfile(picard_jar):

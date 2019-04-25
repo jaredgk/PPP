@@ -62,9 +62,6 @@ import copy
 import shutil
 import logging
 
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
 from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.picard import call_picard, get_ref_dictonary, check_ref_file_association, remove_picard_index
@@ -129,7 +126,7 @@ def vcf_liftover_parser(passed_arguments):
     vcf_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
     vcf_parser.add_argument('--keep-index', help = "Defines if the output VCF index created by picard should be kept", action = 'store_true')
     vcf_parser.add_argument('--picard-max-records', help = 'Defines the number of records to store in memory for picard', type = int)
-    vcf_parser.add_argument('--picard-path', help = "Defines path to locate picard.jar", type = str, default = 'bin/')
+    vcf_parser.add_argument('--picard-path', help = "Defines path to locate picard.jar", type = str)
 
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)

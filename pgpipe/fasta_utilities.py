@@ -52,7 +52,7 @@ def fasta_utility_parser(passed_arguments):
 
     fasta_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
 
-    fasta_parser.add_argument('--picard-path', help = "Defines path to locate picard.jar", type = str, default = 'bin/')
+    fasta_parser.add_argument('--picard-path', help = "Defines path to locate picard.jar", type = str)
 
     if passed_arguments:
         return fasta_parser.parse_args(passed_arguments)
