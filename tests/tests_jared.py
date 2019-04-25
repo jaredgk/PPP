@@ -16,6 +16,17 @@ from pgpipe.find_intergenic_bed import get_intergenic
 from pgpipe.get_nonmissing_chunks import regionsWithData
 from pgpipe import vcf_phase
 
+def compareVcfsNoComments(va,vb):
+    vfa = open(va,'r')
+    vfb = open(vb,'r')
+    for line in vfa:
+        l2 = vfb.readline()
+        if line[0] == '#':
+            continue
+        if line != l2:
+            return False
+    return True
+
 def tryRemove(filename):
     try:
         os.remove(filename)
@@ -326,7 +337,7 @@ class phaseTest(unittest.TestCase):
                    '--out-format','vcf',
                    '--phase-algorithm','shapeit',
                    '--random-seed','123','--overwrite'])
-        self.assertTrue(filecmp.cmp('input/chr11.test.vcf',
+        self.assertTrue(compareVcfsNoComments('input/chr11.test.vcf',
                         'input/chr11.shapeit.test.vcf'))
 
     def test_beagle(self):
@@ -335,11 +346,11 @@ class phaseTest(unittest.TestCase):
                    '--out-format','vcf',
                    '--phase-algorithm','beagle',
                    '--random-seed','123','--overwrite'])
-        self.assertTrue(filecmp.cmp('input/chr11.test.vcf',
+        self.assertTrue(compareVcfsNoComments('input/chr11.test.vcf',
                         'input/chr11.beagle.test.vcf'))
 
-    def tearDown(self):
-        tryRemove('input/chr11.test.vcf')
+    #def tearDown(self):
+    #    tryRemove('input/chr11.test.vcf')
 
 
 
