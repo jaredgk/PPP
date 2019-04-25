@@ -493,7 +493,8 @@ def standard_plink2_call (plink2_call_args):
 
 
     # plink subprocess call
-    plink2_call = subprocess.Popen(['plink2'] + list(map(str, plink2_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    plink2_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','plink2')
+    plink2_call = subprocess.Popen([plink2_path] + list(map(str, plink2_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Wait for plink to finish
     plink2_out, plink2_err = plink2_call.communicate()
