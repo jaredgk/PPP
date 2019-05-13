@@ -421,3 +421,28 @@ def getIntervalsBetween(region_list, padding=0, firstline=True):
     out_list.zeroho = region_list.zeroho
     out_list.zeroclosed = region_list.zeroclosed
     return out_list
+
+def subtractBed(stat_list, filter_list):
+    #Sorts regions and removes regions from stat list 
+    #that overlap with any region in filter_list
+    stat_idx = 0
+    filter_idx = 0
+    stat_list.regions.sort()
+    filter_list.regions.sort()
+    drop_list = [False for i in stat_list.regions]
+    while stat_idx < len(stat_list.regions):
+        #try:
+        #    print (stat_list.regions[stat_idx].toStr(),filter_list.regions[filter_idx].toStr())
+        #except:
+        #    break
+        #print (stat_list.regions[stat_idx].toStr())
+        while filter_idx < len(filter_list.regions) and stat_list.regions[stat_idx].end > filter_list.regions[filter_idx].start:
+            #print (filter_list.regions[filter_idx].toStr())
+            if stat_list.regions[stat_idx].start < filter_list.regions[filter_idx].end:
+                #print ("drop "+str(stat_idx))
+                drop_list[stat_idx] = True
+                break
+            filter_idx+=1
+        stat_idx += 1
+    stat_list.regions = [stat_list.regions[i] for i in range(len(stat_list.regions)) if drop_list[i] is False]
+    return 

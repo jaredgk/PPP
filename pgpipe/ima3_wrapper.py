@@ -6,11 +6,6 @@ import logging
 import itertools
 from distutils.spawn import find_executable
 
-# Import basic vcftools functions
-from ima2p import *
-
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
 
 #from logging_module import initLogger
 
@@ -98,7 +93,7 @@ def call_ima3(args,ima_arglist):
     if args.threads is not None:
         if find_executable('mpirun') is None:
             raise Exception('mpirun required on path for multi-threading')
-        run_args.extend(['mpirun','-np',str(ima3_args.threads)])
+        run_args.extend(['mpirun','-np',str(args.threads)])
     ima_exe = getIMaExe(args)
     if ima_exe is None:
         raise Exception("No IMa executable found on system path")
@@ -111,7 +106,7 @@ def call_ima3(args,ima_arglist):
         ima_stderr = ima_stderr.decode()
     if ima_call.returncode != 0:
         raise Exception("Error with IMa call:%d\n%s"%(ima_call.returncode,ima_stderr))
-    sys.stdout.write(ima_stdout+'\n')
+    #sys.stdout.write(ima_stdout+'\n')
     sys.stdout.write(ima_stderr+'\n')
     
 
