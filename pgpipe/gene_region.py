@@ -367,7 +367,7 @@ class RegionList:
             out_str = ''
         for region in self.regions:
             if region.fullline is not None:
-                file_handle.write(fullline+'\n')
+                file_handle.write(region.fullline+'\n')
                 continue
             start = region.start
             end = region.end
@@ -396,6 +396,13 @@ class RegionList:
 
     def filterOutXY(self):
         self.filterByChrom(['X','Y','chrX','chrY'])
+
+    def expandRegions(self,expand_size):
+        #Expands regions, but does not merge overlaps 
+        #that may occur
+        for i in range(len(self.regions)):
+            self.regions[i].start = max(self.regions[i].start-expand_size,0)
+            self.regions[i].end += expand_size
 
     #TO do:
     #Add sort method for strictly text based sorting
@@ -430,6 +437,8 @@ def subtractBed(stat_list, filter_list):
     stat_list.regions.sort()
     filter_list.regions.sort()
     drop_list = [False for i in stat_list.regions]
+    stat_region = stat_list.regions[stat_idx]
+    filter_region = filter_list.regions[filter_idx]
     while stat_idx < len(stat_list.regions):
         #try:
         #    print (stat_list.regions[stat_idx].toStr(),filter_list.regions[filter_idx].toStr())

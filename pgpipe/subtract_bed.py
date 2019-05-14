@@ -15,7 +15,8 @@ def filterStat(sysargv):
     args = parser.parse_args(sysargv)
     stat_list = RegionList(filename=args.stat_file,zeroho=args.zeroho,keep_full_line=True)
     filter_list = RegionList(filename=args.filter_file,zeroho=args.zeroho)
-
+    if args.window != 0:
+        filter_list.expandRegions(args.window)
     subtractBed(stat_list,filter_list)
     stat_list.printList()
 
