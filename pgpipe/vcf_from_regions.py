@@ -65,8 +65,8 @@ def createParser():
     subsamp_group.add_argument('--subsamp-num', dest="subsamp_num",
                                help=("Number of individuals to be randomly "
                                      "subsampled from VCF file"))
-    subsamp_group.add_argument('--model',dest="modelname",help="Model file for selecting individuals for writing")
-    parser.add_argument('--poptag',dest="poptag",help="If model file is used, will use model with this name")
+    subsamp_group.add_argument('--model-file',dest="modelname",help="Model file for selecting individuals for writing")
+    parser.add_argument('--model',dest="poptag",help="If model file is used, will use model with this name")
     parser.add_argument("--forceempty",dest="forceempty",action="store_true",help=("Will create empty VCF if a region is empty rather than throw an error"))
     return parser
 

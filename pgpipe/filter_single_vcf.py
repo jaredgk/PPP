@@ -9,8 +9,8 @@ from pgpipe.vcf_reader_func import VcfReader
 def createParser():
     parser = argparse.ArgumentParser(description=("Remove individuals from a single VCF file"))
     parser.add_argument("--vcf",dest="vcfname",help=("VCF input filename"))
-    parser.add_argument("--model",dest="modelname",help=("Model filename"))
-    parser.add_argument("--poptag",dest="poptag",help=("Name of model if multiple in model file"))
+    parser.add_argument("--model-file",dest="modelname",help=("Model filename"))
+    parser.add_argument("--model",dest="poptag",help=("Name of model if multiple in model file"))
     parser.add_argument("--out",dest="outname",default="-",help=("Name of VCF output file"))
     return parser
 
