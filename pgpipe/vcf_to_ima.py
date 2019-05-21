@@ -205,7 +205,7 @@ def createParser():
     parser.add_argument("--vcf", dest="vcfname", help="Input VCF filename")
     parser.add_argument("--vcfs", dest="vcflist", metavar="VCF",nargs="+",
                         help=("Input VCF per loci"))
-    parser.add_argument("--reference-fasta", dest="refname", help="Reference FASTA file")
+    parser.add_argument("--reference-fasta", dest="refname", help="Reference FASTA file, use this plus --remove-cpg to remove CpGs from loci")
     parser.add_argument("--bed", dest="genename", help=("If using a single "
                         "VCF, list of regions to generate loci from"))
     parser.add_argument("--bed-column-index", dest="gene_col",
