@@ -6,10 +6,13 @@ from random import sample
 from collections import defaultdict
 import os
 import gzip
+import numpy as np
+
 
 #sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
 from pgpipe.logging_module import initLogger
 from pgpipe.model import read_model_file
+from pgpipe import test_cython
 
 def checkIfGzip(filename):
     try:
@@ -155,6 +158,16 @@ def flipChrom(chrom):
         return chrom[0:3]
     return 'chr'+chrom
 
+def getAlleleCountCython(rec):
+    alleles = defaultdict(int)
+    srec = str(rec)
+    d_array = test_cython.getAlleleCountArray(srec.encode(),len(srec))
+    for i,a in enumerate(rec.alleles):
+        alleles[a] = d_array[i+48]
+    if d_array[46] != 0:
+        alleles['N'] = d_array[46]
+    return alleles
+
 def getAlleleCountDict(rec):
     """
     Returns dict with allele counts for all
@@ -165,7 +178,7 @@ def getAlleleCountDict(rec):
     for j in range(len(rec.samples)):
         samp = rec.samples[j]
         if None in samp.alleles:
-            alleles['N'] += 2
+            alleles['N'] += len(samp.alleles)
             #missing_inds += 1
         for k in range(len(samp.alleles)):
             b = samp.alleles[k]
@@ -179,6 +192,39 @@ def getAlleleStats(rec):
     missing_inds = (acd['N'] if 'N' in acd.keys() else 0)
     total_sites = sum(acd.values())-missing_inds
     return acd,total_sites,missing_inds
+
+#def parseRecString(recstr):
+
+
+
+def getAlleleStatsAlt(rec):
+    ala = str(rec).strip().split()[9:]
+    l = []
+    allele_idx = rec.alleles
+    d = {}
+    for a in allele_idx:
+        d[a] = 0
+    d['.'] = 0
+    for j in range(len(ala)):
+        for k in ala[j].split(':')[0].split(ala[j][1]):
+            #d[allele_idx]
+            if k == '.':
+                d['N'] += 1
+            else:
+                d[allele_idx[int(k)]] += 1
+    #print (str(d))
+    return d
+        #d[allele_idx[ii]] += 1 for ii in ala[j].split(':').split('|'))
+        #l.extend(ala.split(':')[0].split('|'))
+
+    #npa = np.array(l)
+
+def getAlleleStatsTwo(rec):
+    acd = getAlleleCountCython(rec)
+    missing_inds = (acd['.'] if '.' in acd.keys() else 0)
+    total_sites = sum(acd.values())-missing_inds
+    return acd,total_sites,missing_inds
+
 
 def isInvariant(rec):
     alleles, total_sites, missing_inds = getAlleleStats(rec)
@@ -308,24 +354,6 @@ class VcfReader():
             subsamp_list = [l.strip() for l in subsamp_file.readlines()]
             subsamp_file.close()
 
-        #if index is None:
-        #    self.reader = pysam.VariantFile(vcfname)
-        #else:
-        #    self.reader = pysam.VariantFile(vcfname, index_filename=index)
-        #if popmodel is not None:
-        #    self.popmodel = popmodel
-        #    popsamp_list = popmodel.inds
-        #    vcf_names = [l for l in self.reader.header.samples]
-        #    present_list = crossModelAndVcf(popsamp_list,vcf_names)
-            #self.reader.subset_samples(popsamp_list)
-        #    self.reader.subset_samples(present_list)
-        #    self.setPopIdx(present_list)
-        #if use_allpop:
-        #    self.setAllPop()
-        #if subsamp_list is not None:
-        #    logging.debug('Subsampling %d individuals from VCF file' %
-        #    (len(subsamp_list)))
-        #    self.reader.subset_samples(subsamp_list)
         self.openSetInds(vcfname,index,popmodel,use_allpop,subsamp_list)
         self.info_rec = next(self.reader)
         self.prev_last_rec = None #next(self.reader)
@@ -386,6 +414,73 @@ class VcfReader():
     def returnNames(self,index_list):
         return [self.reader.header[i] for i in index_list]
 
+    def getRegionIterUnzipped(self,region=None,add_chr=False):
+        if region is None:
+            a = next(self.reader)
+            while a is not None:
+                #self.prev_last_rec = a
+                yield a
+                self.prev_last_rec = a
+                a = next(self.reader)
+            return
+        trec = (self.prev_last_rec if self.prev_last_rec is not None else next(self.reader))
+        if trec is None:
+            return
+
+        self.prev_last_rec = trec
+        stat = region.containsRecord(trec)
+        #sys.stderr.write(stat+'\n')
+        if stat == 'after':
+            return
+        if stat == 'in':
+            yield trec
+            self.prev_last_rec = trec
+            trec = next(self.reader)
+            if trec is None:
+                return
+            stat = region.containsRecord(trec)
+        elif stat == 'before':
+            #a = next(self.reader)
+            #if a is None:
+            #    return
+            #stat = region.containsRecord(a)
+            while stat == 'before':
+                self.prev_last_rec = trec
+                trec = next(self.reader)
+                if trec is None:
+                    return
+                stat = region.containsRecord(trec)
+                #sys.stderr.write(stat+'\n')
+        while stat != 'after':
+            #sys.stderr.write(stat+'\n')
+            yield trec
+            #sys.stderr.write('after\n')
+            self.prev_last_rec = trec
+            trec = next(self.reader)
+            if trec is None:
+                return
+            stat = region.containsRecord(trec)
+            #sys.stdout.write("END: "+str(self.prev_last_rec.pos)+'\n')
+            #sys.stdout.write(str(trec.pos)+'\n')
+        self.prev_last_rec = trec
+        #sys.stdout.write("real end\n")
+        
+    def getRegionIterZipped(self,region=None):
+        if region is None:
+            treader = self.reader.fetch()
+        else:
+            treader = self.reader.fetch(region.chrom,region.start,region.end)
+        for rec in treader:
+            yield rec
+        return
+
+    def getRegionIter(self,region=None):
+        if self.reader_uncompressed:
+            return self.getRegionIterUnzipped(region=region)
+        else:
+            return self.getRegionIterZipped(region=region)
+            
+
 def modChrom(c,vcf_chr):
     if c is None:
         return None
@@ -408,6 +503,8 @@ def getRecordList(vcf_reader, region=None, chrom=None, start=None,
     for rec in var_sites:
         lst.append(rec)
     return lst
+
+    
 
 
 def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
