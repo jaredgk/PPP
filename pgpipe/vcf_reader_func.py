@@ -416,54 +416,49 @@ class VcfReader():
 
     def getRegionIterUnzipped(self,region=None,add_chr=False):
         if region is None:
-            a = next(self.reader)
+            a = self.getNext()
             while a is not None:
                 #self.prev_last_rec = a
                 yield a
                 self.prev_last_rec = a
-                a = next(self.reader)
+                a = self.getNext()
+            self.prev_last_rec = None
             return
-        trec = (self.prev_last_rec if self.prev_last_rec is not None else next(self.reader))
+        trec = (self.prev_last_rec if self.prev_last_rec is not None else self.getNext())
         if trec is None:
+            self.prev_last_rec = trec
             return
 
         self.prev_last_rec = trec
         stat = region.containsRecord(trec)
-        #sys.stderr.write(stat+'\n')
         if stat == 'after':
             return
         if stat == 'in':
             yield trec
             self.prev_last_rec = trec
-            trec = next(self.reader)
+            trec = self.getNext()
             if trec is None:
+                self.prev_last_rec = None
                 return
             stat = region.containsRecord(trec)
         elif stat == 'before':
-            #a = next(self.reader)
-            #if a is None:
-            #    return
-            #stat = region.containsRecord(a)
             while stat == 'before':
                 self.prev_last_rec = trec
-                trec = next(self.reader)
+                trec = self.getNext()
                 if trec is None:
+                    self.prev_last_rec = trec
                     return
                 stat = region.containsRecord(trec)
-                #sys.stderr.write(stat+'\n')
         while stat != 'after':
-            #sys.stderr.write(stat+'\n')
             yield trec
-            #sys.stderr.write('after\n')
             self.prev_last_rec = trec
-            trec = next(self.reader)
+            trec = self.getNext()
             if trec is None:
+                self.prev_last_rec = trec
                 return
             stat = region.containsRecord(trec)
-            #sys.stdout.write("END: "+str(self.prev_last_rec.pos)+'\n')
-            #sys.stdout.write(str(trec.pos)+'\n')
         self.prev_last_rec = trec
-        #sys.stdout.write("real end\n")
+
         
     def getRegionIterZipped(self,region=None):
         if region is None:
@@ -479,6 +474,13 @@ class VcfReader():
             return self.getRegionIterUnzipped(region=region)
         else:
             return self.getRegionIterZipped(region=region)
+        
+    def getNext(self,set_prev=True):
+        try:
+            trec = next(self.reader)
+            return trec
+        except StopIteration as e:
+            return None
             
 
 def modChrom(c,vcf_chr):
