@@ -676,7 +676,7 @@ def run (passed_arguments = []):
         if vcf_args.out:
 
             # Assign a unique output prefix 
-            vcf_args.out_prefix = assign_vcftools_unique_prefix(vcf_args.out_prefix, vcftools_output_suffix)
+            vcf_args.out_prefix = assign_vcftools_unique_prefix(vcf_args.out_prefix, vcftools_out_suffix)
 
         # Add the output argument
         vcftools_call_args.extend(['--out', vcf_args.out_prefix])
