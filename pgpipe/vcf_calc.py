@@ -672,17 +672,8 @@ def run (passed_arguments = []):
             # Assigns the population files to the vcftools call
             vcftools_call_args.extend([pop_args for pop_file in vcftools_pop_files for pop_args in ['--weir-fst-pop', pop_file]])
 
-        # Check if the user has not specified an output filename
-        if vcf_args.out:
-
-            # Assign a unique output prefix 
-            vcf_args.out_prefix = assign_vcftools_unique_prefix(vcf_args.out_prefix, vcftools_out_suffix)
-
-        # Add the output argument
-        vcftools_call_args.extend(['--out', vcf_args.out_prefix])
-
         # vcftools subprocess call
-        vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args)
+        vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args, output_filename = vcftools_output_filename)
 
         # Check if the log should be piped to the stdout
         if vcf_args.log_stdout:
