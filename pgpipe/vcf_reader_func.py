@@ -158,10 +158,13 @@ def flipChrom(chrom):
         return chrom[0:3]
     return 'chr'+chrom
 
-def getAlleleCountCython(rec):
+def getAlleleCountCython(rec,idxlist=None):
     alleles = defaultdict(int)
     srec = str(rec)
-    d_array = test_cython.getAlleleCountArray(srec.encode(),len(srec))
+    if idxlist is None:
+        d_array = test_cython.getAlleleCountArray(srec.encode(),len(srec))
+    else:
+        d_array = test_cython.getAlleleCountArraySub(srec.encode(),len(srec),idxlist,len(idxlist))
     for i,a in enumerate(rec.alleles):
         alleles[a] = d_array[i+48]
     if d_array[46] != 0:
@@ -219,11 +222,12 @@ def getAlleleStatsAlt(rec):
 
     #npa = np.array(l)
 
-def getAlleleStatsTwo(rec):
-    acd = getAlleleCountCython(rec)
+def getAlleleStatsCython(rec,idx_list=None):
+    acd = getAlleleCountCython(rec,idx_list)
     missing_inds = (acd['.'] if '.' in acd.keys() else 0)
     total_sites = sum(acd.values())-missing_inds
     return acd,total_sites,missing_inds
+
 
 
 def isInvariant(rec):
