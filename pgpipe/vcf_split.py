@@ -107,13 +107,16 @@ import numpy as np
 from pybedtools import BedTool
 
 # Import basic vcftools functions
-from pgpipe.vcftools import *
+from pgpipe.bcftools import *
 
 # Model file related functions
 from pgpipe.model import read_model_file
 
 # Import logging module
 from pgpipe.logging_module import initLogger, logArgs
+
+# Import vcf format check
+from pgpipe.vcf_reader_func import checkFormat
 
 def vcf_split_parser(passed_arguments):
     '''
@@ -240,26 +243,21 @@ def split_samples_iter (split_sample_data, split_method):
 
 def assign_position_args (sample_data, split_method):
 
-    # Assignment variable list - chrom, start, end
-    assign_list = ['', '', '']
-
     # Assign the statistic file columns
     if split_method == 'statistic-file':
 
-        # Assign the headers
-        assign_list = ['CHROM', 'BIN_START', 'BIN_END']
+        # Return the position information
+        return  str(sample_data['CHROM']), int(sample_data['BIN_START']), int(sample_data['BIN_END'])
 
     # Assign the BED file columns
     elif split_method == 'bed':
 
-        # Assign the headers
-        assign_list = ['chrom', 'start', 'end']
+        # Return the position information
+        return str(sample_data['chrom']), int(sample_data['start']), int(sample_data['end'])
 
-    # Return the sample position information
-    return ['--chr', sample_data[assign_list[0]], 
-            '--from-bp', sample_data[assign_list[1]], 
-            '--to-bp', sample_data[assign_list[2]]]
-
+    else:
+        raise Exception('Position assignment error due to split-file format')
+ 
 def run (passed_arguments = []):
     '''
     Split VCF file into multiple VCFs.
@@ -267,7 +265,7 @@ def run (passed_arguments = []):
     This function uses the argparse-based function :py:func:`vcf_split_parser`
     to parse either sys.argv or passed_arguments to obtain the parameters below. 
     The parameters are then translated to their VCFtools equivalent. Once all 
-    the parameters are assigned, VCFtools is called.
+    the parameters are assigned, bcftools is called.
 
     Parameters
     ----------
@@ -321,8 +319,14 @@ def run (passed_arguments = []):
     # Grab VCF arguments from command line
     vcf_args = vcf_split_parser(passed_arguments)
 
-    # Argument container for vcftools
-    vcftools_call_args = []
+    # Adds the arguments (i.e. parameters) to the log file
+    logArgs(vcf_args, func_name = 'vcf_split')
+
+    # Check if the input file is indexed
+    vcf_is_indexed = check_for_index(vcf_args.vcf)
+
+    # Argument container for bcftools
+    bcftools_filter_args = ['view']
 
     # Check if previous output should be overwritten
     if not vcf_args.overwrite:
@@ -369,72 +373,64 @@ def run (passed_arguments = []):
         # Create individuals file
         selected_model.create_ind_file(overwrite = vcf_args.overwrite)
 
-        # Assign the individuals file to vcftools
-        vcftools_call_args.extend(['--keep', selected_model.ind_file])
+        # Assign the individuals file to bcftools
+        bcftools_filter_args.extend(['--samples-file', selected_model.ind_file])
 
-        logging.info('Model file assigned')
+        logging.info('Model file and parameters assigned')
 
-    # Individuals-based filters
+    # Individuals-based file filters
     if vcf_args.filter_include_indv_file or vcf_args.filter_exclude_indv_file:
-        # Used to include a file of individuals to keep
         if vcf_args.filter_exclude_indv_file:
-            vcftools_call_args.extend(['--keep', vcf_args.filter_include_indv_file])
-
-        # Used to include a file of individuals to remove
+            bcftools_filter_args.extend(['--samples-file', vcf_args.filter_include_indv_file])
         if vcf_args.filter_exclude_indv_file:
-            vcftools_call_args.extend(['--remove', vcf_args.filter_exclude_indv_file])
+            bcftools_filter_args.extend(['--samples-file',  '^' + vcf_args.filter_exclude_indv_file])
 
     # Individual-based filters
     if vcf_args.filter_include_indv or vcf_args.filter_exclude_indv:
         if vcf_args.filter_include_indv:
-            for indv_to_include in vcf_args.filter_include_indv:
-                vcftools_call_args.extend(['--indv', indv_to_include])
+            bcftools_filter_args.extend(['--samples', ','.join(vcf_args.filter_include_indv)])
         if vcf_args.filter_exclude_indv:
-            for indv_to_exclude in vcf_args.filter_exclude_indv:
-                vcftools_call_args.extend(['--remove-indv', indv_to_exclude])
+            bcftools_filter_args.extend(['--samples',  '^' + ','.join(vcf_args.filter_exclude_indv)])
 
-    # Position (vcftools output file) filters
-    if vcf_args.filter_include_positions or vcf_args.filter_exclude_positions:
+    # Position file filters that do not require indexed input
+    if (vcf_args.filter_include_positions or vcf_args.filter_exclude_positions) and vcf_is_indexed != True:
         if vcf_args.filter_include_positions:
-            vcftools_call_args.extend(['--positions', vcf_args.filter_include_positions])
+            bcftools_filter_args.extend(['--targets-file', vcf_args.filter_include_positions])
         if vcf_args.filter_exclude_positions:
-            vcftools_call_args.extend(['--exclude-positions', vcf_args.filter_exclude_positions])
+            bcftools_filter_args.extend(['--targets-file', '^' + vcf_args.filter_exclude_positions])
 
-    # Position (BED format file) filters
-    if vcf_args.filter_include_bed or vcf_args.filter_exclude_bed:
+    # Position file filters that requires indexed input
+    if (vcf_args.filter_include_positions or vcf_args.filter_exclude_positions) and vcf_is_indexed == True:  
+        if vcf_args.filter_include_positions:
+            bcftools_filter_args.extend(['--regions-file', vcf_args.filter_include_positions])
+        if vcf_args.filter_exclude_positions:
+            bcftools_filter_args.extend(['--targets-file', '^' + vcf_args.filter_exclude_positions])
+
+    # Position BED filters that do not require indexed input
+    if (vcf_args.filter_include_bed or vcf_args.filter_exclude_bed) and vcf_is_indexed != True:
         if vcf_args.filter_include_bed:
-            vcftools_call_args.extend(['--bed', vcf_args.filter_include_bed])
+            bcftools_filter_args.extend(['--targets-file', vcf_args.filter_include_bed])
         if vcf_args.filter_exclude_bed:
-            vcftools_call_args.extend(['--exclude-bed', vcf_args.filter_exclude_bed])
+            bcftools_filter_args.extend(['--targets-file', '^' + vcf_args.filter_exclude_bed])
 
-    # Used to assign the output format to the vcftools call, and assign
-    # vcftools output suffix
-    if vcf_args.out_format == 'bcf':
-        vcftools_call_args.append('--recode')
-        vcftools_output_suffix = '.recode.bcf'
-    elif vcf_args.out_format == 'vcf':
-        vcftools_call_args.append('--recode')
-        vcftools_output_suffix = '.recode.vcf'
-    elif vcf_args.out_format == 'vcf.gz':
-        vcftools_call_args.append('--recode')
-        vcftools_output_suffix = '.recode.vcf.gz'
+    # Position BED filters that requires indexed input
+    if (vcf_args.filter_include_bed or vcf_args.filter_exclude_bed) and vcf_is_indexed == True:  
+        if vcf_args.filter_include_bed:
+            bcftools_filter_args.extend(['--regions-file', vcf_args.filter_include_bed])
+        if vcf_args.filter_exclude_bed:
+            bcftools_filter_args.extend(['--targets-file', '^' + vcf_args.filter_exclude_bed])
 
-    logging.info('vcftools common parameters assigned')
+    logging.info('Filter parameters assigned')
 
     # Create the vcf/bcf output directory
     if not os.path.exists(vcf_args.out_dir):
         os.makedirs(vcf_args.out_dir)
 
-    # Assigns the file argument for vcftools
-    vcfname_arg = assign_vcftools_input_arg(vcf_args.vcf)
-
-    logging.info('Input file assigned')
-
     # Check if a statistic file is the split method
     if vcf_args.split_method == 'statistic-file':
 
-        # Read in the sample file
-        split_samples = pd.read_csv(vcf_args.split_file, sep = '\t')
+        # Read in the sample file, make sure the chromosome are read as strings 
+        split_samples = pd.read_csv(vcf_args.split_file, sep = '\t', dtype = {'CHROM' : 'str'})
 
         logging.info('Statistic file for splitting assigned')
 
@@ -482,8 +478,8 @@ def run (passed_arguments = []):
     # Loop the rows of the sample to be split
     for sample_index, split_sample in split_samples_iter(split_samples, vcf_args.split_method):
 
-        # Copy common arguments for VCF call
-        sample_call_args = copy.deepcopy(vcftools_call_args)
+        # Copy filter arguments for VCF call
+        sample_filter_args = copy.deepcopy(bcftools_filter_args)
 
         # Assign the sample output prefix
         sample_prefix = '%s_%s' % (vcf_args.out_prefix, sample_index)
@@ -491,34 +487,27 @@ def run (passed_arguments = []):
         # Add the path to the prefix
         sample_path = os.path.join(vcf_args.out_dir, sample_prefix)
 
-        # Store the sample output prefix
-        sample_call_args.extend(['--out', sample_path])
-
         # Assign the position args using the split method
-        assigned_position_args = assign_position_args(split_sample, vcf_args.split_method)
+        chromosome, from_bp, to_bp = assign_position_args(split_sample, vcf_args.split_method)
 
-        # Store the sample position args
-        sample_call_args.extend(assigned_position_args)
+        logging.info('Parameters assigned for locus VCF')
 
-        # Assign the expected output filename
-        vcftools_sample_filename = sample_path + vcftools_output_suffix
+        # Create a single subset VCF for the current loci
+        chr_subset_file(vcf_args.vcf, chromosome, sample_path, vcf_args.out_format, from_bp = from_bp, to_bp = to_bp, filter_args = sample_filter_args, overwrite = False)
 
-        logging.info('vcftools sample parameters assigned')
+        logging.info('Locus VCF created')
 
-        # Call vcftools with the specifed arguments
-        vcftools_err = call_vcftools(vcfname_arg + sample_call_args, output_format = vcf_args.out_format, output_filename = vcftools_sample_filename)
+    # Check if the log should be piped to the stdout
+    if vcf_args.log_stdout:
 
-        # Check if the log should be piped to the stdout
-        if vcf_args.log_stdout:
+        # Pipe the bcftools reference to stdout
+        stdout_bcftools_reference()
 
-            # Write the log to stdout
-            sys.stdout.write(vcftools_err)
-
-        # Check if log should be saved as a file
-        else:
-
-            # Produce the log file (in append mode, will create a single log)
-            produce_vcftools_log(vcftools_err, vcf_args.out_prefix + '.split', append_mode = True)
+    # Check if log should be saved as a file
+    else:
+    
+        # Produce the log file with the bcftools reference
+        log_bcftools_reference(vcf_args.out_prefix + '.split')
 
 
 if __name__ == "__main__":

@@ -2,10 +2,20 @@ import os
 import sys
 import logging
 import subprocess
+import copy
 
 #sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'pppipe')))
 
 from pgpipe.vcf_reader_func import checkFormat
+
+def stdout_bcftools_reference():
+
+    # Write the log header
+    sys.stdout.write('Please Reference alongside the PPP:\n')
+
+    # Write the reference
+    sys.stdout.write('Li, H. et al. The Sequence Alignment/Map format and '
+                   'SAMtools. Bioinformatics (2009). doi:10.1093/bioinformatics/btp352')
 
 def log_bcftools_reference (out_filename, append_mode = False, ref_header = True):
 
@@ -33,6 +43,25 @@ def log_bcftools_reference (out_filename, append_mode = False, ref_header = True
     log_file.close()
 
     logging.info('Reference assigned')
+
+def assign_position_information (chromosome, from_bp, to_bp):
+
+    # String to store the position information i.e. chr:from_bp-to_bp
+    position_information = copy.deepcopy(chromosome)
+
+    # Check if either bp position arguments were specified
+    if from_bp or to_bp:
+
+        # List of the position arguments, in their required order
+        position_args = [':', from_bp, '-', to_bp]
+
+        # Filter the position arguments to remove empty values
+        filttered_position_args = list(filter(None, position_args))
+
+        # Map the arguments to str and add them to the chromosome argument
+        position_information += ''.join(map(str, filttered_position_args))
+
+    return position_information
 
 def return_output_format_args (output_format):
     '''
@@ -265,7 +294,7 @@ def create_index (filename):
     else:
         raise Exception('Error creating index for: %s. Only .bcf and .vcf.gz (bgzip) files are supported.' % filename)
 
-def chr_subset_file (filename, chromosome, output_prefix, output_format, from_bp = None, to_bp = None, overwrite = False):
+def chr_subset_file (filename, chromosome, output_prefix, output_format, from_bp = None, to_bp = None, filter_args = None, overwrite = False):
     '''
         Creates chromosome subset
 
@@ -286,61 +315,59 @@ def chr_subset_file (filename, chromosome, output_prefix, output_format, from_bp
             Lower bound of sites to include
         to_bp : int, optional
             Upper bound of sites to include
+        filter_args : list, optional
+            List of arguments to filter the subset file
         overwrite : bool, optional
             Specify if previous output should be overwritten
     '''
 
-    # Creates a list to the arguments and store the bcftools call
-    subset_args = ['view']
-
     # Assign the output format arguments
-    output_format_args = return_output_format_args(output_format)
-
-    # Store the output format arguments
-    subset_args.extend(output_format_args)
+    output_args = return_output_format_args(output_format)
 
     # Stores the specified output filename
-    vcf_output = '%s.%s' % (output_prefix, output_format)
+    output_path = '%s.%s' % (output_prefix, output_format)
 
     # Check if previous output should not be overwritten 
     if not overwrite:
 
         # Check if previous output exists
-        if os.path.isfile(vcf_output):
+        if os.path.isfile(output_path):
 
-            raise Exception('Temporary file %s already exists')
+            raise Exception('Subset file %s already exists' % output_path)
 
     # Assigns the output file to the arguments
-    subset_args.extend(['-o', vcf_output])
+    output_args.extend(['-o', output_path])
 
-    # Holds the subset argument
-    chr_subet_arg = chromosome
-
-    # Check if either bp position arguments were specified
-    if from_bp or to_bp:
-
-        # List of the position arguments, in their required order
-        position_args = [':', from_bp, '-', to_bp]
-
-        # Filter the position arguments to remove empty values
-        filttered_position_args = filter(None, position_args)
-
-        # Map the arguments to str and add them to the chromosome argument
-        chr_subet_arg += ''.join(map(str, filttered_position_args))
-
-    # Checks if the input file has an index, then subset to the arguments
-    if check_for_index(filename) == False:
-        # Subsets using the index
-        subset_args.extend(['-r', chr_subet_arg])
-    else:
-        # Subsets using the stdout
-        subset_args.extend(['-t', chr_subet_arg])
+    # Creates a list to the arguments and store the bcftools call
+    selection_args = ['view']
 
     # Assigns the input file to the arguments
-    subset_args.append(filename)
+    selection_args.append(filename)
 
-    # Call bcftools
-    call_bcftools(subset_args)
+    # Store the position information i.e. chr:from_bp-to_bp
+    position_information = assign_position_information(chromosome, from_bp, to_bp)
+
+    # Checks if the input file has an index
+    if check_for_index(filename):
+
+        # Selects the position using the index
+        selection_args.extend(['-r', position_information])
+    
+    else:
+
+        # Selects the position using the stdout stream
+        selection_args.extend(['-t', position_information])
+
+    # Check if no filters are required
+    if not filter_args:
+
+        # Call bcftools
+        call_bcftools(selection_args + output_args)
+
+    else:
+
+        # Pipe bcftools to bcftools
+        pipe_bcftools_bcftools(selection_args, filter_args + output_args)
     
 def concatenate (filenames, output_prefix, output_format, keep_original = False, optional_args = []):
     '''
@@ -571,6 +598,63 @@ def pipe_bcftools (bcftools_call_args):
     bcftools_call = subprocess.Popen(['bcftools'] + list(map(str, bcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     return bcftools_call
+
+def pipe_bcftools_bcftools (bcftools_first_call_args, bcftools_second_call_args):
+    '''
+        Pipes the output of bcftools to bcftools
+
+        The purpose of this function is to call bcftools multiple times. This
+        is required to combine different bcftools functions or incompatible 
+        arguments. Should consider updating the function to allow 2+ calls to
+        bcftools.
+
+        Parameters
+        ----------
+        bcftools_first_call_args : list
+            first set of bcftools arguments
+        bcftools_second_call_args : list
+            second set of bcftools arguments
+
+    '''
+    
+    # Open bcftools pipe
+    bcftools_first_call = pipe_bcftools(bcftools_first_call_args)
+
+    # bgzip subprocess call
+    bcftools_second_call = subprocess.Popen(['bcftools'] + list(map(str, bcftools_second_call_args)), stdin = bcftools_first_call.stdout, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+    # Wait for vctools to finish
+    bcftools_first_call.wait()
+
+    # Close the vcftools stdout
+    bcftools_first_call.stdout.close()
+
+    # Read the vcftools stderr
+    bcftools_first_stderr = bcftools_first_call.stderr.read()
+
+    # Check if code is running in python 3
+    if sys.version_info[0] == 3:
+        # Convert bytes to string
+        bcftools_first_stderr = bcftools_first_stderr.decode()
+
+    # Check that the log file was created correctly
+    check_bcftools_for_errors(bcftools_first_stderr)
+
+    # Wait for bgzip to finish
+    bcftools_second_call.wait()
+
+    # Save the stderr from second bcftools call
+    bcftools_second_stdout, bcftools_second_stderr = bcftools_second_call.communicate()
+
+    # Check if code is running in python 3
+    if sys.version_info[0] == 3:
+        # Convert bytes to string
+        bcftools_second_stderr = bcftools_second_stderr.decode()
+
+    # Check that output file was compressed correctly
+    check_bcftools_for_errors(bcftools_second_stderr)
+
+    logging.info('bcftools calls complete')
 
 def pipe_bcftools_to_list (bcftools_call_args):
     '''
