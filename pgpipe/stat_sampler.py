@@ -347,6 +347,10 @@ def run (passed_arguments = []):
     # Set the random seed
     np.random.seed(sampler_args.random_seed)
 
+    # Check if a sample size has been specified
+    if not sampler_args.sample_size:
+        raise Exception('No sample size specified. Please use --sample-size')
+
     # Set the output filename using the out-prefix
     sampled_out_filename = sampler_args.out_prefix + '.sampled'
 
@@ -388,6 +392,12 @@ def run (passed_arguments = []):
 
     # Run the uniform sampler
     if sampler_args.sampling_scheme == 'uniform':
+
+        # Check that uniform bins have been specified
+        if not sampler_args.uniform_bins:
+            raise Exception('No uniform bin count specified. Please use --uniform-bin')
+
+        # Check that the sample size is divisible by the bins
         if sampler_args.sample_size % sampler_args.uniform_bins != 0:
             raise ValueError('Sample size not divisible by the bin count')
 
@@ -411,7 +421,7 @@ def run (passed_arguments = []):
     sampled_samples = stat_file_data[stat_file_data.index.isin(selected_samples)].copy()
 
     # Create selected samples TSV file with the defined output filename
-    sampled_samples.to_csv(sampled_out_filename, sep = '\t', float_format = '%g')
+    sampled_samples.to_csv(sampled_out_filename, sep = '\t', float_format = '%g', index = False)
 
     logging.info('Created selected samples file')
 
