@@ -6,4 +6,4 @@ sklearn
 matplotlib
 cython
 biopython
-rpy2
+rpy2==2.8.6
