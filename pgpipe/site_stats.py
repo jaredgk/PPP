@@ -2,7 +2,7 @@ import sys
 import argparse
 
 from pgpipe.vcf_reader_func import getAlleleStats, VcfReader, getAlleleCountDict, getAlleleStatsTwo
-from pgpipe.gene_region import RegionList, Region
+from pgpipe.genome_region import RegionList, Region
 
 class recordCache():
     def __init__(self):
@@ -22,6 +22,7 @@ def createParser():
     parser.add_argument("--window-size",dest="window_size",type=int)
     parser.add_argument("--step-size",dest="step_size",type=int)
     parser.add_argument("--bed",dest="bedfile",type=str)
+    parser.add_argument("--subsamp",dest="subsamp",type=str)
     return parser
 
 def piSite(record):
@@ -69,6 +70,9 @@ if args.step_size is not None and args.window_size is None:
 if args.step_size is None and args.window_size is not None:
     args.step_size = args.window_size
 
+idx_list = None
+if args.subsamp is not None
+    idx_list = [int(i.strip()) for i in open(args.subsamp).readlines()]
 cache = None
 if args.window_size > args.step_size:
     cache = {}

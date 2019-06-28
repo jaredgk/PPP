@@ -107,7 +107,7 @@ from collections import OrderedDict
 
 import pgpipe.vcf_reader_func as vf
 from pgpipe.logging_module import initLogger, logArgs
-from pgpipe.gene_region import Region, RegionList
+from pgpipe.genome_region import Region, RegionList
 from pgpipe.parse_functions import defaultsDictForFunction, getConfigFilename, makeRequiredList, getArgsWithConfig
 from pgpipe.model import Model, read_single_model
 #from tabix_wrapper import prepVcf

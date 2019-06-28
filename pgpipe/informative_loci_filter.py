@@ -7,7 +7,7 @@ from random import shuffle
 #sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
 
 from pgpipe.vcf_reader_func import getPassSites, VcfReader
-from pgpipe.gene_region import Region, RegionList
+from pgpipe.genome_region import Region, RegionList
 from pgpipe.logging_module import initLogger
 from pgpipe.model import Model, read_single_model
 

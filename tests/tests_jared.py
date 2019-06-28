@@ -6,13 +6,13 @@ import os
 import sys
 from pgpipe.vcf_ref_to_seq import getMaxAlleleLength, getFastaFilename, \
     vcf_to_seq, createParser, validateFiles
-from pgpipe.vcf_from_regions import vcf_region_write
+from pgpipe.vcf_split_pysam import vcf_region_write
 from pgpipe.vcf_reader_func import checkFormat, VcfReader
-from pgpipe.gene_region import RegionList, Region
+from pgpipe.genome_region import RegionList, Region
 from pgpipe.logging_module import initLogger
-from pgpipe.four_gamete_pysam import sample_fourgametetest_intervals
+from pgpipe.four_gamete import sample_fourgametetest_intervals
 from pgpipe.vcf_to_ima import vcf_to_ima
-from pgpipe.find_intergenic_bed import get_intergenic
+from pgpipe.bed_invert import get_intergenic
 from pgpipe.get_nonmissing_chunks import regionsWithData
 from pgpipe import vcf_phase
 

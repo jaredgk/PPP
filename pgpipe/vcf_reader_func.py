@@ -171,14 +171,16 @@ def getAlleleCountCython(rec,idxlist=None):
         alleles['N'] = d_array[46]
     return alleles
 
-def getAlleleCountDict(rec):
+def getAlleleCountDict(rec,idx_list=None):
     """
     Returns dict with allele counts for all
     """
     alleles = defaultdict(int)
     total_sites = 0
     missing_inds = 0
-    for j in range(len(rec.samples)):
+    if idx_list is None:
+        idx_list = range(len(rec.samples))
+    for j in idx_list:
         samp = rec.samples[j]
         if None in samp.alleles:
             alleles['N'] += len(samp.alleles)

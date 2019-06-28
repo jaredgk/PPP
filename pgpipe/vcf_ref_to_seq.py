@@ -6,7 +6,7 @@ import logging
 from random import sample
 
 from pgpipe.logging_module import initLogger, logArgs
-from pgpipe.gene_region import Region, RegionList
+from pgpipe.genome_region import Region, RegionList
 import pgpipe.vcf_reader_func as vf
 from pgpipe.parse_functions import defaultsDictForFunction, getConfigFilename, makeRequiredList, getArgsWithConfig
 #from tabix_wrapper import prepVcf

@@ -365,6 +365,8 @@ class RegionList:
             file_handle = open(file_name, 'w')
         if return_str:
             out_str = ''
+        if self.header is not None:
+            file_handle.write(self.header+'\n')
         for region in self.regions:
             if region.fullline is not None:
                 file_handle.write(region.fullline+'\n')

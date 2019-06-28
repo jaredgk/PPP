@@ -2,7 +2,7 @@ import sys
 import pysam
 from math import ceil,floor
 from pgpipe.vcf_reader_func import VcfReader
-from pgpipe.gene_region import Region, RegionList
+from pgpipe.genome_region import Region, RegionList
 import logging
 
 def findPrevLastSnps(vcfr,region,window=1000):

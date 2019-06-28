@@ -5,7 +5,7 @@ import logging
 import os
 #sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
 from pgpipe.logging_module import initLogger
-from pgpipe.gene_region import Region, RegionList
+from pgpipe.genome_region import Region, RegionList
 import pgpipe.vcf_reader_func as vf
 from pgpipe.model import Model, read_model_file
 
@@ -40,14 +40,13 @@ def createParser():
     parser.add_argument("--compress-vcf", dest="compress_flag",
                         action="store_true", help=("If input VCF is not "
                         "compressed, will compress and use fetch search"))
-    #parser.add_argument("--multi-out", dest="multi_out", action="store_true",
-    #                    help="Produces multiple output VCFs instead of one")
     parser.add_argument("--parsecpg", dest="refname")
     parser.add_argument("--compress-out", dest="compress", action="store_true")
-    parser.add_argument("--remove-indels", dest="remove_indels", 
+    parser.add_argument("--remove-indels",dest="remove_indels", 
                         action="store_true", 
                         help=("Removes indels from output VCF files"))
-    parser.add_argument("--remove-multi", dest="remove_multiallele", action="store_true")
+    parser.add_argument("--remove-multi", dest="remove_multiallele",
+                        action="store_true")
     parser.add_argument("--remove-missing", dest="remove_missing", default=-1, 
                         help=("Will filter out site if more than the given number of "
                         "individuals (not genotypes) are missing data. 0 removes sites"
@@ -59,6 +58,8 @@ def createParser():
     parser.add_argument("--remove-missing-inds",dest="remove_missing_inds",
                         action="store_true", help=("Will remove individuals "
                         "with missing data from a loci's VCF file"))
+    parser.add_argument("--multi-start-num",type=int,default=0,help=("If "
+                        "multiple output files, start numbering with this number"))
     subsamp_group = parser.add_mutually_exclusive_group()
     subsamp_group.add_argument('--subsamp-list', dest="subsamp_fn",
                                help="List of sample names to be used")
@@ -111,7 +112,7 @@ def getMultiFileName(pref, rc, compress):
     ext = '.vcf'
     if compress:
         ext += '.gz'
-    return pref+'region'+str(rc)+ext
+    return pref+str(rc)+ext
 
 def writeRegion(args, vcf_reader, region, rc, filter_sites, remove_cpg, 
                 fasta_ref,header,vcf_out=None):
@@ -255,8 +256,6 @@ def vcf_region_write(sys_args):
     if args.out_prefix is None:
         output_name = getOutputName(args)
         vcf_out = pysam.VariantFile(output_name, 'w', header=header)
-    #else:
-    #    out_p = getOutputPrefix(args)
 
     if args.gene_str is not None:
         region_list = RegionList(genestr=args.gene_str,zeroho=args.zeroho,
@@ -267,10 +266,8 @@ def vcf_region_write(sys_args):
                                  colstr=args.gene_col,sortlist=False)
     else:
         full_fileread=True
-        #raise Exception(("No value provided for region filename or "
-        #                 "single region"))
     logging.info('Region read')
-    #vcf_reader.prev_last_rec = first_el
+
     fasta_ref = None
     remove_cpg = (args.refname is not None)
     filter_sites = ((args.refname is not None)
@@ -288,7 +285,7 @@ def vcf_region_write(sys_args):
         writeFile(args,vcf_reader,filter_sites,remove_cpg,fasta_ref,header)
     else:
         logging.info('Total regions: %d' % (len(region_list.regions)))
-        for rc,region in enumerate(region_list.regions,start=1):
+        for rc,region in enumerate(region_list.regions,start=args.multi_start_num):
             #if args.multi_out:
             writeRegion(args,vcf_reader,region,rc,filter_sites,remove_cpg,
                         fasta_ref,header,vcf_out)
