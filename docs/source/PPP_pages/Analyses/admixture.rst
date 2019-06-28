@@ -1,0 +1,5 @@
+==================
+Admixture Analysis
+==================
+.. automodule:: admixture
+
