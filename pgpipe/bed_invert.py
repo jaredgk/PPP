@@ -1,6 +1,6 @@
 import sys
 import pysam
-from pgpipe.gene_region import Region, RegionList, getIntervalsBetween
+from pgpipe.genome_region import Region, RegionList, getIntervalsBetween
 import pgpipe.argparse_sets
 import argparse
 
