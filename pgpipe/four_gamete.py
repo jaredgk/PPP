@@ -101,7 +101,7 @@ import random
 import pysam
 
 from pgpipe.logging_module import initLogger
-from pgpipe.gene_region import Region, RegionList
+from pgpipe.genome_region import Region, RegionList
 from pgpipe.vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, VcfReader
 
 
