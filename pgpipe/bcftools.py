@@ -88,6 +88,33 @@ def return_output_format_args (output_format):
     else:
         raise Exception('Unsupported file format')
 
+def check_for_bcftools_output (bcftools_output):
+    '''
+        Checks for the previous bcftools output
+
+        Confirms that neither a previous bcftools log or output file exists.
+
+        Parameters
+        ----------
+        bcftools_output : str
+            Specifies the output filename to be checked
+
+        Raises
+        ------
+        IOError
+            If the bcftools output file exists
+        IOError
+            If the bcftools log file exists
+
+    '''
+    # Check if output file already exists
+    if os.path.isfile(bcftools_output):
+        raise IOError('Output file already exists. Use --overwrite to ignore')
+
+    # Check if log file already exists
+    if os.path.isfile(bcftools_output + '.log'):
+        raise IOError('Log file already exists. Use --overwrite to ignore')
+
 def check_bcftools_for_errors (bcftools_stderr):
     '''
         Checks the bgzip stderr for errors
