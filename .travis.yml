@@ -6,6 +6,7 @@ python:
   - "3.6"
 
 before_install:
+  - sudo apt-get update
   - sudo apt-get install -y r-base
   - pip install -r requirements.txt
   - ./install_executables.sh
