@@ -5,3 +5,5 @@ pybedtools
 sklearn
 matplotlib
 cython
+biopython
+rpy2
