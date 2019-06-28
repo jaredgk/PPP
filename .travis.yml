@@ -6,11 +6,7 @@ python:
   - "3.6"
 
 before_install:
-  - sudo add-apt-repository "deb http://cran.rstudio.com/bin/linux/ubuntu $(lsb_release -sc)/"
-  - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-  - sudo add-apt-repository ppa:marutter/rdev
-  - sudo apt-get update
-  - sudo apt-get install r-base
+  - ./install_R.sh
   - pip install -r requirements.txt
   - ./install_executables.sh
 
