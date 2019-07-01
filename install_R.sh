@@ -1,5 +1,6 @@
 #!/bin/sh
 set -ex
+sudo apt-get update
 sudo apt-get install gfortran
 wget http://cran.rstudio.com/src/base/R-3/R-3.4.1.tar.gz
 tar -xf R-3.4.1.tar.gz
