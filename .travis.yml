@@ -6,9 +6,15 @@ python:
   - "3.6"
 
 before_install:
-  - ./install_R.sh
   - pip install -r requirements.txt
   - ./install_executables.sh
+
+addons:
+  apt:
+    sources:
+    - r-packages-precise
+    packages:
+    - r-base
 
 cache: pip
 
