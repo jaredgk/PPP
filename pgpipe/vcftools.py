@@ -1,5 +1,6 @@
 import os
 import sys
+import copy
 import logging
 import subprocess
 import string
@@ -486,10 +487,10 @@ def cvt_vcftools_site_to_bed (vcftools_out_str):
     if 'CHROM' not in vcftools_out_str or 'POS' not in vcftools_out_str:
         # Split the line into a list
         vcftools_out_data = vcftools_out_str.strip().split('\t')
-        # Convert the chromStart to int
-        vcftools_out_data[1] = int(vcftools_out_data[1])
         # Calc chromEnd
-        chrom_end = vcftools_out_data[1] + 1
+        chrom_end = copy.deepcopy(vcftools_out_data[1])
+        # Convert the chromStart to chromStart0
+        vcftools_out_data[1] = int(vcftools_out_data[1]) - 1
         # Add chrom_end to the list
         vcftools_out_data = vcftools_out_data + [chrom_end]
         # Return the list as a string (with newline element)
