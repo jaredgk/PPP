@@ -9,3 +9,10 @@ conda update -q conda
 conda info -a
 conda create -q -n test-env python=$TRAVIS_PYTHON_VERSION
 source activate test-env
+conda install -c bioconda pysam
+conda install -c anaconda pandas
+conda install -c anaconda biopython
+conda install -c anaconda numpydoc
+conda install -c anaconda matplotlib 
+conda install -c anaconda cython
+conda install -c anaconda rpy2

@@ -1,8 +1,2 @@
-pysam
-pandas
-numpydoc
 pybedtools
 sklearn
-matplotlib
-cython
-biopython
