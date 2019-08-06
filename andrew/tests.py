@@ -250,7 +250,8 @@ class admixr_tests (unittest.TestCase):
   # Confirm python version
   def test_version (self):
 
-    print(sys.version)
+    import platform
+    print(platform.python_version())
 
   # Confirm rpy2 is working
   def test_rpy2 (self):
