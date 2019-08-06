@@ -14,5 +14,4 @@ conda install -c anaconda pandas
 conda install -c anaconda biopython
 conda install -c anaconda numpydoc
 conda install -c anaconda matplotlib 
-conda install -c anaconda cython
 conda install -c anaconda rpy2
