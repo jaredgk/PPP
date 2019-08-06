@@ -247,17 +247,22 @@ class vcf_sampler_tests (unittest.TestCase):
 # Run tests for admixr
 class admixr_tests (unittest.TestCase):
 
-    # Confirm rpy2 is working
-    def test_rpy2 (self):
+  # Confirm python version
+  def test_version (self):
 
-      # Import rpy2
-      from rpy2.robjects import r
+    print(sys.version)
 
-      # Obtain the mean from R
-      r_mean = r('x <- mean(c(100, 75, 50, 25, 0))')[0]
+  # Confirm rpy2 is working
+  def test_rpy2 (self):
 
-      # Confirm that the output is what is expected
-      self.assertEqual(r_mean, 50.0)
+    # Import rpy2
+    from rpy2.robjects import r
+
+    # Obtain the mean from R
+    r_mean = r('x <- mean(c(100, 75, 50, 25, 0))')[0]
+
+    # Confirm that the output is what is expected
+    self.assertEqual(r_mean, 50.0)
 
 
 
