@@ -8,4 +8,4 @@ conda config --set always_yes yes --set changeps1 no
 conda update -q conda
 conda info -a
 conda create -q -n test-env python=$TRAVIS_PYTHON_VERSION
-source activate test-env
+conda activate test-env
