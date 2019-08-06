@@ -9,4 +9,5 @@ conda update -q conda
 conda info -a
 conda create -q -n test-env python=$TRAVIS_PYTHON_VERSION
 conda init bash
+exec bash
 conda activate test-env
