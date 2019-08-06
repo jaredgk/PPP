@@ -6,7 +6,7 @@ python:
   - "3.6"
 
 before_install:
-  - ./install_R.sh
+  - bash -i install_R.sh
   - pip install -r requirements.txt
   - ./install_executables.sh
 
