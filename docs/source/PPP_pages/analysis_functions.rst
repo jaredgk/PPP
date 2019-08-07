@@ -9,6 +9,7 @@ Functions
 .. toctree::
    :maxdepth: 1
 
+   Analyses/eigenstrat_fstats
    Analyses/admixture
    Analyses/ima3_wrapper
    Analyses/plink_ld
