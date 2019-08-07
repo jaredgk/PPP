@@ -1,3 +1,4 @@
 pybedtools
 sklearn
 cython
+pysam
