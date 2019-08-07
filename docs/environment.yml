@@ -4,3 +4,4 @@ channels:
 dependencies:
   - rpy2
   - pysam
+  - cython
