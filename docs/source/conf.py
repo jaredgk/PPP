@@ -15,7 +15,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return MagicMock()
 
-MOCK_MODULES = ['pysam', 'rpy2', 'tzlocal']
+MOCK_MODULES = ['pysam', 'rpy2', 'tzlocal', 'rpy2.robjects']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
