@@ -1,0 +1,17 @@
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - pandas
+  - biopython
+  - numpydoc
+  - matplotlib 
+  - rpy2
+  - tabix 
+  - bcftools
+  - vcftools
+  - pip:
+    - pybedtools
+    - sklearn
+    - cython
+    - pysam
