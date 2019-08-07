@@ -1,10 +1,5 @@
 channels:
   - bioconda
   - defaults
-  - conda-forge
 dependencies:
-  - rpy2
-  - pysam
-  - cython
   - numpydoc
-  - tzlocal
