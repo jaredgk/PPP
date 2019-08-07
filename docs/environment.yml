@@ -3,5 +3,6 @@ channels:
   - defaults
 dependencies:
   - rpy2
+  - curl
   - pip:
     - pysam
