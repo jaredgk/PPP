@@ -15,9 +15,13 @@ Python Dependencies
 The PPP requries a number of python libraries, including:
 
 * `The SciPy Ecosystem <https://www.scipy.org/about.html>`_ (i.e. numpy, scipy, pandas, matplotlib, etc.)
-* `Pysam <https://github.com/pysam-developers/pysam>`_  
+* `Pysam <https://github.com/pysam-developers/pysam>`_
+* `Biopython <https://biopython.org/>`_  
+* `Cython <https://cython.org/>`_  
+* `rpy2 <https://rpy2.readthedocs.io/>`_
+* `pandas <https://pandas.pydata.org/>`_ 
 
-We recommend users install `Anaconda 3 <https://www.anaconda.com/distribution/#download-section>`_ to install and maintain these (and other) libraries.
+We recommend users install and maintain these libraries using either `pip <https://pypi.org/project/pip/>`_ or `Anaconda 3 <https://www.anaconda.com/distribution/#download-section>`_.
 
 ##################
 Other Dependencies
@@ -31,5 +35,7 @@ The PPP also requries a number of executables to be installed, including:
 * `plink 2.0 <https://www.cog-genomics.org/plink/2.0/>`_
 * `SHAPEIT <https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.html>`_
 * `Beagle 5.0 <https://faculty.washington.edu/browning/beagle/beagle.html>`_
+
+Please note that VCFtools, BCFtools, Samtools, HTSlib, plink 1.9, plink 2.0, and SHAPEIT may be installed using `Anaconda 3 <https://www.anaconda.com/distribution/#download-section>`_.
 
 
