@@ -1,3 +1,105 @@
+'''
+    Automates the calculation of multiple LD statistics using Plink.
+
+    ############################
+    Input Command-line Arguments
+    ############################
+    **--ped-prefix** *<input_prefix>*
+        Argument used to define the filename prefix shared by the ped file (.ped) and
+        the map file (.map). Should not be used alongside the specific file arguments 
+        (e.g. --ped).
+    **--ped** *<ped_filename>*
+        Argument used to define the filename of the plink ped file (.ped). Must be 
+        called alongside --map. Cannot be called alongside --ped-prefix.
+    **--map** *<map_filename>*
+        Argument used to define the filename of the plink map file (.map). Must be 
+        called alongside --ped. Cannot be called alongside --ped-prefix.
+    **--binary-ped-prefix** *<input_prefix>*
+        Argument used to define the filename prefix shared by the binary ped file
+        (.bed), the fam file (.fam), and the bim file (.bim). Should not be used 
+        alongside the specific file arguments (e.g. --binary-ped).
+    **--binary-ped** *<binary_ped_filename>*
+        Argument used to define the filename of the plink binary ped file (.bed). 
+        Must be called alongside --fam and --bim. Cannot be called alongside 
+        --binary-ped-prefix.
+    **--fam** *<fam_filename>*
+        Argument used to define the filename of the plink fam file (.fam). Must be 
+        called alongside --binary-ped and --bim. Cannot be called alongside 
+        --binary-ped-prefix.
+    **--bim** *<bim_filename>*
+        Argument used to define the filename of the plink bim file (.bim). Must be 
+        called alongside --binary-ped and --fam. Cannot be called alongside 
+        --binary-ped-prefix.
+    
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out-format** *<output_format>*
+        Argument used to define the output format. Supported formats include: gzip
+        compressed (gzipped); standard uncompresed (standard); single-precision binary
+        (bin32); and double-precision binary (bin64). Please note that both binary formats
+        are only supported when called with the square **--lf-format**. By default gzip
+        compressed files are produced.
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**.
+        Cannot be used if multiple output files are created.
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+    
+    ###############################
+    Basic LD Command-line Arguments
+    ###############################
+    **--ld-statistic** *<r, r2>*
+        Argument used to define the correlation statistic to report. Two options are 
+        supported: the raw inter-variant allele count correlations (r) and squared 
+        correlations (r2).
+    **--ld-format** *<square, square-zero, triangle, table>*
+        Argument used to define the matrix result format. Four formats are supported:
+        A symmetric matrix (square); a square matrix in which the cells of the upper 
+        right triangle are zeroed out (square-zero); only the lower-triangular of the 
+        matrix (triangle); and the matrix as a table (table). 
+	**--ld-window-snps** *<snp_int>*
+		Argument used to define the maximum number of SNPs between LD comparisons.
+	**--ld-window-kb** *<snp_int>*
+		Argument used to define the maximum distance in bp between LD comparisons.
+	**--ld-window-cm** *<snp_int>*
+		Argument used to define the maximum distance in cM between LD comparisons.
+   
+    ****************************
+    Table Command-line Arguments
+    ****************************
+	Please note that the following arguments may only be used with **--ld-format** table.
+
+	**--table-d-statistic** *<dprime, dprime-signed, d>*
+        Argument used to add the specified D statistic to table-formatted results. Three options
+        are supported: the absolute value of Lewontin's D-prime statistic (dprime); Lewontin's 
+        D-prime statistic (dprime-signed); and the value of D prior to division by D\ :sub:`max` 
+        (d).  
+	**--table-in-phase**
+		Argument used to add in-phase allele pairs to table-formatted results.
+	**--table-maf**
+		Argument used to add MAF values to table-formatted results.
+	**--table-r2-threshold** *<r2_float>*
+		Argument used to define the threshold for filtering pairs of r2 values.
+	**--table-snp** *<snp_str>* *<snp1_str, snp2_str, etc.>*
+		Argument used to define one or more SNP(s) for LD analysis. This argument may be used 
+        multiple times if desired.
+    **--table-snps** *<snp_filename>*
+		Argument used to define a file with one or more SNP(s) for LD analysis.
+    
+    ##########################
+    Example Command-line Usage
+    ##########################
+    Command-line to calculate Lewontin's D-prime statistic
+
+    .. code-block:: bash
+        
+        python plink_ld.py --ped-prefix hapmap1 --ld-format table --ld-statistic r2 --table-d-statistic dprime
+
+'''
+
 import os
 import sys
 import subprocess
@@ -43,12 +145,6 @@ def plink_argument_parser(passed_arguments):
     plink_parser = argparse.ArgumentParser()
 
     plink_prefix = plink_parser.add_mutually_exclusive_group()
-
-    # Input VCF argument
-    plink_parser.add_argument("--vcf", dest = 'vcf_filename', help = "Input VCF filename", type = str, action = parser_confirm_file())
-
-    # Sets a family ID for the samples in the VCF
-    plink_parser.add_argument("--vcf-fid", dest = 'vcf_fid', help = "Specifies the family ID for all samples", type = str)
 
     # Input PED arguments
     plink_parser.add_argument("--ped", dest = 'ped_filename', help = "Input PED filename", type = str, action = parser_confirm_file())
@@ -203,7 +299,7 @@ def run (passed_arguments = []):
 
         # Check if the output format isn't supported
         if plink_args.out_format not in ['standard', 'gzipped']:
-            raise Exception('The table ld format is incompatible with the %s output format' % plink_args.out_format)
+            raise Exception('The %s output only supports the square ld format (i.e. --lf-format square)' % plink_args.out_format)
 
         # Check if a r2 threshold was specified alonside the r2 statistic
         if plink_args.table_r2_threshold and plink_args.ld_statistic != 'r2':
@@ -240,25 +336,29 @@ def run (passed_arguments = []):
         if plink_args.table_snps:
             raise Exception('The --table-snps argument is incompatible with the %s ld format' % plink_args.ld_format)
 
-    if plink_args.ped_prefix:
+    # Confirm if a prefix has been specified and the files exist
+    if plink_args.ped_prefix and confirm_ped_prefix(plink_args.ped_prefix):
 
-        # Assign the ped input from a prefix
-        plink_input_args = assign_ped_from_prefix(plink_args.ped_prefix)
+        # Assign bed input arguments from a prefix
+        plink_input_args = ['--file', plink_args.ped_prefix]
 
-    elif plink_args.bed_prefix:
+    # Confirm if a prefix has been specified and the files exist
+    elif plink_args.bed_prefix and confirm_ped_prefix(plink_args.bed_prefix):
 
         # Assign the bed input from a prefix
-        plink_input_args = assign_bed_from_prefix(plink_args.bed_prefix)
+        plink_input_args = ['--bfile', plink_args.bed_prefix]
 
-    elif plink_args.ped_filename:
+    # Confirm if required ped files exist
+    elif plink_args.ped_filename and confirm_ped_files(plink_args.ped_filename, plink_args.map_filename):
 
-        # Assign the ped input from files
-        plink_input_args = assign_ped_from_files(plink_args.ped_filename, plink_args.map_filename)
+        # Assign the ped input
+        plink_input_args = ['--ped', plink_args.ped_filename, '--map', plink_args.map_filename]
 
-    elif plink_args.bed_filename:
+    # Confirm if required binary-ped files exist
+    elif plink_args.bed_filename and confirm_bed_files(plink_args.bed_filename, plink_args.bim_filename, plink_args.fam_filename):
 
-        # Assign the bed input from files
-        plink_input_args = assign_bed_from_files(plink_args.bed_filename, plink_args.bim_filename, plink_args.fam_filename)
+        # Assign bed input
+        plink_input_args = ['--bed', plink_args.bed_filename, '--bim', plink_args.bim_filename, '--fam', plink_args.fam_filename]
 
     else:
         raise Exception('No PED or Binary-PED input assigned')
@@ -398,6 +498,12 @@ def run (passed_arguments = []):
         plink_ld_args.extend(['--ld-snp-list', plink_args.table_snps])
 
     logging.info('LD parameters assigned')
+
+    # Check if the has specified the output filename, without a prefix
+    if plink_args.out and '--out-prefix' not in passed_arguments and '--out-prefix' not in sys.argv:
+
+        # Assign a prefix based on the output filename
+        phase_args.out_prefix = copy.deepcopy(phase_args.out)
 
     # Assign the prefix argument
     plink_output_args = ['--out', plink_args.out_prefix]
