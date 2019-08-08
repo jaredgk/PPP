@@ -12,6 +12,7 @@ The Popgen Pipeline Platform (PPP) is a software platform with the goal of reduc
 
 .. image:: PPP_assets/PPP_Pipeline_Figure.png
    :scale: 50 %
+   :align: center
 
 Please Note: This documentation is currently being devlopement and will be updated freqeuntly in the coming days
 
