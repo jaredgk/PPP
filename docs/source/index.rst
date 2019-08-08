@@ -15,8 +15,10 @@ The PPP was written using the Python programming language and designed to operat
 .. image:: PPP_assets/PPP_Pipeline_Figure.png
    :scale: 50 %
    :align: center
+
+.. centered::
    
-   Figure 1: Structure of the PPP
+   **Figure 1:** Structure of the PPP
 
 The core functions of the PPP were designed to operate using VCF-based files primarily due to frequent support for the format among publicly available datasets and population genomics software. Most users will begin their pipelines with these core functions before moving onto an analysis function. Please note that most analysis functions require a preceding file conversion function to operate. 
 
