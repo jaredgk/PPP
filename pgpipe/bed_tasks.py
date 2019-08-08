@@ -376,5 +376,5 @@ def run (passed_arguments = []):
         standard_bedtools_call(bedtools_arg_list, bed_args.out)
 
 if __name__ == "__main__":
-    #initLogger()
+    initLogger()
     run()
