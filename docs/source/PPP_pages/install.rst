@@ -19,7 +19,6 @@ The PPP requries a number of python libraries, including:
 * `Biopython <https://biopython.org/>`_  
 * `Cython <https://cython.org/>`_  
 * `rpy2 <https://rpy2.readthedocs.io/>`_
-* `pandas <https://pandas.pydata.org/>`_ 
 
 We recommend users install and maintain these libraries using either `pip <https://pypi.org/project/pip/>`_ or `Anaconda 3 <https://www.anaconda.com/distribution/#download-section>`_.
 
