@@ -1,3 +1,4 @@
 mock
 numpydoc
 cython
+biopython
