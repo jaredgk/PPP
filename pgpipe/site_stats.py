@@ -71,7 +71,7 @@ if args.step_size is None and args.window_size is not None:
     args.step_size = args.window_size
 
 idx_list = None
-if args.subsamp is not None
+if args.subsamp is not None:
     idx_list = [int(i.strip()) for i in open(args.subsamp).readlines()]
 cache = None
 if args.window_size > args.step_size:
