@@ -73,8 +73,7 @@ def model_creator_parser (passed_arguments):
                 try:
                     int(values[1])
                 except:
-                    print '--%s only accepts integers' % self.dest
-                    sys.exit()
+                    raise Exception('--%s only accepts integers' % self.dest)
 
                 # Assign the passed value
                 if getattr(args, self.dest):
