@@ -1,5 +1,5 @@
 ===========
 Loci Filter
 ===========
-.. automodule:: informative_filter
+.. automodule:: informative_loci_filter
 

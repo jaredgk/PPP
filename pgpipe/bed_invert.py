@@ -1,3 +1,54 @@
+'''
+    Given a BED file, return a BED file that has regions outside of the 
+    regions in the input.
+
+    This function operates similarly to 'bedtools complement', however it 
+    does not require a file that contains chromosome lengths, as it will 
+    automatically discard any bases after the last region on a chromosome
+    in the input file. Options are included to extend the regions in the
+    input (hence shrinking regions in the output), formatting for interval
+    format, indicating what columns represent start/end/chromosome data,
+    and adding/removing the 'chr' prefix from chromosome names.
+
+    ###############
+    Input Arguments
+    ###############
+    **--bed** *<input_bed>*
+        Input BED filename
+    
+    ################
+    Output Arguments
+    ################
+    **--out** *<output_filename>*
+        Name of output file
+
+    ################
+    Region Arguments
+    ################
+    **--bed-column-index** *<start_idx>*,*<end_idx>*,*<chrom_idx>*
+        Comma-separated string of the zero-based indices of the start, end,
+        and chromosome columns in the input file, so the file doesn't need to
+        be reformatted. Default for a regular BED file is 1,2,0.
+    **--zero-ho**
+        If set, indicates input BED regions are on zero-based, half-open
+        coordinate system, as opposed to one-based, closed. For example, the
+        first million bases on a chromosome would be:
+            Zero-based, half-open: 0,1000000
+            One-based, closed:     1,1000000
+    **--pad** *<pad_length>*
+        If set, regions in input file will be extended by pad_length bases
+        on both sides.
+
+    ###############
+    Other Arguments
+    ###############
+    **--add-chr**
+        Adds 'chr' prefix to all chromosome names in output
+    **--remove-chr**
+        Removes 'chr' prefix, if present, to all chromosome names in output
+    
+
+'''
 import sys
 import pysam
 from pgpipe.genome_region import Region, RegionList, getIntervalsBetween

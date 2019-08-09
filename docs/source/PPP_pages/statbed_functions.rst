@@ -10,7 +10,7 @@ Functions
    :maxdepth: 1
 
    Functions/stat_sampler
-   Functions/loci_filter
+   Functions/informative_loci_filter
 
 Utilities
 ---------

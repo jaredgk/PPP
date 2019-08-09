@@ -1,5 +1,5 @@
 =========================
 Four Gamete Test Function
 =========================
-.. automodule:: four_gamete_pysam
+.. automodule:: four_gamete
 
