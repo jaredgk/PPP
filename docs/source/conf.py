@@ -15,7 +15,9 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return MagicMock()
 
-MOCK_MODULES = ['pysam', 'rpy2', 'tzlocal', 'rpy2.robjects', 'rpy2.robjects.packages', 'pybedtools', 'pandas', 'pgpipe']
+MOCK_MODULES = ['pysam', 'rpy2', 'tzlocal', 'rpy2.robjects', 'rpy2.robjects.packages', 'pybedtools', 'pandas'
+                'pgpipe.logging_module', 'pgpipe.plink', 'pgpipe.admixtools', 'pgpipe.vcf_reader_fun', 
+                'pgpipe.vcftools', 'pgpipe.bcftools', 'pgpipe.bedtools']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
