@@ -112,9 +112,9 @@ def assign_plink_output_args (out_prefix, out_format, overwrite = True):
                 raise Exception('%s already exists. Add --overwrite to ignore' % out_filename)
 
         # Check if the output if a ped or bed file-set
-        elif out_format in ['ped', 'binary-ped']:
+        elif out_format in ['ped', 'ped-12', 'binary-ped']:
 
-            if out_format == 'ped':
+            if out_format == 'ped' or out_format == 'ped-12':
 
                 # List of the output suffixes for ped files
                 out_suffixes = ['ped', 'map']
@@ -147,10 +147,13 @@ def assign_plink_output_args (out_prefix, out_format, overwrite = True):
             return ['--recode', 'vcf-iid', 'bgz', '--out', out_prefix]
 
     # Check if the output if a ped or bed file-set
-    elif out_format in ['ped', 'binary-ped']:
+    elif out_format in ['ped', 'ped-12', 'binary-ped']:
 
         if out_format == 'ped':
             return ['--recode', '--out', out_prefix]
+
+        if out_format == 'ped-12':
+            return ['--recode12', '--out', out_prefix]
 
         if out_format == 'binary-ped':
             return ['--make-bed', '--out', out_prefix]
@@ -355,7 +358,11 @@ def convert_ped (ped_filename = None, map_filename = None, ped_prefix = None, ou
     elif ped_filename and confirm_ped_files(ped_filename, map_filename):
 
         # Assign bed input arguments from files
-        ped_input_args = ['--ped', ped_filename, '--map', map_filename] 
+        ped_input_args = ['--ped', ped_filename, '--map', map_filename]
+
+    # Confirm input arguments were assigned
+    if not ped_input_args:
+        raise Exception('Unable to assign PED input arguments. Please confirm the arguments are specified correctly')
 
     # Add the ped input arguments
     convert_ped_args.extend(ped_input_args)
@@ -399,7 +406,7 @@ def convert_bed (bed_filename = None, bim_filename = None, fam_filename = None, 
         bed_input_args = ['--bed', bed_filename, '--bim', bim_filename, '--fam', fam_filename]
 
     # Confirm input arguments were assigned
-    if not bed_prefix_args:
+    if not bed_input_args:
         raise Exception('Unable to assign Binary-PED input arguments. Please confirm the arguments are specified correctly')
 
     # Add the bed input arguments
@@ -469,8 +476,12 @@ def check_plink_for_errors (plink_stderr):
             If plink stderr returns an error
     '''
 
+    # Print warning, if found
+    if 'Warning' in plink_stderr:
+        logging.warning(plink_stderr)
+
     # Print output if error found. Build up as errors are discovered
-    if plink_stderr:
+    elif plink_stderr:
         raise Exception(plink_stderr)
 
 def standard_plink2_call (plink2_call_args):

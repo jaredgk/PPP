@@ -39,10 +39,11 @@
         Argument used to define the complete output filename, overrides **--out-prefix**.
     **--out-prefix** *<output_prefix>*
         Argument used to define the output prefix (i.e. filename without file extension).
-    **--out-format** *<vcf, vcf.gz, bcf, ped, binary-ped, eigenstrat>*
+    **--out-format** *<vcf, vcf.gz, bcf, ped, ped-12, binary-ped, eigenstrat>*
         Argument used to define the desired output format. Formats include: uncompressed 
-        VCF (vcf); compressed VCF (vcf.gz) [default]; and BCF (bcf). Only usable with the 
-        merge and concatenate utilites.
+        VCF (vcf); compressed VCF (vcf.gz); BCF (bcf); PLINK text file (ped); PLINK "12" 
+        coded text file (ped-12); binary PLINK file (binary-ped); and eigenstrat file
+        (eigenstrat).
     **--overwrite**
         Argument used to define if previous output should be overwritten.
 
@@ -136,8 +137,7 @@ def convert_argument_parser(passed_arguments):
     convert_prefix.add_argument("--binary-ped-prefix", dest = 'bed_prefix', help = "Defines the filename prefix of the Binary-PED, FAM, and BIM files", type = str)
 
     # Output arguments.
-    #output_formats = ['vcf', 'vcf.gz', 'bcf', 'fasta', 'im', 'ped', 'binary-ped']
-    output_formats = ['vcf', 'vcf.gz', 'bcf', 'ped', 'binary-ped', 'eigenstrat']
+    output_formats = ['vcf', 'vcf.gz', 'bcf', 'ped', 'ped-12', 'binary-ped', 'eigenstrat']
     convert_parser.add_argument('--out-format', metavar = metavar_list(output_formats), help = 'Defines the desired output format', type = str, choices = output_formats, required = True)
     convert_parser.add_argument('--out', help = 'Defines the complete output filename, overrides --out-prefix')
     convert_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', default = 'out')
@@ -249,6 +249,13 @@ def run (passed_arguments = []):
 
         # Assign the expected output filename
         expected_out_filename = convert_args.out_prefix + '.bed'
+
+    # Check if the format is ped-12, i.e. .ped
+    elif convert_args.out_format == 'ped-12':
+
+        # Assign the expected output filename
+        expected_out_filename = convert_args.out_prefix + '.ped'
+        
     else:
 
         # Assign the expected output filename
@@ -274,7 +281,7 @@ def run (passed_arguments = []):
         check_if_conversion(vcf_format, convert_args.out_format)
 
         # List of formats that are supported from vcf
-        supported_out_format = ['vcf', 'vcf.gz', 'bcf', 'ped', 'binary-ped']
+        supported_out_format = ['vcf', 'vcf.gz', 'bcf', 'ped', 'ped-12', 'binary-ped']
 
         # Check that the conversion is supported
         check_conversion_support(convert_args.out_format, supported_out_format)
@@ -299,7 +306,7 @@ def run (passed_arguments = []):
                 shutil.move(expected_out_filename + '.log', convert_args.out + '.log')
 
         # Check if the output is a ped or binary-ped
-        elif convert_args.out_format in ['ped', 'binary-ped']:
+        elif convert_args.out_format in ['ped', 'ped-12', 'binary-ped']:
 
             # Call the VCF to PED/BED converter
             convert_vcf_to_plink(convert_args.vcf, convert_args.vcf_fid, convert_args.out_prefix, convert_args.out_format, threads = convert_args.threads, overwrite = convert_args.overwrite)
@@ -317,7 +324,7 @@ def run (passed_arguments = []):
         check_if_conversion('ped', convert_args.out_format)
 
         # List of formats that are supported from ped
-        supported_out_format = ['vcf', 'vcf.gz', 'bcf', 'binary-ped', 'eigenstrat']
+        supported_out_format = ['vcf', 'vcf.gz', 'bcf', 'ped-12', 'binary-ped', 'eigenstrat']
 
         # Check that the conversion is supported
         check_conversion_support(convert_args.out_format, supported_out_format)
@@ -349,7 +356,7 @@ def run (passed_arguments = []):
         check_if_conversion('binary-ped', convert_args.out_format)
 
         # List of formats that are supported from bed
-        supported_out_format = ['vcf', 'vcf.gz', 'bcf', 'ped', 'eigenstrat']
+        supported_out_format = ['vcf', 'vcf.gz', 'bcf', 'ped', 'ped-12', 'eigenstrat']
 
         # Check that the conversion is supported
         check_conversion_support(convert_args.out_format, supported_out_format)
