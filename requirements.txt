@@ -1,5 +1,4 @@
 pybedtools
 sklearn
 cython
-pysam
 mock

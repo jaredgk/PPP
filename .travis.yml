@@ -28,7 +28,7 @@ before_install:
   - conda install -c bioconda tabix 
   - conda install -c bioconda bcftools
   - conda install -c bioconda vcftools 
-  - sudo apt-get install zlib1g-dev
+  - conda install -c bioconda pysam
   - pip install -r requirements.txt
   - ./install_executables.sh
 
