@@ -1,0 +1,9 @@
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - mock
+  - numpydoc
+  - cython
+  - biopython
+  - pysam
