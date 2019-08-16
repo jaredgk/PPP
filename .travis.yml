@@ -29,7 +29,10 @@ before_install:
   - conda install -c bioconda bcftools
   - conda install -c bioconda vcftools 
   - conda install -c bioconda pysam
-  - pip install -r requirements.txt
+  - conda install -c anaconda scikit-learn
+  - conda install -c anaconda mock
+  - conda install -c anaconda cython 
+  - conda install -c bioconda pybedtools
   - ./install_executables.sh
 
 cache: pip
