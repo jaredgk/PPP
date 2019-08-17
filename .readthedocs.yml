@@ -1,4 +1,0 @@
-conda:
-  file: docs/source/environment.yml
-python:
-  version: 3
