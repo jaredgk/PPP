@@ -15,7 +15,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return MagicMock()
 
-MOCK_MODULES = ['rpy2','rpy2.robjects', 'rpy2.robjects.packages', 'matplotlib', 'pandas']
+MOCK_MODULES = ['rpy2','rpy2.robjects', 'rpy2.robjects.packages']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
