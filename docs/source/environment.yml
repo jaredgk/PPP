@@ -8,3 +8,4 @@ dependencies:
   - biopython
   - pysam
   - matplotlib
+  - pandas
