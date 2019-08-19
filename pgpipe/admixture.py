@@ -6,16 +6,40 @@
     files. The function is also capable of configuring the optional arguments
     of Admixture.
 
+    ******************
+    Command-line Usage
+    ******************
+    The admixture automater may be called using the following command:
+
+    .. code-block:: bash
+        
+        python admixture.py
+
+    Example usage: Estimating individual ancestries for each sample within *hapmap3.bed*
+    for three ancestral populations.
+
+    .. code-block:: bash
+        
+        python admixture.py --binary-ped-prefix hapmap3 --pop 3
+
+    ************
+    Dependencies 
+    ************
+    The admixture automater requires the following:
+
+    * `Admixture <http://software.genetics.ucla.edu/admixture/>`_
+
     ############################
     Input Command-line Arguments
     ############################
     **--ped-12-prefix** *<input_prefix>*
-        Argument used to define the filename prefix shared by the ped file (.ped) and
-        the map file (.map). Should not be used alongside the specific file arguments 
-        (e.g. --ped).
+        Argument used to define the filename prefix shared by the 12-formatted ped 
+        file (.ped) and the map file (.map). Should not be used alongside the 
+        specific file arguments (e.g. --ped).
     **--ped-12** *<ped_filename>*
-        Argument used to define the filename of the plink ped file (.ped). Must be 
-        called alongside --map. Cannot be called alongside --ped-prefix.
+        Argument used to define the filename of the plink 12-formatted ped file 
+        (.ped). Must be called alongside --map. Cannot be called alongside 
+        --ped-prefix.
     **--map** *<map_filename>*
         Argument used to define the filename of the plink map file (.map). Must be 
         called alongside --ped. Cannot be called alongside --ped-prefix.
