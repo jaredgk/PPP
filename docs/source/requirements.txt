@@ -1,1 +1,2 @@
 numpydoc
+Cython --install-option="--no-cython-compile"
