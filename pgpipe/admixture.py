@@ -1,14 +1,12 @@
 '''
-    Admixture automater.
-
     Automates the estimation of individual ancestries using Admixture. The
     functions allows for input as: i) Binary-PED files or ii) PED 12-formatted
     files. The function is also capable of configuring the optional arguments
     of Admixture.
 
-    ******************
+    ##################
     Command-line Usage
-    ******************
+    ##################
     The admixture automater may be called using the following command:
 
     .. code-block:: bash
@@ -22,9 +20,9 @@
         
         python admixture.py --binary-ped-prefix hapmap3 --pop 3
 
-    ************
+    ############
     Dependencies 
-    ************
+    ############
     The admixture automater requires the following:
 
     * `Admixture <http://software.genetics.ucla.edu/admixture/>`_
