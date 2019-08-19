@@ -4,6 +4,7 @@ import parser
 import filecmp
 import os
 import sys
+import gzip
 from pgpipe.vcf_ref_to_seq import getMaxAlleleLength, getFastaFilename, \
     vcf_to_seq, createParser, validateFiles
 from pgpipe.vcf_split_pysam import vcf_region_write
@@ -26,6 +27,17 @@ def compareVcfsNoComments(va,vb):
         if line != l2:
             return False
     return True
+
+def compareVcfsZipped(va,vb):
+    vfa = gzip.open(va,'rt')
+    vfb = gzip.open(vb,'rt')
+    for line in vfa:
+        l2 = vfb.readline()
+        if line != l2:
+            return False
+    return True
+    
+
 
 def tryRemove(filename):
     try:
@@ -233,8 +245,9 @@ class reduceTest(unittest.TestCase):
         vcf_region_write(['input/chr11.subsamples.vcf.gz',
                          '--bed','input/snp_region.txt',
                          '--out','input/chr11.test.vcf.gz'])
-        self.assertTrue(filecmp.cmp('input/chr11.snp.sr.vcf.gz',
-                        'input/chr11.test.vcf.gz'))
+        #self.assertTrue(filecmp.cmp('input/chr11.snp.sr.vcf.gz',
+        #               'input/chr11.test.vcf.gz'))
+        self.assertTrue(compareVcfsZipped('input/chr11.snp.sr.vcf.gz','input/chr11.test.vcf.gz'))
 
     def test_vcf_region_write_unzipped(self):
         vcf_region_write(['input/chr11.unzipped.vcf',
