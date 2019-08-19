@@ -1,4 +1,1 @@
-mock
 numpydoc
-cython
-biopython
