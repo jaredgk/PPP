@@ -13,7 +13,10 @@
         
         python admixture.py
 
-    Example usage: Estimating individual ancestries for each sample within *hapmap3.bed*
+    *************
+    Example usage
+    *************
+    Estimating individual ancestries for each sample within *hapmap3.bed*
     for three ancestral populations.
 
     .. code-block:: bash
@@ -23,8 +26,6 @@
     ############
     Dependencies 
     ############
-    The admixture automater requires the following:
-
     * `Admixture <http://software.genetics.ucla.edu/admixture/>`_
 
     ############################
@@ -99,15 +100,6 @@
         Argument used to define the seed value for the random number generator.
     **--threads** *<thread_int>*
         Argument used to define the number of threads to be used for computation.
-
-    ##########################
-    Example Command-line Usage
-    ##########################
-    Command-line to estimate individual ancestries using three ancestral populations.
-
-    .. code-block:: bash
-        
-        python admixture.py --ped-prefix hapmap3 --pop 3
 '''
 
 import os
