@@ -1,8 +1,37 @@
 '''
-    Utilites for VCF-formatted files
-
     Automates various utilites for VCF-formatted files. This currently includes:
-    obtain list of chromosomes and obtain list of samples.
+    obtain a list of the chromosomes within a VCF-based file, obtain a list of the 
+    samples within a VCF-based file, concatenate multiple VCF-based files, merge
+    multiple VCF-based files, and sort a VCF-based file.
+
+    ##################
+    Command-line Usage
+    ##################
+    The VCF utilites function may be called using the following command:
+
+    .. code-block:: bash
+        
+        python vcf_utilites.py
+
+    *************
+    Example usage
+    *************
+    Concatenate multiple VCF files:
+
+    .. code-block:: bash
+        
+        python vcf_utilites.py --vcfs chr21.vcf.gz chr22.vcf.gz --utility concatenate
+
+    Merge multiple VCF files:
+
+    .. code-block:: bash
+        
+        python vcf_utilites.py --vcfs chr22.ceu.vcf.gz chr22.yri.vcf.gz --utility merge
+    
+    ############
+    Dependencies 
+    ############
+    * `BCFtools <https://samtools.github.io/bcftools/bcftools.html>`_
     
     ############################
     Input Command-line Arguments
@@ -46,7 +75,6 @@
         Argument used to define the desired output format. Formats include: uncompressed 
         VCF (vcf); compressed VCF (vcf.gz) [default]; and BCF (bcf). Only usable with the 
         merge and concatenate utilites.
-
 '''
 
 import os

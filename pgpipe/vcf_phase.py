@@ -2,7 +2,39 @@
     Automates the phasing process for a specified VCF file. The function
     allows users to select between the beagle (default) and shapeit 
     phasing algorithms.
-    
+
+    ##################
+    Command-line Usage
+    ##################
+    The VCF file phaser may be called using the following command:
+
+    .. code-block:: bash
+        
+        python vcf_phase.py
+
+    *************
+    Example usage
+    *************
+    Command-line to phase chromosome chr1 using Beagle:
+
+    .. code-block:: bash
+        
+        python vcf_phase.py --vcf input.vcf --phase-algorithm beagle --phase-chr chr1
+
+    Command-line to phase using SHAPEIT with 100 burn-in iterations:
+
+    .. code-block:: bash
+        
+        python vcf_phase.py --vcf input.vcf.gz --phase-algorithm shapeit --shapeit-burn-iter 100
+
+    ############
+    Dependencies 
+    ############
+    * `SHAPEIT <https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.html>`_
+    * `Beagle 5.0 <https://faculty.washington.edu/browning/beagle/beagle.html>`_
+    * `BCFtools <https://samtools.github.io/bcftools/bcftools.html>`_ 
+    * `plink 2.0 <https://www.cog-genomics.org/plink/2.0/>`_
+
     ############################
     Input Command-line Arguments
     ############################
@@ -90,23 +122,7 @@
         Argument used to define the number of consecutive **--beagle-steps** used 
         for identifying long IBS segments.
     **--beagle-path** *<path>*
-        Argument used to define the path to locate beagle.jar.
-
-    ##########################
-    Example Command-line Usage
-    ##########################
-    Command-line to phase chromosome chr1 using Beagle:
-
-    .. code-block:: bash
-        
-        python vcf_phase.py --vcf input.vcf --phase-algorithm beagle --phase-chr chr1
-
-    Command-line to phase using SHAPEIT with 100 burn-in iterations:
-
-    .. code-block:: bash
-        
-        python vcf_phase.py --vcf input.vcf.gz --phase-algorithm shapeit --shapeit-burn-iter 100
-    
+        Argument used to define the path to locate beagle.jar.    
 '''
 #/usr/bin/env python
 import os

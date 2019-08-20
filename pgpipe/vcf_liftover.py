@@ -1,7 +1,28 @@
 '''
-    Liftover for VCF-formatted files
-
     Automates the liftover function from picard for VCF-formatted files.
+
+    ##################
+    Command-line Usage
+    ##################
+    The VCF liftover function may be called using the following command:
+
+    .. code-block:: bash
+        
+        python vcf_liftover.py
+
+    *************
+    Example usage
+    *************
+    Converting an hg19 VCF file **chr22.vcf.gz ** to hg38.
+
+    .. code-block:: bash
+        
+        python vcf_liftover.py --vcf chr22.vcf.gz --chain hg19ToHg38.over.chain
+
+    ############
+    Dependencies 
+    ############
+    * `Picard <https://broadinstitute.github.io/picard/>`_
     
     ############################
     Input Command-line Arguments
@@ -51,7 +72,6 @@
         Argument used to define if the output VCF index created by picard should be kept.
     **--picard-path** *<path>*
         Argument used to define the path to locate picard.jar.
-
 '''
 
 import os

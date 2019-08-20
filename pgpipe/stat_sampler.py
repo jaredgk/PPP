@@ -1,10 +1,28 @@
 '''
-    Statistics sampler.
-
     Automates the sampling process of a specified statistic output file. The
     function allows the user to select both the statistic in question and
     the sampling scheme. Please note that all sampling is done without
     replacement.
+
+    ##################
+    Command-line Usage
+    ##################
+    The statistic sampler may be called using the following command:
+
+    .. code-block:: bash
+        
+        python stat_sampler.py
+
+    *************
+    Example usage
+    *************
+    Randomly sampling 20 windows from a windowed Fst statistic file 
+    **merged_chr1_10000.windowed.weir.fst**.
+
+    .. code-block:: bash
+        
+        python admixture.py --statistic-file merged_chr1_10000.windowed.weir.fst 
+        --calc-statistic windowed-weir-fst --sampling-scheme random --sample-size 20
 
     ############################
     Input Command-line Arguments

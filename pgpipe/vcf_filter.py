@@ -2,9 +2,40 @@
     Automates VCF file filering using BCFtools. Filters may be used independently or
     combined to create complex filtering operations.        
 
-    Please note, `BCFtools <https://samtools.github.io/bcftools/bcftools.html>`_ should 
-    be cited alonside the PPP when using this function. Please see the log file for the 
-    relevant citation.
+    ##################
+    Command-line Usage
+    ##################
+    The VCF file filter may be called using the following command:
+
+    .. code-block:: bash
+        
+        python vcf_filter.py
+
+    *************
+    Example usage
+    *************
+    Command-line to only include biallelic sites:
+
+    .. code-block:: bash
+        
+        python vcf_filter.py --vcf input.bcf --filter-min-alleles 2 --filter-max-alleles 2
+
+    Command-line to only include chromosome chr1:
+
+    .. code-block:: bash
+        
+        python vcf_filter.py --vcf input.vcf.gz --filter-include-chr chr1
+
+    Command-line to remove indels and ouput a BCF file:
+
+    .. code-block:: bash
+        
+        python vcf_filter.py --vcf input.vcf --filter-exclude-indels --out-format bcf
+
+    ############
+    Dependencies 
+    ############
+    * `BCFtools <https://samtools.github.io/bcftools/bcftools.html>`_    
 
     ############################
     Input Command-line Arguments
@@ -135,27 +166,6 @@
         Argument used to include positions with the specified filter flag.
     **--filter-exclude-filtered** *<filter_flag>*
         Argument used to exclude positions with the specified filter flag.
-
-    ##########################
-    Example Command-line Usage
-    ##########################
-    Command-line to only include biallelic sites:
-
-    .. code-block:: bash
-        
-        python vcf_filter.py --vcf input.bcf --filter-min-alleles 2 --filter-max-alleles 2
-
-    Command-line to only include chromosome chr1:
-
-    .. code-block:: bash
-        
-        python vcf_filter.py --vcf input.vcf.gz --filter-include-chr chr1
-
-    Command-line to remove indels and ouput a BCF file:
-
-    .. code-block:: bash
-        
-        python vcf_filter.py --vcf input.vcf --filter-exclude-indels --out-format bcf
 '''
 
 import os
