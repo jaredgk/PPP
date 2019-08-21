@@ -44,10 +44,11 @@ project = 'PPP'
 copyright = '2019, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)'
 author = 'PPP Development Team'
 
+from pgpipe import __version__
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = __version__
 
 
 # -- General configuration ---------------------------------------------------

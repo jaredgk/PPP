@@ -1,3 +1,4 @@
+__version__ = '0.0.3'
 #from .vcf_ref_to_seq import *
 #from .vcf_from_regions import *
 #from .vcf_reader_func import *
