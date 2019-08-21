@@ -87,7 +87,6 @@ import shutil
 import argparse
 import glob
 import logging
-import pybedtools
 
 #sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 
