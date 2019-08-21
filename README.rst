@@ -8,7 +8,8 @@ The current documentation may be found `here <https://ppp.readthedocs.io/>`_.
 
 A PDF of the documentation is also available for `download <https://readthedocs.org/projects/ppp/downloads/pdf/latest/>`_. 
 
-|build-status|
+
+|build-status| |doc-status|
 
 
 
@@ -16,4 +17,8 @@ A PDF of the documentation is also available for `download <https://readthedocs.
     :alt: build status
     :scale: 100%
     :target: https://travis-ci.org/jaredgk/PPP
-
+    
+.. |doc-status| image:: https://readthedocs.org/projects/ppp/badge/?version=latest
+    :alt: doc status
+    :scale: 100%
+    :target: https://ppp.readthedocs.io/en/latest/?badge=latest
