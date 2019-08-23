@@ -1,4 +1,5 @@
-'''
+#!/usr/bin/env python
+"""
     Automates the phasing process for a specified VCF file. The function
     allows users to select between the beagle (default) and shapeit 
     phasing algorithms.
@@ -123,8 +124,8 @@
         for identifying long IBS segments.
     **--beagle-path** *<path>*
         Argument used to define the path to locate beagle.jar.    
-'''
-#/usr/bin/env python
+"""
+
 import os
 import sys
 import copy
