@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Create IMa input file from four-gamete filtered VCF files.
 

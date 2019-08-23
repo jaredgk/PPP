@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Wrapper for IMa3 executable. This wrapper will handle locating the proper
     version of IMa3 for the desired run, as well as providing multi-threading
@@ -34,7 +35,6 @@
     **--ima-path** *<path_to_ima>*
         Path to IMa executable to use if not on system path. This should include
         the name of the executable, not just the path to it.
-
 '''
 
 import os

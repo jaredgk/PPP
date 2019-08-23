@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Automates the calculation of multiple LD statistics using Plink.
 
@@ -97,7 +98,6 @@
     .. code-block:: bash
         
         python plink_ld.py --ped-prefix hapmap1 --ld-format table --ld-statistic r2 --table-d-statistic dprime
-
 '''
 
 import os

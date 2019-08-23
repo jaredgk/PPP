@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Automates the calculation of site/windowed fixation index (Fst), Tajima's D,
     nucleotide diversity (Pi), allele frequency, and heterozygosity using

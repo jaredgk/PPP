@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Automates the sampling process of a specified statistic output file. The
     function allows the user to select both the statistic in question and

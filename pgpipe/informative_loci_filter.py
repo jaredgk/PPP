@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Given a BED file and a VCF file, will find regions in the VCF that have
     a certain number of variant sites meeting specified criteria.
@@ -102,8 +103,6 @@
         provide the tabix filename here.
     **--no-xy**
         Removes regions on X/Y chromosomes from consideration.
-
-
 '''
 
 import sys

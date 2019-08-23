@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Given input with individual variants over a region of the genome, 
     generate an interval within those variants that passes the 
@@ -88,10 +89,6 @@
     **--ovlpi**
         Include informative variants from overlapping
         regions
-
-
-
-
 '''
 
 import sys

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Automates the calculation of multiple admixture statistics, including: Patterson's D, 
     F4 statistic, F4-ratio statistic, and F3 statistic.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Automates various simple file conversions. Currently the function is 
     capable of converting between VCF-based formats (i.e. VCF, compressed-VCF, 
@@ -55,7 +56,6 @@
     **--threads** *<thread_int>*
         Argument used to define the number of threads. This argument is currently only 
         supported by conversions to/from PED and Binary-PED.
-    
 '''
 
 import os

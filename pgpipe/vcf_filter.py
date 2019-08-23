@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Automates VCF file filering using BCFtools. Filters may be used independently or
     combined to create complex filtering operations.        

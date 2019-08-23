@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Automates the liftover function from picard for VCF-formatted files.
 

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Utilites for BED-formatted files
 
@@ -77,7 +78,6 @@
     **--max-merge-distance** *<bp_int>*
         Argument used to define the maximum distance allowed between features to be 
         merged.
-
 '''
 
 import os

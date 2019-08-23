@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Splits a single VCF file into multiple VCF files using either a statistic or
     bed file. The statistic/bed file must contain loci-based (i.e. window-based)

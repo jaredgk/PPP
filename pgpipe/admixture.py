@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Automates the estimation of individual ancestries using Admixture. The
     functions allows for input as: i) Binary-PED files or ii) PED 12-formatted

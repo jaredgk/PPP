@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
     Automates various utilites for VCF-formatted files. This currently includes:
     obtain a list of the chromosomes within a VCF-based file, obtain a list of the 
