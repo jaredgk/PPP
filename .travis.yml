@@ -30,7 +30,6 @@ before_install:
   - conda install -c bioconda vcftools 
   - conda install -c bioconda pysam
   - conda install -c anaconda scikit-learn
-  - conda install -c anaconda mock
   - conda install -c anaconda cython 
   - conda install -c bioconda pybedtools
   - ./install_executables.sh
