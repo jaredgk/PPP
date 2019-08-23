@@ -1,29 +1,16 @@
 import io
-from pgpipe import __version__
+import pgpipe
 from setuptools import setup
 from Cython.Build import cythonize
 
 with io.open("README.rst", "rt", encoding="utf8") as f:
     readme = f.read()
 
-author_str = "Andrew Webb, " \
-             "Jared Knoblauch, " \
-             "Nitesh Sabankar, " \
-             "Apeksha Sukesh Kallur, " \
-             "Jody Hey, " \
-             "Arun Sethuraman"
-
-email_str = "tug41380@temple.edu, " \
-            "jaredknoblauch@gmail.com, " \
-            "nsabankar@csusm.edu, " \
-            "asukeshkall@csusm.edu, " \
-            "hey@temple.edu, " \
-            "asethuraman@csusm.edu"
-
-requirements = ['pysam',
+requirements = ['Cython',
+                'pysam',
                 'pandas',
                 'pybedtools',
-                'sklearn',
+                'scikit-learn',
                 'matplotlib']
 
 ppp_scripts = ['pgpipe/vcf_filter.py',
@@ -43,19 +30,19 @@ ppp_scripts = ['pgpipe/vcf_filter.py',
                'pgpipe/vcf_liftover.py',
                'pgpipe/vcf_utilities.py']
 
-setup(name="py-popgen",
-      version=__version__,
+setup(name=pgpipe.__title__,
+      version=pgpipe.__version__,
       project_urls={"Documentation": "https://ppp.readthedocs.io",
                     "Code": "https://github.com/jaredgk/PPP",
                     "Issue tracker": "https://github.com/jaredgk/PPP/issues"},
-      license="MIT",
-      author=author_str,
-      author_email=email_str,
+      license=pgpipe.__license__,
+      url=pgpipe.__url__,
+      author=pgpipe.__author__,
+      author_email=pgpipe.__email__,
       maintainer="Jared Knoblauch, " \
                  "Andrew Webb",
-      maintainer_email="jaredknoblauch@gmail.com, " \
-                       "tug41380@temple.edu",
-      description="Software platform for facilitating population genomic analyses",
+      maintainer_email="tug41380@temple.edu",
+      description=pgpipe.__summary__,
       long_description=readme,
       include_package_data=True,
       packages=['pgpipe'],
