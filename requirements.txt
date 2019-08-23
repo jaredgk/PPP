@@ -1,4 +1,0 @@
-pybedtools
-sklearn
-cython
-mock
