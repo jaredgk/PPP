@@ -166,7 +166,7 @@ import string
 import shutil
 
 # Import PPP modules and scripts
-from admixtools import *
+from pgpipe.admixtools import *
 from pgpipe.model import read_model_file, pops_not_in_model
 from pgpipe.logging_module import initLogger, logArgs
 
