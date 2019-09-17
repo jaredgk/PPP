@@ -8,8 +8,8 @@
     <description>Tests a VCF file for a subregion that passes four gamete test</description>
     <command>
         <![CDATA[
-            python $__tool_directory__/four_gamete_pysam.py
-            --vcfname $input
+            python $__tool_directory__/four_gamete.py
+            --vcfs $input
             --out $output
             --4gcompat
             --reti
@@ -19,6 +19,8 @@
             --right
             #elif str($select_arg) == 'randomi':
             --rani
+            #elif str($select_arg) == 'maxlen':
+            --maxlen
             #else:
             --ranb
             #end if
@@ -26,6 +28,8 @@
             #if  $input.is_of_type('vcf_bgzip')
                 --tbi $input.metadata.tabix_index
             #end if
+            $ovlps
+            $ovlpi
 
         ]]>
 
@@ -38,7 +42,10 @@
             <option value="right" selected="True">Right-most</option>
             <option value="randomi">Random (equal probability per region)</option>
             <option value="randomb">Random (probability equal to size)</option>
+            <option value="maxlen">Longest Subregion</option>
         </param>
+        <param type="boolean" name="ovlps" truevalue="--ovlps" falsevalue="" label="Include non-informative variants between edge of region and variant that breaks region" />
+        <param type="boolean" name="ovlpi" truevalue="--ovlpi" falsevalue="" label="Include informative variants from overlapping regions" />
     </inputs>
     <outputs>
         <data format="vcf" name="output"/>
