@@ -2,6 +2,30 @@
 '''
     Automates the calculation of multiple LD statistics using Plink.
 
+    ##################
+    Command-line Usage
+    ##################
+    The LD statistics automater may be called using the following command:
+
+    .. code-block:: bash
+        
+        plink_ld.py
+
+    *************
+    Example usage
+    *************
+    Command-line to calculate Lewontin's D-prime statistic
+
+    .. code-block:: bash
+        
+        plink_ld.py --ped-prefix hapmap1 --ld-format table --ld-statistic r2 --table-d-statistic dprime
+
+    ############
+    Dependencies 
+    ############
+    * `plink 1.9 <https://www.cog-genomics.org/plink2/>`_
+    * `plink 2.0 <https://www.cog-genomics.org/plink/2.0/>`
+
     ############################
     Input Command-line Arguments
     ############################
@@ -89,15 +113,6 @@
         multiple times if desired.
     **--table-snps** *<snp_filename>*
 		Argument used to define a file with one or more SNP(s) for LD analysis.
-    
-    ##########################
-    Example Command-line Usage
-    ##########################
-    Command-line to calculate Lewontin's D-prime statistic
-
-    .. code-block:: bash
-        
-        python plink_ld.py --ped-prefix hapmap1 --ld-format table --ld-statistic r2 --table-d-statistic dprime
 '''
 
 import os

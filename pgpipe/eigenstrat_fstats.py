@@ -3,6 +3,37 @@
     Automates the calculation of multiple admixture statistics, including: Patterson's D, 
     F4 statistic, F4-ratio statistic, and F3 statistic.
 
+    ##################
+    Command-line Usage
+    ##################
+    The admixture statistics automater may be called using the following command:
+
+    .. code-block:: bash
+        
+        eigenstrat_fstats.py
+
+    *************
+    Example usage
+    *************
+    Command-line to calculate Patterson's D:
+
+    .. code-block:: bash
+        
+        eigenstrat_fstats.py --eigenstrat-prefix snps --calc-admix-statistic D --admix-w-pop French --admix-x-pop Yoruba --admix-y-pop Vindija --admix-z-pop Chimp 
+    
+    Command-line to calculate the F4-ratio: 
+
+    .. code-block:: bash
+        
+        eigenstrat_fstats.py --eigenstrat-prefix snps --calc-admix-statistic F4-ratio --admix-a-pop Altai --admix-b-pop Vindija --admix-c-pop Yoruba --admix-x-pop French --admix-o-pop Chimp  
+    
+    ############
+    Dependencies 
+    ############
+    * `AdmixTools <https://github.com/DReichLab/AdmixTools>`_
+    * `admixr <https://github.com/bodkan/admixr>`_
+
+
     ############################
     Input Command-line Arguments
     ############################
@@ -139,21 +170,6 @@
         Argument used to define a file of population(s) to represent C in the supported 
         admixure statistic. If multiple populations the statistic will be repeated until each 
         population has represented C.
-    
-    ##########################
-    Example Command-line Usage
-    ##########################
-    Command-line to calculate Patterson's D:
-
-    .. code-block:: bash
-        
-        python eigenstrat_fstats.py --eigenstrat-prefix snps --calc-admix-statistic D --admix-w-pop French --admix-x-pop Yoruba --admix-y-pop Vindija --admix-z-pop Chimp 
-    
-    Command-line to calculate the F4-ratio: 
-
-    .. code-block:: bash
-        
-        python eigenstrat_fstats.py --eigenstrat-prefix snps --calc-admix-statistic F4-ratio --admix-a-pop Altai --admix-b-pop Vindija --admix-c-pop Yoruba --admix-x-pop French --admix-o-pop Chimp  
 '''
 
 import os

@@ -9,7 +9,7 @@
 
     .. code-block:: bash
         
-        python vcf_liftover.py
+        vcf_liftover.py
 
     *************
     Example usage
@@ -18,7 +18,7 @@
 
     .. code-block:: bash
         
-        python vcf_liftover.py --vcf chr22.vcf.gz --chain hg19ToHg38.over.chain
+        vcf_liftover.py --vcf chr22.vcf.gz --chain hg19ToHg38.over.chain
 
     ############
     Dependencies 

@@ -11,7 +11,7 @@
 
     .. code-block:: bash
         
-        python vcf_phase.py
+        vcf_phase.py
 
     *************
     Example usage
@@ -20,13 +20,13 @@
 
     .. code-block:: bash
         
-        python vcf_phase.py --vcf input.vcf --phase-algorithm beagle --phase-chr chr1
+        vcf_phase.py --vcf input.vcf --phase-algorithm beagle --phase-chr chr1
 
     Command-line to phase using SHAPEIT with 100 burn-in iterations:
 
     .. code-block:: bash
         
-        python vcf_phase.py --vcf input.vcf.gz --phase-algorithm shapeit --shapeit-burn-iter 100
+        vcf_phase.py --vcf input.vcf.gz --phase-algorithm shapeit --shapeit-burn-iter 100
 
     ############
     Dependencies 

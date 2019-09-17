@@ -12,7 +12,7 @@
 
     .. code-block:: bash
         
-        python stat_sampler.py
+        stat_sampler.py
 
     *************
     Example usage
@@ -22,7 +22,7 @@
 
     .. code-block:: bash
         
-        python admixture.py --statistic-file merged_chr1_10000.windowed.weir.fst 
+        stat_sampler.py --statistic-file merged_chr1_10000.windowed.weir.fst 
         --calc-statistic windowed-weir-fst --sampling-scheme random --sample-size 20
 
     ############################

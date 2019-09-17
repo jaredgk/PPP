@@ -5,6 +5,29 @@
     data for the function to operate. If the specified statistic file does not
     contain a BIN_END column, the --statistic-window-size argument may be used.
 
+    ##################
+    Command-line Usage
+    ##################
+    The VCF splitter may be called using the following command:
+
+    .. code-block:: bash
+        
+        vcf_split.py
+
+    *************
+    Example usage
+    *************
+    Command-line to split using a statistic file:
+
+    .. code-block:: bash
+        
+        vcf_split.py --vcf input.vcf --split-file input.windowed.weir.fst --split-method statistic-file
+
+    ############
+    Dependencies 
+    ############
+    * `BCFtools <https://samtools.github.io/bcftools/bcftools.html>`_    
+
     ############################
     Input Command-line Arguments
     ############################
@@ -85,15 +108,6 @@
         Argument used to define a BED file of positions to include.
     **--filter-exclude-bed** *<position_bed_filename>*
         Argument used to define a BED file of positions to exclude.
-
-    ##########################
-    Example Command-line Usage
-    ##########################
-    Command-line to split using a statistic file:
-
-    .. code-block:: bash
-        
-        python vcf_split.py --vcf input.vcf --split-file input.windowed.weir.fst --split-method statistic-file
 '''
 
 import os

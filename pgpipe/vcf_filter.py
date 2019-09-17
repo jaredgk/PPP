@@ -10,7 +10,7 @@
 
     .. code-block:: bash
         
-        python vcf_filter.py
+        vcf_filter.py
 
     *************
     Example usage
@@ -19,19 +19,19 @@
 
     .. code-block:: bash
         
-        python vcf_filter.py --vcf input.bcf --filter-min-alleles 2 --filter-max-alleles 2
+        vcf_filter.py --vcf input.bcf --filter-min-alleles 2 --filter-max-alleles 2
 
     Command-line to only include chromosome chr1:
 
     .. code-block:: bash
         
-        python vcf_filter.py --vcf input.vcf.gz --filter-include-chr chr1
+        vcf_filter.py --vcf input.vcf.gz --filter-include-chr chr1
 
     Command-line to remove indels and ouput a BCF file:
 
     .. code-block:: bash
         
-        python vcf_filter.py --vcf input.vcf --filter-exclude-indels --out-format bcf
+        vcf_filter.py --vcf input.vcf --filter-exclude-indels --out-format bcf
 
     ############
     Dependencies 

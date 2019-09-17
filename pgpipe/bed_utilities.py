@@ -1,9 +1,38 @@
 #!/usr/bin/env python
 '''
-    Utilites for BED-formatted files
+    Automates various utilites for BED-formatted files. This currently includes: i) 
+    subtract from a BED that overlap with a second BED file; ii) extend a BED upstream, 
+    downstream, or both upstream and downstream; iii) sort a single BED; iv) merge 
+    features within one or more BED files; v) create a BED of complementary features.
 
-    Automates various utilites for BED-formatted files. This currently includes:
-    MORE INFO.
+    ##################
+    Command-line Usage
+    ##################
+    The BED utilites function may be called using the following command:
+
+    .. code-block:: bash
+        
+        bed_utilites.py
+
+    *************
+    Example usage
+    *************
+    Extend flanks (i.e. both upstream and downstream) by 10kb:
+
+    .. code-block:: bash
+        
+        bed_utilites.py --bed input.bed chr22.vcf.gz --utility extend --extend-flanks 10000
+
+    Merge multiple BED files:
+
+    .. code-block:: bash
+        
+        bed_utilites.py --beds Input_BEDs --utility merge
+    
+    ############
+    Dependencies 
+    ############
+    * `BEDtools <https://bedtools.readthedocs.io/en/latest/>`_
     
     ############################
     Input Command-line Arguments

@@ -12,7 +12,7 @@
 
     .. code-block:: bash
         
-        python admixture.py
+        admixture.py
 
     *************
     Example usage
@@ -22,7 +22,7 @@
 
     .. code-block:: bash
         
-        python admixture.py --binary-ped-prefix hapmap3 --pop 3
+        admixture.py --binary-ped-prefix hapmap3 --pop 3
 
     ############
     Dependencies 
