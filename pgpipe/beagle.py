@@ -12,6 +12,7 @@ from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.vcftools import bgzip_decompress_vcfgz
 from pgpipe.bcftools import convert_vcf, check_for_index, create_index
+from pgpipe.misc import confirm_executable
 
 def delete_beagle_log (output_prefix):
     '''
@@ -112,12 +113,21 @@ def standard_beagle_call (beagle_path, beagle_call_args, output_prefix):
             Output file prefix
     '''
 
-    # Assign location of beagle jar file
-    beagle_jar = os.path.join(beagle_path, 'beagle.jar')
+    # Assign location of picard jar file
+    if beagle_path is None:
 
-    # Check that beagle.jar exists
-    if not os.path.isfile(beagle_jar):
-        raise IOError('beagle.jar not found. Path specified: %s' % beagle_path)
+        # Create a string with the picard path
+        beagle_jar = confirm_executable('beagle.jar')
+
+        #beagle_jar = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','beagle.jar')
+
+    else:
+        # Use path if specified
+        beagle_jar = os.path.join(picard_path, 'beagle.jar')
+
+    # Check if executable is installed
+    if not beagle_jar:
+         raise IOError('beagle.jar not found. Please confirm the executable is installed')
 
     logging.info('beagle phasing parameters assigned')
 

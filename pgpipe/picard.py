@@ -11,6 +11,7 @@ import copy
 
 from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.fasta import check_format
+from pgpipe.misc import confirm_executable
 
 def check_ref_file_association (ref_filename, dict_filename, dictonary_ext = 'dict', gunzip_ext = 'gz'):
 
@@ -213,13 +214,20 @@ def standard_picard_call (picard_path, picard_call_args, output_filename):
 
     # Assign location of picard jar file
     if picard_path is None:
-        picard_jar = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','picard.jar')
+
+        # Create a string with the picard path
+        picard_jar = confirm_executable('picard.jar')
+
+        #picard_jar = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','picard.jar')
+
     else:
+
+        # Use path if specified
         picard_jar = os.path.join(picard_path, 'picard.jar')
 
-    # Check that picard.jar exists
-    if not os.path.isfile(picard_jar):
-        raise IOError('picard.jar not found. Path specified: %s' % picard_path)
+    # Check if executable is installed
+    if not picard_jar:
+         raise IOError('picard.jar not found. Please confirm the executable is installed')
 
     logging.info('picard parameters assigned')
 

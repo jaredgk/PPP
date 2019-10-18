@@ -12,6 +12,7 @@ import pkg_resources
 from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.plink import convert_haps_to_vcf
+from pgpipe.misc import confirm_executable
 
 def check_shapeit_for_errors (shapeit_stdout, output_prefix):
     '''
@@ -153,11 +154,15 @@ def standard_shapeit_call (shapeit_call_args, output_prefix):
     '''
 
     logging.info('shapeit phasing parameters assigned')
-    #shapeit_path = '../bin/shapeit'
-    #shapeit_path = pkg_resources.resource_filename('shapeit','../bin/shapeit')
-    # Phasing subprocess call
-    #shapeit_path='shapeit'
-    shapeit_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','shapeit')
+
+    # Confirm where the specifed executable is located
+    shapeit_path = confirm_executable('shapeit')
+
+    # Check if the executable was found
+    if not shapeit_path:
+        raise IOError('shapeit not found. Please confirm the executable is installed')
+
+    #shapeit_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','shapeit')
 
     #sys.stderr.write(str(shapeit_path)+'\n')
     phase_call = subprocess.Popen([shapeit_path] + shapeit_call_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)

@@ -134,22 +134,11 @@ import argparse
 import glob
 import logging
 
-# Import vcf format check function
 from pgpipe.vcf_reader_func import checkFormat
-
-# Import logging module
 from pgpipe.logging_module import initLogger, logArgs
-
-# Import model reader
 from pgpipe.model import read_model_file
-
-# Import beagle functions
 from pgpipe.beagle import call_beagle, check_for_beagle_intermediate_files
-
-# Import shapeit functions
 from pgpipe.shapeit import call_shapeit, remove_shapeit_intermediate_files, check_for_shapeit_intermediate_files
-
-# Import bcftools functions
 from pgpipe.bcftools import get_unique_chrs, get_samples, chr_subset_file, concatenate, check_for_index, create_index
 
 def phase_argument_parser(passed_arguments):
@@ -676,10 +665,6 @@ def run (passed_arguments = []):
     # Assign general arguments and call beagle
     if phase_args.phase_algorithm == 'beagle':
 
-        if phase_args.beagle_path is not None:
-            beagle_path = phase_args.beagle_path
-        else:
-            beagle_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin')
         # Check for the presence of intermediate files from beagle
         check_for_beagle_intermediate_files(phase_args.out_prefix, phase_args.out_format, overwrite = phase_args.overwrite)
 

@@ -4,6 +4,8 @@ import subprocess
 import logging
 import fileinput
 
+from pgpipe.misc import confirm_executable
+
 def log_bedtools_reference (out_filename, append_mode = False, ref_header = True):
 
     # Check if the file is to be written in append mode
@@ -71,6 +73,13 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
 			If bedtools stderr returns an error
 	'''
 
+	# Confirm where the specifed executable is located
+    bedtools_path = confirm_executable('bedtools')
+
+    # Check if the executable was found
+    if not bedtools_path:
+        raise IOError('bedtools not found. Please confirm the executable is installed')
+
 	# Assign the BEDtools input using fileinput
 	bed_input = fileinput.input(files = bed_files, mode = 'rb')
 
@@ -78,7 +87,7 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
 	bed_output_file = open(bed_output_filename, 'w')
 
 	# Call BEDtools to sort the input files
-	bedtools_sort_call = subprocess.Popen(['bedtools', 'sort', '-i', '-'], stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+	bedtools_sort_call = subprocess.Popen([bedtools_path, 'sort', '-i', '-'], stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 	# Loop the BEDtools input
 	for bed_line in bed_input:
@@ -87,7 +96,7 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
 		bedtools_sort_call.stdin.write(bed_line)
 
 	# Call BEDtools to merge the sorted input
-	bedtools_merge_call = subprocess.Popen(['bedtools', 'merge', '-i', '-'] + list(map(str, optional_merge_args)), stdin = bedtools_sort_call.stdout, stdout = bed_output_file, stderr = subprocess.PIPE)
+	bedtools_merge_call = subprocess.Popen([bedtools_path, 'merge', '-i', '-'] + list(map(str, optional_merge_args)), stdin = bedtools_sort_call.stdout, stdout = bed_output_file, stderr = subprocess.PIPE)
 
 	# Close the sort stdin
 	bedtools_sort_call.stdin.close()
@@ -144,15 +153,20 @@ def standard_bedtools_call (bedtools_call_args, bed_output_filename):
             If bedtools stderr returns an error
     '''
 
-    # Create a string with the bedtools path
-
-    #bedtools_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin', 'bedtools')
-
     # Create the output file
     bed_output_file = open(bed_output_filename, 'w')
 
+    # Confirm where the specifed executable is located
+    bedtools_path = confirm_executable('bedtools')
+
+    # Check if the executable was found
+    if not bedtools_path:
+        raise IOError('bedtools not found. Please confirm the executable is installed')
+
+    #bedtools_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin', 'bedtools')
+
     # bedtools subprocess call
-    bedtools_call = subprocess.Popen(['bedtools'] + list(map(str, bedtools_call_args)), stdout = bed_output_file, stderr = subprocess.PIPE)
+    bedtools_call = subprocess.Popen([bedtools_path] + list(map(str, bedtools_call_args)), stdout = bed_output_file, stderr = subprocess.PIPE)
 
     # Wait for bedtools to finish
     bedtools_out, bedtools_err = bedtools_call.communicate()

@@ -14,6 +14,7 @@ import re
 from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.bcftools import convert_vcf
 from pgpipe.logging_module import initLogger, logArgs
+from pgpipe.misc import confirm_executable
 
 def log_plink_reference (out_filename, append_mode = False, ref_header = True):
 
@@ -502,9 +503,16 @@ def standard_plink2_call (plink2_call_args):
             If plink2 stderr returns an error
     '''
 
+    # Confirm where the specifed executable is located
+    plink2_path = confirm_executable('plink2')
+
+    # Check if the executable was found
+    if not plink2_path:
+        raise IOError('plink2 not found. Please confirm the executable is installed')
+
+    #plink2_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','plink2')
 
     # plink subprocess call
-    plink2_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','plink2')
     plink2_call = subprocess.Popen([plink2_path] + list(map(str, plink2_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Wait for plink to finish
@@ -539,9 +547,14 @@ def standard_plink_call (plink_call_args):
             If plink stderr returns an error
     '''
 
-    # Create a string with the plink path
+    # Confirm where the specifed executable is located
+    plink_path = confirm_executable('plink')
 
-    plink_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin', 'plink')
+    # Check if the executable was found
+    if not plink_path:
+        raise IOError('plink not found. Please confirm the executable is installed')
+
+    #plink_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'bin', 'plink')
 
     # plink subprocess call
     plink_call = subprocess.Popen([plink_path] + list(map(str, plink_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)

@@ -16,6 +16,7 @@ from rpy2.robjects import pandas2ri
 from pgpipe.plink import *
 from pgpipe.model import read_model_file, pops_not_in_model
 from pgpipe.logging_module import initLogger, logArgs
+from pgpipe.misc import confirm_executable
 
 def check_convertf_for_errors (convertf_stderr):
     '''
@@ -58,8 +59,15 @@ def call_convertf (convertf_call_args):
             convertf log output
     '''
 
+    # Confirm where the specifed executable is located
+    convertf_path = confirm_executable('convertf')
+    
+    # Check if executable is installed
+    if not convertf_path:
+        raise Exception('convertf not found. Please confirm the executable is installed')
+
     # convertf subprocess call without stdout
-    convertf_call = subprocess.Popen(['convertf'] + list(map(str, convertf_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    convertf_call = subprocess.Popen([convertf_path] + list(map(str, convertf_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Wait for convertf to finish
     convertf_stdout, convertf_stderr = convertf_call.communicate()

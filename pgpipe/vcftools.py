@@ -10,6 +10,7 @@ import random
 
 from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.bcftools import check_bcftools_for_errors
+from pgpipe.misc import confirm_executable
 
 def log_vcftools_reference (out_filename, append_mode = False, ref_header = True):
 
@@ -517,8 +518,15 @@ def pipe_vcftools_to_bed_file (vcftools_call_args, output_filename):
 
     '''
 
+    # Confirm where the specifed executable is located
+    vcftools_path = confirm_executable('vcftools')
+
+    # Check if the executable was found
+    if not vcftools_path:
+        raise IOError('vcftools not found. Please confirm the executable is installed')
+
     # Open vcftools pipe
-    vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    vcftools_call = subprocess.Popen([vcftools_path, '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Create the bed file
     bed_output = open(output_filename, 'w')
@@ -573,13 +581,27 @@ def pipe_vcftools_bgzip (vcftools_call_args, output_filename):
 
     '''
 
-    vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # Confirm where the specifed executable is located
+    vcftools_path = confirm_executable('vcftools')
+
+    # Check if the executable was found
+    if not vcftools_path:
+        raise IOError('vcftools not found. Please confirm the executable is installed')
+
+    vcftools_call = subprocess.Popen([vcftools_path, '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Create bgzip output file
     bgzip_output = open(output_filename, 'wb')
 
+    # Confirm where the specifed executable is located
+    bgzip_path = confirm_executable('bgzip')
+
+    # Check if the executable was found
+    if not bgzip_path:
+        raise IOError('bgzip not found. Please confirm the executable is installed')
+
     # bgzip subprocess call
-    bgzip_call = subprocess.Popen(['bgzip'], stdin = vcftools_call.stdout, stdout = bgzip_output, stderr = subprocess.PIPE)
+    bgzip_call = subprocess.Popen([bgzip_path], stdin = vcftools_call.stdout, stdout = bgzip_output, stderr = subprocess.PIPE)
 
     # Wait for vctools to finish
     vcftools_call.wait()
@@ -637,7 +659,14 @@ def pipe_vcftools_bcftools (vcftools_call_args, output_filename):
 
     '''
 
-    vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # Confirm where the specifed executable is located
+    vcftools_path = confirm_executable('vcftools')
+
+    # Check if the executable was found
+    if not vcftools_path:
+        raise IOError('vcftools not found. Please confirm the executable is installed')
+
+    vcftools_call = subprocess.Popen([vcftools_path, '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Holds the arguments to convert to BCF format
     convert_args = ['view', '-O', 'b']
@@ -645,8 +674,15 @@ def pipe_vcftools_bcftools (vcftools_call_args, output_filename):
     # Create bgzip output file
     bcftools_output = open(output_filename, 'wb')
 
+    # Confirm where the specifed executable is located
+    bcftools_path = confirm_executable('bcftools')
+
+    # Check if the executable was found
+    if not bcftools_path:
+        raise IOError('bcftools not found. Please confirm the executable is installed')
+
     # bcftools subprocess call
-    bcftools_call = subprocess.Popen(['bcftools'] + convert_args, stdin = vcftools_call.stdout, stdout = bcftools_output, stderr = subprocess.PIPE)
+    bcftools_call = subprocess.Popen([bcftools_path] + convert_args, stdin = vcftools_call.stdout, stdout = bcftools_output, stderr = subprocess.PIPE)
 
     # Wait for vctools to finish
     vcftools_call.wait()
@@ -709,8 +745,15 @@ def pipe_vcftools_to_file (vcftools_call_args, output_filename, append_output = 
             If vcftools stderr returns an error
     '''
 
+    # Confirm where the specifed executable is located
+    vcftools_path = confirm_executable('vcftools')
+
+    # Check if the executable was found
+    if not vcftools_path:
+        raise IOError('vcftools not found. Please confirm the executable is installed')
+
     # Open vcftools pipe
-    vcftools_call = subprocess.Popen(['vcftools', '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    vcftools_call = subprocess.Popen([vcftools_path, '--stdout'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Check if the output should be opened in append mode
     if append_output:
@@ -796,8 +839,15 @@ def standard_vcftools_call (vcftools_call_args):
             If vcftools stderr returns an error
     '''
 
+    # Confirm where the specifed executable is located
+    vcftools_path = confirm_executable('vcftools')
+
+    # Check if the executable was found
+    if not vcftools_path:
+        raise IOError('vcftools not found. Please confirm the executable is installed')
+
     # vcftools subprocess call without stdout
-    vcftools_call = subprocess.Popen(['vcftools'] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    vcftools_call = subprocess.Popen([vcftools_path] + list(map(str, vcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Wait for vcftools to finish
     vcftools_stdout, vcftools_stderr = vcftools_call.communicate()

@@ -110,6 +110,7 @@ import subprocess
 
 from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.plink import confirm_ped_prefix, confirm_bed_prefix, confirm_ped_files, confirm_bed_files
+from pgpipe.misc import confirm_executable
 
 def admix_parser(passed_arguments):
     '''admix Argument Parser - Assigns arguments from command line'''
@@ -176,14 +177,6 @@ def admix_parser(passed_arguments):
 
 
 def run(passed_arguments = []):
-
-	# Assign location of admixture file
-    admixture_exec = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','admixture')
-
-    # Check that admixture exists at specified path
-    if not os.path.isfile(admixture_exec):
-        raise IOError('admixture executable not found in Path specified: %s' % admixture_exec)
-
 
     # Grab admixture arguments from command line
     admix_args = admix_parser(passed_arguments)
@@ -278,8 +271,17 @@ def run(passed_arguments = []):
 
     logging.info('admixture parameters assigned')
 
+    # Confirm where the specifed executable is located
+    admixture_path = confirm_executable('admixture')
+
+    # Check if the executable was found
+    if not admixture_path:
+        raise IOError('admixture not found. Please confirm the executable is installed')
+
+    #admixture_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','admixture')
+
     # Run 'admixture' executable file with options provided by user
-    admixture_call = subprocess.Popen([admixture_exec] + list(map(str, admix_call_args)), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    admixture_call = subprocess.Popen([admixture_path] + list(map(str, admix_call_args)), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # Store command output and/or error to variables
     admix_stdout, admix_stderr = admixture_call.communicate()

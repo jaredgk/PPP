@@ -7,6 +7,7 @@ import copy
 #sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'pppipe')))
 
 from pgpipe.vcf_reader_func import checkFormat
+from pgpipe.misc import confirm_executable
 
 def stdout_bcftools_reference():
 
@@ -621,8 +622,15 @@ def pipe_bcftools (bcftools_call_args):
 
     '''
 
+    # Confirm where the specifed executable is located
+    bcftools_path = confirm_executable('bcftools')
+
+    # Check if the executable was found
+    if not bcftools_path:
+        raise IOError('bcftools not found. Please confirm the executable is installed')
+
     # bcftools subprocess call
-    bcftools_call = subprocess.Popen(['bcftools'] + list(map(str, bcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    bcftools_call = subprocess.Popen([bcftools_path] + list(map(str, bcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     return bcftools_call
 
@@ -647,8 +655,15 @@ def pipe_bcftools_bcftools (bcftools_first_call_args, bcftools_second_call_args)
     # Open bcftools pipe
     bcftools_first_call = pipe_bcftools(bcftools_first_call_args)
 
+    # Confirm where the specifed executable is located
+    bcftools_path = confirm_executable('bcftools')
+
+    # Check if the executable was found
+    if not bcftools_path:
+        raise IOError('bcftools not found. Please confirm the executable is installed')
+
     # bgzip subprocess call
-    bcftools_second_call = subprocess.Popen(['bcftools'] + list(map(str, bcftools_second_call_args)), stdin = bcftools_first_call.stdout, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    bcftools_second_call = subprocess.Popen([bcftools_path] + list(map(str, bcftools_second_call_args)), stdin = bcftools_first_call.stdout, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # Wait for vctools to finish
     bcftools_first_call.wait()
@@ -840,8 +855,15 @@ def call_bcftools (bcftools_call_args):
             If bcftools stderr returns an error
     '''
 
+    # Confirm where the specifed executable is located
+    bcftools_path = confirm_executable('bcftools')
+
+    # Check if the executable was found
+    if not bcftools_path:
+        raise IOError('bcftools not found. Please confirm the executable is installed')
+
     # bcftools subprocess call
-    bcftools_call = subprocess.Popen(['bcftools'] + list(map(str, bcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    bcftools_call = subprocess.Popen([bcftools_path] + list(map(str, bcftools_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Wait for bcftools to finish
     bcftools_stdout, bcftools_stderr = bcftools_call.communicate()
