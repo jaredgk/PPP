@@ -746,7 +746,7 @@ def run (passed_arguments = []):
             phase_call_args.append(chr_arg)
 
         # Call beagle wrapper
-        call_beagle(beagle_path, list(map(str, phase_call_args)), phase_args.out_prefix, phase_args.out_format)
+        call_beagle(phase_args.beagle_path, list(map(str, phase_call_args)), phase_args.out_prefix, phase_args.out_format)
 
         # Rename log using phased_output
         shutil.move(phase_args.out_prefix + '.log', phased_output + '.log')
