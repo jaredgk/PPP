@@ -267,8 +267,8 @@ def assign_position_args (sample_data, split_method):
     # Assign the BED file columns
     elif split_method == 'bed':
 
-        # Return the position information
-        return str(sample_data['chrom']), int(sample_data['start']), int(sample_data['end'])
+        # Return the position information, convert to 1-based and inclusive
+        return str(sample_data['chrom']), int(sample_data['start']) + 1, int(sample_data['end'])
 
     else:
         raise Exception('Position assignment error due to split-file format')
