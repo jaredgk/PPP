@@ -1,7 +1,7 @@
 import io
 import pgpipe
 from setuptools import setup
-from Cython.Build import cythonize
+#from Cython.Build import cythonize
 
 with io.open("README.rst", "rt", encoding="utf8") as f:
     readme = f.read()
@@ -48,7 +48,7 @@ setup(name=pgpipe.__title__,
       packages=['pgpipe'],
       install_requires=requirements,
       scripts=ppp_scripts,
-      python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*",
-      ext_modules = cythonize('pgpipe/test_cython.pyx'))
+      python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*")
+#     , ext_modules = cythonize('pgpipe/test_cython.pyx'))
 
 #packages=setuptools.find_packages() to automate package finding?
