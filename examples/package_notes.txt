@@ -1,0 +1,11 @@
+PIP:
+python setup.py sdist (make sure to increment version in pgpipe/__init__.py
+twine upload dist/(package with version)
+
+Conda:
+Update version in meta.yaml
+conda-build --python 3.7 --R 3.6 py-popgen -c bioconda --no-build-id
+anaconda upload /path/to/whatever/tar/was/created.tar.bz2
+
+Galaxy:
+Modify conda_ensure_ to include channel jaredgk
