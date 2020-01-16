@@ -28,7 +28,9 @@ ppp_scripts = ['pgpipe/vcf_filter.py',
                'pgpipe/ima3_wrapper.py',
                'pgpipe/eigenstrat_fstats.py',
                'pgpipe/vcf_liftover.py',
-               'pgpipe/vcf_utilities.py']
+               'pgpipe/vcf_utilities.py',
+               'pgpipe/vcf_split_pysam.py',
+               'pgpipe/bed_invert.py']
 
 setup(name=pgpipe.__title__,
       version=pgpipe.__version__,
