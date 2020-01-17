@@ -1,7 +1,7 @@
 import sys
 import argparse
 
-from pgpipe.vcf_reader_func import getAlleleStats, VcfReader, getAlleleCountDict, getAlleleStatsTwo
+from pgpipe.vcf_reader_func import getAlleleStats, VcfReader, getAlleleCountDict
 from pgpipe.genome_region import RegionList, Region
 
 class recordCache():
@@ -26,8 +26,8 @@ def createParser():
     return parser
 
 def piSite(record):
-    #alleles,total_sites,missing_inds = getAlleleStats(record)
-    alleles,total_sites,missing_inds = getAlleleStatsTwo(record)
+    alleles,total_sites,missing_inds = getAlleleStats(record)
+    #alleles,total_sites,missing_inds = getAlleleStatsTwo(record)
     #return 2
     site_sum = 0
     for a in record.alleles:

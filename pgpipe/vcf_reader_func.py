@@ -12,7 +12,7 @@ import numpy as np
 #sys.path.insert(0,os.path.abspath(os.path.join(os.pardir, 'andrew')))
 from pgpipe.logging_module import initLogger
 from pgpipe.model import read_model_file
-from pgpipe import test_cython
+#from pgpipe import test_cython
 
 def checkIfGzip(filename):
     try:
@@ -158,18 +158,18 @@ def flipChrom(chrom):
         return chrom[0:3]
     return 'chr'+chrom
 
-def getAlleleCountCython(rec,idxlist=None):
-    alleles = defaultdict(int)
-    srec = str(rec)
-    if idxlist is None:
-        d_array = test_cython.getAlleleCountArray(srec.encode(),len(srec))
-    else:
-        d_array = test_cython.getAlleleCountArraySub(srec.encode(),len(srec),idxlist,len(idxlist))
-    for i,a in enumerate(rec.alleles):
-        alleles[a] = d_array[i+48]
-    if d_array[46] != 0:
-        alleles['N'] = d_array[46]
-    return alleles
+#def getAlleleCountCython(rec,idxlist=None):
+#    alleles = defaultdict(int)
+#    srec = str(rec)
+#    if idxlist is None:
+#        d_array = test_cython.getAlleleCountArray(srec.encode(),len(srec))
+#    else:
+#        d_array = test_cython.getAlleleCountArraySub(srec.encode(),len(srec),idxlist,len(idxlist))
+#    for i,a in enumerate(rec.alleles):
+#        alleles[a] = d_array[i+48]
+#    if d_array[46] != 0:
+#        alleles['N'] = d_array[46]
+#    return alleles
 
 def getAlleleCountDict(rec,idx_list=None):
     """
@@ -224,11 +224,11 @@ def getAlleleStatsAlt(rec):
 
     #npa = np.array(l)
 
-def getAlleleStatsCython(rec,idx_list=None):
-    acd = getAlleleCountCython(rec,idx_list)
-    missing_inds = (acd['.'] if '.' in acd.keys() else 0)
-    total_sites = sum(acd.values())-missing_inds
-    return acd,total_sites,missing_inds
+#def getAlleleStatsCython(rec,idx_list=None):
+#    acd = getAlleleCountCython(rec,idx_list)
+#    missing_inds = (acd['.'] if '.' in acd.keys() else 0)
+#    total_sites = sum(acd.values())-missing_inds
+#    return acd,total_sites,missing_inds
 
 
 
