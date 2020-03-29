@@ -28,7 +28,7 @@ before_install:
   - conda install -c bioconda tabix 
   - conda install -c bioconda bcftools
   - conda install -c bioconda vcftools
-  - conda install -c bioconda shapeit 
+  - conda install -c dranew shapeit 
   - conda install -c bioconda pysam
   - conda install -c anaconda scikit-learn
   - conda install -c anaconda cython 
