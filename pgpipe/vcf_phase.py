@@ -88,6 +88,9 @@
     **************************************
     SHAPEIT Phasing Command-line Arguments
     **************************************
+    **--shapeit-ref** *<ref_haps>* *<ref_legend>* *<ref_sample>*
+        Argument used to define a reference panel. Three files are required: the reference 
+        haplotypes (.haps), the snp map (.legend), and the individual information (.sample)
     **--shapeit-burn-iter** *<iteration_int>*
         Argument used to define the number of burn-in iterations.
     **--shapeit-prune-iter** *<iteration_int>*
@@ -103,6 +106,8 @@
     *************************************
     BEAGLE Phasing Command-line Arguments
     *************************************
+    **--beagle-ref** *<ref_vcf, ref_bref3>*
+        Argument used to define a reference panel VCF or bref3.
     **--beagle-burn-iter** *<iteration_int>*
         Argument used to define the number of burn-in iterations.
     **--beagle-iter** *<iteration_int>*
@@ -168,6 +173,25 @@ def phase_argument_parser(passed_arguments):
                 setattr(args, self.dest, value)
         return customAction
 
+    def parser_confirm_files ():
+        '''Custom action to confirm file exists'''
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, value, option_string=None):
+
+                # Clean up any commas
+                value = [item.strip(',') for item in value]
+                
+                # Loop the files
+                for item in value:
+                    if not os.path.isfile(item):
+                        raise IOError('%s not found' % item)
+
+                if not getattr(args, self.dest):
+                    setattr(args, self.dest, value)
+                else:
+                    getattr(args, self.dest).extend(value)
+        return customAction
+
     def parser_add_to_list ():
         '''Custom action to add items to a list'''
         class customAction(argparse.Action):
@@ -231,6 +255,7 @@ def phase_argument_parser(passed_arguments):
     phase_parser.add_argument('--phase-to-bp', help = 'Upper bound of sites to include. May only be used with a single chromosome', type = int)
 
     # Shapeit-specific options
+    phase_parser.add_argument('--shapeit-ref', help = 'Reference panel filenames (haps, legend, and sample)', type = str, nargs = 3, action = parser_confirm_files())
     phase_parser.add_argument('--shapeit-burn-iter', help = 'Number of the burn-in iterations (shapeit)', type = int)
     phase_parser.add_argument('--shapeit-prune-iter', help = 'Number of pruning iterations (shapeit)', type = int)
     phase_parser.add_argument('--shapeit-main-iter', help = 'Number of main iterations (shapeit)', type = int)
@@ -238,6 +263,7 @@ def phase_argument_parser(passed_arguments):
     phase_parser.add_argument('--shapeit-window', help = 'Model window size in Mb (shapeit)', type = float)
 
     # Beagle-specific options
+    phase_parser.add_argument('--beagle-ref', help = 'Reference panel filename (bref3 or VCF formats)', type = str, action = parser_confirm_file())
     phase_parser.add_argument('--beagle-burn-iter', help = 'Number of the burn-in iterations (beagle)', type = int)
     phase_parser.add_argument('--beagle-iter', help = 'Number of iterations after burn-in (beagle)', type = int)
     phase_parser.add_argument('--beagle-states', help = 'Number of model states for genotype estimation (beagle)', type = int)
@@ -437,6 +463,8 @@ def run (passed_arguments = []):
     --phase-to-bp : int
         Upper bound of sites to include. Only usable with a single 
         chromosome
+    --shapeit-ref : list
+        Reference panel filenames (haps, legend, and sample)
     --shapeit-burn-iter : int
         Number of burn-in iterations
     --shapeit-prune-iter : int
@@ -447,6 +475,8 @@ def run (passed_arguments = []):
         Number of conditioning states for haplotype estimation
     --shapeit-window : float
         Model window size in Mb
+    --beagle-ref : str
+        Reference panel filename (bref3 or VCF formats)
     --beagle-burn-iter : int
         Number of the burn-in iterations
     --beagle-iter : int
@@ -672,6 +702,10 @@ def run (passed_arguments = []):
         phase_call_args.extend(['gt=' + phase_args.vcf,
                                 'out=' + phase_args.out_prefix])
 
+        # Assign the beagle reference panel filename, if specified
+        if phase_args.beagle_ref:
+            phase_call_args.append('ref=' + phase_args.beagle_ref)
+
         # Assign the burn-in iter, if specified
         if phase_args.beagle_burn_iter:
             phase_call_args.append('burnin=' + str(phase_args.beagle_burn_iter))
@@ -753,6 +787,11 @@ def run (passed_arguments = []):
 
     # Assign general arguments and call shapeit
     elif phase_args.phase_algorithm == 'shapeit':
+
+        # Assign the shapeit reference panel filenames, if specified
+        if phase_args.shapeit_ref:
+            phase_call_args.append('--input-ref')
+            phase_call_args.extend(phase_args.shapeit_ref)
 
         # Assign the shapeit burn in iter, if specified
         if phase_args.shapeit_burn_iter:
@@ -939,5 +978,5 @@ def run (passed_arguments = []):
         os.remove(filter_indv_filename)
 
 if __name__ == "__main__":
-    initLogger()
+    #initLogger()
     run()
