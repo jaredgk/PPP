@@ -978,5 +978,5 @@ def run (passed_arguments = []):
         os.remove(filter_indv_filename)
 
 if __name__ == "__main__":
-    #initLogger()
+    initLogger()
     run()
