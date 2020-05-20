@@ -322,7 +322,7 @@ def checkRefAlign(vcf_recs, fasta_ref, chrom, ref_check):
                 break
 
 
-def generateSequence(rec_list, ref_seq, region, chrom, indiv, idx, args):
+def generateSequence(rec_list, ref_seq, region, indiv, idx, args):
     """Fetches variant sites from a given region, then outputs sequences
     from each individual with their correct variants. Will print sequence
     up to the variant site, then print correct variant. After last site,
@@ -644,7 +644,7 @@ def vcf_to_ima(sys_args):
                 for hap in range(len(first_el.samples[indiv_idx].alleles)):
                     if args.fasta:
                         seq = generateSequence(rec_list, ref_seq,
-                                   region, region.chrom, indiv_idx, hap, args)
+                                   region, indiv_idx, hap, args)
                         output_file.write('>'+first_el.samples[indiv_idx].name+'_'+str(hap)+'\n')
                         output_file.write(seq+'\n')
                         continue
@@ -656,7 +656,7 @@ def vcf_to_ima(sys_args):
                             continue
 
                     seq = generateSequence(rec_list, ref_seq,
-                                   region, region.chrom, indiv_idx, hap, args)
+                                   region, indiv_idx, hap, args)
                     seq_name = str(popnum)+':'+str(indiv)+':'+str(hap)
                     seq_name += ''.join([' ' for i in range(len(seq_name),10)])
                     allseq = seq_name + seq
