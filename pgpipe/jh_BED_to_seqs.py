@@ -192,13 +192,13 @@ def get_model_sequences_from_multiple_regions(vcf_filename=None,popmodel=None,
         samtools_stderr = call_samtools_faidx (fasta_reference)
     # pysam.FastaFile object is later used with fetch()
     fasta_access = pysam.FastaFile(fasta_reference)
-
+    vcf_reader = vf.VcfReader(vcf_filename,popmodel=popmodel)
     with open(BED_filename,'r') as bf:
         for line in bf:
             ls = line.split()
             if len(ls) >= 3:  # anything less than 3 is not a valid line
                 # make an instand of VcfReader 
-                vcf_reader = vf.VcfReader(vcf_filename,popmodel=popmodel)
+##                vcf_reader = vf.VcfReader(vcf_filename,popmodel=popmodel)
                 # deal with possibility of chromosome name differences
                 BEDchrname = ls[0]
                 chr_in_chrome_BED = BEDchrname[0:3] == 'chr'
@@ -223,12 +223,12 @@ def get_model_sequences_from_multiple_regions(vcf_filename=None,popmodel=None,
                 yield(slist)
 
 # in  Pan_all_hicov_chr22_decrun_missingasref.vcf chromosome names are 22
-##vcf_filename = "../jhworkfiles/Pan_all_hicov_chr22_decrun_missingasref.vcf"
-vcf_filename = "../jhworkfiles/Pan_all_hicov_chr22_decrun_missingasref.vcf.gz"
+vcf_filename = "../jhworkfiles/Pan_all_hicov_chr22_decrun_missingasref.vcf"
+##vcf_filename = "../jhworkfiles/Pan_all_hicov_chr22_decrun_missingasref.vcf.gz"
 # in chr22_hg18.fa chromosome name is 'chr22'
 fasta_reference = "../jhworkfiles/chr22_hg18.fa"
-model_file = r"../jhworkfiles/panmodels.model"
-BED_file = r"../jhworkfiles/pan_test.bed"
+model_file = "../jhworkfiles/panmodels.model"
+BED_file = "../jhworkfiles/pan_test.bed"
 
 popmodels = read_model_file(model_file)
 popmodel = popmodels['3Pop']
