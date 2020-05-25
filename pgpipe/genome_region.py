@@ -123,6 +123,7 @@ class Region:
                 return 'before'
             return 'after'
         comp_pos = rec.pos-1
+##        print(comp_pos,self.start,self.end)
         if comp_pos < self.start:
             return 'before'
         if comp_pos >= self.end:
@@ -178,7 +179,8 @@ class RegionList:
             to the end value for a region. Rarely if ever used option.
         colstr : str (None)
             Three-element string separated by semicolons, with
-            each element being an integer corresponding to the 0-based index of the column of the start, end, and chromosome values
+            each element being an integer corresponding to the 0-based
+            index of the column of the start, end, and chromosome values
             for input region(s).
         sortlist : bool (True)
             Will sort list once initialized using assigned sorting scheme.

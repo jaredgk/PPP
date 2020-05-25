@@ -371,6 +371,9 @@ def pops_not_in_model (model, pops):
     return None
 
 def read_model_file (filename):
+    """
+    returns a ModelFile, which is a dictionary    
+    """
 
     # Check that the file exists
     if not os.path.isfile(filename):

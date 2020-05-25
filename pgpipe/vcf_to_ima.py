@@ -331,25 +331,27 @@ def generateSequence(rec_list, ref_seq, region, indiv, idx, args):
     fl = 0
     seq = ''
     prev_offset = 0
-
     for vcf_record in rec_list:
         issnp = vf.checkRecordIsSnp(vcf_record)
         if not args.indel_flag and not issnp:
             continue
-
         #If reference included, add all bases between last and current variant
         pos_offset = vcf_record.pos - 1 - region.start
         if ref_seq is not None:
             for i in range(prev_offset, pos_offset):
+##                print(vcf_record.pos,region.start,prev_offset,pos_offset,i)
                 seq += ref_seq[i]
 
         allele = vcf_record.samples[indiv].alleles[idx]
-        if allele is None:
-            raise Exception(("Individual %d at position %d is missing "
-            "data") % (vcf_record.pos,indiv))
+        if allele is None and not args.N_if_missing:
+            raise Exception(("Individual {} at position {} is missing "
+                "data").format(indiv,vcf_record.pos))
         if issnp:
             #Place allele, move reference offset
-            seq += vcf_record.samples[indiv].alleles[idx]
+            if allele is None and args.N_if_missing:
+                seq += 'N' 
+            else:
+                seq += vcf_record.samples[indiv].alleles[idx]
             prev_offset = pos_offset+1
         else:
             #Find longest allele, pad others to its length
