@@ -1,0 +1,138 @@
+[
+    {
+        "name": "1Pop",
+        "pops": {
+            "Paniscus": {
+                "inds": [
+                    "Pan_paniscus-A917_Dzeeta",
+                    "Pan_paniscus-A918_Hermien",
+                    "Pan_paniscus-A919_Desmond"
+                ]
+            }
+        }
+    },
+    {
+        "name": "2Pop",
+        "pops": {
+            "Paniscus": {
+                "inds": [
+                    "Pan_paniscus-A917_Dzeeta",
+                    "Pan_paniscus-A918_Hermien",
+                    "Pan_paniscus-A919_Desmond"
+                ]
+            },
+            "Troglodytes": {
+                "inds": [
+                    "Pan_troglodytes_troglodytes-A957_Vaillant",
+                    "Pan_troglodytes_troglodytes-A958_Doris",
+                    "Pan_troglodytes_troglodytes-A959_Julie"
+                ]
+            }
+        }
+    },
+    {
+        "name": "3Pop",
+        "pops": {
+            "Paniscus": {
+                "inds": [
+                    "Pan_paniscus-A917_Dzeeta",
+                    "Pan_paniscus-A918_Hermien",
+                    "Pan_paniscus-A919_Desmond"
+                ]
+            },
+            "Troglodytes": {
+                "inds": [
+                    "Pan_troglodytes_troglodytes-A957_Vaillant",
+                    "Pan_troglodytes_troglodytes-A958_Doris",
+                    "Pan_troglodytes_troglodytes-A959_Julie"
+                ]
+            },
+            "Schweinfurthii": {
+                "inds": [
+                    "Pan_troglodytes_schweinfurthii-A910_Bwambale",
+                    "Pan_troglodytes_schweinfurthii-A911_Kidongo",
+                    "Pan_troglodytes_schweinfurthii-A912_Nakuu"
+                ]
+            }
+        }
+    },
+    {
+        "name": "4Pop",
+        "pops": {
+            "Paniscus": {
+                "inds": [
+                    "Pan_paniscus-A917_Dzeeta",
+                    "Pan_paniscus-A918_Hermien",
+                    "Pan_paniscus-A919_Desmond"
+                ]
+            },
+            "Troglodytes": {
+                "inds": [
+                    "Pan_troglodytes_troglodytes-A957_Vaillant",
+                    "Pan_troglodytes_troglodytes-A958_Doris",
+                    "Pan_troglodytes_troglodytes-A959_Julie"
+                ]
+            },
+            "Schweinfurthii": {
+                "inds": [
+                    "Pan_troglodytes_schweinfurthii-A910_Bwambale",
+                    "Pan_troglodytes_schweinfurthii-A911_Kidongo",
+                    "Pan_troglodytes_schweinfurthii-A912_Nakuu"
+                ]
+            },
+            "verus": {
+               "inds": [
+                   "Pan_troglodytes_verus-9668_Bosco",
+                   "Pan_troglodytes_verus-A956_Jimmie",
+                   "Pan_troglodytes_verus-Clint",
+                   "Pan_troglodytes_verus-X00100_Koby"
+                ]
+            }
+        }
+    },
+    {
+        "name": "5Pop",
+        "pops": {
+            "Paniscus": {
+                "inds": [
+                    "Pan_paniscus-A917_Dzeeta",
+                    "Pan_paniscus-A918_Hermien",
+                    "Pan_paniscus-A919_Desmond"
+                ]
+            },
+            "Troglodytes": {
+                "inds": [
+                    "Pan_troglodytes_troglodytes-A957_Vaillant",
+                    "Pan_troglodytes_troglodytes-A958_Doris",
+                    "Pan_troglodytes_troglodytes-A959_Julie"
+                ]
+            },
+            "Schweinfurthii": {
+                "inds": [
+                    "Pan_troglodytes_schweinfurthii-A910_Bwambale",
+                    "Pan_troglodytes_schweinfurthii-A911_Kidongo",
+                    "Pan_troglodytes_schweinfurthii-A912_Nakuu"
+                ]
+            },
+            "verus": {
+               "inds": [
+                   "Pan_troglodytes_verus-9668_Bosco",
+                   "Pan_troglodytes_verus-A956_Jimmie",
+                   "Pan_troglodytes_verus-Clint",
+                   "Pan_troglodytes_verus-X00100_Koby"
+                ]
+            },
+            "ellioti": {
+               "inds": [
+                  "Pan_troglodytes_ellioti-Akwaya_Jean",
+                  "Pan_troglodytes_ellioti-Damian",
+                  "Pan_troglodytes_ellioti-Koto",
+                  "Pan_troglodytes_ellioti-Taweh"
+                ]
+            }
+        }          
+    }
+
+
+
+]
