@@ -5,7 +5,7 @@
     filtered VCF. Filters may be used independently or combined as needed. 
 
     .. image:: ../../PPP_assets/PPP_Filter.png
-        :scale: 50 %
+        :width: 80 %
         :align: center
 
     In this illustration of the filtering process within a locus of interest, variant 
