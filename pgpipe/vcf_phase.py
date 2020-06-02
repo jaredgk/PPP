@@ -1,8 +1,17 @@
 #!/usr/bin/env python
 """
-    Automates the phasing process for a specified VCF file. The function
-    allows users to select between the beagle (default) and shapeit 
-    phasing algorithms.
+    Phasing is an essental and frequently used process in population genetic 
+    analyses. Given an unphased VCF file and a selected phasing algorithm, 
+    vcf_phase will produce a phased VCF. Additional options, including the 
+    ability to include a reference panel, may also be applied to augment 
+    the phasing process as needed. 
+
+    .. image:: ../../PPP_assets/PPP_Phase.png
+        :width: 100 %
+        :align: center
+    
+    In this illustration of the phasing process, the haplotypes of each locus
+    are esitmated from unphased variants. 
 
     ##################
     Command-line Usage

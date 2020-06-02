@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 '''
-    Splits a single VCF file into multiple VCF files using either a statistic or
-    bed file. The statistic/bed file must contain loci-based (i.e. window-based)
-    data for the function to operate. If the specified statistic file does not
-    contain a BIN_END column, the --statistic-window-size argument may be used.
+    As a single VCF may include the variant sites of multiple loci, it is
+    often necessary to seperate the loci from the VCF. Given a VCF file and
+    a file of loci (i.e. BED or PPP-created statistic file), vcf_split will
+    generate a VCF for each locus.
+
+    .. image:: ../../PPP_assets/PPP_Split.png
+        :width: 100 %
+        :align: center
+
+    In this illustration of the splitting process, Data.VCF includes variant sites 
+    associated with a discrete set of loci. Once split, a single file - e.g. 
+    Locus_0001.VCF - will only contain the variant sites associated with that locus.
 
     ##################
     Command-line Usage

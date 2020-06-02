@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 '''
     Filtering VCFs is a frequent and essential process in population genetic analyses.
-    Given an unfiltered VCF, VCF_filter will apply the selected filters and produce a 
+    Given an unfiltered VCF, vcf_filter will apply the selected filters and produce a 
     filtered VCF. Filters may be used independently or combined as needed. 
 
     .. image:: ../../PPP_assets/PPP_Filter.png
-        :width: 80 %
+        :width: 100 %
         :align: center
 
     In this illustration of the filtering process within a locus of interest, variant 
