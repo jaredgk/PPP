@@ -278,9 +278,6 @@ def vcf_filter_parser(passed_arguments):
     indv_file_filters.add_argument('--filter-include-indv-file', help = 'Defines a file of individuals to include', action = parser_confirm_file())
     indv_file_filters.add_argument('--filter-exclude-indv-file', help = 'Defines a file of individuals to exclude', action = parser_confirm_file())
 
-    **--filter-only-biallelic**
-        Argument used to only include variants that are biallelic.
-
     # Allele count filters
     vcf_parser.add_argument('--filter-only-biallelic', help = 'Only include variants that are biallelic', action = 'store_true')
     vcf_parser.add_argument('--filter-min-alleles', help = 'Include variants with a number of allele >= to the given number', type = int)
