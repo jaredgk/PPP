@@ -4,7 +4,7 @@
     Given an unfiltered VCF, VCF_filter will apply the selected filters and produce a 
     filtered VCF. Filters may be used independently or combined as needed. 
 
-    .. image:: PPP_assets/PPP_Filter.png
+    .. image:: ../../PPP_assets/PPP_Filter.png
         :scale: 50 %
         :align: center
 
