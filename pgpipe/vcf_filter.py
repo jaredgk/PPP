@@ -54,11 +54,11 @@
     **--vcf** *<input_filename>*
         Argument used to define the filename of the VCF file to be filtered.
     **--model-file** *<model_filename>*
-    	Argument used to define the model file. Please note that this argument cannot be 
-    	used with the individual-based filters.
+        Argument used to define the model file. Please note that this argument cannot be 
+        used with the individual-based filters.
     **--model** *<model_str>*
-    	Argument used to define the model (i.e. the individual(s) to include). Please note
-    	that this argument cannot be used with the individual-based filters.
+        Argument used to define the model (i.e. the individual(s) to include). Please note
+        that this argument cannot be used with the individual-based filters.
 
     #############################
     Output Command-line Arguments
@@ -104,39 +104,39 @@
     **--filter-only-biallelic**
         Argument used to only include variants that are biallelic.
     **--filter-min-alleles** *min_int*
-    	Argument used to include variants with a number of allele >= to the 
-    	given number.
+        Argument used to include variants with a number of allele >= to the 
+        given number.
     **--filter-max-alleles** *max_int*
         Argument used to include variants with a number of allele <= to the 
         given number.
     **--filter-maf-min** *maf_proportion*
-    	Argument used to include variants with equal or greater MAF values.
+        Argument used to include variants with equal or greater MAF values.
     **--filter-maf-max** *maf_proportion*
-    	Argument used to include variants with equal or lesser MAF values.
+        Argument used to include variants with equal or lesser MAF values.
     **--filter-mac-min** *mac_int*
-    	Argument used to include variants with equal or greater MAC values.
+        Argument used to include variants with equal or greater MAC values.
     **--filter-mac-max** *mac_int*
-    	Argument used to include variants with equal or lesser MAC values.
+        Argument used to include variants with equal or lesser MAC values.
     **--filter-include-indels**
-    	Argument used to include variants if they contain an insertion or a deletion. 
+        Argument used to include variants if they contain an insertion or a deletion. 
     **--filter-exclude-indels**
-    	Argument used to exclude variants if they contain an insertion or a deletion.
+        Argument used to exclude variants if they contain an insertion or a deletion.
     **--filter-include-snps**
         Argument used to include variants if they contain a SNP. 
     **--filter-exclude-snps**
         Argument used to exclude variants if they contain a SNP. 
     **--filter-include-snp** *<rs#>* *<rs#1, rs#2, etc.>*
-    	Argument used to include SNP(s) with the matching ID. This argument may be used 
+        Argument used to include SNP(s) with the matching ID. This argument may be used 
         multiple times if desired.
     **--filter-exclude-snp** *<rs#>* *<rs#1, rs#2, etc.>*
         Argument used to exclude SNP(s) with the matching ID. This argument may be used 
         multiple times if desired.
     **--filter-include-snp-file** *<snp_filename>*
-    	Argument used to define a file of SNP IDs to include.
+        Argument used to define a file of SNP IDs to include.
     **--filter-exclude-snp-file** *<snp_filename>*
-    	Argument used to define a file of SNP IDs to exclude.
+        Argument used to define a file of SNP IDs to exclude.
     **--filter-max-missing** *proportion_float*
-    	Argument used to filter positions by their proportion of missing data, a value of
+        Argument used to filter positions by their proportion of missing data, a value of
         0.0 allows for no missing whereas a value of 1.0 ignores missing data. 
     **--filter-max-missing-count** *count_int*
         Argument used to filter positions by the number of samples with missing data, a 
@@ -204,11 +204,11 @@ def vcf_filter_parser(passed_arguments):
 
     Parameters
     ----------
-	passed_arguments : list, optional
-		Parameters passed by another function. sys.argv is used if
-		not given. 
+    passed_arguments : list, optional
+        Parameters passed by another function. sys.argv is used if
+        not given. 
 
-	Raises
+    Raises
     ------
     IOError
         If the input, or other specified files do not exist
@@ -363,10 +363,10 @@ def run (passed_arguments = []):
         Output filename prefix
     --out-format : str
         Output format
-	--model-file : str
-		Model filename
-	--model : str
-		Model to use
+    --model-file : str
+        Model filename
+    --model : str
+        Model to use
     --filter-include-indv : list or str
         Individual(s) to include. May be used multiple times. Not usable w/ --model
     --filter-exclude-indv : list or str
@@ -382,25 +382,25 @@ def run (passed_arguments = []):
     --filter-max-alleles : int
         Include positions with a number of allele <= to the given number
     --filter-maf-min
-		Include sites with equal or greater MAF values
+        Include sites with equal or greater MAF values
     --filter-maf-max
-    	Include sites with equal or lesser MAF values
+        Include sites with equal or lesser MAF values
     --filter-mac-min
-    	Include sites with equal or greater MAC values
+        Include sites with equal or greater MAC values
     --filter-mac-max
-    	Include sites with equal or lesser MAC values
-   	--filter-include-indels
-    	Include positions if they contain an insertion or a deletion
+        Include sites with equal or lesser MAC values
+    --filter-include-indels
+        Include positions if they contain an insertion or a deletion
     --filter-exclude-indels
-    	Exclude positions if they contain an insertion or a deletion
- 	--filter-include-snp
- 		Include SNP(s) with the matching ID. May be used multiple times
+        Exclude positions if they contain an insertion or a deletion
+    --filter-include-snp
+        Include SNP(s) with the matching ID. May be used multiple times
     --filter-include-snp-file
-    	File of SNP IDs to include
+        File of SNP IDs to include
     --filter-exclude-snp-file
-    	File of SNP IDs to exclude
+        File of SNP IDs to exclude
     --filter-max-missing
-		Filter positions by their missing data proportion. Values should be given
+        Filter positions by their missing data proportion. Values should be given
         as max proportion of missing data to accept. For example, a value of 0.0
         allows no missing data whereas a value of 0.1 allows for 10% of samples to 
         have missig data.
