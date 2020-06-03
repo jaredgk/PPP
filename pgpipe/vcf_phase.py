@@ -2,16 +2,18 @@
 """
     Phasing is an essental and frequently used process in population genetic 
     analyses. Given an unphased VCF file and a selected phasing algorithm, 
-    vcf_phase will produce a phased VCF. Additional options, including the 
-    ability to include a reference panel, may also be applied to augment 
-    the phasing process as needed. 
+    vcf_phase will produce a phased VCF. Phasing may be configured using
+    various general options (e.g. specifying Ne, including a genetic map)
+    or algorithm-specific options (e.g. including a compatible reference 
+    panel) as needed.
 
     .. image:: ../../PPP_assets/PPP_Phase.png
         :width: 100 %
         :align: center
     
-    In this illustration of the phasing process, the haplotypes of each locus
-    are esitmated from unphased variants. 
+    In this illustration of the phasing process, unphased variants (alleles
+    divided diagonally) are converted into an estimated haplotypes (alleles
+    divided horizontally and on seperate strands).
 
     ##################
     Command-line Usage

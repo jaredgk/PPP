@@ -9,9 +9,10 @@
         :width: 100 %
         :align: center
 
-    In this illustration of the splitting process, Data.VCF includes variant sites 
-    associated with a discrete set of loci. Once split, a single file - e.g. 
-    Locus_0001.VCF - will only contain the variant sites associated with that locus.
+    In this illustration of the splitting process, Data.VCF includes variant 
+    sites associated with a discrete set of loci (i.e. Locus_0001 - Locus_0013). 
+    Once split, a single file (e.g. Locus_0001.VCF) will only contain the 
+    variant sites associated with that locus.
 
     ##################
     Command-line Usage
