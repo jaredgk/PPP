@@ -9,7 +9,7 @@ from pgpipe.genome_region import Region
 # in  Pan_all_hicov_chr22_decrun_missingasref.vcf chromosome names are 22
 vcf_filename = "Pan_all_hicov_chr22_decrun_missingasref.vcf"
 vcf_filename = "Pan_all_hicov_chr22_decrun_missingasref.vcf.gz"
-# in chr22_hg18.fa chromosome name is 'chr22'
+# in chr22_hg18.fa changed chromosome name to '22'
 fasta_reference = "chr22_hg18.fa"
 model_file = "panmodels.model"
 BED_file = "pan_test.bed"
