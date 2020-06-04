@@ -3,7 +3,7 @@ import os
 import subprocess
 import logging
 import pgpipe.vcf_reader_func as vf
-from pgpipe.model import Model, read_model_file
+from pgpipe.model import Model
 from pgpipe.misc import confirm_executable
 from pgpipe.vcf_to_ima import generateSequence
 from pgpipe.genome_region import Region, RegionList
@@ -56,7 +56,7 @@ def check_samtools_for_errors (samtools_stderr):
     else:
         raise Exception(samtools_stderr)
 
-def call_samtools_faidx (fastaname,fastaout,rangearg):
+def call_samtools_faidx (fastaname):
     '''
         Calls samtools faidx to generate a fasta file index
 
@@ -76,12 +76,13 @@ def call_samtools_faidx (fastaname,fastaout,rangearg):
     # Check if the executable was found
     if not samtools_path:
         raise IOError('samtools not found. Please confirm the executable is installed')
+    
     # check that the fasta file exists
     if os.path.isfile(fastaname) is False:
         raise IOError('fasta file %s does not exist'%fastaname)
 
     # samtools subprocess call
-    samtools_call = subprocess.Popen(cmdargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    samtools_call = subprocess.Popen(['samtools', 'faidx', fastaname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # Wait for samtools to finish
     samtools_stdout, samtools_stderr = samtools_call.communicate()
@@ -97,25 +98,45 @@ def call_samtools_faidx (fastaname,fastaout,rangearg):
     return samtools_stderr
 
 
-def get_model_sequences_from_region(vcf_reader=None,popmodel=None,
-                                    seq_reference=None, region=None,
-                                    useNifmissingdata=None):    
+def get_model_sequences_from_region(vcf=None,popmodel=None,
+    seq_reference=None, region=None,useNifmissingdata=None):
+    
     '''
-        gets a list of sequences using a list of vcf records and sequence
+        gets a list of sequences for individuals in a population model
+        for a particular chromosomal region from a vcf file 
 
- ? can't handle haploidy or mixed ploidy among individuals
+        This can operate on its own, or when called by get_model_sequences_from_multiple_regions()
+
+ ? as of 6/2/2020 can't handle haploidy or mixed ploidy among individuals
         
         Parameters
         ----------
-        recordlist
-            a list of vcf records as made using VcfReader.getRecordList()
+        vcf
+            is either:
+                a vcf_reader  (i.e. see vf.VcfReader())
+                or the name of a vcf file
+                
         popmodel
             an instance of class model
             the individuals in the model must also be in the vcf file
+            
         seq_reference
-            a string containing the DNA sequence for the region
+            a string that either:
+                 contains the DNA sequence for the region
+                 
+                 or a string containting the name of a fasta file
+                 if a fasta file, this works better if the chromosome name(s) in the fasta file
+                 match those in the vcf file 
+            
         region
-            an instance of class Region
+            either:
+                 a samtools style region string ("chromosome name:start-end")
+                     where the chromosome name matches that used in the vcf file
+                     where start and end are the 1-based endpoints (closed interval)
+                 or an instance of class Region
+                     Region uses 0-based open interval on the left
+                     
+                 
         useNifmissingdata
             if True  put N's in wherever data is missing 
         
@@ -127,24 +148,54 @@ def get_model_sequences_from_region(vcf_reader=None,popmodel=None,
         ------
         ?       
     '''
+    if not isinstance(vcf,vf.VcfReader): # if vcf is a vcf file,  create a vcf_reader from it
+        assert isinstance(vcf,str)
+        vcf_reader = vf.VcfReader(vcf,popmodel=popmodel)
+    else:
+        vcf_reader = vcf  # vcf was a file
+
+    if not isinstance(region,Region): # if region is not a Region, then make one from it
+        assert isinstance(region,str)
+        regionstr = region
+        chrname = regionstr[:regionstr.find(':')]
+        [start,end] = map(int,regionstr[regionstr.find(':')+1:].split(sep='-'))
+        region = Region(start-1,end,chrname)
+##    print('x',region.start,region.end,region.chrom)
+    if os.path.isfile(seq_reference): #seq_reference is the name of a fasta file
+        fasta_access = pysam.FastaFile(seq_reference)
+        if 'regionstr' not in locals():
+            assert isinstance(region,Region)
+            regionstr = '%s:%d-%d'%(region.chrom,region.start+1,region.end)# must add 1 to start because Region's use half open 0-based
+        seqstr = fasta_access.fetch(region=regionstr)
+    else:  # seq_reference was just a sequence string, but check to see if string looks like DNA
+        seqstr = seq_reference
+        dnaset = set("agctyrwskmdvhbxnAGCTYRWSKMDVHBXN")
+        nondnachar =  set(seqstr)-dnaset
+        if len(nondnachar)> 0:
+            raise Exception("sequence has non DNA characters:%s"%set(nondnachar))
+
+    
+    print(region.chrom,region.start,region.end)
     recordlist = vcf_reader.getRecordList(region=region)
+    
     # argstemp is an undefined object for passings arguments to generateSequence()
     argstemp = type('',(),{})() 
     argstemp.indel_flag = None
     argstemp.trim_seq = True
     argstemp.N_if_missing = useNifmissingdata
-    # list that will hold sequences
+
+    # seqlist is a list that will hold sequences
     seqlist = []
+    
     for pop in popmodel.pop_list:
         for indiv in popmodel.ind_dict[pop]:
             for ai in range(2): # assumes diploidy 
-                s = generateSequence(recordlist,seq_reference, region, indiv, ai, argstemp)
+                s = generateSequence(recordlist,seqstr, region, indiv, ai, argstemp)
                 seqlist.append(s)
     return(seqlist)
 
 def get_model_sequences_from_multiple_regions(vcf_filename=None,popmodel=None,
-                                     fasta_reference=None,BED_filename = None,
-                                    useNifmissingdata = None):
+    fasta_reference=None,BED_filename = None,useNifmissingdata = None):
 
     '''
  ?  not clear how this will work when bed file and vcf file span multiple chromosomes
@@ -172,10 +223,15 @@ def get_model_sequences_from_multiple_regions(vcf_filename=None,popmodel=None,
         fasta_reference
             a fasta file with one more sequences
             typically these are reference chromosome sequences
+            the chromosome name(s) in the fasta file must
+            match those in the vcf file
+            
         BED_filename
             a sorted BED file giving regions from which to pull sequences
             the first column with the chromosome name must match a name in
             the fasta_reference file
+            The chromosome names in the BED file must match those in the fasta file
+            and the vcf file 
 
         Returns
         -------
@@ -200,45 +256,28 @@ def get_model_sequences_from_multiple_regions(vcf_filename=None,popmodel=None,
                 # make an instand of VcfReader 
 ##                vcf_reader = vf.VcfReader(vcf_filename,popmodel=popmodel)
                 # deal with possibility of chromosome name differences
-                BEDchrname = ls[0]
+                chrname = BEDchrname = ls[0]
                 chr_in_chrome_BED = BEDchrname[0:3] == 'chr'
                 if chr_in_chrome_BED:
                     if not vcf_reader.chr_in_chrom:
-                        vcfchrname = BEDchrname[3:] # remove 'chr' from ls[0]
+                        raise Exception("\"chr\" mismatch, check fasta file, BED file and vcf file")
+##                        vcfchrname = BEDchrname[3:] # remove 'chr' from ls[0]
                 else:
                     if vcf_reader.chr_in_chrom:  ## could use  vcf_reader.info_rec.chrom
-                        vcfchrname = 'chr' + BEDchrname
+                        raise Exception("\"chr\" mismatch, check fasta file, BED file and vcf file")                        
+##                        vcfchrname = 'chr' + BEDchrname
                 
                 # pysam.fetch can use a samtools faidx style region string 
                 regionstr = '%s:%d-%d'%(BEDchrname,int(ls[1])+1,int(ls[2]))
                 seqstr = fasta_access.fetch(region=regionstr)
                 # make an instance of Region 
-                region = Region(int(ls[1]),int(ls[2]),vcfchrname)
+                region = Region(int(ls[1]),int(ls[2]),chrname)
 
-                slist = get_model_sequences_from_region(vcf_reader=vcf_reader,
+                slist = get_model_sequences_from_region(vcf=vcf_reader,
                                                         popmodel=popmodel,
                                                         seq_reference=seqstr,
                                                         region=region,
                                                         useNifmissingdata=useNifmissingdata)                
                 yield(slist)
 
-# in  Pan_all_hicov_chr22_decrun_missingasref.vcf chromosome names are 22
-vcf_filename = "../jhworkfiles/Pan_all_hicov_chr22_decrun_missingasref.vcf"
-##vcf_filename = "../jhworkfiles/Pan_all_hicov_chr22_decrun_missingasref.vcf.gz"
-# in chr22_hg18.fa chromosome name is 'chr22'
-fasta_reference = "../jhworkfiles/chr22_hg18.fa"
-model_file = "../jhworkfiles/panmodels.model"
-BED_file = "../jhworkfiles/pan_test.bed"
 
-popmodels = read_model_file(model_file)
-popmodel = popmodels['3Pop']
-
-a = get_model_sequences_from_multiple_regions(vcf_filename=vcf_filename,
-                        popmodel=popmodel,fasta_reference=fasta_reference,
-                        BED_filename = BED_file,useNifmissingdata=True)
-while True:
-    try:
-        s = next(a)# should raise StopIteration if generator is exhausted
-        print(len(s),len(s[0]))
-    except StopIteration:
-        break   # end loop 
