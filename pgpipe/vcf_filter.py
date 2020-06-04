@@ -85,22 +85,22 @@
     mulitple filters are seperated into two opposing function types **include** and 
     **exclude**.
 
-    **********************
-    Sample-Based Arguments
-    **********************
-    Please note that all sample-based arguments are not compatible with either the 
+    **************************
+    Individual-Based Arguments
+    **************************
+    Please note that all individual-based arguments are not compatible with either the 
     **--model** or **--model-file** command-line arguments.
 
-    **--filter-include-sample** *<sample_str>* *<sample_str, sample_str, etc.>*
-        Argument used to define the sample(s) to include. This argument may be used 
+    **--filter-include-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to include. This argument may be used 
         multiple times if desired.
-    **--filter-exclude-sample** *<sample_str>* *<sample_str, sample_str, etc.>*
-        Argument used to define the sample(s) to exclude. This argument may be used 
+    **--filter-exclude-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to exclude. This argument may be used 
         multiple times if desired.
-    **--filter-include-sample-file** *<sample_filename>*
-        Argument used to define a file of samples to include.
-    **--filter-exclude-sample-file** *<sample_filename>*
-        Argument used to define a file of samples to exclude.
+    **--filter-include-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to include.
+    **--filter-exclude-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to exclude.
 
     *******************************
     Allele/Genotype-Based Arguments
@@ -274,13 +274,13 @@ def vcf_filter_parser(passed_arguments):
 
     # Individual list arguments
     indv_filters = vcf_parser.add_mutually_exclusive_group()
-    indv_filters.add_argument('--filter-include-sample', help = 'Defines the sample(s) to include. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
-    indv_filters.add_argument('--filter-exclude-sample', help = 'Defines the sample(s) to exclude. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
+    indv_filters.add_argument('--filter-include-indv', help = 'Defines the individual(s) to include. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
+    indv_filters.add_argument('--filter-exclude-indv', help = 'Defines the individual(s) to exclude. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
     
     # Individual file arguments
     indv_file_filters = vcf_parser.add_mutually_exclusive_group()
-    indv_file_filters.add_argument('--filter-include-sample-file', help = 'Defines a file of samples to include', action = parser_confirm_file())
-    indv_file_filters.add_argument('--filter-exclude-sample-file', help = 'Defines a file of samples to exclude', action = parser_confirm_file())
+    indv_file_filters.add_argument('--filter-include-indv-file', help = 'Defines a file of individuals to include', action = parser_confirm_file())
+    indv_file_filters.add_argument('--filter-exclude-indv-file', help = 'Defines a file of individuals to exclude', action = parser_confirm_file())
 
     # Allele count filters
     vcf_parser.add_argument('--filter-only-biallelic', help = 'Only include variants that are biallelic', action = 'store_true')
@@ -368,14 +368,14 @@ def run (passed_arguments = []):
         Model filename
     --model : str
         Model to use
-    --filter-include-sample : list or str
-        Sample(s) to include. May be used multiple times. Not usable w/ --model
-    --filter-exclude-sample : list or str
-        Sample(s) to exclude. May be used multiple times. Not usable w/ --model
-    --filter-include-sample-file : str
-        File of samples to include. Not usable w/ --model
-    --filter-exclude-sample-file : str
-        File of samples to exclude.  Not usable w/ --model
+    --filter-include-indv : list or str
+        Individual(s) to include. May be used multiple times. Not usable w/ --model
+    --filter-exclude-indv : list or str
+        Individual(s) to exclude. May be used multiple times. Not usable w/ --model
+    --filter-include-indv-file : str
+        File of individuals to include. Not usable w/ --model
+    --filter-exclude-indv-file : str
+        File of individuals to exclude.  Not usable w/ --model
     --filter-only-biallelic
         Only include variants that are biallelic
     --filter-min-alleles : int
@@ -462,17 +462,19 @@ def run (passed_arguments = []):
         if vcf_args.model not in models_in_file:
             raise IOError('Selected model "%s" not found in: %s' % (vcf_args.model, vcf_args.model_file))
 
-        # Check that sample-based filters are not also being used
-        if vcf_args.filter_include_sample:
-            raise Exception('--model and --filter-include-sample arguments are incompatible')
-        if vcf_args.filter_exclude_sample:
-            raise Exception('--model and --filter-exclude-sample arguments are incompatible')
+        # Check that individual-based filters are not also being used
+        if vcf_args.filter_include_indv or vcf_args.filter_exclude_indv:
+            if vcf_args.filter_include_indv:
+                raise Exception('--model and --filter-include-indv arguments are incompatible')
+            if vcf_args.filter_exclude_indv:
+                raise Exception('--model and --filter-exclude-indv arguments are incompatible')
 
-        # Check that sample file filters are not also being used
-        if vcf_args.filter_include_sample_file:
-            raise Exception('--model and --filter-include-sample-file arguments are incompatible')
-        if vcf_args.filter_exclude_sample_file:
-            raise Exception('--model and --filter-exclude-sample-file arguments are incompatible')
+        # Check that individuals-based filters are not also being used
+        if vcf_args.filter_include_indv_file or vcf_args.filter_exclude_indv_file:
+            if vcf_args.filter_include_indv_file:
+                raise Exception('--model and --filter_include_indv-file arguments are incompatible')
+            if vcf_args.filter_exclude_indv_file:
+                raise Exception('--model and --filter-exclude-indv-file arguments are incompatible')
 
         # Select model, might change this in future versions
         selected_model = models_in_file[vcf_args.model]
@@ -502,21 +504,21 @@ def run (passed_arguments = []):
         check_for_bcftools_output(bcftools_output_filename)
 
     # Individuals-based filters
-    if vcf_args.filter_include_sample_file or vcf_args.filter_exclude_sample_file:
+    if vcf_args.filter_include_indv_file or vcf_args.filter_exclude_indv_file:
         # Used to include a file of individuals to keep
-        if vcf_args.filter_include_sample_file:
-            bcftools_call_args.extend(['--samples-file', vcf_args.filter_include_sample_file])
+        if vcf_args.filter_include_indv_file:
+            bcftools_call_args.extend(['--samples-file', vcf_args.filter_include_indv_file])
 
         # Used to include a file of individuals to remove
-        if vcf_args.filter_exclude_sample_file:
-            bcftools_call_args.extend(['--samples-file', '^' + vcf_args.filter_exclude_sample_file])
+        if vcf_args.filter_exclude_indv_file:
+            bcftools_call_args.extend(['--samples-file', '^' + vcf_args.filter_exclude_indv_file])
 
     # Individual-based filters
-    if vcf_args.filter_include_sample or vcf_args.filter_exclude_sample:
-        if vcf_args.filter_include_sample:
-            bcftools_call_args.extend(['--samples', ','.join(vcf_args.filter_include_sample)])
-        if vcf_args.filter_exclude_sample:
-            bcftools_call_args.extend(['--samples', '^' + ','.join(vcf_args.filter_exclude_sample)])
+    if vcf_args.filter_include_indv or vcf_args.filter_exclude_indv:
+        if vcf_args.filter_include_indv:
+            bcftools_call_args.extend(['--samples', ','.join(vcf_args.filter_include_indv)])
+        if vcf_args.filter_exclude_indv:
+            bcftools_call_args.extend(['--samples', '^' + ','.join(vcf_args.filter_exclude_indv)])
 
     # Position-list filter
     if vcf_args.filter_include_pos or vcf_args.filter_exclude_pos:

@@ -1,20 +1,25 @@
 #!/usr/bin/env python
-'''
-    Given input with individual variants over a region of the genome, 
-    generate an interval within those variants that passes the 
-    four-gamete filtering criteria, then return either that interval
-    or an output file with variants in that interval.
+''' 
 
-    The four-gamete test is a method for determining whether or not 
+	The four-gamete test is a method for determining whether or not 
     there has been recombination between a pair of variants. To do this, 
-    all individuals have haplotypes defined as the variants at the two
-    sites. Given two snps with ref/alt alleles A/G and C/T, if 
-    individuals in this sample have haplotypes AC, AT, and GT, it is
-    possible that there has been no recombination between these alleles.
-    If an additional individual has the GC haplotype, this means that 
-    a recombination event must have taken place between the sites. 
+    all individuals must have haplotypes defined as the variants at the 
+    two sites.
 
-    This test must be done on phased data.
+    .. image:: ../../PPP_assets/PPP_FGT.png
+        :width: 100 %
+        :align: center
+
+    In this illustration of four-gamete test, the haplotypes of the samples
+    from 197337 to 199256 (highlighted in green) pass the four-gamete test. 
+    In comparison, the haplotypes from 196944 to 197337 and from 199256 to 
+    199492 (highlighted in red) both fail the four-gamete test as all possible 
+    haplotypes are observed.
+
+    Given phased input with individual variants over a region of the genome, 
+    four_gamete generates an interval within those variants that passes the 
+    four-gamete filtering criteria, then return either that interval or an 
+    output file with variants in that interval.
 
     Common usage for this function is to input a VCF file that contains
     variants for individuals at a single locus, with output returned being
