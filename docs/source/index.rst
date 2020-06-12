@@ -23,10 +23,6 @@ The core functions of the PPP were designed to operate using VCF-based files pri
 
 Please Note: This documentation is currently being devlopement and will be updated freqeuntly in the coming days
 
-Test :ref:`example_pipeline_pan.ipynb`
-
-
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -41,7 +37,4 @@ Test :ref:`example_pipeline_pan.ipynb`
    PPP_pages/model
    PPP_pages/contact
    PPP_pages/citations
-
-   
-
-
+   example_pipeline_pan.ipynb
