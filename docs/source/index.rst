@@ -23,7 +23,7 @@ The core functions of the PPP were designed to operate using VCF-based files pri
 
 Please Note: This documentation is currently being devlopement and will be updated freqeuntly in the coming days
 
-:ref:`../../examples/example_pipeline_pan.ipynb`
+Test :ref:`example_pipeline_pan.ipynb`
 
 
 
