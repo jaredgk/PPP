@@ -33,6 +33,7 @@ before_install:
   - conda install -c anaconda scikit-learn
   - conda install -c anaconda cython 
   - conda install -c bioconda pybedtools
+  - conda install -c conda-forge nbsphinx
   - ./install_executables.sh
 
 cache: pip
