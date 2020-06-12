@@ -1,5 +1,5 @@
 =========================
 BED Modification Utilites
 =========================
-.. automodule:: bed_tasks
+.. automodule:: bed_utilities
 
