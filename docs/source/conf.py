@@ -41,7 +41,7 @@ for root, dirs, files in os.walk("../../"):
 # -- Project information -----------------------------------------------------
 
 project = 'PPP'
-copyright = '2019, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)'
+copyright = '2020, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)'
 author = 'PPP Development Team'
 
 from pgpipe import __version__
@@ -63,7 +63,8 @@ release = __version__
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary', 
-    'numpydoc'
+    'numpydoc',
+    'nbsphinx'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

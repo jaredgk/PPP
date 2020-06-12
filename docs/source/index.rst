@@ -39,5 +39,7 @@ Please Note: This documentation is currently being devlopement and will be updat
    PPP_pages/model
    PPP_pages/contact
    PPP_pages/citations
+   :ref:`../../examples/example_pipeline_pan.ipynb`
+   
 
 
