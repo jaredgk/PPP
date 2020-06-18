@@ -30,7 +30,11 @@ ppp_scripts = ['pgpipe/vcf_filter.py',
                'pgpipe/vcf_liftover.py',
                'pgpipe/vcf_utilities.py',
                'pgpipe/vcf_split_pysam.py',
-               'pgpipe/bed_invert.py']
+               'pgpipe/bed_invert.py',
+               'pgpipe/vcf_to_fastsimcoal.py',
+               'pgpipe/vcf_to_dadi.py',
+               'pgpipe/vcf_to_treemix.py',
+               'pgpipe/vcf_to_gphocs.py']
 
 setup(name=pgpipe.__title__,
       version=pgpipe.__version__,

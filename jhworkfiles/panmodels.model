@@ -2,14 +2,14 @@
     {
         "name": "1Pop",
         "pops": {
-            "Paniscus": {
+            "Troglodytes": {
                 "inds": [
-                    "Pan_paniscus-A917_Dzeeta",
-                    "Pan_paniscus-A918_Hermien",
-                    "Pan_paniscus-A919_Desmond"
+                    "Pan_troglodytes_troglodytes-A957_Vaillant",
+                    "Pan_troglodytes_troglodytes-A958_Doris",
+                    "Pan_troglodytes_troglodytes-A959_Julie"
                 ]
             }
-        }
+         }
     },
     {
         "name": "2Pop",
