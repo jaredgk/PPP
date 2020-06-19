@@ -1,18 +1,80 @@
-"""
-   generates a dadi snp file
+#!/usr/bin/env python
+'''
+   Generates a dadi snp file from a vcf file.
 
-   dadi citation:
+   
+   The dadi snp file format is described in the dadi manual 
+   
+   https://dadi.readthedocs.io/en/latest/user-guide/importing-data/#snp-data-format
+
    Gutenkunst RN, Hernandez RD, Williams SH, Bustamante CD (2009) Inferring the
    joint demographic history of multiple populations from multidimensional SNP
    frequency data. PLoS Genet 5: e1000695. DOI: 10.1371/journal.pgen.1000695
 
-   snp file format described in the dadi manual 
-   
 
-   https://dadi.readthedocs.io/en/latest/user-guide/importing-data/#snp-data-format
 
-   
-"""
+    ###############
+    Required Arguments
+    ###############
+    **--vcf** *<input_vcf_filename>*
+        The name of the vcf file.  This can be a bgzipped vcf file. . 
+
+    **--model-file** *<model_file_name>*
+        The name of a PPP model file. 
+
+    **--model** *<model_name>*
+        The name of a model in the model file.  The treemix file to be
+        generated will contain the allele counts for each SNP in each of
+        the populations.  The treemix run will estimate the phylogeny
+        for the populations in the model.
+        
+    **--out** *<output file name>*
+        Specifies the complete output filename.
+           
+    ###############
+    Optional Aguments
+    ###############
+
+        
+    **--bed-file** *<BED_file_name>*
+        The BED file is a sorted UCSC-style bedfile containing chromosome locations of
+        the SNPs to be included in the output files. The BED file has no header.
+        The first column is the chromosome name (this must match the chromosome
+        name in the vcf file).
+        The second column is start position (0-based, open interval)
+        The third column is end position (closed interval).
+        Any other columns are ignored.
+
+    **--outgroup_fasta** *<name of alternative reference sequence>*
+        This option is used to specify the name of a fasta file to use as an
+        alternative reference to that used for the vcf file.
+
+        This fasta file must have been properly aligned to the reference
+        used in the vcf file.  
+            
+        This option can be useful, for example, if an ancestral or outgroup reference is
+        available that more accurately identifies the ancestral (and thus derived)
+        allele at each SNP than does the reference used to make the vcf file.
+
+    **--comment** *<comment text>*
+        Comment text to be included in the header of the output file.
+ 
+'''
+##"""
+##   generates a dadi snp file
+##
+##   dadi citation:
+##   Gutenkunst RN, Hernandez RD, Williams SH, Bustamante CD (2009) Inferring the
+##   joint demographic history of multiple populations from multidimensional SNP
+##   frequency data. PLoS Genet 5: e1000695. DOI: 10.1371/journal.pgen.1000695
+##
+##   snp file format described in the dadi manual 
+##   
+##
+##   https://dadi.readthedocs.io/en/latest/user-guide/importing-data/#snp-data-format
+##
+##   
+##"""
 import sys
 import os
 import subprocess

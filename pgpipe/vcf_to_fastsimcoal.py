@@ -1,28 +1,121 @@
-"""
-   generates Site Frequency Spectrum (SFS) fils for fastsimcoal
+#!/usr/bin/env python
+'''
+   Generates a Site Frequency Spectrum (SFS) fils for fastsimcoal
+   based on instructions in fastsimcoal ver 2.6 manual.
+
+   Generates one-dimensional (1D), two-dimensional (2D) and multidimensional SFS files
+
+   
    Excoffier, L. and M. Foll. 2011. fastsimcoal: a continuous-time coalescent
    simulator of genomic diversity under arbitrarily complex evolutionary scenarios.
    Bioinformatics 27: 1332-1334.
+   
 
-   Excoffier, L., Dupanloup, I., Huerta-Sánchez, E., and M. Foll (2013) Robust
-   demographic inference from genomic and SNP data. PLOS Genetics 9(10):e1003905.
 
-   Based on instructions in fastsimcoal ver 2.6 manual.
+    ###############
+    Required Arguments
+    ###############
+    **--vcf** *<input_vcf_filename>*
+        The name of the vcf file.  This can be a bgzipped vcf file. . 
 
-   Generates 1D, 2D and multidimensional SFS files
-   For 1D files:
-       -the filename suffix is _DAFpop#.obs for an array of derived allele counts.
-          where '#' is replaced by the population number
-       -the filename suffix is _MAFpop#.obs for an array of minor allele counts.
-   For 2D files:
-       -the filename suffix is _jointDAFpop#_&.obs for an array of derived allele counts.
-           where # and & are population numbers, and # is larger than &
-       -the filename suffix is _jointDAFpop#_&.obs for an array of minor allele counts.
-   For a multidimensional file:
-       - the filename suffix is _DSFS.obs for an array of derived allele counts.
-       - the filename suffix is _MSFS.obs for an array of minor allele counts.
-       
-"""
+    **--model-file** *<model_file_name>*
+        The name of a PPP model file. 
+
+    **--model** *<model_name>*
+        The name of a model in the model file.  The treemix file to be
+        generated will contain the allele counts for each SNP in each of
+        the populations.  The treemix run will estimate the phylogeny
+        for the populations in the model.
+
+    **--dim** *<dimension file type signifiers>*
+        One or more of '1', '2', or 'm', for 1D, 2D or multidimensional output files.
+        
+        For 1D files:
+           -the filename suffix is _DAFpop#.obs for an array of derived allele counts.
+              where '#' is replaced by the population number
+           -the filename suffix is _MAFpop#.obs for an array of minor allele counts.
+        For 2D files:
+           -the filename suffix is _jointDAFpop#_&.obs for an array of derived allele counts.
+               where # and & are population numbers, and # is larger than &
+           -the filename suffix is _jointDAFpop#_&.obs for an array of minor allele counts.
+        For a multidimensional file:
+           - the filename suffix is _DSFS.obs for an array of derived allele counts.
+           - the filename suffix is _MSFS.obs for an array of minor allele counts.
+           
+    ###############
+    Optional Aguments
+    ###############
+
+    **--basename** *<name of outpuf file prefix>*
+        This is used to specify the prefix of the output files. The default is
+        "ppp_fsc"
+        
+    **--bed-file** *<BED_file_name>*
+        The BED file is a sorted UCSC-style bedfile containing chromosome locations of
+        the SNPs to be included in the output files. The BED file has no header.
+        The first column is the chromosome name (this must match the chromosome
+        name in the vcf file).
+        The second column is start position (0-based, open interval)
+        The third column is end position (closed interval).
+        Any other columns are ignored.
+
+    **--outgroup_fasta** *<name of alternative reference sequence>*
+        This option is used to specify the name of a fasta file to use as an
+        alternative reference to that used for the vcf file.
+
+        This fasta file must have been properly aligned to the reference
+        used in the vcf file.  
+            
+        This option can be useful, for example, if an ancestral or outgroup reference is
+        available that more accurately identifies the ancestral (and thus derived)
+        allele at each SNP than does the reference used to make the vcf file.  
+
+    **--downsamplesizes** *<down sample sizes>*
+        A sequence of integers,  one for each of the populations in the model in
+        the same order as populations listed in the model. The values 
+        specify the down sampling to be used for each respective population.
+        For a population with k>=1 diploid individuals (2k>=2 genomes) in the model,
+        the downsample count d  must be 2<=d<=2k.
+
+    **--folded** *<True/False>*
+        The folded option indicates that the folded sfs should be returned.
+        If folded is False (default) the sfs reports the count of the derived allele.
+        If True,  the sfs reports of the count of the minor (less frequent) allele.
+
+    **--randomsnpprop** *<floating point value between 0 and 1>*
+        This option can be used to randomly sample a subset of SNPs. The default
+        is to sample all biallelic SNPs.
+
+    **--seed** *<integer>*
+        This is used with --randomsnpprop as the seed for the random number generator.
+ 
+'''
+##"""
+##   generates Site Frequency Spectrum (SFS) fils for fastsimcoal
+##   Excoffier, L. and M. Foll. 2011. fastsimcoal: a continuous-time coalescent
+##   simulator of genomic diversity under arbitrarily complex evolutionary scenarios.
+##   Bioinformatics 27: 1332-1334.
+##
+##   Excoffier, L., Dupanloup, I., Huerta-Sánchez, E., and M. Foll (2013) Robust
+##   demographic inference from genomic and SNP data. PLOS Genetics 9(10):e1003905.
+##
+##   Based on instructions in fastsimcoal ver 2.6 manual.
+##
+##   Generates 1D, 2D and multidimensional SFS files
+##   For 1D files:
+##       -the filename suffix is _DAFpop#.obs for an array of derived allele counts.
+##          where '#' is replaced by the population number
+##       -the filename suffix is _MAFpop#.obs for an array of minor allele counts.
+##   For 2D files:
+##       -the filename suffix is _jointDAFpop#_&.obs for an array of derived allele counts.
+##           where # and & are population numbers, and # is larger than &
+##       -the filename suffix is _jointDAFpop#_&.obs for an array of minor allele counts.
+##   For a multidimensional file:
+##       - the filename suffix is _DSFS.obs for an array of derived allele counts.
+##       - the filename suffix is _MSFS.obs for an array of minor allele counts.
+##       
+##"""
+
 import sys
 import os
 import logging
@@ -52,17 +145,6 @@ def writemultidimfile(sfs,popmodel,basefilename,folded,sampsizes):
     
 
 def write2dimfiles(sfs,popmodel,basename,folded):
-## example
-##1 observations
-##	d0_0	d0_1	d0_2	d0_3	d0_4	d0_5
-##d1_0	19985547	8211	1415	316	55	10
-##d1_1	1266	101	37	16	5	1
-##d1_2	611	42	20	8	2	0
-##d1_3	486	31	12	5	0	0
-##d1_4	479	15	9	2	3	1
-##d1_5	421	20	2	1	1	0
-##d1_6	312	16	12	9	8	0
-##d1_7	1189	46	22	19	18	0
     
     dd = sfs.shape
     fns = []
@@ -96,11 +178,6 @@ def write2dimfiles(sfs,popmodel,basename,folded):
 
 def write1dimfiles(sfs,popmodel,basename,folded):
 
-## example
-##1 observations
-##d0_0	d0_1	d0_2	d0_3	d0_4	d0_5	d0_6	d0_7	d0_8	d0_9	d0_10	
-##19973842	24630	810	173	145	111	88	84	61	56	0
-##
     dd = sfs.shape
     fns = []
     for pi,pop in enumerate(popmodel.pop_list):

@@ -1,14 +1,78 @@
-"""
-    Generates an input sequence file for the G-Phocs program.
+#!/usr/bin/env python
+'''
+    Generates an input sequence file for the G-Phocs program from a
+    vcf file and a fasta reference file.
+    
+    G-Phocs can estimate the phylogenetic and demographic history of a
+    set of genomes,  each sampled at a large number of genomic regions or loci.
     
     Gronau I, Hubisz MJ, Gulko B, Danko CG, Siepel A.   Bayesian inference of ancient
     human demography from individual genome sequences.  Nature Genetics 43 1031–1034.   2011
 
-
     https://github.com/gphocs-dev/G-PhoCS/blob/master/GPhoCS_Manual.pdf
 
-    
-"""
+    ###############
+    Required Arguments
+    ###############
+    **--vcf** *<input_vcf_filename>*
+        The name of the vcf file.  This can be a bgzipped vcf file. . 
+
+    **--model-file** *<model_file_name>*
+        The name of a PPP model file. 
+
+    **--model** *<model_name>*
+        The name of a model in the model file.  The treemix file to be
+        generated will contain the allele counts for each SNP in each of
+        the populations.  The treemix run will estimate the phylogeny
+        for the populations in the model.
+
+        
+    **--bed-file** *<BED_file_name>*
+        The Bed file specifies the regions of the vcf file to be sampled.
+        Each row of the BED file (region) correspondes to one locus in the
+        G-Phocs sequence file.
+        
+        The BED file is a sorted UCSC-style bedfile containing chromosome locations of
+        the SNPs to be included in the output files. The BED file has no header.
+        The first column is the chromosome name (this must match the chromosome
+        name in the vcf file).
+        The second column is start position (0-based, open interval)
+        The third column is end position (closed interval).
+        Any other columns are ignored.
+
+    **--out** *<output file name>*
+        Specifies the complete output filename.
+
+    **--reference** *<reference fasta file>*
+        The reference genome fasta file is required in order to generate full
+        sequences from the SNP data in the vcf file. 
+        
+    ###############
+    Optional Aguments
+    ###############
+
+    **--diploid** *<True (default)/False>*
+        By default G-Phocs works with a single sequence for each individual, where
+        heterozygous positions are shown using IUPAC ambiguity codes.
+        If this option is False, then only the first sequence of each
+        individual is returned and heterozygous positions are not shown.
+
+    **--nloci** *<number of loci>*
+        By default the output file will contain as many loci as there are regions
+        in the BED file.  With this option,  the first nloci regions will be used.
+
+'''
+##"""
+##    Generates an input sequence file for the G-Phocs program.
+##    
+##    Gronau I, Hubisz MJ, Gulko B, Danko CG, Siepel A.   Bayesian inference of ancient
+##    human demography from individual genome sequences.  Nature Genetics 43 1031–1034.   2011
+##
+##
+##    https://github.com/gphocs-dev/G-PhoCS/blob/master/GPhoCS_Manual.pdf
+##
+##    
+##"""
 import sys
 import os
 import subprocess
