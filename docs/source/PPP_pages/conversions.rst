@@ -17,3 +17,4 @@ Specalized Conversions Functions
    :maxdepth: 1
 
    Functions/vcf_to_ima
+   Functions/vcf_to_treemix

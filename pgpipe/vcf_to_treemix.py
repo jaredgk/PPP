@@ -1,20 +1,81 @@
-"""
-    make an input file for the treemix program
+#!/usr/bin/env python
+'''
+    The treemix program was developed by Pickrell and Prichard (2012)
+    to estimate phylogeny and admixture for closely related populations.
 
     Pickrell JK, Pritchard JK (2012) Inference of Population Splits and Mixtures
     from Genome-Wide Allele Frequency Data. PLOS Genetics 8(11): e1002967.
 
-    Treemix manual:
-    https://bitbucket.org/nygcresearch/treemix/downloads/treemix_manual_10_1_2012.pdf
-
-    this replaces an older file of this name that was designed to work with IMa3 related code
-    that old file is renamed  vcf_to_treemix_old_version.py
-   
+    The program can make use of very large numbers of SNPs.
     
-"""
-import sys
+    vcf_to_treemix.py will generate a treemix input file from a vcf file.
+
+
+    If run using the --bed-file and --kblock options, the resulting treemix
+    file can be run using the 'linkage disequilibrium' (-k) option.
+    Under this option each block of kblock SNPs are treated as a linked group
+    and different groups are treated as unlinked.
+    
+    ###############
+    Required Arguments
+    ###############
+    **--vcf** *<input_vcf_filename>*
+        The name of the vcf file.  This can be a bgzipped vcf file. . 
+
+    **--model-file** *<model_file_name>*
+        The name of a PPP model file. 
+
+    **--model** *<model_name>*
+        The name of a model in the model file.  The treemix file to be
+        generated will contain the allele counts for each SNP in each of
+        the populations.  The treemix run will estimate the phylogeny
+        for the populations in the model.
+
+    **--out** *<outpuf_file_name>*
+        The name of the treemix file to be generated. The file is bgzipped
+        and '.gz' is added to the end of the name
+       
+    ###############
+    Optional Aguments
+    ###############
+    **--bed-file** *<BED_file_name>*
+        The BED file is a sorted UCSC-style bedfile containing chromosome locations of
+        the SNPs to be included in the output file. The BED file has no header.
+        The first column is the chromosome name (this must match the chromosome
+        name in the vcf file).
+        The second column is start position (0-based, open interval)
+        The third column is end position (closed interval).
+        Any other columns are ignored.
+
+        If used with --kblock,  each of the BED file regions is used to generate
+        one block of SNPs
+        
+    **--kblock** *<k_block_size>*
+        Used with --bed-file, for using treemix runtime option -k.  
+        k is the number of SNPs in a block in the treemix file. 
+        If the actual number of SNPs in a BED file interval is less than kblock,
+        then additional invariant rows are added to the treemix file so
+        the total numbers of rows for that and every block is equal to kblock.
+        k is set to 1000 by default.  It needs to be increased only when
+        one or more BED file regions have more than k snps.
+  
+'''
+##"""
+##    make an input file for the treemix program
+##
+##    Pickrell JK, Pritchard JK (2012) Inference of Population Splits and Mixtures
+##    from Genome-Wide Allele Frequency Data. PLOS Genetics 8(11): e1002967.
+##
+##    Treemix manual:
+##    https://bitbucket.org/nygcresearch/treemix/downloads/treemix_manual_10_1_2012.pdf
+##
+##    this replaces an older file of this name that was designed to work with IMa3 related code
+##    that old file is renamed  vcf_to_treemix_old_version.py
+##   
+##    
+##"""
+
 import os
-import subprocess
 import logging
 import argparse
 import pgpipe.vcf_BED_to_seqs as vBs
