@@ -1,5 +1,5 @@
-====================================================
-Informative Loci Filter (informative_loci_filter.py)
-====================================================
+===================================================
+informative_loci_filter.py: Informative Loci Filter
+===================================================
 .. automodule:: informative_loci_filter
 

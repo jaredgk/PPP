@@ -1,5 +1,5 @@
-===================================
-STAT File Sampler (stat_sampler.py)
-===================================
+==================================
+stat_sampler.py: STAT File Sampler
+==================================
 .. automodule:: stat_sampler
 

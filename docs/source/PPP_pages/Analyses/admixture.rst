@@ -1,5 +1,5 @@
-=================================
-Admixture Analysis (admixture.py)
-=================================
+================================
+admixture.py: Admixture Analysis
+================================
 .. automodule:: admixture
 

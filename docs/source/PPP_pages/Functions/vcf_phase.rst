@@ -1,5 +1,5 @@
-=================================
-VCF Phase Function (vcf_phase.py)
-=================================
+================================
+vcf_phase.py: VCF Phase Function
+================================
 .. automodule:: vcf_phase
 
