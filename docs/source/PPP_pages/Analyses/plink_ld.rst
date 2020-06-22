@@ -1,5 +1,5 @@
-======================
-LD-statistics Analysis
-======================
-.. automodule:: plink_ld
+=================================================================
+Linkage Disequilibrium Analysis (plink_linkage_disequilibrium.py)
+=================================================================
+.. automodule:: plink_linkage_disequilibrium
 

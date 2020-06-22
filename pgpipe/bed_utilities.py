@@ -148,7 +148,7 @@ import numpy as np
 #sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 
 # Import basic bedtools functions
-from pgpipe.bedtools import merge_bed_files, standard_bedtools_call
+from pgpipe.bedtools_wrapper import merge_bed_files, standard_bedtools_call
 
 from pgpipe.logging_module import initLogger, logArgs
 

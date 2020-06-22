@@ -1,5 +1,5 @@
-=================================
-VCF Statistic Calculator Function
-=================================
+===============================================
+VCF Statistic Calculator Function (vcf_calc.py)
+===============================================
 .. automodule:: vcf_calc
 

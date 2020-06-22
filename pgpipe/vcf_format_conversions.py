@@ -69,7 +69,7 @@ import logging
 #sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 
 # Import PPP modules and scripts
-from pgpipe.admixtools import *
+from pgpipe.eigenstrat_wrapper import *
 from pgpipe.bcftools import convert_vcf, log_bcftools_reference
 from pgpipe.plink import convert_ped, convert_bed, convert_vcf_to_plink, log_plink_reference
 from pgpipe.vcf_reader_func import checkFormat
