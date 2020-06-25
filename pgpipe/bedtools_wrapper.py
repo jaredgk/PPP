@@ -58,19 +58,19 @@ def check_bedtools_for_errors (bedtools_stderr):
 
 def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
     '''
-        Merge BED files
+    Merge BED files
 
-        The function calls bedtools
+    The function calls bedtools
 
-        Parameters
-        ----------
-        bedtools_call_args : list
-            bedtools arguments
+    Parameters
+    ----------
+    bedtools_call_args : list
+    bedtools arguments
 
-        Raises
-        ------
-        Exception
-            If bedtools stderr returns an error
+    Raises
+    ------
+    Exception
+    If bedtools stderr returns an error
     '''
 
     # Confirm where the specifed executable is located
@@ -92,7 +92,7 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
     # Loop the BEDtools input
     for bed_line in bed_input:
 
-        # Pipe the BEDtools input to stdin
+    # Pipe the BEDtools input to stdin
         bedtools_sort_call.stdin.write(bed_line)
 
     # Call BEDtools to merge the sorted input
@@ -110,7 +110,7 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
     # Check if code is running in python 3
     if sys.version_info[0] == 3:
 
-        # Convert bytes to string
+    # Convert bytes to string
         bedtools_sort_stderr = bedtools_sort_stderr.decode()
 
     # Check BEDtools sort for possible errors
@@ -130,6 +130,9 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
 
     # Check BEDtools sort for possible errors
     check_bedtools_for_errors(bedtools_merge_stderr)
+
+    # Close BEDtools output
+    bed_output_file.close()
 
     # Close BEDtools output
     bed_output_file.close()

@@ -242,6 +242,8 @@ def isInformative(rec, mincount=2, alleles=None):
     count = 0
     if alleles is None:
         alleles, total_sites, missing_inds = getAlleleStats(rec)
+    if 'N' in alleles.keys(): #jh edit 6/17/2020 alleles may have N's 
+        del(alleles['N'])
     if len(alleles) != 2:
         return False
     i1,i2 = alleles.keys()
@@ -286,10 +288,13 @@ def checkRecordPass(rec, remove_cpg=False, remove_indels=True,
         return False
     if remove_missing != -1 or inform_level != 0:
         alleles,total_sites,missing_inds = getAlleleStats(rec)
+##        if len(alleles) > 1:
+##            return True
         if remove_missing != -1 and missing_inds > int(remove_missing):
             return False
-        if inform_level != 0 and not isInformative(rec,mincount=inform_level,
-                alleles=alleles):
+##  jh 6/17/2020  was calling isInformative which was removing variants,  replace with isInvariant
+##        if inform_level != 0 and not isInformative(rec,mincount=inform_level,alleles=alleles):
+        if inform_level != 0 and isInvariant(rec):
             return False
     return True
 
@@ -342,6 +347,7 @@ class VcfReader():
                              'uncompressed or zipped with bgzip' % vcfname))
         self.file_uncompressed = (ext == 'vcf')
         self.reader_uncompressed = (self.file_uncompressed and not compress_flag)
+
         self.popmodel = None
         self.popkeys = None
         if popmodel is not None and use_allpop:
@@ -359,7 +365,7 @@ class VcfReader():
             subsamp_file = open(subsamp_fn,'r')
             subsamp_list = [l.strip() for l in subsamp_file.readlines()]
             subsamp_file.close()
-
+        
         self.openSetInds(vcfname,index,popmodel,use_allpop,subsamp_list)
         self.info_rec = next(self.reader)
         self.prev_last_rec = None #next(self.reader)
@@ -484,7 +490,11 @@ class VcfReader():
     def getNext(self,set_prev=True):
         try:
             trec = next(self.reader)
-            return trec
+            # jh 6/17/2020 added this crude trap for reading a line with only a newline symbol
+            if trec.chrom == '':
+                return None
+            else:
+                return trec
         except StopIteration as e:
             return None
             
@@ -557,7 +567,7 @@ def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
         lst.append(prev_last_rec)
     elif (prev_last_rec is not None and
          region.containsRecord(prev_last_rec) == 'after'):
-        return []
+        return [],prev_last_rec  #jh added ',prev_last_rec'  6/5/2020
     rec = next(vcf_reader,None)
     if rec is None:
         return lst,None

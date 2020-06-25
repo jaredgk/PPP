@@ -28,7 +28,11 @@ ppp_scripts = ['pgpipe/vcf_filter.py',
                'pgpipe/ima3_wrapper.py',
                'pgpipe/eigenstrat_fstats.py',
                'pgpipe/vcf_utilities.py',
-               'pgpipe/vcf_split_pysam.py']
+               'pgpipe/vcf_split_pysam.py',
+               'pgpipe/vcf_to_fastsimcoal.py',
+               'pgpipe/vcf_to_dadi.py',
+               'pgpipe/vcf_to_treemix.py',
+               'pgpipe/vcf_to_gphocs.py']
 
 setup(name=pgpipe.__title__,
       version=pgpipe.__version__,
