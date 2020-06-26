@@ -42,11 +42,10 @@
     Example 2: Model Using Files
     ****************************
     A model may also be created using two file options:
-    
+
     #. Assign multiple pops to model: *--model-pop-file 2Pop_Model 2Pops.txt*
     #. Assign multiple inds to pop:   *--pop-ind-file Pop1 Pop1_Inds.txt*
-                                      *--pop-ind-file Pop2 Pop2_Inds.txt*
-
+                                      
     .. code-block:: bash
         
         model_creator.py --model-pop-file 2Pop_Model 2Pops.txt --pop-ind-file Pop1 Pop1_Inds.txt --pop-ind-file Pop2 Pop2_Inds.txt
