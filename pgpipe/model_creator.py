@@ -29,9 +29,10 @@
     ***********************
     A basic model only require a single population (pop) with a single in individual (ind).
     Only three commands are required:
-    1) Create and name a model: *--model 1Pop_Model*
-    2) Assign a pop to a model: *--model-pop 1Pop_Model Pop1*
-    2) Assign an ind to a pop:  *--pop-ind Pop1 Ind1*
+
+    #. Create and name a model: *--model 1Pop_Model*
+    #. Assign a pop to a model: *--model-pop 1Pop_Model Pop1*
+    #. Assign an ind to a pop:  *--pop-ind Pop1 Ind1*
 
     .. code-block:: bash
 
@@ -40,9 +41,10 @@
     ****************************
     Example 2: Model Using Files
     ****************************
-    A model may also be created using two file options
-    1) Assign multiple pops to model: *--model-pop-file 2Pop_Model 2Pops.txt*
-    2) Assign multiple inds to pop:   *--pop-ind-file Pop1 Pop1_Inds.txt*
+    A model may also be created using two file options:
+    
+    #. Assign multiple pops to model: *--model-pop-file 2Pop_Model 2Pops.txt*
+    #. Assign multiple inds to pop:   *--pop-ind-file Pop1 Pop1_Inds.txt*
                                       *--pop-ind-file Pop2 Pop2_Inds.txt*
 
     .. code-block:: bash
