@@ -50,19 +50,19 @@
         model_creator.py --model-pop-file 2Pop_Model 2Pops.txt --pop-ind-file Pop1 Pop1_Inds.txt --pop-ind-file Pop2 Pop2_Inds.txt
 
     .. code-block:: bash
-       :name: 2Pops.txt
+       :caption: 2Pops.txt
 
        Pop1
        Pop2
 
     .. code-block:: bash
-       :name: Pop1_Inds.txt
+       :caption: Pop1_Inds.txt
 
        Ind1
        Ind2
 
     .. code-block:: bash
-       :name: Pop2_Inds.txt
+       :caption: Pop2_Inds.txt
 
        Ind3
        Ind4
