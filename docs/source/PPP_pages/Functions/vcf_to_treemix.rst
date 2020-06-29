@@ -1,4 +1,4 @@
 =============================================
-vcf_to_ima.py: VCF to IMa Conversion Function
+vcf_to_treemix.py: VCF to treemix Conversion Function
 =============================================
-.. automodule:: vcf_to_ima
+.. automodule:: vcf_to_treemix

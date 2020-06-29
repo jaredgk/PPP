@@ -11,3 +11,5 @@ These functions were developed to perform the actual population genetic analyses
    Analyses/admixture
    Analyses/ima3_wrapper
    Analyses/plink_linkage_disequilibrium
+   Analyses/vcf_to_sfs
+
