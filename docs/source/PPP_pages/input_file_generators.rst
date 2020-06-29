@@ -2,10 +2,14 @@
 PPP Input File Generators
 =========================
 
-Many techniques are incompatible with VCF files and require file conversion that may be computationally intensive and/or time consuming. To avoid potential redundancies, we have not automated conversions within the PPP. Instead we have developed multiple functions to generate the necessary input files.
+For several programs that implement analyses of population genomic variation, PPP provides scripts to generate input files from VCF files.
 
 .. toctree::
    :maxdepth: 1
 
    Functions/vcf_format_conversions
    Functions/vcf_to_ima
+   Functions/vcf_to_treemix
+   Functions/vcf_to_gphocs
+   Functions/vcf_to_fastsimcoal
+   Functions/vcf_to_dadi
