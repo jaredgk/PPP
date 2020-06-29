@@ -1,3 +1,74 @@
+#!/usr/bin/env python
+'''
+   For generating the site frequency spectrum (sfs) from a vcf file.
+   
+   The sfs is an array with as many dimensions as populations.
+   For example, if population samples are in order A,B, C
+   then position (i,j,k) of the array refers to the count of SNPs with derived alleles that
+   were observed to have a count of i in A, j in B, and k in C
+   
+   If the sfs is folded then the count in a cell of the sfs is he number
+   of SNPs with that combination of minor allele counts.
+   
+   -can handle an arbitrary number of dimensions (populations)
+   -handles downsampling, and reduction of dimensions
+   -handles unfolded and folded sfs's
+   -handles a BED file
+   -can handle an alternative reference genome for rooting, rather than that used in the vcf file
+   -primary callable functions:
+       build_sfs() - for building an sfs 
+       reducesfsdims() - for reducing dimensionality of an sfs by summing across axes
+
+        returns a multidimensional numpy array
+            for k populations the array has k dimensions
+            for populations in order,  the indices of a position in the array are in that order
+            e.g. if populations are in order A,B, C
+            then position (i,j,k) refers to alleles that were observed to have a count of i in A, j in B, and k in C
+
+        Can handle aribtrary numbers of populations and sample sizes, so long as each
+            population has at least a sample size of two
+            All vcf handling assumes that inidividuals are diploid at all SNPs.
+            Otherwise, if vcf processing were more general then sample sizes could be odd.
+            
+        vcffile is a vcf, or bgzipped vcf file, with SNP data
+        
+        popmodel is an instance of Model
+            It should specify one or more populations
+            sample sizes are determined by the numbers of individuals in the model for each population
+
+        
+        BEDfilename is the name of a ucsc-style bedfile with intervals to include
+
+        altreference is the name of a fasta sequence file that contains the reference genome to be used
+            this causes the 'ref' allele, as given in the vcf to not be used as the reference
+            this can be useful, for example, if an ancestral reference is available to that the reference allele is
+            the ancestral allele
+
+            if the base from the alternative references does not match either the vcf reference base or the vcf first alternate base
+            the SNP will be ignored 
+
+            using an alternate reference has no effect if folded is True 
+
+        folded indicates that the folded sfs should be returned
+            folded causes the count returned for a SNP to be that for the less common base
+            ignores alt and ref
+
+        downsamplesizes is an array listing the sample sizes to be used if they are less than given in the model
+            2 <= downsamplesizes[i] <= samplesizes[i]
+            if None,  then the sample sizes are those given by the popmodel
+
+        randomsnpprop is the proportion of snps to include
+            uses random sampling
+
+        seed is a random number seed that can be used with randomsnpprop
+
+        makeint causes the array to be rounded to the nearest integer (dtype remains float)
+            == True by default
+
+        out is the name of a file to contain the sfs
+            if out is not None,  this will write a tab-delimited file of the array
+'''
+
 """
    For generating the site frequency spectrum (sfs) from a vcf file.
    
@@ -55,29 +126,34 @@ def odd(num):
         return True
     return False
 
-## not used
-##def downsampleSFS(rsampsize,sampsize,SFS):
-##    """ expect an SFS as a list of length sampsize + 1,  with position i for i gene copies"""
-##    b = [[0.0 for i in range(sampsize+1)] for j in range(sampsize+1)]
-##    for i in range(sampsize+1):
-##        for j in range(sampsize+1):
-##            if i>= j:
-##                b[i][j] = binomial(i,j)
-##    rSFS = [0.0 for i in range(rsampsize+1)]
-##    for ai in range(len(SFS)):
-##        c = SFS[ai]
-##        for ri in range(len(rSFS)):
-##            p = 1.0
-##            p *= b[ai][ri]*b[sampsize-ai][rsampsize-ri]/ b[sampsize][rsampsize]
-##            rSFS[ri]+= c * p
-##    # now rescale non-zero values so probability is 1 and 0 cell is 0.0
-##    rSFS[0] = 0.0
-##    rSFS[rsampsize] = 0.0
-##    rsum = sum(rSFS)
-##    for ri in range(1,len(rSFS)):
-##        rSFS[ri] /= rsum
-####    print sum(rSFS)
-##    return rsampsize,rSFS
+def downsampleSFS(rsampsize,sampsize,SFS):
+    """
+        standalone function, not called by build_sfs()
+        
+        expect a 1D SFS as a list of length sampsize + 1,  with position i for i gene copies
+        returns a list with the reduced sfs
+        
+    """
+    b = [[0.0 for i in range(sampsize+1)] for j in range(sampsize+1)]
+    for i in range(sampsize+1):
+        for j in range(sampsize+1):
+            if i>= j:
+                b[i][j] = binomial(i,j)
+    rSFS = [0.0 for i in range(rsampsize+1)]
+    for ai in range(len(SFS)):
+        c = SFS[ai]
+        for ri in range(len(rSFS)):
+            p = 1.0
+            p *= b[ai][ri]*b[sampsize-ai][rsampsize-ri]/ b[sampsize][rsampsize]
+            rSFS[ri]+= c * p
+    # now rescale non-zero values so probability is 1 and 0 cell is 0.0
+    rSFS[0] = 0.0
+    rSFS[rsampsize] = 0.0
+    rsum = sum(rSFS)
+    for ri in range(1,len(rSFS)):
+        rSFS[ri] /= rsum
+##    print sum(rSFS)
+    return rSFS
 
 def builddownsamplearrays(rsampsize,sampsize, folded = None):
     
@@ -181,6 +257,8 @@ def dnprocessSNP(r,popmodel,sampsizes,sfs,altref_access=None,folded=None,downsam
         
     return sfs,0
 
+
+
 def processSNP(r,popmodel,sampsizes,sfs,folded = None,altref_access=None):
     """
       gets an array of counts,c, and adds to sfs
@@ -205,7 +283,23 @@ def processSNP(r,popmodel,sampsizes,sfs,folded = None,altref_access=None):
     return sfs,0
 
 
-def build_sfs(vcffile,popmodel,BEDfilename=None,altreference = None,folded = False,downsamplesizes = None,randomsnpprop = None, seed = None,makeint = True):
+def reducesfsdims(sfs,popmodel,keeppops):
+    """
+        sfs is a full sfs for popmodel that was made using build_sfs() with axes
+        ordered the same as populations in popmodel.
+        keeppops is a list containing a subset of populations in popmodel 
+        returns the sfs after summing along axes not in keeppops
+    """
+    temp = list(popmodel.pop_list)
+    for kp in keeppops:
+        temp.remove(kp)
+    sumaxes = tuple([popmodel.pop_list.index(kp) for kp in temp])
+    sfs = np.sum(sfs,sumaxes)
+    return sfs
+
+def build_sfs(vcffile,popmodel,BEDfilename=None,altreference = None,folded = False,
+              downsamplesizes = None,randomsnpprop = None, seed = None,
+              makeint = True, out = None):
     """
         returns a multidimensional numpy array
             for k populations the array has k dimensions
@@ -252,8 +346,9 @@ def build_sfs(vcffile,popmodel,BEDfilename=None,altreference = None,folded = Fal
 
         makeint causes the array to be rounded to the nearest integer (dtype remains float)
             == True by default
-                        
-        
+
+        out is the name of a file to contain the sfs
+            if out is not None,  this will write a tab-delimited file of the array
         
     """
     npops = len(list(popmodel.pop_list))
@@ -345,21 +440,64 @@ def build_sfs(vcffile,popmodel,BEDfilename=None,altreference = None,folded = Fal
                         ri += 1
     if makeint:
         sfs = np.rint(sfs)
+    if out:
+        if makeint:
+            np.savetxt(out,sfs,fmt = '%d',delimiter ='\t')
+        else:
+            np.savetxt(out,sfs,fmt = '%.1f',delimiter ='\t')
     return sfs
         
 
-def reducesfsdims(sfs,popmodel,keeppops):
-    """
-        sfs is a full sfs for popmodel that was made using build_sfs() with axes
-        ordered the same as populations in popmodel.
-        keeppops is a list containing a subset of populations in popmodel 
-        returns the sfs after summing along axes not in keeppops
-    """
-    temp = list(popmodel.pop_list)
-    for kp in keeppops:
-        temp.remove(kp)
-    sumaxes = tuple([popmodel.pop_list.index(kp) for kp in temp])
-    sfs = np.sum(sfs,sumaxes)
-    return sfs
+def sfs_parser(passed_arguments):
+    '''snfs Argument Parser - Assigns arguments from command line'''
+
+    def parser_confirm_file ():
+        '''Custom action to confirm file exists'''
+        class customAction(argparse.Action):
+            def __call__(self, parser, args, value, option_string=None):
+                if not os.path.isfile(value):
+                    raise IOError('%s not found' % value)
+                setattr(args, self.dest, value)
+        return customAction
+
+    sfs_parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    sfs_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
+    sfs_parser.add_argument('--model-file', help = 'Defines the model filename',required = True, type = str, action = parser_confirm_file())
+    sfs_parser.add_argument('--model', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
+    sfs_parser.add_argument("--bed-file",help="Optional, the name of a BED file", type = str, action = parser_confirm_file())
+    sfs_parser.add_argument('--folded',default=False,action="store_true",help="Optional, generate the folded sfs")
+    sfs_parser.add_argument('--randomsnpprop',type=float,help="Optinal,the proportion of randomly selected SNPs to include")
+    sfs_parser.add_argument('--seed',type=int,help="Optinal,integer random number seed to use with randomsnpprop")
+    sfs_parser.add_argument('--downsamplesizes',type=int,nargs='+',help="Optional,sample sizes to use for output "
+                                "an array of integers,  one for each population, in the same order "
+                                "as populations in popmodel. Values must >=2 and be <= actual number of "
+                                "chromosomes in the vcf file for the corresponding population.")    
+    sfs_parser.add_argument('--out', help = 'Optional, the complete output filename of a tab-delimted file', type = str)
+    sfs_parser.add_argument('--outgroup-fasta',help="Optinal, the name of a fasta format file containing"
+                                 " the ancestral or outgroup sequence, by default the 'ref' allele "
+                                 "of the vcf file is treated as the outgroup", action = parser_confirm_file())
+    sfs_parser.add_argument('--makeint',help='Optional, round all values to zero decimal places', default = True)
+
+    if passed_arguments:
+        return sfs_parser.parse_args(passed_arguments)
+    else:
+        return sfs_parser.parse_args()
+
+def run (passed_arguments = []):
+    # Grab sfs arguments from command line
+    sfs_args = sfs_parser(passed_arguments)
+
+    # Adds the arguments (i.e. parameters) to the log file
+    logArgs(sfs_args, func_name = 'build_sfs')
+
+##    print(sfs_args)
+    popmodels = read_model_file(sfs_args.model_file)
+    popmodel = popmodels[sfs_args.model]
+    
+    
+    
+if __name__ == "__main__":
+    initLogger()
+    run()
 
         

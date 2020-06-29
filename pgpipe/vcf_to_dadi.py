@@ -279,7 +279,7 @@ def run (passed_arguments = []):
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(dadisnp_args, func_name = 'make_dadisnp_file')
 
-    print(dadisnp_args)
+##    print(dadisnp_args)
     popmodels = read_model_file(dadisnp_args.model_file)
     popmodel = popmodels[dadisnp_args.model]
     dadisnp_run_infostring =make_dadisnp_file(dadisnp_args.vcf,popmodel,dadisnp_args.out,

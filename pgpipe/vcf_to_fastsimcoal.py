@@ -290,7 +290,7 @@ def fscmsfs_parser(passed_arguments):
     parser.add_argument("--bed-file",help="Defines the BED filename", type = str, action = parser_confirm_file())
     parser.add_argument('--outgroup-fasta',help="The name of a fasta format file containing"
                                  " the ancestral or outgroup sequence, by default the 'ref' allele "
-                                 "of the vcf file is treated as the outgroup")
+                                 "of the vcf file is treated as the outgroup", action = parser_confirm_file())
     parser.add_argument('--dim',type=str,nargs='+',required = True,
                         help="1 (single), 2 (two) or m (multi-) dimensional output files. "
                                 "Multiple values can be used, e.g.  --dim 1 m ")
