@@ -2,7 +2,7 @@
 PPP Utilities
 =============
 
-XXX The utility functions were developed to perform various tasks often needed when preparing files for population genetic analyses.
+The utility functions were developed to perform various tasks often needed when preparing files for population genetic analyses.
 
 .. toctree::
    :maxdepth: 1
