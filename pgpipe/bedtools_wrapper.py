@@ -73,7 +73,7 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
     If bedtools stderr returns an error
     '''
 
-# Confirm where the specifed executable is located
+    # Confirm where the specifed executable is located
     bedtools_path = confirm_executable('bedtools')
 
     # Check if the executable was found
@@ -134,6 +134,8 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
     # Close BEDtools output
     bed_output_file.close()
 
+    # Close BEDtools output
+    bed_output_file.close()
 
 def standard_bedtools_call (bedtools_call_args, bed_output_filename):
     '''

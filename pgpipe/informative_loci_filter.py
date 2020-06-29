@@ -1,19 +1,27 @@
 #!/usr/bin/env python
-'''
-    Given a BED file and a VCF file, will find regions in the VCF that have
-    a certain number of variant sites meeting specified criteria.
+''' 
 
-    This function checks to make sure that regions specified by other means
-    have enough sites to be considered informative in either the four-gamete 
-    test or an IM run. Because many variants are not considered useful in 
-    these situations, filters are provided for removing sites with missing 
-    data, non-biallelic sites, indels, CpGs, and singletons from determining
-    if there are a sufficient number of sites in the region. Output is either
-    a BED file of a set number of random regions that pass the criteria, or a 
-    file with all regions that pass. It can also remove regions that are below
-    a minimum specified length. If a model file is specified, only the 
-    individuals in the selected population will be considered for singleton and
-    missing data filters.
+    This function checks to make sure that a locus has enough sites to be 
+    considered informative in either the four-gamete test or an IM run. 
+    Given a BED file and a VCF file, informative_loci_filter will find regions 
+    in the VCF that have a specified number of variant sites.
+
+    .. image:: ../../PPP_assets/PPP_Loci_Filter.png
+        :width: 100 %
+        :align: center
+
+    In this illustration of the locus filtering process, locus_0004 is
+    removed due to only having three variant sites (highlighted in green)
+    when the threshold is set to four.
+
+    Because many variants are not considered useful in these situations, filters 
+    are provided for removing sites with missing data, non-biallelic sites, 
+    indels, CpGs, and singletons from determining if there are a sufficient 
+    number of sites in the region. Output is either a BED file of a set number 
+    of random regions that pass the criteria, or a file with all regions that pass. 
+    It can also remove regions that are below a minimum specified length. If a 
+    model file is specified, only the individuals in the selected population will 
+    be considered for singleton and missing data filters.
 
     ###############
     Input Arguments

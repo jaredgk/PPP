@@ -1,5 +1,5 @@
 =============================================
-vcf_to_ima.py: VCF to IMa Conversion Function
+vcf_four_gamete.py: Four Gamete Test Function
 =============================================
-.. automodule:: vcf_to_ima
+.. automodule:: vcf_four_gamete
 

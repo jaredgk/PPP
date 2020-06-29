@@ -23,21 +23,17 @@ The core functions of the PPP were designed to operate using VCF-based files pri
 
 Please Note: This documentation is currently being devlopement and will be updated freqeuntly in the coming days
 
-
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
    :hidden:
 
    PPP_pages/install
-   PPP_pages/vcf_functions
-   PPP_pages/statbed_functions
-   PPP_pages/conversions
-   PPP_pages/analysis_functions
-   PPP_pages/utility_functions
+   PPP_pages/functions
+   PPP_pages/input_file_generators
+   PPP_pages/analyses
+   PPP_pages/utilities
    PPP_pages/model
    PPP_pages/contact
    PPP_pages/citations
-
-
+   example_pipeline_pan.ipynb

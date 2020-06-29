@@ -1,18 +1,120 @@
+#!/usr/bin/env python
+'''
+    Many PPP functions were designed to automatically assign relevant populations 
+    and/or individuals using a *Model* file. To enable this functionality, the 
+    model_creator.py function may be used to produce *Model* files by either: i) 
+    manually entering the necessary information or ii) by using files with the 
+    relevant information. It is also all possible to create multiple models 
+    simultaneously and assign populations to more than a single model. 
+
+    .. image:: ../../PPP_assets/PPP_Model.png
+        :width: 100 %
+        :align: center
+
+    A simple way to visualize models are as a hierarchy. Each *Model* may contain 
+    one or more *Populations* and each *Population* may contain one or more 
+    *Individuals*.
+
+    ##################
+    Command-line Usage
+    ##################
+    The model creator may be called using the following command:
+
+    .. code-block:: bash
+        
+        model_creator.py
+
+    ***********************
+    Example 1: Simple Model
+    ***********************
+    A basic model only require a single population (pop) with a single in individual (ind).
+    Only three commands are required:
+
+    #. Create and name a model: *--model 1Pop_Model*
+    #. Assign a pop to a model: *--model-pop 1Pop_Model Pop1*
+    #. Assign an ind to a pop:  *--pop-ind Pop1 Ind1*
+
+    .. code-block:: bash
+
+        model_creator.py --model 1Pop_Model --model-pop Test Pop1 --pop-ind Pop1 Ind1
+        
+    ****************************
+    Example 2: Model Using Files
+    ****************************
+    A model may also be created using two file options:
+
+    #. Assign multiple pops to model: *--model-pop-file 2Pop_Model 2Pops.txt*
+    #. Assign multiple inds to pop:   *--pop-ind-file Pop1 Pop1_Inds.txt*
+                                      
+    .. code-block:: bash
+        
+        model_creator.py --model-pop-file 2Pop_Model 2Pops.txt --pop-ind-file Pop1 Pop1_Inds.txt --pop-ind-file Pop2 Pop2_Inds.txt
+
+    .. code-block:: bash
+       :caption: 2Pops.txt
+
+       Pop1
+       Pop2
+
+    .. code-block:: bash
+       :caption: Pop1_Inds.txt
+
+       Ind1
+       Ind2
+
+    .. code-block:: bash
+       :caption: Pop2_Inds.txt
+
+       Ind3
+       Ind4
+
+    ############################
+    Model Command-line Arguments
+    ############################
+    All model-based arguments may be used multiple times.
+
+    **--model** *<model_str>*
+        Argument used to define the name of a model to create.
+    **--model-tree** *<model_str>* *<newick_str>*
+        Argument used to assign a population tree to a model, in Newick format. 
+        --eigenstrat-prefix.
+    **--model-tree-file** *<model_str>* *<newick_file>*
+        Argument used to assign a population tree file to a model, in Newick 
+        format.
+    **--model-pop** *<model_str>* *<pop_str>*
+        Argument used to assign a population to a model.
+    **--model-pops** *<model_str>* *<pop1_str>* *<pop2_str>* ..
+        Argument used to assign a multiple populations to a model.
+    **--model-pop-file** *<model_str>* *<pop_file>*
+        Argument used to assign a multiple populations to a model using a file.
+    **--pop-ind** *<pop_str>* *<ind_str>*
+        Argument used to assign a individual to a population.
+    **--pop-inds** *<pop_str>* *<ind1_str>* *<ind2_str>* ..
+        Argument used to assign a multiple individuals to a population.
+    **--pop-ind-file** *<pop_str>* *<ind_file>*
+        Argument used to assign a multiple individuals to a population using a file.
+
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename.
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+'''
+
 import os
 import sys
 import json
 import argparse
 import logging
 import itertools
+
+from collections import defaultdict, OrderedDict
+
 from pgpipe.model import Model, ModelFile, write_model_file
+from pgpipe.logging_module import initLogger, logArgs
 
-from collections import defaultdict
-from collections import OrderedDict
-
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
-from pgpipe.logging_module import initLogger
 
 def model_creator_parser (passed_arguments):
     '''VCF Argument Parser - Assigns arguments from command line'''
@@ -117,18 +219,18 @@ def model_creator_parser (passed_arguments):
     model_parser.add_argument('--model', help = 'Defines the name of a model', type = str, action = 'append', required = True)
 
     # Tree arguments
-    model_parser.add_argument('--model-tree', help = 'Assign population tree string to a model, in Newick format', type = str, nargs = 2, action = parser_dict_str())
-    model_parser.add_argument('--model-tree-file', help = 'Assign population tree file to a model, in Newick format', type = str, nargs = 2, action = parser_dict_file())
+    model_parser.add_argument('--model-tree', metavar = ('MODEL', 'TREE'), help = 'Assign population tree string to a model, in Newick format', type = str, nargs = 2, action = parser_dict_str())
+    model_parser.add_argument('--model-tree-file',  metavar = ('MODEL', 'NEWICK_FILE'), help = 'Assign population tree file to a model, in Newick format', type = str, nargs = 2, action = parser_dict_file())
 
     # Population arguments
-    model_parser.add_argument('--model-pop', dest = 'pops', help = 'Assign a population name to a model', type = str, nargs = 2, action = parser_dict_list_append())
-    model_parser.add_argument('--model-pops', dest = 'pops', help = 'Assign multiple population names to a model', type = str, nargs = '+', action = parser_dict_list_extend())
-    model_parser.add_argument('--model-pop-file', help = 'Assign multiple population names to a model usign a file', type = str, nargs = 2, action = parser_dict_file())
+    model_parser.add_argument('--model-pop', metavar = ('MODEL', 'POP'), dest = 'pops', help = 'Assign a population name to a model', type = str, nargs = 2, action = parser_dict_list_append())
+    model_parser.add_argument('--model-pops', metavar = ('MODEL', 'POP'), dest = 'pops', help = 'Assign multiple population names to a model', type = str, nargs = '+', action = parser_dict_list_extend())
+    model_parser.add_argument('--model-pop-file', metavar = ('MODEL', 'POP_FILE'), help = 'Assign multiple population names to a model usign a file', type = str, nargs = 2, action = parser_dict_file())
 
     # Individual arguments
-    model_parser.add_argument('--pop-ind', dest = 'inds', help = 'Assign an individual name to a population', type = str, nargs = 2, action = parser_dict_list_append())
-    model_parser.add_argument('--pop-inds', dest = 'inds', help = 'Assign multiple individual names to a population', type = str, nargs = '+', action = parser_dict_list_extend())
-    model_parser.add_argument('--pop-ind-file', help = 'Assign multiple individual names to a population using a file', type = str, nargs = 2, action = parser_dict_file())
+    model_parser.add_argument('--pop-ind', metavar = ('POP', 'IND'), dest = 'inds', help = 'Assign an individual name to a population', type = str, nargs = 2, action = parser_dict_list_append())
+    model_parser.add_argument('--pop-inds', metavar = ('POP', 'IND'), dest = 'inds', help = 'Assign multiple individual names to a population', type = str, nargs = '+', action = parser_dict_list_extend())
+    model_parser.add_argument('--pop-ind-file', metavar = ('POP', 'IND_FILE'), help = 'Assign multiple individual names to a population using a file', type = str, nargs = 2, action = parser_dict_file())
 
     # Output Arguments
     model_parser.add_argument('--out', help = 'Specifies the complete output filename.', type = str, default = 'out.model')
@@ -138,12 +240,6 @@ def model_creator_parser (passed_arguments):
         return model_parser.parse_args(passed_arguments)
     else:
         return model_parser.parse_args()
-
-def logArgs(args, pipeline_function):
-    '''Logs arguments from argparse system. May be replaced with a general function in logging_module'''
-    logging.info('Arguments for %s:' % pipeline_function)
-    for k in vars(args):
-        logging.info('Arguments %s: %s' % (k, vars(args)[k]))
 
 def incompatible_duplicates_check (term, *arguments_to_test):
 
@@ -272,7 +368,6 @@ def run (passed_arguments = []):
         No population assigned to model
     Exception
         No individuals assigned to population
-
     '''
 
     # Grab VCF arguments from command line
@@ -289,7 +384,7 @@ def run (passed_arguments = []):
 
         # Check that a tree has been assigned to the model
         if not assigment_check(model, creator_args.model_tree_file, creator_args.model_tree):
-            raise Exception('No tree assigned to %s' % model)
+            logging.warning('No tree assigned to %s' % model)
 
         # Check that multiple trees have not been assigned to the model
         if incompatible_duplicates_check(model, creator_args.model_tree_file, creator_args.model_tree):

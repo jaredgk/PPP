@@ -1,9 +1,26 @@
 #!/usr/bin/env python
 '''
-    Automates various utilites for BED-formatted files. This currently includes: i) 
-    subtract from a BED that overlap with a second BED file; ii) extend a BED upstream, 
-    downstream, or both upstream and downstream; iii) sort a single BED; iv) merge 
-    features within one or more BED files; v) create a BED of complementary features.
+    Automates various utilites for BED-formatted files. This currently includes: i)
+    sample a BED file; ii) subtract from a BED that overlap with a second BED file; 
+    iii) extend a BED upstream, downstream, or both upstream and downstream; iv) sort 
+    a single BED; v) merge features within one or more BED files; vi) create a BED of 
+    complementary features.
+
+    ########
+    Utilites
+    ########
+
+    **************
+    Sample Utility
+    **************
+
+    .. image:: ../../PPP_assets/PPP_BED_Sample.png
+        :width: 100 %
+        :align: center
+
+    Given a BED file (Loci.BED) and a sample size, the sample utility will generate a 
+    pseudorandomly sampled BED. Please note that the random seed may be used to 
+    reproduced the sample.
 
     ##################
     Command-line Usage
@@ -58,13 +75,22 @@
     ##################################
     Utility Command-line Specification
     ##################################
-    **--utility** *<subtract, extend, sort, merge, complement>*
-        Argument used to define the desired utility. Current utilities include: subtract
-        features from a BED file that overlap with features within a second BED file 
-        (subtract); extend the flanks of features upstream, downstream, or both within a 
-        single BED file (extend); sort the features within a single BED file (sort); merge
-        features within one or more BED files (merge); create a BED file of complementary
-        features - i.e. features that do not overlap - from a BED file (complement).
+    **--utility** *<sample, subtract, extend, sort, merge, complement>*
+        Argument used to define the desired utility. Current utilities include: sample
+        features from a BED file (sample); subtract features from a BED file that overlap 
+        with features within a second BED file (subtract); extend the flanks of features 
+        upstream, downstream, or both within a single BED file (extend); sort the 
+        features within a single BED file (sort); merge features within one or more BED 
+        files (merge); create a BED file of complementary features - i.e. features that 
+        do not overlap - from a BED file (complement).
+
+    *************************************
+    Sample Utility Command-line Arguments
+    *************************************
+    **--sample-size** *<sample_size_int>*
+        Argument used to define the total sample size.
+    **--random-seed** *<seed_int>*
+        Argument used to define the seed value for the random number generator.
 
     ***************************************
     Subtract Utility Command-line Arguments
@@ -116,11 +142,13 @@ import shutil
 import argparse
 import glob
 import logging
+import csv
+import numpy as np
 
 #sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 
 # Import basic bedtools functions
-from pgpipe.bedtools import merge_bed_files, standard_bedtools_call
+from pgpipe.bedtools_wrapper import merge_bed_files, standard_bedtools_call
 
 from pgpipe.logging_module import initLogger, logArgs
 
@@ -165,8 +193,13 @@ def bed_argument_parser(passed_arguments):
     bed_parser.add_argument('--chrom-file', help = 'File of chromosome sizes', type = str, action = parser_confirm_file())
 
     # Utility based arguments
-    utility_list = ['subtract', 'extend', 'sort', 'merge', 'complement']
+    utility_list = ['sample', 'subtract', 'extend', 'sort', 'merge', 'complement']
     bed_parser.add_argument('--utility', metavar = metavar_list(utility_list), help = 'Specifies the utility to be used', type = str, choices = utility_list, required = True)
+
+    # Sample-specific arguments
+    sample_group = bed_parser.add_argument_group('Sample Utility Arguments')
+    sample_group.add_argument('--sample-size', help="Defines the total sample size", type = int)
+    sample_group.add_argument('--random-seed', help="Defines the seed value for the random number generator", type = int, default = np.random.randint(1, high = 1000000000))
 
     # Subtract-specific arguments
     subtract_group = bed_parser.add_argument_group('Subtract Utility Arguments')
@@ -191,10 +224,55 @@ def bed_argument_parser(passed_arguments):
     bed_parser.add_argument('--out', help = 'Defines the output filename', default = 'out.bed')
     bed_parser.add_argument('--overwrite', help = "Defines that previous output files should be overwritten", action = 'store_true')
 
+
+
     if passed_arguments:
         return bed_parser.parse_args(passed_arguments)
     else:
         return bed_parser.parse_args()
+
+def random_bed_sampler (bed_filename, out_filename, sample_size, with_replacements = False):
+    '''
+        Random Sampler.
+
+        Returns a list of randomly selected elements from stat_file_data. The
+        length of this list is defined by sample_size.
+
+        Parameters
+        ----------
+        bed_filename : str
+            Filename of the bed file
+        out_filename : str
+            Filename of the output file
+        sample_size : int
+            Size of the total sample
+        with_replacements : bool, optional
+            If the function should sample with replacements
+    '''
+
+    # Open the BED file
+    with open(bed_filename, 'r') as bed_file:
+
+        # Start a CSV reader, split by tab
+        bed_reader = csv.reader(bed_file, delimiter = '\t')
+
+        # Store the split contents within file
+        bed_list = list(bed_reader)
+
+    # Use numpy choice to randomly sample the bed list by index
+    random_samples = np.random.choice(len(bed_list), int(sample_size), replace = with_replacements)
+
+    # Convert the sample indices to a list
+    random_samples = [bed_list[random_sample] for random_sample in random_samples]
+
+    # Open the output file
+    with open(out_filename,'w') as out_file:
+
+        # Create the output writer
+        out_writer = csv.writer(out_file, delimiter = '\t')
+
+        # Write the output
+        out_writer.writerows(random_samples)
 
 def run (passed_arguments = []):
     '''
@@ -219,6 +297,10 @@ def run (passed_arguments = []):
             Complete output filename
         --overwrite
             Species if previous output should be overwriten
+        --sample-size : int
+            Specifies the total sample size.
+        --random-seed : int
+            Specifies the random seed value for the random number generator
         --subtract-bed : str
             Filename of the BED to subtract
         --subtract-entire-feature : bool
@@ -270,8 +352,21 @@ def run (passed_arguments = []):
     if bed_args.beds and bed_args.utility not in ['merge']:
         raise Exception('%s only supports a single BED file' % bed_args.utility)
 
+    # Check if the user has selected the sample utility
+    if bed_args.utility == 'sample':
+
+        # Check that a sample size was specified
+        if not bed_args.sample_size:
+            raise Exception('%s requires a sample size. Please use --sample-size' % bed_args.utility)
+
+        # Set the random seed
+        np.random.seed(bed_args.random_seed)
+
+        # Randomly sample the BED file
+        random_bed_sampler(bed_args.bed, bed_args.out, bed_args.sample_size, with_replacements = False)
+
     # Check if the user has selected the merge utility
-    if bed_args.utility == 'merge':
+    elif bed_args.utility == 'merge':
 
         # Create list of BED files to merge
         bed_files_to_merge = []

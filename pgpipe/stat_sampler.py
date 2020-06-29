@@ -1,9 +1,25 @@
 #!/usr/bin/env python
 '''
-    Automates the sampling process of a specified statistic output file. The
-    function allows the user to select both the statistic in question and
-    the sampling scheme. Please note that all sampling is done without
-    replacement.
+    As a single statistic file may include far more loci/windows than
+    a technique is capable of analyzing, it is often necessary to 
+    sample the loci/windows from the file. Given a statistic file and 
+    a sampling scheme, stat_sampler will generate a pseudorandomly
+    sampled file.
+
+    .. image:: ../../PPP_assets/PPP_STAT_Sample.png
+        :width: 100 %
+        :align: center
+
+    In this illustration of the sampling process, the loci found within 
+    Data.VCF are pseudorandomly sampled using the corrdinates found within 
+    the given statistic file.
+
+    Two pseudorandomly sampling schemes are provided: i) a random sampler 
+    that will randomly select loci/windows and ii) a uniform sampler that 
+    will evenly sample across equal-sized bins of the given statistic. 
+    Please note that all sampling is done without replacement.
+
+    For BED-based sampling, please see :doc:`../Utilities/bed_utilities.rst`.
 
     ##################
     Command-line Usage

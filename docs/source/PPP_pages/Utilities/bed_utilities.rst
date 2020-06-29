@@ -1,5 +1,5 @@
-=========================
-BED Modification Utilites
-=========================
-.. automodule:: bed_tasks
+==============================
+bed_utilities.py: BED Utilites
+==============================
+.. automodule:: bed_utilities
 

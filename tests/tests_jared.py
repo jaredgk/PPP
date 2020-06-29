@@ -11,7 +11,7 @@ from pgpipe.vcf_split_pysam import vcf_region_write
 from pgpipe.vcf_reader_func import checkFormat, VcfReader
 from pgpipe.genome_region import RegionList, Region
 from pgpipe.logging_module import initLogger
-from pgpipe.four_gamete import sample_fourgametetest_intervals
+from pgpipe.vcf_four_gamete import sample_fourgametetest_intervals
 from pgpipe.vcf_to_ima import vcf_to_ima
 from pgpipe.bed_invert import get_intergenic
 from pgpipe.get_nonmissing_chunks import regionsWithData

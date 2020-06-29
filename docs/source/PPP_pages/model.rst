@@ -1,8 +1,14 @@
-==========
-Model File
-==========
+=======================
+Model File and Creation
+=======================
 
 A unique benefit of the PPP is the ability to use the Model files. Model files are JSON-based files used to store population models and their relevant details, such as: the populations within the model; the individuals in each population; the population tree; and other potential meta-data as needed. Model files allow the PPP functions to automatically assign various parameters and serves as the repository for all model-related information.
+
+.. toctree::
+   :maxdepth: 1
+
+   Functions/model_creator
+
 
 An example Model file may be seen below:
 
@@ -32,6 +38,3 @@ An example Model file may be seen below:
         }
     }
     ]
-
-
-Model creation?

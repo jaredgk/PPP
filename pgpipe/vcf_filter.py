@@ -1,7 +1,21 @@
 #!/usr/bin/env python
 '''
-    Automates VCF file filering using BCFtools. Filters may be used independently or
-    combined to create complex filtering operations.        
+    Depending on the analysis being conducted, a number of variant sites and/or 
+    samples may be unsuitable and must be removed. Given an unfiltered VCF and 
+    the desired filters, vcf_filter will apply the filters and produce a filtered 
+    VCF. Filters may be used independently or combined as needed. In addition, a
+    number of the filters are seperated into two types: include (include/keep 
+    all relevant variant sites or samples) and exclude (exclude/remove all 
+    relevant variant sites or samples).
+
+    .. image:: ../../PPP_assets/PPP_Filter.png
+        :width: 100 %
+        :align: center
+
+    In this illustration of the filtering process (within a locus of interest), variant 
+    sites were kept only if they: i) were biallelic and ii) passed all filters. These 
+    requirements resulted in the removal of two variant sites (i.e. 197557 and 198510) 
+    within the given locus.
 
     ##################
     Command-line Usage
@@ -19,7 +33,7 @@
 
     .. code-block:: bash
         
-        vcf_filter.py --vcf input.bcf --filter-min-alleles 2 --filter-max-alleles 2
+        vcf_filter.py --vcf input.bcf --filter-only-biallelic
 
     Command-line to only include chromosome chr1:
 
@@ -44,11 +58,11 @@
     **--vcf** *<input_filename>*
         Argument used to define the filename of the VCF file to be filtered.
     **--model-file** *<model_filename>*
-    	Argument used to define the model file. Please note that this argument cannot be 
-    	used with the individual-based filters.
+        Argument used to define the model file. Please note that this argument cannot be 
+        used with the individual-based filters.
     **--model** *<model_str>*
-    	Argument used to define the model (i.e. the individual(s) to include). Please note
-    	that this argument cannot be used with the individual-based filters.
+        Argument used to define the model (i.e. the individual(s) to include). Please note
+        that this argument cannot be used with the individual-based filters.
 
     #############################
     Output Command-line Arguments
@@ -91,40 +105,42 @@
     *******************************
     Allele/Genotype-Based Arguments
     *******************************
+    **--filter-only-biallelic**
+        Argument used to only include variants that are biallelic.
     **--filter-min-alleles** *min_int*
-    	Argument used to include positions with a number of allele >= to the 
-    	given number.
+        Argument used to include variants with a number of allele >= to the 
+        given number.
     **--filter-max-alleles** *max_int*
-        Argument used to include positions with a number of allele <= to the 
+        Argument used to include variants with a number of allele <= to the 
         given number.
     **--filter-maf-min** *maf_proportion*
-    	Argument used to include sites with equal or greater MAF values.
+        Argument used to include variants with equal or greater MAF values.
     **--filter-maf-max** *maf_proportion*
-    	Argument used to include sites with equal or lesser MAF values.
+        Argument used to include variants with equal or lesser MAF values.
     **--filter-mac-min** *mac_int*
-    	Argument used to include sites with equal or greater MAC values.
+        Argument used to include variants with equal or greater MAC values.
     **--filter-mac-max** *mac_int*
-    	Argument used to include sites with equal or lesser MAC values.
+        Argument used to include variants with equal or lesser MAC values.
     **--filter-include-indels**
-    	Argument used to include positions if they contain an insertion or a deletion. 
+        Argument used to include variants if they contain an insertion or a deletion. 
     **--filter-exclude-indels**
-    	Argument used to exclude positions if they contain an insertion or a deletion.
+        Argument used to exclude variants if they contain an insertion or a deletion.
     **--filter-include-snps**
-        Argument used to include positions if they contain a SNP. 
+        Argument used to include variants if they contain a SNP. 
     **--filter-exclude-snps**
-        Argument used to exclude positions if they contain a SNP. 
+        Argument used to exclude variants if they contain a SNP. 
     **--filter-include-snp** *<rs#>* *<rs#1, rs#2, etc.>*
-    	Argument used to include SNP(s) with the matching ID. This argument may be used 
+        Argument used to include SNP(s) with the matching ID. This argument may be used 
         multiple times if desired.
     **--filter-exclude-snp** *<rs#>* *<rs#1, rs#2, etc.>*
         Argument used to exclude SNP(s) with the matching ID. This argument may be used 
         multiple times if desired.
     **--filter-include-snp-file** *<snp_filename>*
-    	Argument used to define a file of SNP IDs to include.
+        Argument used to define a file of SNP IDs to include.
     **--filter-exclude-snp-file** *<snp_filename>*
-    	Argument used to define a file of SNP IDs to exclude.
+        Argument used to define a file of SNP IDs to exclude.
     **--filter-max-missing** *proportion_float*
-    	Argument used to filter positions by their proportion of missing data, a value of
+        Argument used to filter positions by their proportion of missing data, a value of
         0.0 allows for no missing whereas a value of 1.0 ignores missing data. 
     **--filter-max-missing-count** *count_int*
         Argument used to filter positions by the number of samples with missing data, a 
@@ -192,11 +208,11 @@ def vcf_filter_parser(passed_arguments):
 
     Parameters
     ----------
-	passed_arguments : list, optional
-		Parameters passed by another function. sys.argv is used if
-		not given. 
+    passed_arguments : list, optional
+        Parameters passed by another function. sys.argv is used if
+        not given. 
 
-	Raises
+    Raises
     ------
     IOError
         If the input, or other specified files do not exist
@@ -267,8 +283,9 @@ def vcf_filter_parser(passed_arguments):
     indv_file_filters.add_argument('--filter-exclude-indv-file', help = 'Defines a file of individuals to exclude', action = parser_confirm_file())
 
     # Allele count filters
-    vcf_parser.add_argument('--filter-min-alleles', help = 'Include positions with a number of allele >= to the given number', type = int)
-    vcf_parser.add_argument('--filter-max-alleles', help = 'Include positions with a number of allele <= to the given number', type = int)
+    vcf_parser.add_argument('--filter-only-biallelic', help = 'Only include variants that are biallelic', action = 'store_true')
+    vcf_parser.add_argument('--filter-min-alleles', help = 'Include variants with a number of allele >= to the given number', type = int)
+    vcf_parser.add_argument('--filter-max-alleles', help = 'Include variants with a number of allele <= to the given number', type = int)
 
     # Missing data filters
     missing_filters = vcf_parser.add_mutually_exclusive_group()
@@ -277,13 +294,13 @@ def vcf_filter_parser(passed_arguments):
 
     # Indel variant-type filters
     indel_filters = vcf_parser.add_mutually_exclusive_group()
-    indel_filters.add_argument('--filter-include-indels', help = 'Include positions if they contain an insertion or a deletion', action = 'store_true')
-    indel_filters.add_argument('--filter-exclude-indels', help = 'Exclude positions if they contain an insertion or a deletion', action = 'store_true')
+    indel_filters.add_argument('--filter-include-indels', help = 'Include variants if they contain an insertion or a deletion', action = 'store_true')
+    indel_filters.add_argument('--filter-exclude-indels', help = 'Exclude variants if they contain an insertion or a deletion', action = 'store_true')
     
     # SNP variant-type filter
     snps_filters = vcf_parser.add_mutually_exclusive_group()
-    snps_filters.add_argument('--filter-include-snps', help = 'Include positions if they contain a SNP', action = 'store_true')
-    snps_filters.add_argument('--filter-exclude-snps', help = 'Exclude positions if they contain a SNP', action = 'store_true')
+    snps_filters.add_argument('--filter-include-snps', help = 'Include variants if they contain a SNP', action = 'store_true')
+    snps_filters.add_argument('--filter-exclude-snps', help = 'Exclude variants if they contain a SNP', action = 'store_true')
 
     # Position filters
     vcf_parser.add_argument('--filter-include-pos', help = 'Defines comma seperated positions (i.e. CHROM:START-END) to include. START and END are optional. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
@@ -298,10 +315,10 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument('--filter-exclude-bed', help = 'Defines a BED file of positions to exclude', action = parser_confirm_file())
 
     # Filter-flag filters
-    vcf_parser.add_argument('--filter-include-passed', help = "Include positions with the 'PASS' filter flag", action = 'store_true')
-    vcf_parser.add_argument('--filter-exclude-passed', help = "Exclude positions with the 'PASS' filter flag", action = 'store_true')
-    vcf_parser.add_argument('--filter-include-flag', help = 'Include positions with the specified filter flag', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-flag', help = 'Exclude positions with the specified filter flag', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-include-passed', help = "Include variants with the 'PASS' filter flag", action = 'store_true')
+    vcf_parser.add_argument('--filter-exclude-passed', help = "Exclude variants with the 'PASS' filter flag", action = 'store_true')
+    vcf_parser.add_argument('--filter-include-flag', help = 'Include variants with the specified filter flag', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-flag', help = 'Exclude variants with the specified filter flag', nargs = '+', type = str, action = parser_add_to_list())
 
     # Info-flag filters
     #vcf_parser.add_argument('--filter-include-info', help = 'Include positions with the specified info flag', nargs = '+', type = str, action = parser_add_to_list())
@@ -316,12 +333,12 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument('--filter-exclude-snp-file', help = 'Defines a file of SNP IDs to exclude', action = parser_confirm_file())
 
     # MAF Filter
-    vcf_parser.add_argument('--filter-maf-min', help = 'Include sites with equal or greater MAF values', type = float)
-    vcf_parser.add_argument('--filter-maf-max', help = 'Include sites with equal or lesser MAF values', type = float)
+    vcf_parser.add_argument('--filter-maf-min', help = 'Include variants with equal or greater MAF values', type = float)
+    vcf_parser.add_argument('--filter-maf-max', help = 'Include variants with equal or lesser MAF values', type = float)
 
     # MAC Filter
-    vcf_parser.add_argument('--filter-mac-min', help = 'Include sites with equal or greater MAC values', type = int)
-    vcf_parser.add_argument('--filter-mac-max', help = 'Include sites with equal or lesser MAC values', type = int)
+    vcf_parser.add_argument('--filter-mac-min', help = 'Include variants with equal or greater MAC values', type = int)
+    vcf_parser.add_argument('--filter-mac-max', help = 'Include variants with equal or lesser MAC values', type = int)
 
     if passed_arguments:
         return vcf_parser.parse_args(passed_arguments)
@@ -347,10 +364,10 @@ def run (passed_arguments = []):
         Output filename prefix
     --out-format : str
         Output format
-	--model-file : str
-		Model filename
-	--model : str
-		Model to use
+    --model-file : str
+        Model filename
+    --model : str
+        Model to use
     --filter-include-indv : list or str
         Individual(s) to include. May be used multiple times. Not usable w/ --model
     --filter-exclude-indv : list or str
@@ -359,30 +376,32 @@ def run (passed_arguments = []):
         File of individuals to include. Not usable w/ --model
     --filter-exclude-indv-file : str
         File of individuals to exclude.  Not usable w/ --model
+    --filter-only-biallelic
+        Only include variants that are biallelic
     --filter-min-alleles : int
         Include positions with a number of allele >= to the given number
     --filter-max-alleles : int
         Include positions with a number of allele <= to the given number
     --filter-maf-min
-		Include sites with equal or greater MAF values
+        Include sites with equal or greater MAF values
     --filter-maf-max
-    	Include sites with equal or lesser MAF values
+        Include sites with equal or lesser MAF values
     --filter-mac-min
-    	Include sites with equal or greater MAC values
+        Include sites with equal or greater MAC values
     --filter-mac-max
-    	Include sites with equal or lesser MAC values
-   	--filter-include-indels
-    	Include positions if they contain an insertion or a deletion
+        Include sites with equal or lesser MAC values
+    --filter-include-indels
+        Include positions if they contain an insertion or a deletion
     --filter-exclude-indels
-    	Exclude positions if they contain an insertion or a deletion
- 	--filter-include-snp
- 		Include SNP(s) with the matching ID. May be used multiple times
+        Exclude positions if they contain an insertion or a deletion
+    --filter-include-snp
+        Include SNP(s) with the matching ID. May be used multiple times
     --filter-include-snp-file
-    	File of SNP IDs to include
+        File of SNP IDs to include
     --filter-exclude-snp-file
-    	File of SNP IDs to exclude
+        File of SNP IDs to exclude
     --filter-max-missing
-		Filter positions by their missing data proportion. Values should be given
+        Filter positions by their missing data proportion. Values should be given
         as max proportion of missing data to accept. For example, a value of 0.0
         allows no missing data whereas a value of 0.1 allows for 10% of samples to 
         have missig data.
@@ -588,8 +607,15 @@ def run (passed_arguments = []):
         # Store the types to include argument
         bcftools_call_args.extend(['--exclude-types', '%s' % ','.join(exclude_variant_types)])
 
-    # Allele-based filters
-    if vcf_args.filter_min_alleles or vcf_args.filter_max_alleles:
+    # Allele-based filter, biallelic only
+    if vcf_args.filter_only_biallelic:
+        
+        # Assign the max and min allele to two
+        bcftools_call_args.extend(['--min-alleles', 2, '--max-alleles', 2])
+
+    # Allele-based filters, min and max 
+    elif vcf_args.filter_min_alleles or vcf_args.filter_max_alleles:
+        
         if vcf_args.filter_min_alleles:
             bcftools_call_args.extend(['--min-alleles', vcf_args.filter_min_alleles])
         if vcf_args.filter_max_alleles:
