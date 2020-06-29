@@ -139,7 +139,7 @@ def make_gphocs_sequence_file(vcf,reference,BEDfile,ids,filename=None,diploid = 
     else:
         file_handle = open(filename, 'w')
         
-    if isinstance(ids,list): # make a model to pass to get_model_sequences_from_multiple_regions()
+    if isinstance(ids,list): # make a model to pass to get_model_sequences()
         # order of sequences in output gphocs sequence file will be the same as in ids
         idlist = ids
         popmodel = Model('gphocsmodel')
@@ -168,10 +168,9 @@ def make_gphocs_sequence_file(vcf,reference,BEDfile,ids,filename=None,diploid = 
     file_handle.write("%d\n"%nloci)
 
 
-    a = vBs.get_model_sequences_from_multiple_regions(vcf_filename=vcf,
-                        popmodel=popmodel,fasta_reference=reference,
-                        BED_filename = BEDfile,return_one_sequence = (diploid==False),
-                        useNifmissingdata=True)
+    a = vBs.get_model_sequences(vcf_filename=vcf,
+                        pppmodel=popmodel,fasta_reference=reference,
+                        BED_filename = BEDfile,return_single = (diploid==False))
     nr = 0
     while True:
         try:
@@ -245,8 +244,10 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
-##    debugargs = ['--vcf','Pan_chr_21_22_test.vcf.gz','--reference',"twochr_test_ref.fa",
-##            '--model-file',"panmodels.model",'--model',"4Pop",
-##            '--bed-file',"twochr_test.bed",'--out','testgphocsparser.out']#,'--diploid','False','--nloci','4']
-##    run(debugargs)
+##    run()
+    debugargs = ['--vcf','..//jhworkfiles//Pan_chr_21_22_test.vcf.gz','--reference',
+                 "..//jhworkfiles//twochr_test_ref.fa",
+            '--model-file',"..//jhworkfiles//panmodels.model",'--model',"4Pop",
+            '--bed-file',"..//jhworkfiles//twochr_test.bed",
+            '--out','..//jhworkfiles//testgphocsparser.out']#,'--diploid','False','--nloci','4']
+    run(debugargs)

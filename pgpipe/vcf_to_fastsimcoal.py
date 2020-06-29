@@ -48,7 +48,7 @@
 
     **--basename** *<name of outpuf file prefix>*
         This is used to specify the prefix of the output files. The default is
-        "ppp_fsc"
+        "ppp_fsc" in the same folder as the vcf file
         
     **--bed-file** *<BED_file_name>*
         The BED file is a sorted UCSC-style bedfile containing chromosome locations of
@@ -153,7 +153,7 @@ def write2dimfiles(sfs,popmodel,basename,folded):
     for popi in popmodel.pop_list[:-1]:
         pj = pi + 1
         for popj in popmodel.pop_list[pi+1:]:
-            temp=vcfsfs.reducesfsdims(sfs,popmodel,[popi,popj])
+            temp=vcfsfs.reduce_sfs_dims(sfs,popmodel,[popi,popj])
             if folded:
                 fn = basename + "_jointMAFpop{}_{}.obs".format(pj,pi)
             else:
@@ -181,7 +181,7 @@ def write1dimfiles(sfs,popmodel,basename,folded):
     dd = sfs.shape
     fns = []
     for pi,pop in enumerate(popmodel.pop_list):
-        temp=vcfsfs.reducesfsdims(sfs,popmodel,[pop])
+        temp=vcfsfs.reduce_sfs_dims(sfs,popmodel,[pop])
         if folded:
             fn = basename + "_MAFpop{}.obs".format(pi)
         else:
@@ -198,7 +198,7 @@ def write1dimfiles(sfs,popmodel,basename,folded):
     return fns
 
         
-def make_fscmsfs_file(vcffile,popmodel, basefilename, dimfiletypes, downsampsizes,
+def make_fscmsfs_file(vcffile,model_file,model, basefilename, dimfiletypes, downsampsizes,
                       folded,outgroup_fasta,BEDfilename,randomsnpprop,seed):
                                                                                                               
     
@@ -206,9 +206,9 @@ def make_fscmsfs_file(vcffile,popmodel, basefilename, dimfiletypes, downsampsize
         calls vcfsfs.build_sfs(), to which most arguments are simply passed
         
         vcffile is a vcf, or bgzipped vcf file, with SNP data
-        
-        popmodel is an instance of Model
-            It should specify one or more populations
+
+        model_file is a model file
+        model is the name of a population in the model
         
         basefilename is the basename to be used for the sfs files
 
@@ -246,9 +246,12 @@ def make_fscmsfs_file(vcffile,popmodel, basefilename, dimfiletypes, downsampsize
             
         
     """
-    sfs = vcfsfs.build_sfs(vcffile,popmodel,BEDfilename=BEDfilename,
+    
+    sfs = vcfsfs.build_sfs(vcffile,model_file,model,BEDfilename=BEDfilename,
                     altreference = outgroup_fasta,folded = folded,
                     downsamplesizes = downsampsizes,randomsnpprop =randomsnpprop, seed = seed)
+    popmodels = read_model_file(model_file)
+    popmodel = popmodels[model]
 ##    print(sfs.shape,sfs.sum())
     numfiles = 0
     if '1' in dimfiletypes:
@@ -294,7 +297,7 @@ def fscmsfs_parser(passed_arguments):
     parser.add_argument('--dim',type=str,nargs='+',required = True,
                         help="1 (single), 2 (two) or m (multi-) dimensional output files. "
                                 "Multiple values can be used, e.g.  --dim 1 m ")
-    parser.add_argument('--basename',default = 'ppp_fsc',help="base of the file name for sfs obs files")
+    parser.add_argument('--basename',help="base of the file name for sfs obs files")
     parser.add_argument('--folded',default=False,action="store_true",help="Generate the folded sfs")
     parser.add_argument('--randomsnpprop',type=float,help="the proportion of randomly selected SNPs to include")
     parser.add_argument('--seed',type=int,help="integer random number seed to use with randomsnpprop")
@@ -315,12 +318,11 @@ def run (passed_arguments = []):
     print(args)
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(args, func_name = 'make_fscmsfs_file')
-    popmodels = read_model_file(args.model_file)
-    popmodel = popmodels[args.model]
 
-
+    if args.basename == None:
+        args.basename = os.path.dirname(args.vcf) + "//ppp_fsc"
                                                                                                               
-    fscmsfs_run_infostring =make_fscmsfs_file(args.vcf,popmodel,args.basename,args.dim,
+    fscmsfs_run_infostring =make_fscmsfs_file(args.vcf,args.model_file,args.model,args.basename,args.dim,
             args.downsamplesizes,args.folded,args.outgroup_fasta,
             args.bed_file,args.randomsnpprop,args.seed)
     
@@ -330,17 +332,19 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
-##    debugargs=['--vcf',"Pan_chr_21_22_test.vcf.gz",'--model-file',"panmodels.model",'--model','4Pop',
+##    run()
+##    debugargs=['--vcf',"..//jhworkfiles//Pan_chr_21_22_test.vcf.gz",
+##               '--model-file',"..//jhworkfiles//panmodels.model",'--model','4Pop',
 ##           '--dim','1','2','m']#,'--folded']
 
-##    debugargs=['--vcf',"Pan_all_hicov_chr22_decrun_missingasref.vcf.gz",'--model-file',
-##               "panmodels.model",'--model','4Pop','--downsamplesizes','3','3','3','4',
-##               '--folded','--dim','1','2','m','--outgroup-fasta',"chr22_hg18.fa"]
+    debugargs=['--vcf',"..//jhworkfiles//Pan_all_hicov_chr22_decrun_missingasref.vcf.gz",
+               '--model-file',"..//jhworkfiles//panmodels.model",'--model','4Pop',
+               '--downsamplesizes','3','3','3','4',
+               '--folded','--dim','1','2','m','--outgroup-fasta',"..//jhworkfiles//chr22_hg18.fa"]
 ##    debugargs=['--vcf',"sfs_test.vcf",'--model-file',
 ##               "pantest.model",'--model','5Pop','--downsamplesizes','3','3','3','4','3',
 ##               '--folded','--dim','1','2','m']
 ##    debugargs=['--vcf',"sfs_test.vcf",'--model-file',
 ##               "pantest.model",'--model','5Pop','--dim','1','2','m']    
     
-##    run(debugargs)
+    run(debugargs)

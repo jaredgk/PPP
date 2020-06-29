@@ -1,95 +1,143 @@
 #!/usr/bin/env python
 '''
-   For generating the site frequency spectrum (sfs) from a vcf file.
-   
-   The sfs is an array with as many dimensions as populations.
-   For example, if population samples are in order A,B, C
-   then position (i,j,k) of the array refers to the count of SNPs with derived alleles that
-   were observed to have a count of i in A, j in B, and k in C
-   
-   If the sfs is folded then the count in a cell of the sfs is he number
-   of SNPs with that combination of minor allele counts.
-   
-   -can handle an arbitrary number of dimensions (populations)
-   -handles downsampling, and reduction of dimensions
-   -handles unfolded and folded sfs's
-   -handles a BED file
-   -can handle an alternative reference genome for rooting, rather than that used in the vcf file
-   -primary callable functions:
-       build_sfs() - for building an sfs 
-       reducesfsdims() - for reducing dimensionality of an sfs by summing across axes
+    For generating the site frequency spectrum (sfs)for a
+    population model from a vcf file.
 
-        returns a multidimensional numpy array
-            for k populations the array has k dimensions
-            for populations in order,  the indices of a position in the array are in that order
-            e.g. if populations are in order A,B, C
-            then position (i,j,k) refers to alleles that were observed to have a count of i in A, j in B, and k in C
+    The sfs is an array with as many dimensions as populations in the model.
+    For example, if population samples are in order A,B, C
+    then position (i,j,k) of the array refers to the count of SNPs with derived alleles that
+    were observed to have a count of i in A, j in B, and k in C
 
-        Can handle aribtrary numbers of populations and sample sizes, so long as each
-            population has at least a sample size of two
-            All vcf handling assumes that inidividuals are diploid at all SNPs.
-            Otherwise, if vcf processing were more general then sample sizes could be odd.
+    If the sfs is folded then the count in a cell of the sfs is the number
+    of SNPs with that combination of minor allele counts.
+
+    This script can be run in stand-alone mode,  or for more flexibility it can
+    be imported to give access to more general functions for building and
+    manipulating the sfs. 
+
+
+    All vcf handling assumes that all individuals are diploid at all SNPs.
+
+    ###############
+    Required Arguments
+    ###############
+
+    **--vcf** *<input_vcf_filename>*
+        The name of the vcf file.  This can be a bgzipped vcf file. . 
+
+    **--model-file** *<model_file_name>*
+        The name of a PPP model file. 
+
+    **--model** *<model_name>*
+        The name of a model in the model file.  The treemix file to be
+        generated will contain the allele counts for each SNP in each of
+        the populations.  The treemix run will estimate the phylogeny
+        for the populations in the model.
+
+
+    **--out** *<out file name>*
+        - the name of an output file. If --out is omitted the default is ppp_sfs.out in
+            the same folder as the vcffile This will be a tab-delimited file
+            If the number of dimensions is 2, the sfs is contained in the rows and columns,
+            otherwise the values are given on the first line of the file
+
+    ###############
+    Optional Aguments
+    ###############
+
+      
+    **--bed-file** *<BED_file_name>*
+        The BED file is a sorted UCSC-style bedfile containing chromosome locations of
+        the SNPs to be included in the output files. The BED file has no header.
+        The first column is the chromosome name (this must match the chromosome
+        name in the vcf file).
+        The second column is start position (0-based, open interval)
+        The third column is end position (closed interval).
+        Any other columns are ignored.
+
+    **--outgroup_fasta** *<name of alternative reference sequence>*
+        This option is used to specify the name of a fasta file to use as an
+        alternative reference to that used for the vcf file.
+
+        This fasta file must have been properly aligned to the reference
+        used in the vcf file.  
             
-        vcffile is a vcf, or bgzipped vcf file, with SNP data
-        
-        popmodel is an instance of Model
-            It should specify one or more populations
-            sample sizes are determined by the numbers of individuals in the model for each population
+        This option can be useful, for example, if an ancestral or outgroup reference is
+        available that more accurately identifies the ancestral (and thus derived)
+        allele at each SNP than does the reference used to make the vcf file.
 
-        
-        BEDfilename is the name of a ucsc-style bedfile with intervals to include
+    **--downsamplesizes** *<down sample sizes>*
+        A sequence of integers,  one for each of the populations in the model in
+        the same order as populations listed in the model. The values 
+        specify the down sampling to be used for each respective population.
+        For a population with k>=1 diploid individuals (2k>=2 genomes) in the model,
+        the downsample count d  must be 2<=d<=2k.
 
-        altreference is the name of a fasta sequence file that contains the reference genome to be used
-            this causes the 'ref' allele, as given in the vcf to not be used as the reference
-            this can be useful, for example, if an ancestral reference is available to that the reference allele is
-            the ancestral allele
+    **--folded** *<True/False>*
+        The folded option indicates that the folded sfs should be returned.
+        If folded is False (default) the sfs reports the count of the derived allele.
+        If True,  the sfs reports of the count of the minor (less frequent) allele.
 
-            if the base from the alternative references does not match either the vcf reference base or the vcf first alternate base
-            the SNP will be ignored 
+    **--randomsnpprop** *<floating point value between 0 and 1>*
+        This option can be used to randomly sample a subset of SNPs. The default
+        is to sample all biallelic SNPs.
 
-            using an alternate reference has no effect if folded is True 
+    **--seed** *<integer>*
+        This is used with --randomsnpprop as the seed for the random number generator.
 
-        folded indicates that the folded sfs should be returned
-            folded causes the count returned for a SNP to be that for the less common base
-            ignores alt and ref
+    **--makeint** *<True/False>*
+        If True, round the counts in the sfs to the nearest integer (default False)
 
-        downsamplesizes is an array listing the sample sizes to be used if they are less than given in the model
-            2 <= downsamplesizes[i] <= samplesizes[i]
-            if None,  then the sample sizes are those given by the popmodel
 
-        randomsnpprop is the proportion of snps to include
-            uses random sampling
+    ###############
+    Importing Functions
+    ###############   
 
-        seed is a random number seed that can be used with randomsnpprop
+    This file has two scripts that can be useful for working with site frequency spectra
 
-        makeint causes the array to be rounded to the nearest integer (dtype remains float)
-            == True by default
+     1. build_sfs() is the default script that runs when this file is run
+         -This can also be accessed directly by importing this file
+         - generates an sfs from a vcf file
+         -can handle an arbitrary number of dimensions (populations) and
+            sample sizes, so long as each population has at least a
+            sample size of two genomes (i.e. one diploid individual)
+         -handles downsampling, and reduction of dimensions
+         -handles unfolded and folded sfs's
+         - can take a BED file name to sample portions of a vcf file
+         - can handle an alternative reference genome for rooting, rather
+            than that used in the vcf file
+         -the arguments closely resemble those used when the function is called
+             by running this file
+             Required arguments:
+             -vcffile is a vcf, or bgzipped vcf file, with SNP data, can be bgzipped
+             -model_file is the name of a model file
+             -model is the name of a population in the model file
+             Optional arguments:
+             - BEDfilename is the name of a ucsc-style bedfile with intervals to include
+             - altreference is the name of a fasta sequence file that contains the reference genome
+             - folded indicates that the folded sfs should be returned
+             - downsamplesizes is sequence of sample sizes to be used if they are
+                 less than given in the model 2 <= downsamplesizes[i] <= samplesizes[i]
+             - randomsnpprop is the proportion of snps to include using random sampling
+             - seed is a random number seed that can be used with randomsnpprop
+             - makeint causes the array to be rounded to the nearest integer (dtype remains float)
+             - out is the name of a file to contain the sfs
+                if out is not None,  this will write a tab-delimited file of the array
 
-        out is the name of a file to contain the sfs
-            if out is not None,  this will write a tab-delimited file of the array
+    2. reduce_sfs_dims() - for reducing dimensionality of an sfs by summing across axes
+        - accessed by importing this file
+        - three required arguements in order:
+            - sfs : a multidimensional array containnig the sfs, (e.g. generated by build_sfs())
+            - popmodel: the model used to create the sfs
+            - keeppops: a list containing a subset of the names of the population in the model
+        - one optional argument
+            - the name of an output file.  This will be a tab-delimited file
+                If the number of dimensions is 2, the sfs is contained in the rows and columns,
+                otherwise the values are given on the first line of the file
+        - returns a numpy array with as many dimensions as there populations in keeppops
+            
 '''
 
-"""
-   For generating the site frequency spectrum (sfs) from a vcf file.
-   
-   The sfs is an array with as many dimensions as populations.
-   For example, if population samples are in order A,B, C
-   then position (i,j,k) of the array refers to the count of SNPs with derived alleles that
-   were observed to have a count of i in A, j in B, and k in C
-   
-   If the sfs is folded then the count in a cell of the sfs is he number
-   of SNPs with that combination of minor allele counts.
-   
-   -can handle an arbitrary number of dimensions (populations)
-   -handles downsampling, and reduction of dimensions
-   -handles unfolded and folded sfs's
-   -handles a BED file
-   -can handle an alternative reference genome for rooting, rather than that used in the vcf file
-   -primary callable functions:
-       build_sfs() - for building an sfs 
-       reducesfsdims() - for reducing dimensionality of an sfs by summing across axes
-   
-"""
 import sys
 import os
 import subprocess
@@ -283,7 +331,7 @@ def processSNP(r,popmodel,sampsizes,sfs,folded = None,altref_access=None):
     return sfs,0
 
 
-def reducesfsdims(sfs,popmodel,keeppops):
+def reduce_sfs_dims(sfs,popmodel,keeppops, out=None):
     """
         sfs is a full sfs for popmodel that was made using build_sfs() with axes
         ordered the same as populations in popmodel.
@@ -295,11 +343,24 @@ def reducesfsdims(sfs,popmodel,keeppops):
         temp.remove(kp)
     sumaxes = tuple([popmodel.pop_list.index(kp) for kp in temp])
     sfs = np.sum(sfs,sumaxes)
+
+    if out:
+        # detect if array as been rounded to zero decimals, or very close
+        temp = sfs.astype(int)
+        if np.all(np.isclose(sfs, temp, 1e-8)):
+            outfmt = "%d"
+        else:
+            outfmt = "%.1f"
+        if len(sfs.shape) <= 2:
+            np.savetxt(out,sfs,fmt = outfmt,delimiter ='\t')
+        else:
+            sfs.tofile(out,sep='\t',format=outfmt)            
+    
     return sfs
 
-def build_sfs(vcffile,popmodel,BEDfilename=None,altreference = None,folded = False,
+def build_sfs(vcffile,model_file,model,BEDfilename=None,altreference = None,folded = False,
               downsamplesizes = None,randomsnpprop = None, seed = None,
-              makeint = True, out = None):
+              makeint = True, out = None, called_from_run = False):
     """
         returns a multidimensional numpy array
             for k populations the array has k dimensions
@@ -345,12 +406,20 @@ def build_sfs(vcffile,popmodel,BEDfilename=None,altreference = None,folded = Fal
         seed is a random number seed that can be used with randomsnpprop
 
         makeint causes the array to be rounded to the nearest integer (dtype remains float)
-            == True by default
+            True by default
 
         out is the name of a file to contain the sfs
             if out is not None,  this will write a tab-delimited file of the array
+
+        called_from_run is true only if build_sfs() was called from run()
+            in this case the out file name is set to a default value 
         
     """
+
+
+    popmodels = read_model_file(model_file)
+    popmodel = popmodels[model]
+    
     npops = len(list(popmodel.pop_list))
     sampsizes = []
     for pop in popmodel.pop_list:
@@ -440,11 +509,16 @@ def build_sfs(vcffile,popmodel,BEDfilename=None,altreference = None,folded = Fal
                         ri += 1
     if makeint:
         sfs = np.rint(sfs)
-    if out:
-        if makeint:
-            np.savetxt(out,sfs,fmt = '%d',delimiter ='\t')
+        outfmt = "%d"
+    else:
+        outfmt = "%.1f"
+    if called_from_run or out != None:
+        if out == None:
+            out = os.path.dirname(vcffile) + "//ppp_sfs.out"
+        if len(sfs.shape) <= 2:
+            np.savetxt(out,sfs,fmt = outfmt,delimiter ='\t')
         else:
-            np.savetxt(out,sfs,fmt = '%.1f',delimiter ='\t')
+            sfs.tofile(out,sep='\t',format=outfmt)
     return sfs
         
 
@@ -490,14 +564,35 @@ def run (passed_arguments = []):
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(sfs_args, func_name = 'build_sfs')
 
-##    print(sfs_args)
-    popmodels = read_model_file(sfs_args.model_file)
-    popmodel = popmodels[sfs_args.model]
-    
+    print(sfs_args)
+
+    build_sfs(sfs_args.vcf,sfs_args.model_file,sfs_args.model,BEDfilename=sfs_args.bed_file,
+              altreference = sfs_args.outgroup_fasta,folded = sfs_args.folded,
+              downsamplesizes = sfs_args.downsamplesizes,
+              randomsnpprop = sfs_args.randomsnpprop, seed = sfs_args.seed,
+              makeint = sfs_args.makeint, out = sfs_args.out, called_from_run = True)
     
     
 if __name__ == "__main__":
     initLogger()
-    run()
+##    run()
 
-        
+    debugargs=['--vcf',"..//jhworkfiles//Pan_all_hicov_chr22_decrun_missingasref.vcf.gz",
+               '--model-file',"..//jhworkfiles//panmodels.model",'--model','4Pop',
+               '--downsamplesizes','3','3','3','4',
+               '--folded','--outgroup-fasta',"..//jhworkfiles//chr22_hg18.fa",
+               '--out',"..//jhworkfiles//test_vcf_to_sfs.txt"]
+    debugargs=['--vcf',"..//jhworkfiles//Pan_all_hicov_chr22_decrun_missingasref.vcf.gz",
+               '--model-file',"..//jhworkfiles//panmodels.model",'--model','4Pop',
+               '--downsamplesizes','3','3','3','4',
+               '--folded','--outgroup-fasta',"..//jhworkfiles//chr22_hg18.fa"]
+    
+##    debugargs=['--vcf',"..//jhworkfiles//Pan_all_hicov_chr22_decrun_missingasref.vcf.gz",
+##               '--model-file',"..//jhworkfiles//panmodels.model",'--model','2Pop',
+##               '--outgroup-fasta',"..//jhworkfiles//chr22_hg18.fa",
+##               '--out',"..//jhworkfiles//test_vcf_to_sfs_2pop.txt"]
+    
+##    debugargs = ['--vcf','Pan_chr_21_22_test.vcf.gz','--reference',"twochr_test_ref.fa",
+##            '--model-file',"panmodels.model",'--model',"4Pop",
+##            '--bed-file',"twochr_test.bed",'--out','testgphocsparser.out']#,'--diploid','False','--nloci','4']
+    run(debugargs)

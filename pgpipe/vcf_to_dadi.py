@@ -291,11 +291,12 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+##    run()
                       
-##    debugargs = ['--vcf','Pan_chr_21_22_test.vcf.gz','--model-file',"panmodels.model",
-##                 '--model',"4Pop",'--out','dadisnp_bedfile_test.out',
-##                 '--comment','testing bedfile','--bed-file',"twochr_test.bed",]
+    debugargs = ['--vcf','..//jhworkfiles//Pan_chr_21_22_test.vcf.gz','--model-file',
+                 "..//jhworkfiles//panmodels.model",
+                 '--model',"4Pop",'--out','..//jhworkfiles//dadisnp_bedfile_test.out',
+                 '--comment','testing bedfile','--bed-file',"..//jhworkfiles//twochr_test.bed",]
 
 ##    debugargs = ['--vcf',"Pan_all_hicov_chr22_decrun_missingasref.vcf.gz",'--model-file',"panmodels.model",
 ##                 '--model',"4Pop",'--out','dadisnp_test.out',
@@ -304,7 +305,7 @@ if __name__ == "__main__":
 ##                 '--model',"4Pop",'--out','dadisnp_test.out',
 ##                 '--comment','testing outgroup-fasta','--outgroup-fasta',"chr22_hg18.fa"]
 
-##    run(debugargs)
+    run(debugargs)
 
 
 
