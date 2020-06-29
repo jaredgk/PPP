@@ -151,9 +151,6 @@
         returns a generator
         subsequent calls using next()  return a samtools/pysam-style region string
         and a list of sequences
-    
-        
-       
             
 '''
 import sys
@@ -182,8 +179,7 @@ def xor(val1,val2):
 def get_model_sequences_from_region(vcf=None,popmodel=None,
     seq_reference=None, region=None,return_single=True,
     out = None, called_from_run = False):
-    
-    '''
+    """
         basically a wrapper for  vcf_to_ima.generateSequence()
         (note - there is also a generateSequence() in vcf_ref_to_seq() ) 
         
@@ -240,8 +236,7 @@ def get_model_sequences_from_region(vcf=None,popmodel=None,
             but if a Region was passed,  then it will be new
         a list of sequences
         
-
-    '''
+    """
     if not isinstance(vcf,vf.VcfReader): # if vcf is a vcf file,  create a vcf_reader from it
         assert isinstance(vcf,str)
         vcf_reader = vf.VcfReader(vcf,popmodel=popmodel)
@@ -314,7 +309,7 @@ def get_model_sequences(vcf_filename=None,model_file = None,modelname=None,
 
     
 
-    '''
+    """
         returns a generator for getting sets of sequences from
         regions given in a BED file for individuals in a model
         seems to work when vcf and BED span multiple chromosomes
@@ -363,7 +358,7 @@ def get_model_sequences(vcf_filename=None,model_file = None,modelname=None,
         and a list of sequences
     
         
-    ''' 
+    """ 
     if not os.path.isfile(fasta_reference + ".fai"):
         # make an index 
         pysam.faidx(fasta_reference) #easier to call this rather than samtools
@@ -409,10 +404,10 @@ def get_model_sequences(vcf_filename=None,model_file = None,modelname=None,
 
 
 def parser(passed_arguments):
-    '''snfs Argument Parser - Assigns arguments from command line'''
+    """snfs Argument Parser - Assigns arguments from command line"""
 
     def parser_confirm_file ():
-        '''Custom action to confirm file exists'''
+        """Custom action to confirm file exists"""
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
                 if not os.path.isfile(value):
