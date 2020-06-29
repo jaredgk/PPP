@@ -3,7 +3,7 @@ Popgen Pipeline Platform
 ========================
 
 .. only:: not html
-
+ 
    ------------
    Introduction
    ------------
