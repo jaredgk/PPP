@@ -5,6 +5,13 @@ python:
   - "2.7"
   - "3.7"
 
+# safelist
+
+branches:
+  only:
+  - master
+  - jody
+
 before_install:
   - sudo apt-get update
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
