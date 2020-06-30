@@ -56,50 +56,41 @@
      
         Parameters
         ----------
-        vcf
-            is either:
-                a vcf_reader  (i.e. see vf.VcfReader())
-                or the name of a vcf file (can be bgzipped)
-                
-        popmodel
-            an instance of class model
-            the individuals in the model must also be in the vcf file
-            
-        seq_reference
-            a string that either:
-                 contains the DNA sequence for the region
-                 
-                 or a string containting the name of a fasta file
-                 if a fasta file, the chromosome name(s) in the fasta file
-                 must match those in the vcf file 
-            
-        region
-            either:
-                 a samtools/pysam style region string ("chromosome name:start-end")
-                     where the chromosome name matches that used in the vcf file
-                     where start and end are the 1-based endpoints (closed interval)
-                 or an instance of class Region
-                     Region uses 0-based open interval on the left
-        return_single
-            if True,  return only the first sequence for an individual
+        -vcf  either:
+            -a vcf_reader  (i.e. see vf.VcfReader())
+            -or the name of a vcf file (can be bgzipped)
+        -popmodel :an instance of class model. The individuals in the model must also be in the vcf file
+        -seq_reference: A string that either contains the DNA sequence for the region
+            or is a string containing the name of a fasta file. If a fasta file name,
+            the chromosome name(s) in the fasta file must match those in the vcf file 
+        - region : either a
+            samtools/pysam style region string ("chromosome name:start-end")
+            where the chromosome name matches that used in the vcf file
+            where start and end are the 1-based endpoints (closed interval)
+            Or an instance of class Region (Regions uses 0-based open interval on the left)
+        -return_single: if True,  return only the first sequence for an individual
             else, return two sequences  (assumes diploid)
-
-
-        out is the name of a file to contain the sequences (optional)
-        
-
+        -out :the name of a file to contain the sequences (optional)
 
         Returns
         -------
-        a samtools/pysam-style region string ("chromosome name:start-end")
+        -a samtools/pysam-style region string ("chromosome name:start-end")
             if a region string was passed to this function,  this should be the same
             but if a Region was passed,  then it will be new
-        a list of sequences as strings
+        - a list of sequences as strings
 
     2. get_model_sequences()
         Returns a generator for getting sets of sequences from
         regions given in a BED file for individuals in a model.
-        e.g. usage:
+        
+        *************
+         Example usage
+        *************
+        Extend flanks (i.e. both upstream and downstream) by 10kb:
+
+        .. code-block:: python
+        :linenos:
+        
             a = get_model_sequences_from_multiple_regions(vcf_filename=vcf_filename,
                         pppmodel=popmodel,fasta_reference=fasta_reference,
                         BED_filename = BED_file)
@@ -112,38 +103,24 @@
 
         Parameters
         ----------
-        vcf_filename
-            the name of the vcf file (can be bgzipped)
-            
-        model_file : name of a model file
-        modelname: the name of a model in model_file
+        -vcf_filename: the name of the vcf file (can be bgzipped)
+        -model_file : name of a model file
+        -modelname: the name of a model in model_file
             Either pppmmodel or both model_file and modelname must be used
-
-        
-        pppmodel
-            an instance of class model
+        -pppmodel :   an instance of class model
             the individuals in the model must also be in the vcf file
-
             Either pppmmodel or both model_file and modelname must be used
-
-        fasta_reference
-            a fasta file with one more sequences corresponding to the vcf file
+        -fasta_reference : a fasta file with one more sequences corresponding to the vcf file
             typically these are reference chromosome sequences
             the chromosome name(s) in the fasta file must
             match those in the vcf file
-            
-        BED_filename
-            a sorted BED file giving regions from which to pull sequences
+        -BED_filename : a sorted BED file giving regions from which to pull sequences
             the first column with the chromosome name must match a name in
             the fasta_reference file
             The chromosome names in the BED file must match those in the fasta file
             and the vcf file
-            
-        region_string
-            a pysam style region string,  if only one region is to be returned
-            
-        return_single
-            if True,  return only the first sequence for an individual
+        -region_string : a pysam style region string,  if only one region is to be returned
+        -return_single : if True,  return only the first sequence for an individual
             else, return two sequences  (assumes diploid)
 
         Returns
@@ -153,6 +130,7 @@
         and a list of sequences
             
 '''
+
 import sys
 import os
 import subprocess
