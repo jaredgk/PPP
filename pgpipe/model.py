@@ -392,6 +392,7 @@ def read_model_file (filename):
 
     # Parse the model file using the json reader
     models_dict = json.load(model_file)
+    model_file.close()
 
     # List to store all unique individuals (i.e. individuals in all models)
     individual_list = []

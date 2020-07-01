@@ -33,7 +33,9 @@ ppp_scripts = ['pgpipe/vcf_filter.py',
                'pgpipe/vcf_to_dadi.py',
                'pgpipe/vcf_to_treemix.py',
                'pgpipe/vcf_to_gphocs.py',
-               'pgpipe/model_creator.py']
+               'pgpipe/model_creator.py',
+               'pgpipe/vcf_to_sfs.py',
+               'pgpipe/vcf_bed_to_seq.py']
 
 setup(name=pgpipe.__title__,
       version=pgpipe.__version__,
