@@ -7,7 +7,7 @@ G-Phocs can estimate the phylogenetic and demographic history of a
 set of genomes,  each sampled at a large number of genomic regions or loci.
 
 Gronau I, Hubisz MJ, Gulko B, Danko CG, Siepel A.   Bayesian inference of ancient
-human demography from individual genome sequences.  Nature Genetics 43 1031–1034.   2011
+human demography from individual genome sequences.  Nature Genetics 43 1031-1034.   2011
 
 https://github.com/gphocs-dev/G-PhoCS/blob/master/GPhoCS_Manual.pdf
 
