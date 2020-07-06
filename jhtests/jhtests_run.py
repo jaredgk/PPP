@@ -5,6 +5,9 @@ import os
 import logging
 import shutil
 import zipfile
+import gzip
+import tempfile
+import hashlib
 
 ## Import scripts to test
 
@@ -20,9 +23,65 @@ import pgpipe.vcf_to_fastsimcoal as vcf_to_fastsimcoal
 def file_comp(test_output, expected_output):
     return filecmp.cmp(test_output, expected_output)
 
+## Used to compare two gz files, uses file_comp and a temp dir
+def gz_file_comp (test_output, expected_output, tmp_dir):
 
+    # Create the tmp paths
+    tmp_test_path = os.path.join(tmp_dir, 'Test')
+    tmp_expected_path = os.path.join(tmp_dir, 'Expected')
+
+    # Create test tmp directories, if needed
+    if not os.path.exists(tmp_test_path):
+        os.makedirs(tmp_test_path)
+
+    # Create test expected directories, if needed
+    if not os.path.exists(tmp_expected_path):
+        os.makedirs(tmp_expected_path)
+
+    # Assign the tmp output files
+    tmp_test_output = os.path.join(tmp_test_path, os.path.basename(test_output))
+    tmp_expected_output = os.path.join(tmp_expected_path, os.path.basename(expected_output))
+
+    # Open the gzip file
+    with gzip.open(test_output, 'rb') as test_file:
+
+        # Open the gunzip file
+        with open(tmp_test_output, 'wb') as tmp_test_file:
+            
+            # Copy the file
+            shutil.copyfileobj(test_file, tmp_test_file)
+
+    # Open the gzip file
+    with gzip.open(expected_output, 'rb') as expected_file:
+
+        # Open the gunzip file
+        with open(tmp_expected_output, 'wb') as tmp_expected_file:
+            
+            # Copy the file
+            shutil.copyfileobj(expected_file, tmp_expected_file)
+
+    # Check if the files have the same content
+    file_compare_results = file_comp(tmp_test_output, tmp_expected_output)
+
+    # Remove the tmp dirs
+    shutil.rmtree(tmp_test_path)
+    shutil.rmtree(tmp_expected_path)
+
+    # Return the results
+    return file_compare_results
 
 class jh_function_tests (unittest.TestCase):
+
+    @classmethod
+    def setUpClass (cls):
+        # Create a temporary directory
+        cls.test_dir = tempfile.mkdtemp()
+
+    @classmethod
+    def tearDownClass (cls):
+
+        # Remove the test directory after the tests
+        shutil.rmtree(cls.test_dir)
 
     def test_vcf_bed_to_seq1 (self):
         vcf_bed_to_seq.run(['--vcf','pan_example.vcf.gz',
@@ -110,9 +169,9 @@ class jh_function_tests (unittest.TestCase):
                         '--out','ppp_test_temp.out',
                         '--bed-file',"pan_example_regions.bed",
                         '--kblock','1000'])
+
         # Confirm that the output is what is expected
-        self.assertTrue(file_comp('ppp_test_temp.out.gz',
-                                  'results/vcf_treemixtest1.gz'))
+        self.assertTrue(gz_file_comp('ppp_test_temp.out.gz', 'results/vcf_treemixtest1.gz', self.test_dir))
 
         # Remove the ouput 
         self.addCleanup(os.remove, 'ppp_test_temp.out.gz')
@@ -122,9 +181,9 @@ class jh_function_tests (unittest.TestCase):
                         '--model-file',"panmodels.model",
                         '--modelname',"4Pop",
                         '--out','ppp_test_temp.out'])
+
         # Confirm that the output is what is expected
-        self.assertTrue(file_comp('ppp_test_temp.out.gz',
-                                  'results/vcf_treemixtest2.gz'))
+        self.assertTrue(gz_file_comp('ppp_test_temp.out.gz', 'results/vcf_treemixtest2.gz', self.test_dir))
 
         # Remove the ouput 
         self.addCleanup(os.remove, 'ppp_test_temp.out.gz')        
@@ -137,7 +196,7 @@ class jh_function_tests (unittest.TestCase):
                     '--modelname','3Pop',
                     '--dim','1','2','m',
                     '--basename','ppp_test_temp.out'])
-        # must extract archives to check that files match 
+        # must extract archives to check that files match
         pz = zipfile.ZipFile('ppp_test_temp.out.zip',mode='r')
         vz = zipfile.ZipFile('results/vcf_fsc1.zip',mode='r')
         pznl = pz.namelist()

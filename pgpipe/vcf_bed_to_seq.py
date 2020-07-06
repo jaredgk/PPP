@@ -281,7 +281,7 @@ def get_model_sequences_from_region(vcf=None,popmodel=None,
         assert isinstance(region,str)
         regionstr = region
         chrname = regionstr[:regionstr.find(':')]
-        [start,end] = map(int,regionstr[regionstr.find(':')+1:].split(sep='-'))
+        [start,end] = map(int,regionstr[regionstr.find(':')+1:].split('-'))
         region = Region(start-1,end,chrname)
     else: # make regionstr
         regionstr = '%s:%d-%d'%(region.chrom,region.start+1,region.end)# must add 1 to start because Region's use half open 0-based
