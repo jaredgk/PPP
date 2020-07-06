@@ -1,85 +1,92 @@
 #!/usr/bin/env python
 '''
-    Generates an input sequence file for the G-Phocs program from a
-    vcf file and a fasta reference file.
+Generates an input sequence file for the G-Phocs program from a
+vcf file and a fasta reference file.
+
+G-Phocs can estimate the phylogenetic and demographic history of a
+set of genomes,  each sampled at a large number of genomic regions or loci.
+
+Gronau I, Hubisz MJ, Gulko B, Danko CG, Siepel A.   Bayesian inference of ancient
+human demography from individual genome sequences.  Nature Genetics 43 1031-1034.   2011
+
+https://github.com/gphocs-dev/G-PhoCS/blob/master/GPhoCS_Manual.pdf
+
+##################
+Required Arguments
+##################
+
+**--vcf** *<input_vcf_filename>*
+    The name of the vcf file.  This can be a bgzipped vcf file. . 
+
+**--model-file** *<model_file_name>*
+    The name of a PPP model file. 
+
+**--model** *<model_name>*
+    The name of a model in the model file.  The treemix file to be
+    generated will contain the allele counts for each SNP in each of
+    the populations.  The treemix run will estimate the phylogeny
+    for the populations in the model.
+
     
-    G-Phocs can estimate the phylogenetic and demographic history of a
-    set of genomes,  each sampled at a large number of genomic regions or loci.
+**--bed-file** *<BED_file_name>*
+    The Bed file specifies the regions of the vcf file to be sampled.
+    Each row of the BED file (region) correspondes to one locus in the
+    G-Phocs sequence file.
     
-    Gronau I, Hubisz MJ, Gulko B, Danko CG, Siepel A.   Bayesian inference of ancient
-    human demography from individual genome sequences.  Nature Genetics 43 1031–1034.   2011
+    The BED file is a sorted UCSC-style bedfile containing chromosome locations of
+    the SNPs to be included in the output files. The BED file has no header.
+    The first column is the chromosome name (this must match the chromosome
+    name in the vcf file).
+    The second column is start position (0-based, open interval)
+    The third column is end position (closed interval).
+    Any other columns are ignored.
 
-    https://github.com/gphocs-dev/G-PhoCS/blob/master/GPhoCS_Manual.pdf
+**--out** *<output file name>*
+    Specifies the complete output filename.
 
-    ###############
-    Required Arguments
-    ###############
-    **--vcf** *<input_vcf_filename>*
-        The name of the vcf file.  This can be a bgzipped vcf file. . 
+**--reference** *<reference fasta file>*
+    The reference genome fasta file is required in order to generate full
+    sequences from the SNP data in the vcf file. 
+    
+#################
+Optional Aguments
+#################
 
-    **--model-file** *<model_file_name>*
-        The name of a PPP model file. 
+**--diploid** *<True (default)/False>*
+    By default G-Phocs works with a single sequence for each individual, where
+    heterozygous positions are shown using IUPAC ambiguity codes.
+    If this option is False, then only the first sequence of each
+    individual is returned and heterozygous positions are not shown.
 
-    **--model** *<model_name>*
-        The name of a model in the model file.  The treemix file to be
-        generated will contain the allele counts for each SNP in each of
-        the populations.  The treemix run will estimate the phylogeny
-        for the populations in the model.
+**--nloci** *<number of loci>*
+    By default the output file will contain as many loci as there are regions
+    in the BED file.  With this option,  the first nloci regions will be used.
 
-        
-    **--bed-file** *<BED_file_name>*
-        The Bed file specifies the regions of the vcf file to be sampled.
-        Each row of the BED file (region) correspondes to one locus in the
-        G-Phocs sequence file.
-        
-        The BED file is a sorted UCSC-style bedfile containing chromosome locations of
-        the SNPs to be included in the output files. The BED file has no header.
-        The first column is the chromosome name (this must match the chromosome
-        name in the vcf file).
-        The second column is start position (0-based, open interval)
-        The third column is end position (closed interval).
-        Any other columns are ignored.
 
-    **--out** *<output file name>*
-        Specifies the complete output filename.
+#############
+Example usage
+#############
+Example command-lines:
 
-    **--reference** *<reference fasta file>*
-        The reference genome fasta file is required in order to generate full
-        sequences from the SNP data in the vcf file. 
-        
-    ###############
-    Optional Aguments
-    ###############
+.. code-block:: bash
 
-    **--diploid** *<True (default)/False>*
-        By default G-Phocs works with a single sequence for each individual, where
-        heterozygous positions are shown using IUPAC ambiguity codes.
-        If this option is False, then only the first sequence of each
-        individual is returned and heterozygous positions are not shown.
+    vcf_to_gphocs.py -h
 
-    **--nloci** *<number of loci>*
-        By default the output file will contain as many loci as there are regions
-        in the BED file.  With this option,  the first nloci regions will be used.
+   
+.. code-block:: bash
+
+    vcf_to_gphocs.py --vcf pan_example.vcf.gz --reference pan_example_ref.fa --model-file panmodels.model --modelname 4Pop" --bed-file pan_example_regions.bed --outvcf_gphocs_test.out
+    
 
 '''
-##"""
-##    Generates an input sequence file for the G-Phocs program.
-##    
-##    Gronau I, Hubisz MJ, Gulko B, Danko CG, Siepel A.   Bayesian inference of ancient
-##    human demography from individual genome sequences.  Nature Genetics 43 1031–1034.   2011
-##
-##
-##    https://github.com/gphocs-dev/G-PhoCS/blob/master/GPhoCS_Manual.pdf
-##
-##    
-##"""
+
 import sys
 import os
 import subprocess
 import logging
 import argparse
 from pgpipe.logging_module import initLogger, logArgs
-import pgpipe.vcf_BED_to_seqs as vBs
+import pgpipe.vcf_bed_to_seq as vBs
 from pgpipe.model import Model, read_model_file
 from pgpipe.genome_region import Region
 import pgpipe.vcf_reader_func as vr
@@ -139,7 +146,7 @@ def make_gphocs_sequence_file(vcf,reference,BEDfile,ids,filename=None,diploid = 
     else:
         file_handle = open(filename, 'w')
         
-    if isinstance(ids,list): # make a model to pass to get_model_sequences_from_multiple_regions()
+    if isinstance(ids,list): # make a model to pass to get_model_sequences()
         # order of sequences in output gphocs sequence file will be the same as in ids
         idlist = ids
         popmodel = Model('gphocsmodel')
@@ -168,10 +175,9 @@ def make_gphocs_sequence_file(vcf,reference,BEDfile,ids,filename=None,diploid = 
     file_handle.write("%d\n"%nloci)
 
 
-    a = vBs.get_model_sequences_from_multiple_regions(vcf_filename=vcf,
+    a = vBs.get_model_sequences(vcf=vcf,
                         popmodel=popmodel,fasta_reference=reference,
-                        BED_filename = BEDfile,return_one_sequence = (diploid==False),
-                        useNifmissingdata=True)
+                        BED_filename = BEDfile,return_single = (diploid==False))
     nr = 0
     while True:
         try:
@@ -195,6 +201,7 @@ def make_gphocs_sequence_file(vcf,reference,BEDfile,ids,filename=None,diploid = 
             break   # end loop
     if nr < nloci:
         raise Exception("Number of loci requested (%d) less than number retrieved (%d)"%(nloci,nr))
+    file_handle.close()
     return 
 
 def gphocs_parser(passed_arguments):
@@ -213,7 +220,7 @@ def gphocs_parser(passed_arguments):
     gphocs_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
     gphocs_parser.add_argument('--reference', help = 'Defines the fasta referemce filename',required = True, type = str, action = parser_confirm_file())
     gphocs_parser.add_argument('--model-file', help = 'Defines the model filename',required = True, type = str, action = parser_confirm_file())
-    gphocs_parser.add_argument('--model', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
+    gphocs_parser.add_argument('--modelname', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
     gphocs_parser.add_argument("--bed-file",help="Defines the BED filename", type = str, required = True, action = parser_confirm_file())
     gphocs_parser.add_argument('--out', help = 'Defines the complete output filename', type = str)
     gphocs_parser.add_argument('--diploid',default = True,
@@ -235,9 +242,9 @@ def run (passed_arguments = []):
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(gphocs_args, func_name = 'make_gphocs_sequence_file')
 
-    print(gphocs_args)
+##    print(gphocs_args)
     popmodels = read_model_file(gphocs_args.model_file)
-    popmodel = popmodels[gphocs_args.model]
+    popmodel = popmodels[gphocs_args.modelname]
     make_gphocs_sequence_file(gphocs_args.vcf,gphocs_args.reference,gphocs_args.bed_file,
                               popmodel,filename=gphocs_args.out,diploid = gphocs_args.diploid,
                               nloci=gphocs_args.nloci)
@@ -246,7 +253,17 @@ def run (passed_arguments = []):
 if __name__ == "__main__":
     initLogger()
     run()
-##    debugargs = ['--vcf','Pan_chr_21_22_test.vcf.gz','--reference',"twochr_test_ref.fa",
-##            '--model-file',"panmodels.model",'--model',"4Pop",
-##            '--bed-file',"twochr_test.bed",'--out','testgphocsparser.out']#,'--diploid','False','--nloci','4']
-##    run(debugargs)
+    exit()
+    debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz',
+            '--reference',"..//jhtests//pan_example_ref.fa",
+            '--model-file',"..//jhtests//panmodels.model",
+            '--modelname',"4Pop",
+            '--bed-file',"..//jhtests//pan_example_regions.bed",
+            '--out','..//jhtests//results//vcf_gphocs_test.out']
+    run(debugargs)
+    debugargs = ['--vcf','..//jhtests//pan_example2.vcf.gz','--reference',
+                 "..//jhtests//chr22_pan_example2_ref.fa",
+            '--model-file',"..//jhtests//panmodels.model",'--modelname',"4Pop",
+            '--bed-file',"..//jhtests//pan_test_regions.bed",
+            '--out','..//jhtests//results//vcf_gphocs_test2.out','--diploid','False']
+    run(debugargs)

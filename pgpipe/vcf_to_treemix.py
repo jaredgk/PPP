@@ -1,84 +1,93 @@
 #!/usr/bin/env python
 '''
-    The treemix program was developed by Pickrell and Prichard (2012)
-    to estimate phylogeny and admixture for closely related populations.
+The treemix program was developed by Pickrell and Prichard (2012)
+to estimate phylogeny and admixture for closely related populations.
 
-    Pickrell JK, Pritchard JK (2012) Inference of Population Splits and Mixtures
-    from Genome-Wide Allele Frequency Data. PLOS Genetics 8(11): e1002967.
+Pickrell JK, Pritchard JK (2012) Inference of Population Splits and Mixtures
+from Genome-Wide Allele Frequency Data. PLOS Genetics 8(11): e1002967.
 
-    The program can make use of very large numbers of SNPs.
+The program can make use of very large numbers of SNPs.
+
+vcf_to_treemix.py will generate a treemix input file from a vcf file.
+
+
+If run using the --bed-file and --kblock options, the resulting treemix
+file can be run using the 'linkage disequilibrium' (-k) option.
+Under this option each block of kblock SNPs are treated as a linked group
+and different groups are treated as unlinked.
+
+##################
+Required Arguments
+##################
+
+**--vcf** *<input_vcf_filename>*
+    The name of the vcf file.  This can be a bgzipped vcf file. . 
+
+**--model-file** *<model_file_name>*
+    The name of a PPP model file. 
+
+**--modelname** *<model_name>*
+    The name of a model in the model file.  The treemix file to be
+    generated will contain the allele counts for each SNP in each of
+    the populations.  The treemix run will estimate the phylogeny
+    for the populations in the model.
+
+**--out** *<outpuf_file_name>*
+    The name of the treemix file to be generated. The file is bgzipped
+    and '.gz' is added to the end of the name
+   
+#################
+Optional Aguments
+#################
+
+**--bed-file** *<BED_file_name>*
+    The BED file is a sorted UCSC-style bedfile containing chromosome locations of
+    the SNPs to be included in the output file. The BED file has no header.
+    The first column is the chromosome name (this must match the chromosome
+    name in the vcf file).
+    The second column is start position (0-based, open interval)
+    The third column is end position (closed interval).
+    Any other columns are ignored.
+
+    If used with --kblock,  each of the BED file regions is used to generate
+    one block of SNPs
     
-    vcf_to_treemix.py will generate a treemix input file from a vcf file.
-
-
-    If run using the --bed-file and --kblock options, the resulting treemix
-    file can be run using the 'linkage disequilibrium' (-k) option.
-    Under this option each block of kblock SNPs are treated as a linked group
-    and different groups are treated as unlinked.
-    
-    ###############
-    Required Arguments
-    ###############
-    **--vcf** *<input_vcf_filename>*
-        The name of the vcf file.  This can be a bgzipped vcf file. . 
-
-    **--model-file** *<model_file_name>*
-        The name of a PPP model file. 
-
-    **--model** *<model_name>*
-        The name of a model in the model file.  The treemix file to be
-        generated will contain the allele counts for each SNP in each of
-        the populations.  The treemix run will estimate the phylogeny
-        for the populations in the model.
-
-    **--out** *<outpuf_file_name>*
-        The name of the treemix file to be generated. The file is bgzipped
-        and '.gz' is added to the end of the name
-       
-    ###############
-    Optional Aguments
-    ###############
-    **--bed-file** *<BED_file_name>*
-        The BED file is a sorted UCSC-style bedfile containing chromosome locations of
-        the SNPs to be included in the output file. The BED file has no header.
-        The first column is the chromosome name (this must match the chromosome
-        name in the vcf file).
-        The second column is start position (0-based, open interval)
-        The third column is end position (closed interval).
-        Any other columns are ignored.
-
-        If used with --kblock,  each of the BED file regions is used to generate
-        one block of SNPs
-        
-    **--kblock** *<k_block_size>*
-        Used with --bed-file, for using treemix runtime option -k.  
-        k is the number of SNPs in a block in the treemix file. 
-        If the actual number of SNPs in a BED file interval is less than kblock,
-        then additional invariant rows are added to the treemix file so
-        the total numbers of rows for that and every block is equal to kblock.
-        k is set to 1000 by default.  It needs to be increased only when
-        one or more BED file regions have more than k snps.
+**--kblock** *<k_block_size>*
+    Used with --bed-file, for using treemix runtime option -k.  
+    k is the number of SNPs in a block in the treemix file. 
+    If the actual number of SNPs in a BED file interval is less than kblock,
+    then additional invariant rows are added to the treemix file so
+    the total numbers of rows for that and every block is equal to kblock.
+    k is set to 1000 by default.  It needs to be increased only when
+    one or more BED file regions have more than k snps.
   
+#############
+Example usage
+#############
+Example command-lines:
+
+.. code-block:: bash
+
+    vcf_to_treemix.py -h
+
+   
+.. code-block:: bash
+
+    vcf_to_treemix.py --vcf pan_example.vcf.gz --model-file panmodels.model --modelname 4Pop --out vcf_treemixtest1 --bed-file pan_example_regions.bed --kblock 1000
+ 
+ .. code-block:: bash
+
+    vcf_to_treemix.py --vcf pan_example.vcf.gz --model-file panmodels.model --modelname 4Pop --out vcf_treemixtest2    
+
+
 '''
-##"""
-##    make an input file for the treemix program
-##
-##    Pickrell JK, Pritchard JK (2012) Inference of Population Splits and Mixtures
-##    from Genome-Wide Allele Frequency Data. PLOS Genetics 8(11): e1002967.
-##
-##    Treemix manual:
-##    https://bitbucket.org/nygcresearch/treemix/downloads/treemix_manual_10_1_2012.pdf
-##
-##    this replaces an older file of this name that was designed to work with IMa3 related code
-##    that old file is renamed  vcf_to_treemix_old_version.py
-##   
-##    
-##"""
+
 
 import os
 import logging
 import argparse
-import pgpipe.vcf_BED_to_seqs as vBs
+import subprocess
+import pgpipe.vcf_bed_to_seq as vBs
 from pgpipe.model import Model, read_model_file
 from pgpipe.genome_region import Region
 import pgpipe.vcf_reader_func as vr
@@ -255,7 +264,7 @@ def treemix_parser(passed_arguments):
     treemix_parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     treemix_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
     treemix_parser.add_argument('--model-file', help = 'Defines the model filename',required = True, type = str, action = parser_confirm_file())
-    treemix_parser.add_argument('--model', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
+    treemix_parser.add_argument('--modelname', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
     treemix_parser.add_argument("--bed-file",help="Defines the BED filename", type = str, action = parser_confirm_file())
     treemix_parser.add_argument('--out', help = 'Defines the complete output filename', type = str)
     treemix_parser.add_argument("--kblock",type=int,default = 1000,help="For treemix option of having SNPs in 'blocks'."
@@ -281,9 +290,9 @@ def run (passed_arguments = []):
     if (treemix_args.bed_file != None) and (treemix_args.kblock == None):
         raise Exception("--bed-file and --kblock must be used together")
 
-    print(treemix_args)
+##    print(treemix_args)
     popmodels = read_model_file(treemix_args.model_file)
-    popmodel = popmodels[treemix_args.model]
+    popmodel = popmodels[treemix_args.modelname]
     treemix_run_infostring =make_treemix_file(treemix_args.vcf,popmodel,treemix_args.out,BEDfilename=treemix_args.bed_file, kblock = treemix_args.kblock)
     logging.info(treemix_run_infostring)
 
@@ -292,9 +301,15 @@ def run (passed_arguments = []):
 if __name__ == "__main__":
     initLogger()
     run()
-##    debugargs = ['--vcf','../jhworkfiles/Pan_chr_21_22_test.vcf.gz','--model-file',"../jhworkfiles/panmodels.model",'--model',"4Pop",
-##            '--out','treemixtestwithargs','--bed-file',"../jhworkfiles/twochr_test.bed",'--kblock','1000']
-##    run(debugargs)
+    exit()
+    debugargs = ['--vcf','../jhtests/pan_example.vcf.gz','--model-file',
+            "../jhtests/panmodels.model",'--modelname',"4Pop",
+            '--out','../jhtests/results/vcf_treemixtest1','--bed-file',"../jhtests/pan_example_regions.bed",'--kblock','1000']
+    run(debugargs)
+    debugargs = ['--vcf','../jhtests/pan_example.vcf.gz','--model-file',
+            "../jhtests/panmodels.model",'--modelname',"4Pop",
+            '--out','../jhtests/results/vcf_treemixtest2']
+    run(debugargs)
 
 
 
