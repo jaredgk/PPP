@@ -445,6 +445,13 @@ def bgzip_compress_vcf (vcf_filename, out_prefix = '', keep_original = False):
                 Error in creating the compressed file
         '''
 
+        # Confirm where the specifed executable is located
+        bgzip_path = confirm_executable('bgzip')
+
+        # Check if the executable was found
+        if not bgzip_path:
+            raise IOError('bgzip not found. Please confirm the executable is installed')
+
         # Compress and keep the original file
         if keep_original or out_prefix:
 
@@ -469,13 +476,13 @@ def bgzip_compress_vcf (vcf_filename, out_prefix = '', keep_original = False):
             vcfgz_file = open(vcfgz_filename, 'w')
 
             # bgzip subprocess call
-            bgzip_call = subprocess.Popen(['bgzip', '-c', vcf_filename], stdout = vcfgz_file, stderr = subprocess.PIPE)
+            bgzip_call = subprocess.Popen([bgzip_path, '-c', vcf_filename], stdout = vcfgz_file, stderr = subprocess.PIPE)
 
         # Compress and do not keep the original file
         else:
 
             # bgzip subprocess call
-            bgzip_call = subprocess.Popen(['bgzip', vcf_filename], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+            bgzip_call = subprocess.Popen([bgzip_path, vcf_filename], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
         # Save the stdout and stderr from bgzip
         bgzip_out, bgzip_err = bgzip_call.communicate()
@@ -801,6 +808,9 @@ def pipe_vcftools_to_file (vcftools_call_args, output_filename, append_output = 
 
     # Read the vcftools stderr
     vcftools_stderr = vcftools_call.stderr.read()
+
+    # Close the vcftools stderr
+    vcftools_call.stderr.close()
 
     # Check if code is running in python 3
     if sys.version_info[0] == 3:

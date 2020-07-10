@@ -20,13 +20,13 @@
 
     .. code-block:: bash
         
-        vcf_calc.py --vcf input.vcf --calc-statistic TajimaD --statistic-window-size 10000
+        vcf_calc.py --vcf input/merged_chr1_10000.vcf.gz --calc-statistic TajimaD --statistic-window-size 10000
 
     Command-line to calculate windowed Fst on the two populations within the model *2Pop*: 
 
     .. code-block:: bash
         
-        vcf_calc.py --vcf input.vcf.gz --model-file input.model --model 2Pop --calc-statistic windowed-weir-fst --statistic-window-size 10000 --statistic-window-step 10000
+        vcf_calc.py --vcf input/merged_chr1_10000.vcf.gz --model-file input/input.model --model 2Pop --calc-statistic windowed-weir-fst --statistic-window-size 10000 --statistic-window-step 10000
     
     ############
     Dependencies 

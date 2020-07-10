@@ -194,6 +194,36 @@ class Model:
             self.ind_dict[pop] = [str(ind) for ind in inds]
         self.nind[pop] = len(self.ind_dict[pop])
 
+    def remove_pop (self, pop):
+
+        # Confirm the pop is in the model
+        if str(pop) not in self.pop_list:
+
+            # Raise error if pop not found
+            raise Exception('%s not found' % pop)
+            
+        self.pop_list.remove(str(pop))
+        del self.ind_dict[pop]
+        del self.nind[pop]
+
+    def update_pop (self, pop, inds = [], rm_inds = []):
+        
+        # Confirm the pop is in the model
+        if str(pop) not in self.pop_list:
+
+            # Raise error if pop not found
+            raise Exception('%s not found' % pop)
+
+        if inds:
+            self.ind_dict[pop].extend([str(ind) for ind in inds])
+
+        if rm_inds:
+            for rm_ind in rm_inds:
+                if str(rm_ind) in self.ind_dict[pop]: 
+                    self.ind_dict[pop].remove(str(rm_ind))
+            
+        self.nind[pop] = len(self.ind_dict[pop])
+
     def sample_pop (self, pop, sample_size, with_replacements = False):
 
         # Confirm the pop is in the model
@@ -337,6 +367,8 @@ class Model:
 
         pop_json = OrderedDict()
 
+        model_json['tree'] = self.tree
+
         for pop in self.pop_list:
 
             pop_json[pop] = OrderedDict()
@@ -402,6 +434,12 @@ def read_model_file (filename):
 
         # Create the model
         model = Model(str(model_dict['name']))
+
+        # Check if model has a tree
+        if 'tree' in model_dict:
+
+            # Assign the model tree
+            model.assign_tree(model_dict['tree'])
 
         # Loop the populations in the model
         for pop, pop_dict in model_dict['pops'].items():

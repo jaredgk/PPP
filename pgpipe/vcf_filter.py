@@ -29,23 +29,23 @@
     *************
     Example usage
     *************
-    Command-line to only include biallelic sites:
+    Command-line to create a BCF with only biallelic sites:
 
     .. code-block:: bash
         
-        vcf_filter.py --vcf input.bcf --filter-only-biallelic
+        vcf_filter.py --vcf input/merged_chr1_10000.vcf.gz --filter-only-biallelic --out-format bcf
 
-    Command-line to only include chromosome chr1:
+    Command-line to only include variants on chr1 from 1 to 1509546:
 
     .. code-block:: bash
         
-        vcf_filter.py --vcf input.vcf.gz --filter-include-chr chr1
+        vcf_filter.py --vcf input/merged_chr1_10000.bcf --filter-include-pos chr1:1-1509546
 
     Command-line to remove indels and ouput a BCF file:
 
     .. code-block:: bash
         
-        vcf_filter.py --vcf input.vcf --filter-exclude-indels --out-format bcf
+        vcf_filter.py --vcf input/merged_chr1_10000.indels.vcf.gz --filter-exclude-indels --out-format bcf
 
     ############
     Dependencies 
@@ -485,6 +485,25 @@ def run (passed_arguments = []):
         # Assign the individuals file to bcftools
         bcftools_call_args.extend(['--samples-file', selected_model.ind_file])
 
+    # Check for incompatible arguments if the user specified only biallelic alleles
+    if vcf_args.filter_only_biallelic:
+
+        # Check type arguments
+        if vcf_args.filter_include_indels:
+            raise Exception('--filter-only-biallelic and --filter-include-indel arguments are incompatible')
+        if vcf_args.filter_exclude_indels:
+            raise Exception('--filter-only-biallelic and --filter-exclude-indel arguments are incompatible')
+        if vcf_args.filter_include_snps:
+            raise Exception('--filter-only-biallelic and --filter-include-snps arguments are incompatible')
+        if vcf_args.filter_exclude_snps:
+            raise Exception('--filter-only-biallelic and --filter-exclude-snps arguments are incompatible')
+
+        # Check allele arguments
+        if vcf_args.filter_min_alleles:
+            raise Exception('--filter-only-biallelic and --filter-min-alleles arguments are incompatible')
+        if vcf_args.filter_max_alleles:
+            raise Exception('--filter-only-biallelic and --filter-max-alleles arguments are incompatible')
+
     # Holds the filename suffix bcftools assigns to the filtered output
     bcftools_out_suffix = None
 
@@ -607,15 +626,10 @@ def run (passed_arguments = []):
         # Store the types to include argument
         bcftools_call_args.extend(['--exclude-types', '%s' % ','.join(exclude_variant_types)])
 
-    # Allele-based filter, biallelic only
-    if vcf_args.filter_only_biallelic:
-        
-        # Assign the max and min allele to two
-        bcftools_call_args.extend(['--min-alleles', 2, '--max-alleles', 2])
-
     # Allele-based filters, min and max 
-    elif vcf_args.filter_min_alleles or vcf_args.filter_max_alleles:
-        
+    if vcf_args.filter_only_biallelic or vcf_args.filter_min_alleles or vcf_args.filter_max_alleles:
+        if vcf_args.filter_only_biallelic:
+            bcftools_call_args.extend(['--min-alleles', '2', '--max-alleles', '2', '--types', 'snps'])
         if vcf_args.filter_min_alleles:
             bcftools_call_args.extend(['--min-alleles', vcf_args.filter_min_alleles])
         if vcf_args.filter_max_alleles:

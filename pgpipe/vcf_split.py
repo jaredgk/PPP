@@ -30,7 +30,7 @@
 
     .. code-block:: bash
         
-        vcf_split.py --vcf input.vcf --split-file input.windowed.weir.fst --split-method statistic-file
+        vcf_split.py --vcf input/merged_chr1_10000.vcf.gz --split-file input.windowed.weir.fst --split-method statistic-file --model-file input/input.model --model 2Pop
 
     ############
     Dependencies 
@@ -533,6 +533,11 @@ def run (passed_arguments = []):
         # Produce the log file with the bcftools reference
         log_bcftools_reference(vcf_args.out_prefix + '.split')
 
+    # Check if the user has specified a model file
+    if vcf_args.model_file and vcf_args.model:
+
+        # Create individuals file
+        selected_model.delete_ind_file()
 
 if __name__ == "__main__":
     initLogger()

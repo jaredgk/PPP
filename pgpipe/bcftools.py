@@ -665,14 +665,17 @@ def pipe_bcftools_bcftools (bcftools_first_call_args, bcftools_second_call_args)
     # bgzip subprocess call
     bcftools_second_call = subprocess.Popen([bcftools_path] + list(map(str, bcftools_second_call_args)), stdin = bcftools_first_call.stdout, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
-    # Wait for vctools to finish
+    # Wait for bcftools to finish
     bcftools_first_call.wait()
 
-    # Close the vcftools stdout
+    # Close the bcftools stdout
     bcftools_first_call.stdout.close()
 
-    # Read the vcftools stderr
+    # Read the bcftools stderr
     bcftools_first_stderr = bcftools_first_call.stderr.read()
+
+    # Close the bcftools stdout
+    bcftools_first_call.stderr.close()
 
     # Check if code is running in python 3
     if sys.version_info[0] == 3:
