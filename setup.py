@@ -55,7 +55,7 @@ setup(name=pgpipe.__title__,
       packages=['pgpipe'],
       install_requires=requirements,
       scripts=ppp_scripts,
-      python_requires=">=3.6.*")
+      python_requires=">=3.6.*, !=3.8.*")
 #     , ext_modules = cythonize('pgpipe/test_cython.pyx'))
 
 #packages=setuptools.find_packages() to automate package finding?
