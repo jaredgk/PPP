@@ -23,5 +23,5 @@ All PPP functions may also be used within a `Jupyter Notebook <https://jupyter.o
 
 .. toctree::
    :maxdepth: 1
-   
-   example_pipeline_pan.ipynb
+
+   jupyter/example_pipeline_pan.ipynb
