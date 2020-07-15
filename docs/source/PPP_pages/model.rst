@@ -2,7 +2,7 @@
 Model File and Creation
 =======================
 
-A core aspect of the PPP is the use of Model files, JSON-based files used to assign and store **population models**. A population model primarily consists of: the populations within the model; the individuals in each population; and a population tree. Model files offer various benefits within the PPP: i) automatic assignment of relevant populations, individuals, or other potential meta-data; ii) simplifed process to examine multiple models; and iii) a single repository of all relevant meta-data. 
+A core aspect of the PPP is the use of Model files, JSON-based files used to assign and store **population models**. A population model primarily consists of: the populations within the model; the individuals in each population; and a population tree. Model files offer various benefits within the PPP: i) automatic assignment of relevant populations, individuals, or other potential meta-data; ii) simplified process to examine multiple models; and iii) a single repository of all relevant meta-data.
 
 
 Model files may be created and edited using our model creator. 

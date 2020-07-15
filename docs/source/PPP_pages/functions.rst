@@ -1,6 +1,6 @@
-=============
-PPP Functions
-=============
+==============
+Core Functions
+==============
 
 The functions below were developed to perform many of the core operations typically used in population genetic analyses. Each of these functions were designed to perform a single operation (i.e. filtering, phasing, etc.).
 
@@ -9,8 +9,8 @@ The functions below were developed to perform many of the core operations typica
 
    Functions/vcf_filter
    Functions/vcf_calc
-   Functions/stat_sampler
    Functions/loci_filter
    Functions/vcf_split
    Functions/vcf_phase
    Functions/vcf_four_gamete
+   
