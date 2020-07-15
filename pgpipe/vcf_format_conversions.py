@@ -294,7 +294,7 @@ def run (passed_arguments = []):
             convert_vcf(convert_args.vcf, convert_args.out_prefix, convert_args.out_format, convert_args.overwrite, keep_original = True)
 
             # Add the reference to the log
-            log_bcftools_reference(expected_out_filename, append_mode = False)
+            log_bcftools_reference()
 
             # Check if a specific output filename was specified
             if convert_args.out:
@@ -315,7 +315,7 @@ def run (passed_arguments = []):
             shutil.move(convert_args.out_prefix + '.log', expected_out_filename + '.log')
 
             # Add the reference to the log
-            log_plink_reference(expected_out_filename, append_mode = True)
+            log_plink_reference()
 
     # Check if input is a specified as a ped
     elif convert_args.ped_prefix or (convert_args.ped_filename or convert_args.map_filename):
@@ -341,7 +341,7 @@ def run (passed_arguments = []):
             shutil.move(convert_args.out_prefix + '.log', expected_out_filename + '.log')
 
             # Add the reference to the log
-            log_plink_reference(expected_out_filename, append_mode = True)
+            log_plink_reference()
 
         # Check if output format is eigenstrat
         else:
@@ -373,7 +373,7 @@ def run (passed_arguments = []):
             shutil.move(convert_args.out_prefix + '.log', expected_out_filename + '.log')
 
             # Add the reference to the log
-            log_plink_reference(expected_out_filename, append_mode = True)
+            log_plink_reference()
 
         # Check if output format is eigenstrat
         else:

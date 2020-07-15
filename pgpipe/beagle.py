@@ -118,9 +118,7 @@ def standard_beagle_call (beagle_path, beagle_call_args, output_prefix):
 
         # Create a string with the picard path
         beagle_jar = confirm_executable('beagle.jar')
-
-        #beagle_jar = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','beagle.jar')
-
+        
     else:
         # Use path if specified
         beagle_jar = os.path.join(picard_path, 'beagle.jar')

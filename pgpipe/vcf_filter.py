@@ -33,19 +33,19 @@
 
     .. code-block:: bash
         
-        vcf_filter.py --vcf input/merged_chr1_10000.vcf.gz --filter-only-biallelic --out-format bcf
+        vcf_filter.py --vcf examples/files/merged_chr1_10000.vcf.gz --filter-only-biallelic --out-format bcf
 
     Command-line to only include variants on chr1 from 1 to 1509546:
 
     .. code-block:: bash
         
-        vcf_filter.py --vcf input/merged_chr1_10000.bcf --filter-include-pos chr1:1-1509546
+        vcf_filter.py --vcf examples/files/merged_chr1_10000.bcf --filter-include-pos chr1:1-1509546
 
     Command-line to remove indels and ouput a BCF file:
 
     .. code-block:: bash
         
-        vcf_filter.py --vcf input/merged_chr1_10000.indels.vcf.gz --filter-exclude-indels --out-format bcf
+        vcf_filter.py --vcf examples/files/merged_chr1_10000.indels.vcf.gz --filter-exclude-indels --out-format bcf
 
     ############
     Dependencies 
@@ -199,8 +199,9 @@ from pgpipe.model import read_model_file
 
 # Import logging functions
 from pgpipe.logging_module import initLogger, logArgs
+from pgpipe.misc import argprase_kwargs
 
-def vcf_filter_parser(passed_arguments):
+def vcf_filter_parser(passed_arguments = []):
     '''
     VCF Filter Argument Parser
 
@@ -302,6 +303,16 @@ def vcf_filter_parser(passed_arguments):
     snps_filters.add_argument('--filter-include-snps', help = 'Include variants if they contain a SNP', action = 'store_true')
     snps_filters.add_argument('--filter-exclude-snps', help = 'Exclude variants if they contain a SNP', action = 'store_true')
 
+    def str_to_bool(value):
+        if value.lower() in {'false', 'f', '0', 'no', 'n'}:
+            return False
+        elif value.lower() in {'true', 't', '1', 'yes', 'y'}:
+            return True
+        raise ValueError(f'{value} is not a valid boolean value')
+
+    vcf_parser.add_argument('--foo', type=str_to_bool, nargs='?', const=True, default=False)
+
+
     # Position filters
     vcf_parser.add_argument('--filter-include-pos', help = 'Defines comma seperated positions (i.e. CHROM:START-END) to include. START and END are optional. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
     vcf_parser.add_argument('--filter-exclude-pos', help = 'Defines comma seperated positions (i.e. CHROM:START-END) to exclude. START and END are optional. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
@@ -341,11 +352,11 @@ def vcf_filter_parser(passed_arguments):
     vcf_parser.add_argument('--filter-mac-max', help = 'Include variants with equal or lesser MAC values', type = int)
 
     if passed_arguments:
-        return vcf_parser.parse_args(passed_arguments)
+        return vars(vcf_parser.parse_args(passed_arguments))
     else:
-        return vcf_parser.parse_args()
+        return vars(vcf_parser.parse_args())
 
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
     Filter function for the PPP
 
@@ -421,7 +432,7 @@ def run (passed_arguments = []):
         BED file of positions to include 
     --filter-exclude-bed : str
         BED file of positions to exclude
-    --filter-include-passed : bool
+    --filter-include-passed
         Include positions with the 'PASS' filter flag
     --filter-include-filtered : list or str
         Include positions with the specified filter flag
@@ -441,8 +452,12 @@ def run (passed_arguments = []):
 
     '''
 
-    # Grab VCF arguments from command line
-    vcf_args = vcf_filter_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, vcf_filter_parser)
+
+    # Assign arguments
+    vcf_args = argparse.Namespace(**kwargs)
 
     # Check if the input file is indexed
     vcf_is_indexed = check_for_index(vcf_args.vcf)
@@ -840,17 +855,8 @@ def run (passed_arguments = []):
     else:
         raise Exception('Unknown file format: %s' % vcf_args.out_format)
 
-    # Check if the log should be piped to the stdout
-    if vcf_args.log_stdout:
-
-        # Write the log to stdout
-        stdout_bcftools_reference()
-
-    # Check if log should be saved as a file
-    else:
-
-        # Create the log file
-        log_bcftools_reference(bcftools_output_filename)
+    # Log the bcftools reference
+    log_bcftools_reference()
 
     # Delete any files that were created for bcftools
     if vcf_args.model_file:
@@ -858,4 +864,5 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**vcf_filter_parser())
+

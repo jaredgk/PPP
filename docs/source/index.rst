@@ -29,6 +29,7 @@ Please Note: This documentation is currently being devloped and will be updated 
    :hidden:
 
    PPP_pages/install
+   PPP_pages/examples
    PPP_pages/functions
    PPP_pages/input_file_generators
    PPP_pages/analyses
@@ -36,4 +37,3 @@ Please Note: This documentation is currently being devloped and will be updated 
    PPP_pages/model
    PPP_pages/contact
    PPP_pages/citations
-   example_pipeline_pan.ipynb

@@ -6,35 +6,18 @@ import subprocess
 import string
 import random
 
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
 from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.bcftools import check_bcftools_for_errors
 from pgpipe.misc import confirm_executable
 
-def log_vcftools_reference (out_filename, append_mode = False, ref_header = True):
+def log_vcftools_reference ():
 
-    # Check if the file is to be written in append mode
-    if append_mode:
+    # Write the log header
+    logging.info('Please Reference alongside the PPP:\n')
 
-        # Open the file
-        log_file = open(out_filename + '.log', 'a')
-
-    else:
-
-        # Open the file
-        log_file = open(out_filename + '.log', 'w')
-
-    # Check if the ref header should be added
-    if ref_header:
-        log_file.write('Please Reference alongside the PPP:\n')
-
-    log_file.write('Danecek, P. et al. The variant call format and VCFtools. '
-                   'Bioinformatics 27, 2156-2158 (2011).')
-
-    log_file.close()
-
-    logging.info('Reference assigned')
+    # Write the reference
+    logging.info('Danecek, P. et al. The variant call format and VCFtools. '
+                 'Bioinformatics 27, 2156-2158 (2011).')
 
 def check_for_vcftools_output (vcftools_output):
     '''

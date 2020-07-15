@@ -38,14 +38,14 @@
 
     .. code-block:: bash
         
-        stat_sampler.py --statistic-file input/merged_chr1_10000.windowed.weir.fst --calc-statistic windowed-weir-fst --sampling-scheme random --sample-size 20
+        stat_sampler.py --statistic-file examples/files/merged_chr1_10000.windowed.weir.fst --calc-statistic windowed-weir-fst --sampling-scheme random --sample-size 20
 
     Uniform sampling 20 windows from four bins from a windowed pi statistic file 
     **merged_chr1_10000.windowed.pi**.
 
     .. code-block:: bash
         
-        stat_sampler.py --statistic-file input/merged_chr1_10000.windowed.pi --calc-statistic window-pi --sampling-scheme uniform --uniform-bins 4 --sample-size 20
+        stat_sampler.py --statistic-file examples/files/merged_chr1_10000.windowed.pi --calc-statistic window-pi --sampling-scheme uniform --uniform-bins 4 --sample-size 20
 
     ############################
     Input Command-line Arguments

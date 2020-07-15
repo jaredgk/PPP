@@ -48,22 +48,22 @@
                                       
     .. code-block:: bash
         
-        model_creator.py --model 2Pop --model-pop-file 2Pop tests/input/2Pops.txt --pop-ind-file Paniscus tests/input/Paniscus.txt --pop-ind-file Troglodytes tests/input/Troglodytes.txt
+        model_creator.py --model 2Pop --model-pop-file 2Pop examples/files/2Pops.txt --pop-ind-file Paniscus examples/files/Paniscus.txt --pop-ind-file Troglodytes examples/files/Troglodytes.txt
 
     .. code-block:: bash
-       :caption: 2Pops.txt
+       :caption: examples/files/2Pops.txt
 
        Paniscus
        Troglodytes
 
     .. code-block:: bash
-       :caption: Paniscus.txt
+       :caption: examples/files/Paniscus.txt
 
        Pan_paniscus-9731_LB502
        Pan_paniscus-A915_Kosana
 
     .. code-block:: bash
-       :caption: Troglodytes.txt
+       :caption: examples/files/Troglodytes.txt
 
        Pan_troglodytes_troglodytes-A957_Vaillant
        Pan_troglodytes_troglodytes-A958_Doris
@@ -81,7 +81,7 @@
                                       
     .. code-block:: bash
         
-        model_creator.py --model-file input.model --update-model 2Pop --model-pop 2Pop Schweinfurthii --model-rm-pop 2Pop Troglodytes
+        model_creator.py --model-file examples/files/input.model --update-model 2Pop --model-pop 2Pop Schweinfurthii --model-rm-pop 2Pop Troglodytes
 
     ******************************************
     Example 4: Update Population in Model File
@@ -95,11 +95,11 @@
                                       
     .. code-block:: bash
         
-        model_creator.py --model-file input.model --update-pop Paniscus --pop-ind Paniscus Pan_paniscus-Unknown --pop-rm-ind Paniscus Pan_paniscus-9731_LB502
+        model_creator.py --model-file examples/files/input.model --update-pop Paniscus --pop-ind Paniscus Pan_paniscus-Unknown --pop-rm-ind Paniscus Pan_paniscus-9731_LB502
 
-    ############################
-    Model Command-line Arguments
-    ############################
+    #####################################
+    Standard Model Command-line Arguments
+    #####################################
     Except for **--model-file** all other model-based arguments may be used 
     multiple times.
     
@@ -115,7 +115,6 @@
         Allows for individuals to be added.
     **--model-tree** *<model_str>* *<newick_str>*
         Argument used to assign a population tree to a model, in Newick format. 
-        --eigenstrat-prefix.
     **--model-tree-file** *<model_str>* *<newick_file>*
         Argument used to assign a population tree file to a model, in Newick 
         format.
@@ -131,6 +130,64 @@
         Argument used to assign a multiple individuals to a population.
     **--pop-ind-file** *<pop_str>* *<ind_file>*
         Argument used to assign a multiple individuals to a population using a file.
+
+    ###############################################
+    Model Update: Compatible Command-line Arguments
+    ###############################################
+    Please note: **--update-model** is required to update a model.
+    
+    **--update-model** *<str>*
+        Argument used to define the name of a model to update. Allows for: 
+        i) tree update and ii) populations to be added and/or removed.
+    **--model-file** *<str>*
+        Argument used to define the name of a model file.
+    **--model-tree** *<model_str>* *<newick_str>*
+        Argument may be used to replace a population tree, in Newick format.
+    **--model-tree-file** *<model_str>* *<newick_file>*
+        Argument may be used to replace a population usng a tree file, in 
+        Newick format.
+    **--model-pop** *<model_str>* *<pop_str>*
+        Argument used to assign a population to the model begin updated.
+    **--model-pops** *<model_str>* *<pop1_str>* *<pop2_str>* ..
+        Argument used to assign multiple populations to the model begin updated.
+    **--model-pop-file** *<model_str>* *<pop_file>*
+        Argument used to assign multiple populations to the model begin updated 
+        using a file.
+    **--model-rm-pop** *<model_str>* *<pop_str>*
+        Argument used to remove a population to the model begin updated.
+    **--model-rm-pops** *<model_str>* *<pop1_str>* *<pop2_str>* ..
+        Argument used to remove multiple populations to the model begin updated.
+    **--model-rm-pop-file** *<model_str>* *<pop_file>*
+        Argument used to remove multiple populations to the model begin updated 
+        using a file.
+
+
+    ####################################################
+    Population Update: Compatible Command-line Arguments
+    ####################################################
+    Please note: **--update-pop** is required to update a population.
+
+    **--update-pop** *<str>*
+        Argument used to define the name of a population to update. Allows for 
+        individuals to be added.
+    **--model-file** *<str>*
+        Argument used to define the name of a model file.
+    **--pop-ind** *<pop_str>* *<ind_str>*
+        Argument used to assign a individual to the population begin updated.
+    **--pop-inds** *<pop_str>* *<ind1_str>* *<ind2_str>* ..
+        Argument used to assign multiple individuals to the population begin 
+        updated.
+    **--pop-ind-file** *<pop_str>* *<ind_file>*
+        Argument used to assign multiple individuals to thr population begin 
+        updated using a file.
+    **--pop-rm-ind** *<pop_str>* *<ind_str>*
+        Argument used to remove a individual to the population begin updated.
+    **--pop-rm-inds** *<pop_str>* *<ind1_str>* *<ind2_str>* ..
+        Argument used to remove multiple individuals to the population begin 
+        updated.
+    **--pop-rm-ind-file** *<pop_str>* *<ind_file>*
+        Argument used to remove multiple individuals to thr population begin 
+        updated using a file.
 
     #############################
     Output Command-line Arguments

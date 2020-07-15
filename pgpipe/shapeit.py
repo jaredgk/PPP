@@ -11,7 +11,6 @@ import pkg_resources
 
 from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.logging_module import initLogger, logArgs
-from pgpipe.plink import convert_haps_to_vcf
 from pgpipe.misc import confirm_executable
 
 def check_shapeit_for_errors (shapeit_stdout, output_prefix):
@@ -198,8 +197,4 @@ def call_shapeit (shapeit_call_args, output_prefix, output_format):
 
     # Standard call to beagle
     standard_shapeit_call(shapeit_call_args, output_prefix)
-
-    # Convert haps-format to vcf
-    convert_haps_to_vcf(output_prefix, output_format)
-
-    logging.info('HAPS conversion to VCF complete')
+    

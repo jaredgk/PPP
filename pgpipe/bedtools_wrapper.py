@@ -6,31 +6,15 @@ import fileinput
 
 from pgpipe.misc import confirm_executable
 
-def log_bedtools_reference (out_filename, append_mode = False, ref_header = True):
+def log_bedtools_reference ():
 
-    # Check if the file is to be written in append mode
-    if append_mode:
+    # Write the log header
+    logging.info('Please Reference alongside the PPP:\n')
 
-        # Open the file
-        log_file = open(out_filename + '.log', 'a')
-
-        # Check if the ref header should be added
-        if ref_header:
-            log_file.write('\nPlease Reference alongside the PPP:\n')
-
-    else:
-
-        # Open the file
-        log_file = open(out_filename + '.log', 'w')
-
-        # Check if the ref header should be added
-        if ref_header:
-            log_file.write('Please Reference alongside the PPP:\n')
-
-    log_file.write('')
-    log_file.close()
-
-    logging.info('Reference assigned')
+    # Write the reference
+    logging.info('Aaron R. Quinlan, Ira M. Hall, BEDTools: a flexible suite of utilities '
+                 'for comparing genomic features, Bioinformatics, Volume 26, Issue 6, 15 '
+                 'March 2010, Pages 841–842')
 
 def check_bedtools_for_errors (bedtools_stderr):
     '''
@@ -49,12 +33,9 @@ def check_bedtools_for_errors (bedtools_stderr):
 
     # Print output if error found. Build up as errors are discovered
     if bedtools_stderr:
-
-        # Splits log into list of lines
-        bedtools_stderr_lines = bedtools_stderr.splitlines()
-
+        
         # Prints the error(s)
-        raise Exception('\n'.join((output_line.split(':')[1] for output_line in bedtools_stderr_lines if 'ERROR:' in output_line)))
+        raise Exception(bedtools_stderr)
 
 def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
     '''
@@ -92,7 +73,7 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
     # Loop the BEDtools input
     for bed_line in bed_input:
 
-    # Pipe the BEDtools input to stdin
+        # Pipe the BEDtools input to stdin
         bedtools_sort_call.stdin.write(bed_line)
 
     # Call BEDtools to merge the sorted input
@@ -110,7 +91,7 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
     # Check if code is running in python 3
     if sys.version_info[0] == 3:
 
-    # Convert bytes to string
+        # Convert bytes to string
         bedtools_sort_stderr = bedtools_sort_stderr.decode()
 
     # Check BEDtools sort for possible errors
@@ -131,8 +112,8 @@ def merge_bed_files (bed_files, bed_output_filename, optional_merge_args):
     # Check BEDtools sort for possible errors
     check_bedtools_for_errors(bedtools_merge_stderr)
 
-    # Close BEDtools output
-    bed_output_file.close()
+    # CLose the sort stderr
+    bedtools_sort_call.stderr.close()
 
     # Close BEDtools output
     bed_output_file.close()
@@ -177,6 +158,9 @@ def standard_bedtools_call (bedtools_call_args, bed_output_filename):
     if sys.version_info[0] == 3:
         # Convert bytes to string
         bedtools_err = bedtools_err.decode()
+
+    # Close the bed output
+    bed_output_file.close()
 
     logging.info('bedtools call complete')
 

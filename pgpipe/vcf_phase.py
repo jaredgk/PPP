@@ -27,17 +27,17 @@
     *************
     Example usage
     *************
-    Command-line to phase chromosome chr1 using Beagle:
+    Command-line to phase a VCF using Beagle:
 
     .. code-block:: bash
         
-        vcf_phase.py --vcf input.vcf --phase-algorithm beagle --phase-chr chr1
+        vcf_phase.py --vcf examples/files/merged_chr1_10000.unphased.vcf.gz --phase-algorithm beagle
 
-    Command-line to phase using SHAPEIT with 100 burn-in iterations:
+    Command-line to phase a VCF using SHAPEIT:
 
     .. code-block:: bash
         
-        vcf_phase.py --vcf input.vcf.gz --phase-algorithm shapeit --shapeit-burn-iter 100
+        vcf_phase.py --vcf examples/files/merged_chr1_10000.unphased.vcf.gz --phase-algorithm shapeit
 
     ############
     Dependencies 
@@ -156,6 +156,7 @@ from pgpipe.model import read_model_file
 from pgpipe.beagle import call_beagle, check_for_beagle_intermediate_files
 from pgpipe.shapeit import call_shapeit, remove_shapeit_intermediate_files, check_for_shapeit_intermediate_files
 from pgpipe.bcftools import get_unique_chrs, get_samples, chr_subset_file, concatenate, check_for_index, create_index
+from pgpipe.plink import convert_haps_to_vcf
 
 def phase_argument_parser(passed_arguments):
     '''
@@ -272,6 +273,7 @@ def phase_argument_parser(passed_arguments):
     phase_parser.add_argument('--shapeit-main-iter', help = 'Number of main iterations (shapeit)', type = int)
     phase_parser.add_argument('--shapeit-states', help = 'Number of conditioning states for haplotype estimation (shapeit)', type = int)
     phase_parser.add_argument('--shapeit-window', help = 'Model window size in Mb (shapeit)', type = float)
+    phase_parser.add_argument('--shapeit-use-mt', help = 'Use chrMT rather than chrM', action = 'store_true')
 
     # Beagle-specific options
     phase_parser.add_argument('--beagle-ref', help = 'Reference panel filename (bref3 or VCF formats)', type = str, action = parser_confirm_file())
@@ -876,6 +878,11 @@ def run (passed_arguments = []):
 
             # Call shapeit wrapper
             call_shapeit(list(map(str, phase_call_args)), phase_args.out_prefix, phase_args.out_format)
+
+            # Convert haps-format to vcf
+            convert_haps_to_vcf(phase_args.out_prefix, phase_args.out_format, phase_args.shapeit_use_mt)
+
+            logging.info('HAPS conversion to VCF complete')
 
             # Combine the log files
             concatenate_logs([phase_args.out_prefix + '.phase.log', phase_args.out_prefix + '.log'],  phased_output + '.log')

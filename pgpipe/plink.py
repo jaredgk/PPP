@@ -8,41 +8,20 @@ import copy
 import logging
 import re
 
-# Call PPP-based scripts
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'pppipe')))
-
 from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.bcftools import convert_vcf
 from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.misc import confirm_executable
 
-def log_plink_reference (out_filename, append_mode = False, ref_header = True):
+def log_plink_reference ():
 
-    # Check if the file is to be written in append mode
-    if append_mode:
+    # Write the log header
+    logging.info('Please Reference alongside the PPP:\n')
 
-        # Open the file
-        log_file = open(out_filename + '.log', 'a')
-
-        # Check if the ref header should be added
-        if ref_header:
-            log_file.write('\nPlease Reference alongside the PPP:\n')
-
-    else:
-
-        # Open the file
-        log_file = open(out_filename + '.log', 'w')
-
-        # Check if the ref header should be added
-        if ref_header:
-            log_file.write('Please Reference alongside the PPP:\n')
-
-    log_file.write('Chang, C. C. et al. Second-generation PLINK: Rising to ' 
-                   'the challenge of larger and richer datasets. Gigascience ' 
-                   '(2015). doi:10.1186/s13742-015-0047-8')
-    log_file.close()
-
-    logging.info('Reference assigned')
+    # Write the reference
+    logging.info('Chang, C. C. et al. Second-generation PLINK: Rising to ' 
+                 'the challenge of larger and richer datasets. Gigascience ' 
+                 '(2015). doi:10.1186/s13742-015-0047-8')
 
 def assign_delim_from_ids (filename, id_column = 0, default_delim = '_'):
 
@@ -50,7 +29,7 @@ def assign_delim_from_ids (filename, id_column = 0, default_delim = '_'):
 
     symbols_present = []
 
-    with open(filename, 'rU') as sample_file:
+    with open(filename, 'r') as sample_file:
         for line_pos, sample_line in enumerate(sample_file):
             if line_pos > 1:
                 # Stores the current sample ID
@@ -424,7 +403,7 @@ def convert_bed (bed_filename = None, bim_filename = None, fam_filename = None, 
 
     logging.info('Finished conversion')
 
-def convert_haps_to_vcf (haps_prefix, output_format, output_prefix = ''):
+def convert_haps_to_vcf (haps_prefix, output_format, return_mt, output_prefix = ''):
 
     # Check that input files included a haps file
     if not os.path.isfile(haps_prefix + '.haps'):
@@ -436,7 +415,17 @@ def convert_haps_to_vcf (haps_prefix, output_format, output_prefix = ''):
         # Return error message if no sample input was found
         raise IOError('Unable to assign sample file. Please confirm the prefix and/or command is specified correctly')
 
-    haps_input_args = ['--haps', haps_prefix + '.haps', 'ref-first', '--sample', haps_prefix + '.sample']
+    # Assign the chr setting
+    chrom_setting = 'MT'
+
+    # Check if chromosomes are chr# or #
+    with open(haps_prefix + '.haps') as haps_file:
+        haps_line = haps_file.readline()
+        if haps_line.strip().startswith('chr'):
+            chrom_setting = 'chrMT' if return_mt else 'chrM'
+
+    # Assign input args
+    haps_input_args = ['--haps', haps_prefix + '.haps', 'ref-first', '--sample', haps_prefix + '.sample', '--output-chr', chrom_setting]
 
     # If no output_prefix is assigned, use haps_prefix
     if not output_prefix:

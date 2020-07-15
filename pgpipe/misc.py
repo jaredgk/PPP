@@ -1,5 +1,7 @@
 import os
+import copy
 import logging
+import argparse
 
 def local_executable (executable):
 
@@ -32,3 +34,15 @@ def confirm_executable (executable):
 
     # Return None if the executable was not found
     return None
+
+
+def argprase_kwargs (kwarg_dict, argparse_function):
+
+    # Convert the kwargs
+    kwargs_list = []
+    for arg, value in kwarg_dict.items():
+        if isinstance(value, (bool)):
+            kwargs_list.append('--%s' % arg.replace('_','-'))
+        else:
+            kwargs_list.extend(['--%s' % arg.replace('_','-'), str(value)])
+    return argparse_function(kwargs_list)

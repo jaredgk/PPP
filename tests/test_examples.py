@@ -13,6 +13,8 @@ import pgpipe.vcf_filter as vcf_filter
 import pgpipe.vcf_calc as vcf_calc
 import pgpipe.stat_sampler as stat_sampler
 import pgpipe.vcf_split as vcf_split
+import pgpipe.bed_utilities as bed_utilities
+import pgpipe.vcf_phase as vcf_phase
 
 tracemalloc.start()
 
@@ -38,8 +40,11 @@ class test_examples (unittest.TestCase):
         # Assign the expected path
         cls.expected_path = os.path.join(cls.script_dir, cls.expected_dir)
 
+        # Assign the script parent directory
+        cls.parent_dir = os.path.dirname(cls.script_dir)
+
         # Assign the expected path
-        cls.input_path = os.path.join(cls.script_dir, 'input')
+        cls.input_path = os.path.join(cls.parent_dir, 'examples', 'files')
 
     @classmethod
     def tearDownClass (cls):
@@ -131,7 +136,7 @@ class test_examples (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.vcf.gz')
 
         # Run the function with the following arguments
-        vcf_filter.run(['--vcf', vcf_file, '--filter-only-biallelic', '--out-format', 'bcf', '--out', test_output])
+        vcf_filter.run(vcf = vcf_file, filter_only_biallelic = True, out_format = 'bcf', out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(vcfFileComp(test_output, 'bcf', exp_output, self.test_dir))
@@ -149,7 +154,7 @@ class test_examples (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.bcf')
 
         # Run the function with the following arguments
-        vcf_filter.run(['--vcf', vcf_file, '--filter-include-pos', 'chr1:1-1509546', '--out-format', 'vcf.gz', '--out', test_output])
+        vcf_filter.run(vcf = vcf_file, filter_include_pos = 'chr1:1-1509546', out_format = 'vcf.gz', out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(vcfFileComp(test_output, 'vcf.gz', exp_output, self.test_dir))
@@ -167,7 +172,7 @@ class test_examples (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.indels.vcf.gz')
 
         # Run the function with the following arguments
-        vcf_filter.run(['--vcf', vcf_file, '--filter-exclude-indels', '--out-format', 'vcf.gz', '--out', test_output])
+        vcf_filter.run(vcf = vcf_file, filter_exclude_indels = True, out_format = 'vcf.gz', out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(vcfFileComp(test_output, 'vcf.gz', exp_output, self.test_dir))
@@ -252,10 +257,10 @@ class test_examples (unittest.TestCase):
     # Test vcf_split
     def test_vcf_split_example_1 (self):
 
-        # Assign the test output file
+        # Assign the test output dir
         test_output_dir = os.path.join(self.test_dir, 'test_vcf_split_example_1')
 
-        # Assign the expected output file
+        # Assign the expected output dir
         exp_output_dir = os.path.join(self.expected_path, 'merged_chr1_10000_vcf_split')
 
         # Assign the input stat file
@@ -280,11 +285,223 @@ class test_examples (unittest.TestCase):
             # Confirm that the output is what is expected
             self.assertTrue(vcfFileComp(test_output, 'vcf.gz', exp_output, self.test_dir))
 
+    # Test bed_utilities
+    def test_bed_utilities_example_1 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_bed_utilities_example_1.test')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'chr1_sites.sampled.bed')
+
+        # Assign the input file
+        bed_file = os.path.join(self.input_path, 'chr1_sites.bed')
+
+        # Run the function with the following arguments
+        bed_utilities.run(['--utility', 'sample', '--bed', bed_file, '--sample-size', '20', '--out', test_output, '--random-seed', '1000'])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(fileComp(test_output, exp_output))
+
+    # Test bed_utilities
+    def test_bed_utilities_example_2 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_bed_utilities_example_2.test')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'chr1_sites.extend_upstream.bed')
+
+        # Assign the input file
+        bed_file = os.path.join(self.input_path, 'chr1_sites.bed')
+
+        # Assign the chrom size file
+        chrom_file = os.path.join(self.input_path, 'chr_sizes.txt')
+
+        # Run the function with the following arguments
+        bed_utilities.run(['--utility', 'extend', '--bed', bed_file, '--chrom-file', chrom_file, '--extend-upstream', '1000', '--out', test_output])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(fileComp(test_output, exp_output))
+
+    # Test bed_utilities
+    def test_bed_utilities_example_3 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_bed_utilities_example_3.test')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'chr1_sites.extend_downstream.bed')
+
+        # Assign the input file
+        bed_file = os.path.join(self.input_path, 'chr1_sites.bed')
+
+        # Assign the chrom size file
+        chrom_file = os.path.join(self.input_path, 'chr_sizes.txt')
+
+        # Run the function with the following arguments
+        bed_utilities.run(['--utility', 'extend', '--bed', bed_file, '--chrom-file', chrom_file, '--extend-downstream', '1000', '--out', test_output])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(fileComp(test_output, exp_output))
+
+    # Test bed_utilities
+    def test_bed_utilities_example_4 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_bed_utilities_example_4.test')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'chr1_sites.extend_flanks.bed')
+
+        # Assign the input file
+        bed_file = os.path.join(self.input_path, 'chr1_sites.bed')
+
+        # Assign the chrom size file
+        chrom_file = os.path.join(self.input_path, 'chr_sizes.txt')
+
+        # Run the function with the following arguments
+        bed_utilities.run(['--utility', 'extend', '--bed', bed_file, '--chrom-file', chrom_file, '--extend-flanks', '1000', '--out', test_output])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(fileComp(test_output, exp_output))
+
+    # Test bed_utilities
+    def test_bed_utilities_example_5 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_bed_utilities_example_5.test')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'chr1_sites.bed')
+
+        # Assign the input file
+        bed_file = os.path.join(self.input_path, 'chr1_sites.unsorted.bed')
+
+        # Run the function with the following arguments
+        bed_utilities.run(['--utility', 'sort', '--bed', bed_file, '--out', test_output])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(fileComp(test_output, exp_output))
+
+    # Test bed_utilities
+    def test_bed_utilities_example_6 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_bed_utilities_example_6.test')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'chr1_sites.merged.bed')
+
+        # Assign the input file
+        bed_file = os.path.join(self.input_path, 'chr1_sites.bed')
+
+        # Run the function with the following arguments
+        bed_utilities.run(['--utility', 'merge', '--bed', bed_file, '--out', test_output])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(fileComp(test_output, exp_output))
+
+    # Test bed_utilities
+    def test_bed_utilities_example_7 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_bed_utilities_example_7.test')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'chr1_sites.merged.bed')
+
+        # Assign the input files
+        bed_files = [os.path.join(self.input_path, 'chr1_sites.1.bed'),
+        			 os.path.join(self.input_path, 'chr1_sites.2.bed'),
+        			 os.path.join(self.input_path, 'chr1_sites.3.bed'),
+        			 os.path.join(self.input_path, 'chr1_sites.4.bed')]
+
+        # Run the function with the following arguments
+        bed_utilities.run(['--utility', 'merge', '--out', test_output, '--beds'] +  bed_files)
+
+        # Confirm that the output is what is expected
+        self.assertTrue(fileComp(test_output, exp_output))
+
+    # Test bed_utilities
+    def test_bed_utilities_example_8 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_bed_utilities_example_8.test')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'chr1_sites.subtracted.bed')
+
+        # Assign the input file
+        bed_file = os.path.join(self.input_path, 'chr1_sites.bed')
+
+        # Assign the input file
+        subtract_file = os.path.join(self.input_path, 'chr1_sites.1.bed')
+
+        # Run the function with the following arguments
+        bed_utilities.run(['--utility', 'subtract', '--bed', bed_file, '--subtract-bed', subtract_file, '--out', test_output])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(fileComp(test_output, exp_output))
+
+    # Test bed_utilities
+    def test_bed_utilities_example_9 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_bed_utilities_example_9.test')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'chr1_sites.complement.bed')
+
+        # Assign the input file
+        bed_file = os.path.join(self.input_path, 'chr1_sites.bed')
+
+        # Assign the chrom size file
+        chrom_file = os.path.join(self.input_path, 'chr_sizes.txt')
+
+        # Run the function with the following arguments
+        bed_utilities.run(['--utility', 'complement', '--bed', bed_file, '--chrom-file', chrom_file, '--out', test_output])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(fileComp(test_output, exp_output))
+
+    # Test vcf_phase
+    def test_vcf_phase_example_1 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_vcf_phase_example_1.test')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'merged_chr1_10000.beagle_phased.vcf.gz')
+
+        # Assign the input file
+        vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.unphased.vcf.gz')
+
+        # Run the function with the following arguments
+        vcf_phase.run(['--vcf', vcf_file, '--phase-algorithm', 'beagle', '--out', test_output])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(vcfFileComp(test_output, 'vcf.gz', exp_output, self.test_dir))
+
+    # Test vcf_phase
+    def test_vcf_phase_example_2 (self):
+
+        # Assign the test output file
+        test_output = os.path.join(self.test_dir, 'test_vcf_phase_example_2.vcf.gz')
+
+        # Assign the expected output file
+        exp_output = os.path.join(self.expected_path, 'merged_chr1_10000.shapeit_phased.vcf.gz')
+
+        # Assign the input file
+        vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.unphased.vcf.gz')
+
+        # Run the function with the following arguments
+        vcf_phase.run(['--vcf', vcf_file, '--phase-algorithm', 'shapeit', '--out', test_output])
+
+        # Confirm that the output is what is expected
+        self.assertTrue(vcfFileComp(test_output, 'vcf.gz', exp_output, self.test_dir))
 
 
-
-
-        
 
 if __name__ == "__main__":
     unittest.main(verbosity = 2)

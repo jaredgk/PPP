@@ -6,6 +6,16 @@
     a single BED; v) merge features within one or more BED files; vi) create a BED of 
     complementary features.
 
+    ******************
+    Command-line Usage
+    ******************
+    The BED utilites function may be called using the following command:
+
+    .. code-block:: bash
+        
+        bed_utilities.py
+
+
     ########
     Utilites
     ########
@@ -18,33 +28,115 @@
         :width: 100 %
         :align: center
 
-    Given a BED file (Loci.BED) and a sample size, the sample utility will generate a 
-    pseudorandomly sampled BED. Please note that the random seed may be used to 
-    reproduced the sample.
+    Given a BED file and a sample size, the sample utility will generate a pseudorandomly 
+    sampled BED. Please note that the random seed may be used to reproduced the sample.
 
-    ##################
-    Command-line Usage
-    ##################
-    The BED utilites function may be called using the following command:
-
-    .. code-block:: bash
-        
-        bed_utilites.py
-
-    *************
+    =============
     Example usage
+    =============
+    Sample 20 features from a BED file:
+
+    .. code-block:: bash
+        
+        bed_utilities.py --utility sample --bed examples/files/chr1_sites.bed --sample-size 20
+
+    ************
+    Sort Utility
+    ************
+
+    Given an unsorted BED file, the sort utility will generate a sorted BED file. 
+
+    =============
+    Example usage
+    =============
+    Sort an unsorted BED file:
+
+    .. code-block:: bash
+        
+        bed_utilities.py --utility sort --bed examples/files/chr1_sites.unsorted.bed
+
+    **************
+    Extend Utility
+    **************
+
+    Given a BED file and an extend length, the extend utility will increase the length of each 
+    feature upstream, downstream, or both upstream and downstream.
+
+    =============
+    Example usage
+    =============
+    Extend upstream by 1kb:
+
+    .. code-block:: bash
+        
+        bed_utilities.py --utility extend --bed examples/files/chr1_sites.bed --chrom-file examples/files/chr_sizes.txt --extend-upstream 1000
+
+    Extend downstream by 1kb:
+
+    .. code-block:: bash
+        
+        bed_utilities.py --utility extend --bed examples/files/chr1_sites.bed --chrom-file examples/files/chr_sizes.txt --extend-downstream 1000
+    
+    Extend flanks (i.e. both upstream and downstream) by 1kb:
+
+    .. code-block:: bash
+        
+        bed_utilities.py --utility extend --bed examples/files/chr1_sites.bed --chrom-file examples/files/chr_sizes.txt--extend-flanks 1000
+
+    ****************
+    Subtract Utility
+    ****************
+
+    Given two BED files, the subtract utility will remove BED features from a BED file
+    if they overlap with the features from a second BED file.
+
+    =============
+    Example usage
+    =============
+    Remove BED features if they overlap features within the subtract BED file:
+
+    .. code-block:: bash
+        
+        bed_utilities.py --utility subtract --bed examples/files/chr1_sites.bed --subtract-bed examples/files/chr1_sites.1.bed --subtract-entire-feature
+
+
+    ******************
+    Complement Utility
+    ******************
+
+    Given a BED file, the complementary utility will generate a BED file of complementary 
+    features.
+
+    =============
+    Example usage
+    =============
+    Return a BED with features that do not overlap within the given file:
+
+    .. code-block:: bash
+        
+        bed_utilities.py --utility complement --bed examples/files/chr1_sites.bed --chrom-file examples/files/chr_sizes.txt
+
     *************
-    Extend flanks (i.e. both upstream and downstream) by 10kb:
+    Merge Utility
+    *************
+
+    Given one or more BED files, the merge utility will generate a single sorted BED file of
+    merged BED features.
+
+    =============
+    Example usage
+    =============
+    Merge BED features from a single BED file:
 
     .. code-block:: bash
         
-        bed_utilites.py --bed input.bed chr22.vcf.gz --utility extend --extend-flanks 10000
+        bed_utilities.py --utility merge --bed examples/files/chr1_sites.bed 
 
-    Merge multiple BED files:
+    Merge BED features from multiple BED files:
 
     .. code-block:: bash
         
-        bed_utilites.py --beds Input_BEDs --utility merge
+        bed_utilities.py --utility merge --beds examples/files/chr1_sites.1.bed examples/files/chr1_sites.2.bed examples/files/chr1_sites.3.bed examples/files/chr1_sites.4.bed
     
     ############
     Dependencies 
@@ -145,10 +237,8 @@ import logging
 import csv
 import numpy as np
 
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
 # Import basic bedtools functions
-from pgpipe.bedtools_wrapper import merge_bed_files, standard_bedtools_call
+from pgpipe.bedtools_wrapper import merge_bed_files, standard_bedtools_call, log_bedtools_reference
 
 from pgpipe.logging_module import initLogger, logArgs
 
@@ -391,7 +481,10 @@ def run (passed_arguments = []):
             optional_merge_args.extend(['-d', bed_args.max_merge_distance])
 
         # Merge the BED files
-        merge_bed_files (bed_files_to_merge, bed_args.out, optional_merge_args)
+        merge_bed_files(bed_files_to_merge, bed_args.out, optional_merge_args)
+
+        # Log the bedtools reference
+        log_bedtools_reference()
 
     # Catch the rest of the utilites 
     else:
@@ -449,6 +542,10 @@ def run (passed_arguments = []):
             if not bed_args.extend_flanks and not bed_args.extend_upstream and not bed_args.extend_downstream:
                 raise Exception('%s requires at least one extension argument (e.g. --extend-flanks)' % bed_args.utility)
 
+            # Confirm extend flanks is not being called alone
+            if bed_args.extend_flanks and (bed_args.extend_upstream or bed_args.extend_downstream):
+                raise Exception('--extend-flanks cannot be used with other extend commands')
+
             # Assign the utility
             bedtools_arg_list.append('slop')
 
@@ -462,13 +559,10 @@ def run (passed_arguments = []):
             if bed_args.extend_flanks:
                 bedtools_arg_list.extend(['-b', bed_args.extend_flanks])
 
-            # Check if --extend-upstream has been specified 
-            if bed_args.extend_upstream:
-                bedtools_arg_list.extend(['-l', bed_args.extend_upstream])
-
-            # Check if --extend-downstream has been specified 
-            if bed_args.extend_downstream:
-                bedtools_arg_list.extend(['-r', bed_args.extend_downstream])
+            # Check if --extend-upstream/--extend-downstream have been specified
+            else:
+                bedtools_arg_list.extend(['-l', bed_args.extend_upstream if bed_args.extend_upstream is not None else 0])
+                bedtools_arg_list.extend(['-r', bed_args.extend_downstream if bed_args.extend_downstream is not None else 0])
 
         # Check if the sort utility has been selected
         elif bed_args.utility == 'sort':
@@ -497,6 +591,9 @@ def run (passed_arguments = []):
 
         # Call bedtools
         standard_bedtools_call(bedtools_arg_list, bed_args.out)
+
+        # Log the bedtools reference
+        log_bedtools_reference()
 
 if __name__ == "__main__":
     initLogger()

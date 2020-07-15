@@ -20,13 +20,13 @@
 
     .. code-block:: bash
         
-        vcf_calc.py --vcf input/merged_chr1_10000.vcf.gz --calc-statistic TajimaD --statistic-window-size 10000
+        vcf_calc.py --vcf examples/files/merged_chr1_10000.vcf.gz --calc-statistic TajimaD --statistic-window-size 10000
 
     Command-line to calculate windowed Fst on the two populations within the model *2Pop*: 
 
     .. code-block:: bash
         
-        vcf_calc.py --vcf input/merged_chr1_10000.vcf.gz --model-file input/input.model --model 2Pop --calc-statistic windowed-weir-fst --statistic-window-size 10000 --statistic-window-step 10000
+        vcf_calc.py --vcf examples/files/merged_chr1_10000.vcf.gz --model-file examples/files/input.model --model 2Pop --calc-statistic windowed-weir-fst --statistic-window-size 10000 --statistic-window-step 10000
     
     ############
     Dependencies 
@@ -701,6 +701,9 @@ def run (passed_arguments = []):
 
             # Produce the vcftools log file
             produce_vcftools_log(vcftools_err, vcftools_output_filename)
+
+    # Lof the vcftools reference
+    log_vcftools_reference()
 
     # Delete any files that were created for vcftools
     if vcf_args.model_file:

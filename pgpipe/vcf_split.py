@@ -30,7 +30,7 @@
 
     .. code-block:: bash
         
-        vcf_split.py --vcf input/merged_chr1_10000.vcf.gz --split-file input.windowed.weir.fst --split-method statistic-file --model-file input/input.model --model 2Pop
+        vcf_split.py --vcf examples/files/merged_chr1_10000.vcf.gz --split-file examples/files/sampled.windowed.weir.fst.tsv --split-method statistic-file --model-file examples/files/input.model --model 2Pop
 
     ############
     Dependencies 
@@ -521,17 +521,8 @@ def run (passed_arguments = []):
 
         logging.info('Locus VCF created')
 
-    # Check if the log should be piped to the stdout
-    if vcf_args.log_stdout:
-
-        # Pipe the bcftools reference to stdout
-        stdout_bcftools_reference()
-
-    # Check if log should be saved as a file
-    else:
-    
-        # Produce the log file with the bcftools reference
-        log_bcftools_reference(vcf_args.out_prefix + '.split')
+    # Log the bcftools reference
+    log_bcftools_reference()
 
     # Check if the user has specified a model file
     if vcf_args.model_file and vcf_args.model:

@@ -4,46 +4,17 @@ import logging
 import subprocess
 import copy
 
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'pppipe')))
-
 from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.misc import confirm_executable
 
-def stdout_bcftools_reference():
+def log_bcftools_reference ():
 
     # Write the log header
-    sys.stdout.write('Please Reference alongside the PPP:\n')
+    logging.info('Please Reference alongside the PPP:\n')
 
     # Write the reference
-    sys.stdout.write('Li, H. et al. The Sequence Alignment/Map format and '
-                   'SAMtools. Bioinformatics (2009). doi:10.1093/bioinformatics/btp352')
-
-def log_bcftools_reference (out_filename, append_mode = False, ref_header = True):
-
-    # Check if the file is to be written in append mode
-    if append_mode:
-
-        # Open the file
-        log_file = open(out_filename + '.log', 'a')
-
-        # Check if the ref header should be added
-        if ref_header:
-            log_file.write('\nPlease Reference alongside the PPP:\n')
-
-    else:
-
-        # Open the file
-        log_file = open(out_filename + '.log', 'w')
-
-        # Check if the ref header should be added
-        if ref_header:
-            log_file.write('Please Reference alongside the PPP:\n')
-
-    log_file.write('Li, H. et al. The Sequence Alignment/Map format and '
-                   'SAMtools. Bioinformatics (2009). doi:10.1093/bioinformatics/btp352')
-    log_file.close()
-
-    logging.info('Reference assigned')
+    logging.info('Li, H. et al. The Sequence Alignment/Map format and '
+                 'SAMtools. Bioinformatics (2009). doi:10.1093/bioinformatics/btp352')
 
 def assign_position_information (chromosome, from_bp, to_bp):
 
@@ -833,6 +804,9 @@ def pipe_bcftools_to_set (bcftools_call_args):
     check_bcftools_for_errors(bcftools_stderr)
 
     logging.info('bcftools call complete')
+
+    # Close stderr
+    bcftools_call.stderr.close()
 
     return set_to_return
 
