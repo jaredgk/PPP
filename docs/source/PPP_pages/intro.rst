@@ -12,8 +12,8 @@ For simplicity, PPP functions are separated into four categories:
 
 For details on specific functions, please see the documentation on each section.
 
-.. image:: PPP_assets/PPP_Pipeline_Figure.png
-   :scale: 50 %
+.. image:: ../PPP_assets/PPP_Pipeline_Figure.png
+   :width: 100 %
    :align: center
 
 .. centered::
@@ -24,6 +24,6 @@ For details on specific functions, please see the documentation on each section.
 Creating Pipelines
 ##################
 
-Most PPP-based pipelines are expected to primarily consist of core functions. To simplify development, all core functions were designed to operate using VCF-based files. The VCF format was selected due to the frequent support for the format among publicly available datasets and population genomics software. At present, pipelines may be generated in one of two methods: i) calling each function by command-line or ii) calling the function within a script, such as a jupyter notebook. Example usage of both methods may be found within <examples.rst>`__.
+Most PPP-based pipelines are expected to primarily consist of core functions. To simplify development, all core functions were designed to operate using VCF-based files. The VCF format was selected due to the frequent support for the format among publicly available datasets and population genomics software. At present, pipelines may be generated in one of two methods: i) calling each function by command-line or ii) calling the function within a script, such as a jupyter notebook. Example usage of both methods may be found within :ref:`examples`.
 
 

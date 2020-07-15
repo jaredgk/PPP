@@ -27,6 +27,6 @@ All PPP functions may also be used within a `Jupyter Notebook <https://jupyter.o
 
 .. only:: html
 
-	The Jupyter Notebooks may also be download:
+   The Jupyter Notebooks may also be download:
 
    * :download:`Example Jupyter Pipleine <jupyter/example_pipeline_pan.ipynb>`.
