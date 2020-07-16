@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 ''' 
-
-	The four-gamete test is a method for determining whether or not 
+    The four-gamete test is a method for determining whether or not 
     there has been recombination between a pair of variants. To do this, 
     all individuals must have haplotypes defined as the variants at the 
     two sites.
