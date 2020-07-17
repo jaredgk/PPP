@@ -1,6 +1,6 @@
-==============
-Core Functions
-==============
+==================
+PPP Core Functions
+==================
 
 The functions below were developed to perform many of the core operations typically used in population genetic analyses. Each of these functions were designed to perform a single operation (i.e. filtering, phasing, etc.).
 

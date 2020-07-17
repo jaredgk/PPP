@@ -19,5 +19,6 @@ Please Note: This documentation is currently being developed and will be updated
    PPP_pages/analyses
    PPP_pages/utilities
    PPP_pages/model
+   PPP_pages/develop
    PPP_pages/contact
    PPP_pages/citations
