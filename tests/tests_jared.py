@@ -345,21 +345,23 @@ class imaTest(unittest.TestCase):
 
 class phaseTest(unittest.TestCase):
     def test_shapeit(self):
-        vcf_phase.run(['--vcf','input/chr11.adj.big.vcf',
-                   '--out','input/chr11.test.vcf',
-                   '--out-format','vcf',
-                   '--phase-algorithm','shapeit',
-                   '--random-seed','123','--overwrite'])
+        vcf_phase.run(vcf = 'input/chr11.adj.big.vcf',
+                      out ='input/chr11.test.vcf',
+                      out_format = 'vcf',
+                      phase_algorithm = 'shapeit',
+                      random_seed = 123,
+                      overwrite = True)
         self.assertTrue(os.path.exists('input/chr11.test.vcf'))
         #self.assertTrue(compareVcfsNoComments('input/chr11.test.vcf',
         #                'input/chr11.shapeit.test.vcf'))
 
     def test_beagle(self):
-        vcf_phase.run(['--vcf','input/chr11.adj.big.vcf',
-                   '--out','input/chr11.test.vcf',
-                   '--out-format','vcf',
-                   '--phase-algorithm','beagle',
-                   '--random-seed','123','--overwrite'])
+        vcf_phase.run(vcf = 'input/chr11.adj.big.vcf',
+                      out = 'input/chr11.test.vcf',
+                      out_format = 'vcf',
+                      phase_algorithm = 'beagle',
+                      random_seed = 123,
+                      overwrite = True)
         self.assertTrue(os.path.exists('input/chr11.test.vcf'))
         #self.assertTrue(compareVcfsNoComments('input/chr11.test.vcf',
         #                'input/chr11.beagle.test.vcf'))

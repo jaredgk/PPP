@@ -87,15 +87,11 @@ import shutil
 import logging
 import pandas as pd
 
-# Import basic vcftools functions
 from pgpipe.bcftools import *
-
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
 from pgpipe.logging_module import initLogger, logArgs
+from pgpipe.misc import argprase_kwargs
 
-def vcf_utility_parser(passed_arguments):
+def vcf_utility_parser(passed_arguments = []):
     '''
     VCF Utility Argument Parser
 
@@ -177,9 +173,9 @@ def vcf_utility_parser(passed_arguments):
     vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Defines the desired output format', type = str, choices = out_format_list, default = out_format_default)
     
     if passed_arguments:
-        return vcf_parser.parse_args(passed_arguments)
+        return vars(vcf_parser.parse_args(passed_arguments))
     else:
-        return vcf_parser.parse_args()
+        return vars(vcf_parser.parse_args())
 
 def utility_tsv_output (utility_results, utility_header, utility_index, utility_output_filename):
 
@@ -205,7 +201,7 @@ def utility_tsv_output (utility_results, utility_header, utility_index, utility_
         # Save the utility dataframe into a file
         utility_dataframe.to_csv(utility_output_filename, sep = '\t', index = False)
 
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
     Utilites for VCF-formatted files
 
@@ -241,8 +237,12 @@ def run (passed_arguments = []):
         Output file already exists
     '''
 
-    # Grab VCF arguments from command line
-    vcf_args = vcf_utility_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, vcf_utility_parser)
+
+    # Assign arguments
+    vcf_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(vcf_args, func_name = 'vcf_utilities')
@@ -382,5 +382,5 @@ def run (passed_arguments = []):
 
 
 if __name__ == "__main__":
-    #initLogger()
-    run()
+    initLogger()
+    run(**vcf_utility_parser())

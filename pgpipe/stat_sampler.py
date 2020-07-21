@@ -95,22 +95,13 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
-# Import log initializer
 from pgpipe.logging_module import initLogger, logArgs
-
-# Import basic vcftools functions
 from pgpipe.vcftools import *
-
-# Import basic vcf
 from pgpipe.bcftools import check_for_index, create_index
-
-# Model file related functions
 from pgpipe.model import read_model_file
+from pgpipe.misc import argprase_kwargs
 
-def sampler_parser(passed_arguments):
+def sampler_parser(passed_arguments = []):
     '''
     Stat Sampler Phase Argument Parser
 
@@ -172,9 +163,9 @@ def sampler_parser(passed_arguments):
 
 
     if passed_arguments:
-        return sampler_parser.parse_args(passed_arguments)
+        return vars(sampler_parser.parse_args(passed_arguments))
     else:
-        return sampler_parser.parse_args()
+        return vars(sampler_parser.parse_args())
 
 def random_vcftools_sampler (stat_file_data, sample_size, with_replacements = False):
     '''
@@ -331,7 +322,7 @@ def assign_statistic_column (sample_headers, statistic):
     # Return the converted statistic
     return converted_statistic
 
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
     Statistics sampler.
 
@@ -379,8 +370,12 @@ def run (passed_arguments = []):
         Window size argument not defined (if necessary)
     '''
 
-    # Get arguments from command line
-    sampler_args = sampler_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, sampler_parser)
+
+    # Assign arguments
+    sampler_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(sampler_args, func_name = 'stat_sampler')
@@ -468,4 +463,4 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**sampler_parser())

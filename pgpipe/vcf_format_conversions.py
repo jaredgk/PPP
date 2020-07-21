@@ -66,17 +66,15 @@ import argparse
 import glob
 import logging
 
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
-# Import PPP modules and scripts
 from pgpipe.eigenstrat_wrapper import *
 from pgpipe.bcftools import convert_vcf, log_bcftools_reference
 from pgpipe.plink import convert_ped, convert_bed, convert_vcf_to_plink, log_plink_reference
 from pgpipe.vcf_reader_func import checkFormat
 from pgpipe.logging_module import initLogger, logArgs
+from pgpipe.misc import argprase_kwargs
 
 
-def convert_argument_parser(passed_arguments):
+def convert_argument_parser(passed_arguments = []):
     '''
     Convert Argument Parser
 
@@ -148,9 +146,9 @@ def convert_argument_parser(passed_arguments):
     convert_parser.add_argument('--threads', help = "Set the number of threads. Only supported with ped", type = int, default = 1)
 
     if passed_arguments:
-        return convert_parser.parse_args(passed_arguments)
+        return vars(convert_parser.parse_args(passed_arguments))
     else:
-        return convert_parser.parse_args()
+        return vars(convert_parser.parse_args())
 
 def check_if_conversion (input_format, out_format):
     '''
@@ -196,7 +194,7 @@ def check_conversion_support (out_format, supported_formats):
     if out_format not in supported_formats:
         raise Exception('Input cannot be converted into the format specified')
 
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
     File conversion suite
 
@@ -236,8 +234,12 @@ def run (passed_arguments = []):
         Conversion to same format given
     '''
 
-    # Grab plink arguments from command line
-    convert_args = convert_argument_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, convert_argument_parser)
+
+    # Assign arguments
+    convert_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(convert_args, func_name = 'convert')
@@ -384,4 +386,4 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**convert_argument_parser())

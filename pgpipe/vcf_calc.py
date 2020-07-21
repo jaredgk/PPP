@@ -154,16 +154,12 @@ import copy
 import shutil
 import logging
 
-# Import basic vcftools functions
 from pgpipe.vcftools import *
-
-# Model file related functions
 from pgpipe.model import read_model_file
-
-# Import logging functions
 from pgpipe.logging_module import initLogger, logArgs
+from pgpipe.misc import argprase_kwargs
 
-def vcf_calc_parser(passed_arguments):
+def vcf_calc_parser(passed_arguments = []):
     '''
     VCF Calc Argument Parser
 
@@ -270,12 +266,11 @@ def vcf_calc_parser(passed_arguments):
     vcf_parser.add_argument('--filter-exclude-indv-file', help = 'Defines a file of individuals to exclude', action = parser_confirm_file())
 
     if passed_arguments:
-        return vcf_parser.parse_args(passed_arguments)
+        return vars(vcf_parser.parse_args(passed_arguments))
     else:
-        return vcf_parser.parse_args()
+        return vars(vcf_parser.parse_args())
 
-
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
     Statistic calculation using VCFTools.
 
@@ -343,8 +338,12 @@ def run (passed_arguments = []):
         # Report the original error    
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
 
-    # Grab VCF arguments from command line
-    vcf_args = vcf_calc_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, vcf_calc_parser)
+
+    # Assign arguments
+    vcf_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(vcf_args, func_name = 'vcf_calc')
@@ -712,4 +711,4 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**vcf_calc_parser())

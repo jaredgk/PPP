@@ -157,8 +157,9 @@ from pgpipe.beagle import call_beagle, check_for_beagle_intermediate_files
 from pgpipe.shapeit import call_shapeit, remove_shapeit_intermediate_files, check_for_shapeit_intermediate_files
 from pgpipe.bcftools import get_unique_chrs, get_samples, chr_subset_file, concatenate, check_for_index, create_index
 from pgpipe.plink import convert_haps_to_vcf
+from pgpipe.misc import argprase_kwargs
 
-def phase_argument_parser(passed_arguments):
+def phase_argument_parser(passed_arguments = []):
     '''
     VCF Phase Argument Parser
 
@@ -287,9 +288,9 @@ def phase_argument_parser(passed_arguments):
     phase_parser.add_argument('--beagle-nsteps', help = 'Number of consecutive --beagle-steps used for identifying long IBS segments (beagle)', type = int)
 
     if passed_arguments:
-        return phase_parser.parse_args(passed_arguments)
+        return vars(phase_parser.parse_args(passed_arguments))
     else:
-        return phase_parser.parse_args()
+        return vars(phase_parser.parse_args())
 
 def log_to_stdout (log_filename):
     '''
@@ -437,7 +438,7 @@ def assign_filename_prefix (output_filename, output_format):
     # Return the updated prefix
     return updated_prefix
 
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
     Phaser for VCF files.
 
@@ -516,8 +517,12 @@ def run (passed_arguments = []):
         Incompatible arguments
     '''
 
-    # Grab VCF arguments from command line
-    phase_args = phase_argument_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, phase_argument_parser)
+
+    # Assign arguments
+    phase_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(phase_args, func_name = 'vcf_phase')
@@ -555,8 +560,8 @@ def run (passed_arguments = []):
     filter_indv_filename = ''
 
     # Check if the has specified the output filename, without a prefix
-    if phase_args.out and '--out-prefix' not in passed_arguments and '--out-prefix' not in sys.argv:
-
+    if phase_args.out:
+        
         # Assign a prefix based on the output filename
         phase_args.out_prefix = assign_filename_prefix(phase_args.out, phase_args.out_format)
 
@@ -997,4 +1002,4 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**phase_argument_parser())

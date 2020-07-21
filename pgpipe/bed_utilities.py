@@ -237,12 +237,11 @@ import logging
 import csv
 import numpy as np
 
-# Import basic bedtools functions
 from pgpipe.bedtools_wrapper import merge_bed_files, standard_bedtools_call, log_bedtools_reference
-
 from pgpipe.logging_module import initLogger, logArgs
+from pgpipe.misc import argprase_kwargs
 
-def bed_argument_parser(passed_arguments):
+def bed_argument_parser(passed_arguments = []):
     '''Phase Argument Parser - Assigns arguments for vcftools from command line.
     Depending on the argument in question, a default value may be specified'''
 
@@ -314,12 +313,10 @@ def bed_argument_parser(passed_arguments):
     bed_parser.add_argument('--out', help = 'Defines the output filename', default = 'out.bed')
     bed_parser.add_argument('--overwrite', help = "Defines that previous output files should be overwritten", action = 'store_true')
 
-
-
     if passed_arguments:
-        return bed_parser.parse_args(passed_arguments)
+        return vars(bed_parser.parse_args(passed_arguments))
     else:
-        return bed_parser.parse_args()
+        return vars(bed_parser.parse_args())
 
 def random_bed_sampler (bed_filename, out_filename, sample_size, with_replacements = False):
     '''
@@ -364,7 +361,7 @@ def random_bed_sampler (bed_filename, out_filename, sample_size, with_replacemen
         # Write the output
         out_writer.writerows(random_samples)
 
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
         Utilites for BED-formatted files
 
@@ -425,8 +422,12 @@ def run (passed_arguments = []):
 
     '''
 
-    # Grab BED arguments from command line
-    bed_args = bed_argument_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, bed_argument_parser)
+
+    # Assign arguments
+    bed_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(bed_args, 'bed_utilities')
@@ -597,4 +598,4 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**bed_argument_parser())

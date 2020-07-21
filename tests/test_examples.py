@@ -62,7 +62,7 @@ class test_examples (unittest.TestCase):
         exp_output = os.path.join(self.expected_path, 'model_creator.example_1.model')
 
         # Run the command
-        model_creator.run(['--model', '1Pop', '--model-pop', '1Pop', 'Paniscus', '--pop-ind', 'Paniscus', 'Pan_paniscus-9731_LB502', '--out', test_output])
+        model_creator.run(model = '1Pop', model_pop = ['1Pop', 'Paniscus'], pop_ind = ['Paniscus', 'Pan_paniscus-9731_LB502'], out = test_output)
 
         # Check output
         self.assertTrue(fileComp(test_output, exp_output))
@@ -82,7 +82,7 @@ class test_examples (unittest.TestCase):
         trog_file = os.path.join(self.input_path, 'Troglodytes.txt')
 
         # Run the command
-        model_creator.run(['--model', '2Pop', '--model-pop-file', '2Pop', pop_file, '--pop-ind-file', 'Paniscus', pan_file, '--pop-ind-file', 'Troglodytes', trog_file, '--out', test_output])
+        model_creator.run(model = '2Pop', model_pop_file = ['2Pop', pop_file], pop_ind_file = [['Paniscus', pan_file], ['Troglodytes', trog_file]], out = test_output)
 
         # Check output
         self.assertTrue(fileComp(test_output, exp_output))
@@ -100,7 +100,7 @@ class test_examples (unittest.TestCase):
         model_file = os.path.join(self.input_path, 'input.model')
 
         # Run the command
-        model_creator.run(['--model-file', model_file, '--update-model', '2Pop', '--model-pop', '2Pop', 'Schweinfurthii', '--model-rm-pop', '2Pop', 'Troglodytes', '--out', test_output])
+        model_creator.run(model_file = model_file, update_model = '2Pop', model_pop = ['2Pop', 'Schweinfurthii'], model_rm_pop = ['2Pop', 'Troglodytes'], out = test_output)
 
         # Check output
         self.assertTrue(fileComp(test_output, exp_output))
@@ -118,7 +118,7 @@ class test_examples (unittest.TestCase):
         model_file = os.path.join(self.input_path, 'input.model')
 
         # Run the command
-        model_creator.run(['--model-file', model_file, '--update-pop', 'Paniscus', '--pop-ind', 'Paniscus', 'Pan_paniscus-Unknown', '--pop-rm-ind', 'Paniscus', 'Pan_paniscus-9731_LB502', '--out', test_output])
+        model_creator.run(model_file = model_file, update_pop = 'Paniscus', pop_ind = ['Paniscus', 'Pan_paniscus-Unknown'], pop_rm_ind = ['Paniscus', 'Pan_paniscus-9731_LB502'], out =test_output)
 
         # Check output
         self.assertTrue(fileComp(test_output, exp_output))
@@ -190,7 +190,7 @@ class test_examples (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.vcf.gz') 
 
         # Run the function with the following arguments
-        vcf_calc.run(['--vcf', vcf_file, '--calc-statistic', 'TajimaD', '--statistic-window-size', '10000', '--out', test_output])
+        vcf_calc.run(vcf = vcf_file, calc_statistic = 'TajimaD', statistic_window_size = 10000, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -211,9 +211,7 @@ class test_examples (unittest.TestCase):
         model_file = os.path.join(self.input_path, 'input.model')
 
         # Run the function with the following arguments
-        vcf_calc.run(['--vcf', vcf_file, '--model-file', model_file, '--model', '2Pop', '--calc-statistic', 'windowed-weir-fst', '--statistic-window-size', '10000', '--statistic-window-step', '10000', '--out', test_output])
-
-        #--vcf input.vcf.gz --model-file input.model --model 2Pop --calc-statistic windowed-weir-fst --statistic-window-size 10000 --statistic-window-step 10000
+        vcf_calc.run(vcf = vcf_file, model_file = model_file, model = '2Pop', calc_statistic = 'windowed-weir-fst', statistic_window_size = 10000, statistic_window_step = 10000, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -231,7 +229,7 @@ class test_examples (unittest.TestCase):
         stat_file = os.path.join(self.input_path, 'merged_chr1_10000.windowed.weir.fst')
 
         # Run the function with the following arguments
-        stat_sampler.run(['--statistic-file', stat_file, '--calc-statistic', 'windowed-weir-fst', '--sampling-scheme', 'random', '--sample-size', '20','--random-seed', '1000', '--out', test_output])
+        stat_sampler.run(statistic_file = stat_file, calc_statistic = 'windowed-weir-fst', sampling_scheme = 'random', sample_size = 20, random_seed = 1000, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -249,7 +247,7 @@ class test_examples (unittest.TestCase):
         stat_file = os.path.join(self.input_path, 'merged_chr1_10000.windowed.pi')
 
         # Run the function with the following arguments
-        stat_sampler.run(['--statistic-file', stat_file, '--calc-statistic', 'window-pi', '--sampling-scheme', 'uniform', '--uniform-bins', '4', '--sample-size', '20','--random-seed', '1000', '--out', test_output])
+        stat_sampler.run(statistic_file = stat_file, calc_statistic = 'window-pi', sampling_scheme = 'uniform', uniform_bins = 4, sample_size = 20, random_seed = 1000, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -273,7 +271,7 @@ class test_examples (unittest.TestCase):
         model_file = os.path.join(self.input_path, 'input.model')
 
         # Run the function with the following arguments
-        vcf_split.run(['--vcf', vcf_file, '--split-file', stat_file, '--split-method', 'statistic-file', '--model-file', model_file, '--model', '2Pop', '--out-dir', test_output_dir])
+        vcf_split.run(vcf = vcf_file, split_file = stat_file, split_method = 'statistic-file', model_file = model_file, model = '2Pop', out_dir = test_output_dir)
 
         # Compare the files within the split dirs
         for file_pos in range(len(os.listdir(test_output_dir))):
@@ -298,7 +296,7 @@ class test_examples (unittest.TestCase):
         bed_file = os.path.join(self.input_path, 'chr1_sites.bed')
 
         # Run the function with the following arguments
-        bed_utilities.run(['--utility', 'sample', '--bed', bed_file, '--sample-size', '20', '--out', test_output, '--random-seed', '1000'])
+        bed_utilities.run(utility = 'sample', bed = bed_file, sample_size = 20, out = test_output, random_seed = 1000)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -319,7 +317,7 @@ class test_examples (unittest.TestCase):
         chrom_file = os.path.join(self.input_path, 'chr_sizes.txt')
 
         # Run the function with the following arguments
-        bed_utilities.run(['--utility', 'extend', '--bed', bed_file, '--chrom-file', chrom_file, '--extend-upstream', '1000', '--out', test_output])
+        bed_utilities.run(utility = 'extend', bed = bed_file, chrom_file = chrom_file, extend_upstream = 1000, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -340,7 +338,7 @@ class test_examples (unittest.TestCase):
         chrom_file = os.path.join(self.input_path, 'chr_sizes.txt')
 
         # Run the function with the following arguments
-        bed_utilities.run(['--utility', 'extend', '--bed', bed_file, '--chrom-file', chrom_file, '--extend-downstream', '1000', '--out', test_output])
+        bed_utilities.run(utility = 'extend', bed = bed_file, chrom_file = chrom_file, extend_downstream = 1000, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -361,7 +359,7 @@ class test_examples (unittest.TestCase):
         chrom_file = os.path.join(self.input_path, 'chr_sizes.txt')
 
         # Run the function with the following arguments
-        bed_utilities.run(['--utility', 'extend', '--bed', bed_file, '--chrom-file', chrom_file, '--extend-flanks', '1000', '--out', test_output])
+        bed_utilities.run(utility = 'extend', bed = bed_file, chrom_file = chrom_file, extend_flanks = 1000, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -379,7 +377,7 @@ class test_examples (unittest.TestCase):
         bed_file = os.path.join(self.input_path, 'chr1_sites.unsorted.bed')
 
         # Run the function with the following arguments
-        bed_utilities.run(['--utility', 'sort', '--bed', bed_file, '--out', test_output])
+        bed_utilities.run(utility = 'sort', bed = bed_file, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -397,7 +395,7 @@ class test_examples (unittest.TestCase):
         bed_file = os.path.join(self.input_path, 'chr1_sites.bed')
 
         # Run the function with the following arguments
-        bed_utilities.run(['--utility', 'merge', '--bed', bed_file, '--out', test_output])
+        bed_utilities.run(utility = 'merge', bed = bed_file, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -418,7 +416,7 @@ class test_examples (unittest.TestCase):
         			 os.path.join(self.input_path, 'chr1_sites.4.bed')]
 
         # Run the function with the following arguments
-        bed_utilities.run(['--utility', 'merge', '--out', test_output, '--beds'] +  bed_files)
+        bed_utilities.run(utility = 'merge', out = test_output, beds = bed_files)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -439,7 +437,7 @@ class test_examples (unittest.TestCase):
         subtract_file = os.path.join(self.input_path, 'chr1_sites.1.bed')
 
         # Run the function with the following arguments
-        bed_utilities.run(['--utility', 'subtract', '--bed', bed_file, '--subtract-bed', subtract_file, '--out', test_output])
+        bed_utilities.run(utility = 'subtract', bed = bed_file, subtract_bed = subtract_file, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -460,7 +458,7 @@ class test_examples (unittest.TestCase):
         chrom_file = os.path.join(self.input_path, 'chr_sizes.txt')
 
         # Run the function with the following arguments
-        bed_utilities.run(['--utility', 'complement', '--bed', bed_file, '--chrom-file', chrom_file, '--out', test_output])
+        bed_utilities.run(utility = 'complement', bed = bed_file, chrom_file = chrom_file, out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(fileComp(test_output, exp_output))
@@ -478,7 +476,7 @@ class test_examples (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.unphased.vcf.gz')
 
         # Run the function with the following arguments
-        vcf_phase.run(['--vcf', vcf_file, '--phase-algorithm', 'beagle', '--out', test_output])
+        vcf_phase.run(vcf = vcf_file, phase_algorithm = 'beagle', out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(vcfFileComp(test_output, 'vcf.gz', exp_output, self.test_dir))
@@ -496,7 +494,7 @@ class test_examples (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.unphased.vcf.gz')
 
         # Run the function with the following arguments
-        vcf_phase.run(['--vcf', vcf_file, '--phase-algorithm', 'shapeit', '--out', test_output])
+        vcf_phase.run(vcf = vcf_file, phase_algorithm = 'shapeit', out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(vcfFileComp(test_output, 'vcf.gz', exp_output, self.test_dir))

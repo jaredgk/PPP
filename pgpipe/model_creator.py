@@ -209,8 +209,9 @@ from collections import defaultdict, OrderedDict
 
 from pgpipe.model import Model, ModelFile, write_model_file, read_model_file
 from pgpipe.logging_module import initLogger, logArgs
+from pgpipe.misc import argprase_kwargs
 
-def model_creator_parser (passed_arguments):
+def model_creator_parser (passed_arguments = []):
     '''VCF Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -351,9 +352,9 @@ def model_creator_parser (passed_arguments):
     model_parser.add_argument('--overwrite', help = "Specifies if previous output files should be overwritten", action = 'store_true')
 
     if passed_arguments:
-        return model_parser.parse_args(passed_arguments)
+        return vars(model_parser.parse_args(passed_arguments))
     else:
-        return model_parser.parse_args()
+        return vars(model_parser.parse_args())
 
 def incompatible_duplicates_check (term, *arguments_to_test):
 
@@ -472,7 +473,7 @@ def file_dict_argument_to_str (term, file_argument):
     # Return data as str
     return data_str
 
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
 
     Parameters
@@ -529,8 +530,12 @@ def run (passed_arguments = []):
         No individuals assigned to population
     '''
 
-    # Grab VCF arguments from command line
-    creator_args = model_creator_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, model_creator_parser)
+
+    # Assign arguments
+    creator_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(creator_args, 'model_creator')
@@ -751,4 +756,4 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**model_creator_parser())

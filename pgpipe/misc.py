@@ -36,13 +36,17 @@ def confirm_executable (executable):
     return None
 
 
-def argprase_kwargs (kwarg_dict, argparse_function):
+def argprase_kwargs (kwarg_dict, argparse_function, bad = False):
 
     # Convert the kwargs
     kwargs_list = []
     for arg, value in kwarg_dict.items():
         if isinstance(value, (bool)):
             kwargs_list.append('--%s' % arg.replace('_','-'))
+        elif isinstance(value, (list)) and isinstance(value[0], (list)):
+            for sub_list in value: kwargs_list.extend(['--%s' % arg.replace('_','-')] + [str(sub_value) for sub_value in sub_list])
+        elif isinstance(value, (list)):
+            kwargs_list.extend(['--%s' % arg.replace('_','-')] + [str(sub_value) for sub_value in value])
         else:
             kwargs_list.extend(['--%s' % arg.replace('_','-'), str(value)])
     return argparse_function(kwargs_list)

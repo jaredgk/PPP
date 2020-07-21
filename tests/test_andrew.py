@@ -133,14 +133,13 @@ class vcf_calc_tests (unittest.TestCase):
         model_file = os.path.join(self.input_path, 'input.model')
 
         # Run the function with the following arguments
-        vcf_calc.run(['--vcf', vcf_file,
-                      '--calc-statistic', 'windowed-weir-fst',
-                      '--statistic-window-size', '10000',
-                      '--statistic-window-step', '10000',
-                      '--model-file', model_file,
-                      '--model', '2Pop',
-                      '--out', test_output,
-                      '--overwrite'])
+        vcf_calc.run(vcf = vcf_file,
+                     calc_statistic = 'windowed-weir-fst',
+                     statistic_window_size = 10000,
+                     statistic_window_step = 10000,
+                     model_file = model_file,
+                     model = '2Pop',
+                     out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp(test_output, exp_output))
@@ -158,11 +157,10 @@ class vcf_calc_tests (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.vcf.gz')
 
         # Run the function with the following arguments
-        vcf_calc.run(['--vcf', vcf_file,
-                      '--calc-statistic', 'TajimaD',
-                      '--statistic-window-size', '10000',
-                      '--out', test_output,
-                      '--overwrite'])
+        vcf_calc.run(vcf = vcf_file,
+                     calc_statistic = 'TajimaD',
+                     statistic_window_size = 10000,
+                     out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp(test_output, exp_output))
@@ -180,12 +178,11 @@ class vcf_calc_tests (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.vcf.gz')
 
         # Run the function with the following arguments
-        vcf_calc.run(['--vcf', vcf_file,
-                      '--calc-statistic', 'window-pi',
-                      '--statistic-window-size', '10000',
-                      '--statistic-window-step', '20000',
-                      '--out', test_output,
-                      '--overwrite'])
+        vcf_calc.run(vcf = vcf_file,
+                     calc_statistic = 'window-pi',
+                     statistic_window_size = 10000,
+                     statistic_window_step = 20000,
+                     out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp(test_output, exp_output))
@@ -203,10 +200,9 @@ class vcf_calc_tests (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.vcf.gz')
 
         # Run the function with the following arguments
-        vcf_calc.run(['--vcf', vcf_file,
-                      '--calc-statistic', 'site-pi',
-                      '--out', test_output,
-                      '--overwrite'])
+        vcf_calc.run(vcf = vcf_file,
+                     calc_statistic =  'site-pi',
+                     out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp(test_output, exp_output))
@@ -224,10 +220,9 @@ class vcf_calc_tests (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.vcf.gz')
 
         # Run the function with the following arguments
-        vcf_calc.run(['--vcf', vcf_file,
-                      '--calc-statistic', 'freq',
-                      '--out', test_output,
-                      '--overwrite'])
+        vcf_calc.run(vcf = vcf_file,
+                     calc_statistic = 'freq',
+                     out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp(test_output, exp_output))
@@ -245,10 +240,9 @@ class vcf_calc_tests (unittest.TestCase):
         vcf_file = os.path.join(self.input_path, 'merged_chr1_10000.vcf.gz')
 
         # Run the function with the following arguments
-        vcf_calc.run(['--vcf', vcf_file,
-                      '--calc-statistic', 'het-fit',
-                      '--out', test_output,
-                      '--overwrite'])
+        vcf_calc.run(vcf = vcf_file,
+                     calc_statistic = 'het-fit',
+                     out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp(test_output, exp_output))
@@ -269,12 +263,11 @@ class vcf_calc_tests (unittest.TestCase):
         model_file = os.path.join(self.input_path, 'input.model')
 
         # Run the function with the following arguments
-        vcf_calc.run(['--vcf', vcf_file,
-                      '--model-file', model_file,
-                      '--model', '2Pop',
-                      '--calc-statistic', 'het-fis',
-                      '--out', test_output,
-                      '--overwrite'])
+        vcf_calc.run(vcf = vcf_file,
+                     model_file = model_file,
+                     model = '2Pop',
+                     calc_statistic = 'het-fis',
+                     out = test_output)
 
         # Confirm that the output is what is expected
         self.assertTrue(file_comp(test_output, exp_output))

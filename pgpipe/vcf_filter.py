@@ -303,16 +303,6 @@ def vcf_filter_parser(passed_arguments = []):
     snps_filters.add_argument('--filter-include-snps', help = 'Include variants if they contain a SNP', action = 'store_true')
     snps_filters.add_argument('--filter-exclude-snps', help = 'Exclude variants if they contain a SNP', action = 'store_true')
 
-    def str_to_bool(value):
-        if value.lower() in {'false', 'f', '0', 'no', 'n'}:
-            return False
-        elif value.lower() in {'true', 't', '1', 'yes', 'y'}:
-            return True
-        raise ValueError(f'{value} is not a valid boolean value')
-
-    vcf_parser.add_argument('--foo', type=str_to_bool, nargs='?', const=True, default=False)
-
-
     # Position filters
     vcf_parser.add_argument('--filter-include-pos', help = 'Defines comma seperated positions (i.e. CHROM:START-END) to include. START and END are optional. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
     vcf_parser.add_argument('--filter-exclude-pos', help = 'Defines comma seperated positions (i.e. CHROM:START-END) to exclude. START and END are optional. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
