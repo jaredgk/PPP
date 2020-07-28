@@ -219,6 +219,7 @@ from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.model import Model, read_model_file
 from pgpipe.genome_region import Region
 import pgpipe.vcf_reader_func as vr
+from pgpipe.misc import argprase_kwargs
 
 
 def binomial(n,k):
@@ -588,7 +589,7 @@ def build_sfs(vcffile,model_file,model,BEDfilename=None,altreference = None,fold
     return sfs
         
 
-def sfs_parser(passed_arguments):
+def sfs_parser(passed_arguments=[]):
     '''snfs Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -619,13 +620,17 @@ def sfs_parser(passed_arguments):
     sfs_parser.add_argument('--makeint',help='Optional, round all values to zero decimal places', default = True)
 
     if passed_arguments:
-        return sfs_parser.parse_args(passed_arguments)
+        return vars(sfs_parser.parse_args(passed_arguments))
     else:
-        return sfs_parser.parse_args()
+        return vars(sfs_parser.parse_args())
 
-def run (passed_arguments = []):
-    # Grab sfs arguments from command line
-    sfs_args = sfs_parser(passed_arguments)
+def run (**kwargs):
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, sfs_parser)
+    # Assign arguments
+    sfs_args = argparse.Namespace(**kwargs)    
+
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(sfs_args, func_name = 'build_sfs')
@@ -641,7 +646,7 @@ def run (passed_arguments = []):
     
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**sfs_parcer())
     exit()
 
     debugargs=['--vcf',"..//jhtests//pan_example2.vcf.gz",

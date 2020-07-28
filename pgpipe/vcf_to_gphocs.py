@@ -90,6 +90,7 @@ import pgpipe.vcf_bed_to_seq as vBs
 from pgpipe.model import Model, read_model_file
 from pgpipe.genome_region import Region
 import pgpipe.vcf_reader_func as vr
+from pgpipe.misc import argprase_kwargs
 
 
 def make_gphocs_sequence_file(vcf,reference,BEDfile,ids,filename=None,diploid = True,nloci = None):
@@ -140,7 +141,7 @@ def make_gphocs_sequence_file(vcf,reference,BEDfile,ids,filename=None,diploid = 
         return ''.join(ns)
     acgti = {'A':0,'C':1,'G':2,'T':3}
     hetzcode = [['A','M','R','W'],['M','C','S','Y'],['R','S','G','K'],['W','Y','K','T']]
-    
+
     if filename is None:
         file_handle = sys.stdout
     else:
@@ -204,7 +205,7 @@ def make_gphocs_sequence_file(vcf,reference,BEDfile,ids,filename=None,diploid = 
     file_handle.close()
     return 
 
-def gphocs_parser(passed_arguments):
+def gphocs_parser(passed_arguments=[]):
     '''gphocs Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -230,19 +231,25 @@ def gphocs_parser(passed_arguments):
     gphocs_parser.add_argument("--nloci",type=int,help="Number of 'loci' (BED file regions) to return."
                                "if None returns all regions in the BED file")
     if passed_arguments:
-        return gphocs_parser.parse_args(passed_arguments)
+        return vars(gphocs_parser.parse_args(passed_arguments))
     else:
-        return gphocs_parser.parse_args()
+        return vars(gphocs_parser.parse_args())
 
 
-def run (passed_arguments = []):
+def run (**kwargs):
     # Grab gphocs arguments from command line
-    gphocs_args = gphocs_parser(passed_arguments)
+##    gphocs_args = gphocs_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, gphocs_parser)
+    # Assign arguments
+    
+    gphocs_args = argparse.Namespace(**kwargs)
+
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(gphocs_args, func_name = 'make_gphocs_sequence_file')
 
-##    print(gphocs_args)
     popmodels = read_model_file(gphocs_args.model_file)
     popmodel = popmodels[gphocs_args.modelname]
     make_gphocs_sequence_file(gphocs_args.vcf,gphocs_args.reference,gphocs_args.bed_file,
@@ -252,7 +259,7 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**gphocs_parser())
     exit()
     debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz',
             '--reference',"..//jhtests//pan_example_ref.fa",

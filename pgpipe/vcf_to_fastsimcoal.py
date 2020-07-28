@@ -123,6 +123,7 @@ import zipfile
 from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.model import Model, read_model_file
 import pgpipe.vcf_to_sfs as vcfsfs
+from pgpipe.misc import argprase_kwargs
 
 
 def writemultidimfile(sfs,popmodel,basename,folded,sampsizes):
@@ -283,7 +284,7 @@ def make_fscmsfs_file(vcffile,model_file,model, basename, dimfiletypes, downsamp
     return infostring
 
 
-def fscmsfs_parser(passed_arguments):
+def fscmsfs_parser(passed_arguments=[]):
     '''dadisnp Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -316,14 +317,19 @@ def fscmsfs_parser(passed_arguments):
                                 "chromosomes in the vcf file for the corresponding population.")
        
     if passed_arguments:
-        return parser.parse_args(passed_arguments)
+        return vars(parser.parse_args(passed_arguments))
     else:
-        return parser.parse_args()
+        return vars(parser.parse_args())
 
 
-def run (passed_arguments = []):
-    # Grab dadisnp arguments from command line
-    args = fscmsfs_parser(passed_arguments)
+def run (**kwargs):
+    
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, fscmsfs_parser)
+    # Assign arguments
+    args = argparse.Namespace(**kwargs)
+    
 ##    print(args)
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(args, func_name = 'make_fscmsfs_file')
@@ -341,7 +347,7 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**fscmsfs_parser)
     exit()
     debugargs=['--vcf',"..//jhtests//pan_example.vcf.gz",
                '--model-file',"..//jhtests//panmodels.model",'--modelname','3Pop',

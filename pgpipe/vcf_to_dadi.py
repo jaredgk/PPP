@@ -94,6 +94,7 @@ import pgpipe.vcf_bed_to_seq as vBs
 from pgpipe.model import Model, read_model_file
 from pgpipe.genome_region import Region
 import pgpipe.vcf_reader_func as vr
+from pgpipe.misc import argprase_kwargs
 
 def getallelecount(r,popmodel,altref_access=None):
 
@@ -251,7 +252,7 @@ def make_dadisnp_file(vcffile,popmodel, outfilename, outgroup_fasta = None,
     return infostring
 
 
-def dadisnp_parser(passed_arguments):
+def dadisnp_parser(passed_arguments=[]):
     '''dadisnp Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -275,14 +276,17 @@ def dadisnp_parser(passed_arguments):
     dadisnp_parser.add_argument('--comment',help="comment (in quotes) to be added to the snp file ")
 
     if passed_arguments:
-        return dadisnp_parser.parse_args(passed_arguments)
+        return vars(dadisnp_parser.parse_args(passed_arguments))
     else:
-        return dadisnp_parser.parse_args()
+        return vars(dadisnp_parser.parse_args())
 
 
-def run (passed_arguments = []):
-    # Grab dadisnp arguments from command line
-    dadisnp_args = dadisnp_parser(passed_arguments)
+def run (**kwargs):
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, dadisnp_parser)
+    # Assign arguments
+    dadisnp_args = argparse.Namespace(**kwargs)    
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(dadisnp_args, func_name = 'make_dadisnp_file')
@@ -299,7 +303,7 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**dadisnp_parser())
     exit()
                       
     debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz','--model-file',

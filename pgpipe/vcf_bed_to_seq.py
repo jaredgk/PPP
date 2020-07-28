@@ -199,6 +199,7 @@ from pgpipe.misc import confirm_executable
 from pgpipe.vcf_to_ima import generateSequence
 from pgpipe.genome_region import Region, RegionList
 import pysam
+from pgpipe.misc import argprase_kwargs
 
 
 
@@ -435,7 +436,7 @@ def get_model_sequences(vcf=None,model_file = None,modelname=None,
 
 
 
-def parser(passed_arguments):
+def parser(passed_arguments=[]):
     """snfs Argument Parser - Assigns arguments from command line"""
 
     def parser_confirm_file ():
@@ -460,13 +461,17 @@ def parser(passed_arguments):
 
 
     if passed_arguments:
-        return parser.parse_args(passed_arguments)
+        return vars(parser.parse_args(passed_arguments))
     else:
-        return parser.parse_args()
+        return vars(parser.parse_args())
 
-def run (passed_arguments = []):
-    # get arguments from command line
-    args = parser(passed_arguments)
+def run (**kwargs):
+
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, parser)
+    # Assign arguments
+    args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(args, func_name = 'get_model_sequences_from_region')
@@ -489,7 +494,7 @@ def run (passed_arguments = []):
     
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**parser())
     exit()
     debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz','--fasta-reference',
                  "..//jhtests//pan_example_ref.fa",
