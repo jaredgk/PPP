@@ -9,7 +9,7 @@ import gzip
 import tempfile
 import hashlib
 
-## Import scripts to test
+# Import scripts to test
 
 import pgpipe.vcf_bed_to_seq as vcf_bed_to_seq
 import pgpipe.vcf_to_sfs as vcf_to_sfs
@@ -19,11 +19,11 @@ import pgpipe.vcf_to_gphocs as vcf_to_gphocs
 import pgpipe.vcf_to_fastsimcoal as vcf_to_fastsimcoal
 
 
-## Used to compare two files, returns bool
+# Used to compare two files, returns bool
 def file_comp(test_output, expected_output):
     return filecmp.cmp(test_output, expected_output)
 
-## Used to compare two gz files, uses file_comp and a temp dir
+# Used to compare two gz files, uses file_comp and a temp dir
 def gz_file_comp (test_output, expected_output, tmp_dir):
 
     # Create the tmp paths

@@ -92,6 +92,7 @@ from pgpipe.model import Model, read_model_file
 from pgpipe.genome_region import Region
 import pgpipe.vcf_reader_func as vr
 from pgpipe.logging_module import initLogger, logArgs
+from pgpipe.misc import argprase_kwargs
 
 def make_treemix_file(vcffile,popmodel, outfilename, BEDfilename=None, kblock = 1000):
     """
@@ -249,7 +250,7 @@ def make_treemix_file(vcffile,popmodel, outfilename, BEDfilename=None, kblock = 
     return infostring
 
 
-def treemix_parser(passed_arguments):
+def treemix_parser(passed_arguments=[]):
     '''treemix Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -275,14 +276,21 @@ def treemix_parser(passed_arguments):
 
 
     if passed_arguments:
-        return treemix_parser.parse_args(passed_arguments)
+        return vars(treemix_parser.parse_args(passed_arguments))
     else:
-        return treemix_parser.parse_args()
+        return vars(treemix_parser.parse_args())
 
 
-def run (passed_arguments = []):
+def run (**kwargs):
     # Grab treemix arguments from command line
-    treemix_args = treemix_parser(passed_arguments)
+
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, treemix_parser)
+
+    # Assign arguments
+    treemix_args = argparse.Namespace(**kwargs)    
+    
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(treemix_args, func_name = 'make_treemix_file')
@@ -300,16 +308,18 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**treemix_parser())
     exit()
     debugargs = ['--vcf','../jhtests/pan_example.vcf.gz','--model-file',
             "../jhtests/panmodels.model",'--modelname',"4Pop",
             '--out','../jhtests/results/vcf_treemixtest1','--bed-file',"../jhtests/pan_example_regions.bed",'--kblock','1000']
-    run(debugargs)
+    run(**debugargs)
+    exit()
     debugargs = ['--vcf','../jhtests/pan_example.vcf.gz','--model-file',
             "../jhtests/panmodels.model",'--modelname',"4Pop",
             '--out','../jhtests/results/vcf_treemixtest2']
     run(debugargs)
+    exit()
 
 
 
