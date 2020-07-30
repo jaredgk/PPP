@@ -27,6 +27,7 @@ PPP functions may also be imported from the **pgpipe** module for use within a p
    vcf_filter.run(vcf = 'examples/files/merged_chr1_10000.vcf.gz', filter_only_biallelic = True, out_format = 'bcf')
 
 In comparison to calling functions at the command-line, imported functions require:
+
 * The pgpipe module must be imported
 * Each function is called using .run(): **vcf_filter.run() or pgpipe.vcf_filter.run()**
 * The use of underscores within arguments rather than dashes: **--out-format vs. out_format**
