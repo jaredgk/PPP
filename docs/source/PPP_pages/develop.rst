@@ -31,6 +31,39 @@ internal link: :ref:`examples`
 .. code-block:: bash
         
    my_code.py
+   
+The **VcfReader()** class is responsible for integrating VCF files into the PPP. It can parse unzipped and bgzipped VCFs (as well as BCFs), allowing for the SNP records of those files to be accessed in multiple ways, such as sequentially or from a particular region (as implemented in the **GeneRegion** class). It can also subsample requested individuals from a VCF using the **ModelFile** functionality or by providing a list of individuals to sample. The class can be initialized as follows:
+
+.. code-block::
+   
+   from pgpipe import VcfReader
+   
+   vcf_reader = new VcfReader(vcf_filename)
+   
+There are two primary operating modes for this class: operating on bgzipped or unzipped data. For unzipped data, there is a requirement that records are fetched from the file sequentially, so selecting records using gene regions requires those regions be sorted (as they are by default). For a bgzipped file, a tabix index must be created in order to access any records. 
+
+To perform an action on different regions specified in a BED file:
+
+.. code-block::
+
+   region_list = new RegionList(bed_filename)
+   vcf_reader = new VcfReader(vcf_filename)
+   
+   for region in region_list.regions:
+     records = vcf_reader.fetch(region)
+     ##Add logic here
+     
+
+To subsample the VCF for given individuals:
+
+.. code-block::
+
+   model_file = pgpipe.model.read_model_file(model_filename)
+   model = model_filename[model_tag]
+   
+   vcf_reader = new VcfReader(vcf_filename, popmodel = model)
+   
+  
 
 ***************
 ModelFile Class
