@@ -111,6 +111,7 @@ from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.genome_region import Region, RegionList
 from pgpipe.parse_functions import defaultsDictForFunction, getConfigFilename, makeRequiredList, getArgsWithConfig
 from pgpipe.model import Model, read_single_model
+from pgpipe.misc import argprase_kwargs
 #from tabix_wrapper import prepVcf
 
 #Input: VCF file, reference sequence, region list (possibly .bed file)
@@ -197,7 +198,7 @@ class outputBuffer():
 
 
 
-def createParser():
+def parseArguments(passed_arguments = []):
     parser = argparse.ArgumentParser(description=("Generates an IMa input "
                                      "file from a VCF file, a reference"
                                      " genome, a list of gene regions, "
@@ -268,7 +269,10 @@ def createParser():
     parser.add_argument("--out-prefix",dest="multi_out",type=str,
                         help=("If output is fasta, generate one file"
                         "per loci."))
-    return parser
+    if passed_arguments:
+        return vars(parser.parse_args(passed_arguments))
+    else:
+        return vars(parser.parse_args())
 
 
 def checkArgs(args):
@@ -444,7 +448,7 @@ def hasMissingData(rec_list, indiv_idx):
     return False
 
 
-def vcf_to_ima(sys_args):
+def vcf_to_ima(**kwargs):
     """Returns an IMa input file given four-gamete filtered loci in one or 
     multiple VCFs.
 
@@ -532,13 +536,16 @@ def vcf_to_ima(sys_args):
         Will be named either '--out' value or (vcfinput).ima.u.
         Contains variants in designated loci for IMa run.
     """
-    parser = createParser()
-    if len(sys_args) == 0:
-        parser.print_help()
-        sys.exit(1)
+    #parser = createParser()
+    #if len(sys_args) == 0:
+    #    parser.print_help()
+    #    sys.exit(1)
 
-    required_args = ['vcfname','popname']
-    args = getArgsWithConfig(parser,sys_args,required_args,'vcf_to_ima')
+    #required_args = ['vcfname','popname']
+    #args = getArgsWithConfig(parser,sys_args,required_args,'vcf_to_ima')
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs,parseArguments)
+    args = argparse.Namespace(**kwargs)
     checkArgs(args)
     logArgs(args)
     #validateFiles(args)
@@ -674,5 +681,5 @@ def vcf_to_ima(sys_args):
     output_file.close()
 
 if __name__ == "__main__":
-    initLogger()
-    vcf_to_ima(sys.argv[1:])
+    #initLogger()
+    vcf_to_ima(**parseArguments())

@@ -8,9 +8,9 @@ from pgpipe.logging_module import initLogger
 from pgpipe.genome_region import Region, RegionList
 import pgpipe.vcf_reader_func as vf
 from pgpipe.model import Model, read_model_file
+from pgpipe.misc import argprase_kwargs
 
-
-def createParser():
+def parseArguments(passed_arguments = []):
     parser= argparse.ArgumentParser(description=("Given a range or a file of "
                                 "ranges and a VCF file, will generate one or "
                                 "more VCF files with variants only from the "
@@ -18,7 +18,7 @@ def createParser():
                                 "end coordinates required (default is zero-"
                                 "based, half-open intervals, chromosome "
                                 "optional unless VCF has more than one"))
-    parser.add_argument("vcfname", help="Input VCF name")
+    parser.add_argument("--vcf",dest="vcfname", help="Input VCF name")
     region_group = parser.add_mutually_exclusive_group()
     region_group.add_argument("--r", dest="gene_str", help=("Comma "
                               "separated string, formatted \"start,end,"
@@ -69,7 +69,11 @@ def createParser():
     subsamp_group.add_argument('--model-file',dest="modelname",help="Model file for selecting individuals for writing")
     parser.add_argument('--model',dest="poptag",help="If model file is used, will use model with this name")
     parser.add_argument("--forceempty",dest="forceempty",action="store_true",help=("Will create empty VCF if a region is empty rather than throw an error"))
-    return parser
+    if passed_arguments:
+        return vars(parser.parse_args(passed_arguments))
+    else:
+        return vars(parser.parse_args())
+    #return parser
 
 def logArgs(args):
     logging.info('Arguments for vcf_region_write:')
@@ -157,7 +161,7 @@ def writeFile(args, vcf_reader, filter_sites, remove_cpg, fasta_ref, header):
             outfile.write(rec)
 
 
-def vcf_region_write(sys_args):
+def vcf_region_write(**kwargs):
     """Returns a VCF file with variants from regions in a list
 
     Given a VCF file and gene region information (from either a file with one
@@ -226,11 +230,14 @@ def vcf_region_write(sys_args):
 
     """
 
-    parser = createParser()
-    if len(sys_args) == 0:
-        parser.print_help()
-        sys.exit(1)
-    args = parser.parse_args(sys_args)
+    #parser = createParser()
+    #if len(sys_args) == 0:
+    #    parser.print_help()
+    #    sys.exit(1)
+    #args = parser.parse_args(sys_args)
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs,parseArguments)
+    args = argparse.Namespace(**kwargs)
     logArgs(args)
     popmodel = None
     if args.modelname is not None:
@@ -318,5 +325,5 @@ def vcf_region_write(sys_args):
 
 
 if __name__ == '__main__':
-    initLogger()
-    vcf_region_write(sys.argv[1:])
+    #initLogger()
+    vcf_region_write(**parseArguments())

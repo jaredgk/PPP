@@ -104,6 +104,7 @@ import pysam
 from pgpipe.logging_module import initLogger
 from pgpipe.genome_region import Region, RegionList
 from pgpipe.vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, VcfReader
+from pgpipe.misc import argprase_kwargs
 
 
 class BaseData():
@@ -516,7 +517,8 @@ class BaseData():
         self.seqs = [[base_list[row][col] for row in range(0, len(base_list))] for col in range(0, len(base_list[0]))]
 
 
-def createParser():
+#def createParser(passed_arguments = []):
+def parseArguments(passed_arguments = []):
     parser = argparse.ArgumentParser(description=("Given a file of aligned"
             "sequences or variable sites, will return intervals based"
             " on 4 gamete tests"))
@@ -542,7 +544,7 @@ def createParser():
             action='store_const', const="HandK85",help = "get a set of "
             "parsimonious intervals each containing at least 1 recombination"
             " event.  Follows appendix 2 of Hudson and Kaplan 1985")
-    intervaltype_group.add_argument("--4gcompat", dest="intervaltype",
+    intervaltype_group.add_argument("--fourgcompat", dest="intervaltype",
             action='store_const', const="CONTIG4GPASS",help = "get a set of "
             " intervals such that for each interval all the included bases are"
             " compatible with each other based on the 4 gamete test")
@@ -593,7 +595,12 @@ def createParser():
     #add checks for correct input type
     parser.add_argument('--tbi', dest="tabix_index",help=("Filepath for tabix "
                         "index file if using a single bgzipped VCF"))
-    return parser
+    parser.add_argument('--log', dest="log_name", help=("Filepath for log file"))
+    #return parser
+    if passed_arguments:
+        return vars(parser.parse_args(passed_arguments))
+    else:
+        return vars(parser.parse_args())
 
 def logArgs(args):
     logging.info('Arguments for vcf_region_write:')
@@ -775,7 +782,8 @@ def outputSubregion(args, interval, basedata, region=None, filename=None):
 
 
 
-def sample_fourgametetest_intervals(sys_args):
+#def sample_fourgametetest_intervals(sys_args):
+def sample_fourgametetest_intervals(**kwargs):
     """Returns interval(s) from aligned sequences or snps.
 
     Given a set of aligned sequences or a vcf file, this function
@@ -809,7 +817,7 @@ def sample_fourgametetest_intervals(sys_args):
     Tests (one required)
     --hk : bool
         Will find intervals that contain at least one recombination event
-    --4gcompat : bool
+    --fourgcompat : bool
         Will find intervals with zero recombination events in them
 
     Return options:
@@ -845,12 +853,18 @@ def sample_fourgametetest_intervals(sys_args):
         Extend region to overlapping informative sites
 
     """
-    parser = createParser()
+    #parser = createParser()
     # parser.print_help()
-    if len(sys_args) == 0:
-        parser.print_help()
-        sys.exit(1)
-    args = parser.parse_args(sys_args)
+    #if len(kwargs) == 0:
+        #parser.print_help()
+        #sys.exit(1)
+    #args = parser.parse_args(sys_args)
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, parseArguments)
+
+    args = argparse.Namespace(**kwargs)
+    if args.log_name is not None:
+        initLogger(filename=log_name)
     logArgs(args)
     #argdic = vars(args)
     interval_list = []
@@ -953,7 +967,8 @@ def sample_fourgametetest_intervals(sys_args):
 
 
 if __name__ == '__main__':
-    initLogger()
+    #initLogger()
 
-    sample_fourgametetest_intervals(sys.argv[1:])
+    #sample_fourgametetest_intervals(sys.argv[1:])
+    sample_fourgametetest_intervals(**parseArguments())
 

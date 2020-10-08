@@ -53,13 +53,14 @@ import sys
 import pysam
 from pgpipe.genome_region import Region, RegionList, getIntervalsBetween
 import pgpipe.argparse_sets
+from pgpipe.misc import argprase_kwargs
 import argparse
 
 
 
 #Given a list of CDS intervals and optional buffer length,
 #Generate full set of intervals between regions.
-def createParser():
+def parseArguments(passed_arguments = []):
     parser = argparse.ArgumentParser(description=("Generates list of "
                 "intervals within a provided BED file with option "
                 "to pad intervals by a fixed amount"))
@@ -80,11 +81,14 @@ def createParser():
     cg.add_argument('--removechr',dest="remove_chr",action="store_true")
     parser.add_argument('--out', dest="output_name",
                         help="Output filename, default is stdout")
-    return parser
+    if passed_arguments:
+        return vars(parser.parse_args(passed_arguments))
+    else:
+        return vars(parser.parse_args())
 
 
 
-def get_intergenic(sysargs):
+def get_intergenic(**kwargs):
     """
     Creates a BED file with regions that are not covered in the input BED.
 
@@ -125,8 +129,11 @@ def get_intergenic(sysargs):
 
 
     """
-    parser = createParser()
-    args = parser.parse_args(sysargs)
+    #parser = createParser()
+    #args = parser.parse_args(sysargs)
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, parseArguments)
+    args = argparse.Namespace(**kwargs)
     if args.region_name is None:
         raise Exception("BED input filename required")
     reg_list = RegionList(filename=args.region_name, colstr=args.colstr,
@@ -136,4 +143,4 @@ def get_intergenic(sysargs):
 
 if __name__ == "__main__":
     #initLogger()
-    get_intergenic(sys.argv[1:])
+    get_intergenic(**parseArguments())

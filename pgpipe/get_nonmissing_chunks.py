@@ -4,8 +4,9 @@ import gzip
 import io
 from pgpipe.vcf_reader_func import VcfReader
 from pgpipe.model import Model, read_single_model
+from pgpipe.misc import argprase_kwargs
 
-def createParser():
+def parseArguments(passed_arguments = []):
     parser = argparse.ArgumentParser(description=("Outputs windows in a "
                       "VCF file where all sites in the window have below"
                       " a set limit of missing data. Limit default "
@@ -35,7 +36,11 @@ def createParser():
                         "in model file if more than one is contained"))
     parser.add_argument("--tbi", dest="tabix_index", help="Path to bgzipped "
                         "file's index if name doesn't match VCF file")
-    return parser
+    if passed_arguments:
+        return vars(parser.parse_args(passed_arguments))
+    else:
+        return vars(parser.parse_args())
+    #return parser
 
 def getl(f,compressed=False):
     l = f.readline()
@@ -61,7 +66,7 @@ def outputLine(chrom,start_pos,end_pos,args):
     chrom = fixChromName(chrom,args.addchr,args.removechr)
     return chrom+'\t'+str(sp)+'\t'+str(ep)+'\n'
 
-def regionsWithData(sysargs):
+def regionsWithData(**kwargs):
     """Returns a BED file with regions where all SNPs contained have
     less than a given limit of missing data.
 
@@ -114,8 +119,11 @@ def regionsWithData(sysargs):
 
 
     """
-    parser = createParser()
-    args = parser.parse_args(sysargs)
+    #parser = createParser()
+    #args = parser.parse_args(sysargs)
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, parseArguments)
+    args = argparse.Namespace(**kwargs)
     compressed_input = False
     #if args.vcfname is None:
     #    instream = sys.stdin
@@ -218,4 +226,4 @@ def regionsWithData(sysargs):
         pass
 
 if __name__ == '__main__':
-    regionsWithData(sys.argv[1:])
+    regionsWithData(**parseArguments())

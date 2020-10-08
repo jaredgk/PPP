@@ -67,41 +67,37 @@ class funcTest(unittest.TestCase):
 
 class intergenicTest(unittest.TestCase):
     def test_oneidx(self):
-        args = ['--bed','input/fib_in.txt',
-                '--out','input/fib_t.txt']
-        get_intergenic(args)
+        get_intergenic(bed = 'input/fib_in.txt',
+                       out = 'input/fib_t.txt')
         self.assertTrue(filecmp.cmp('input/fib_t.txt','input/fib_oneidx.txt'))
     def test_zeroho(self):
-        args = ['--bed','input/fib_in.txt','--out','input/fib_t.txt','--zero-ho']
-        get_intergenic(args)
+        get_intergenic(bed = 'input/fib_in.txt',
+                       out = 'input/fib_t.txt',
+                       zero_ho = True)
         self.assertTrue(filecmp.cmp('input/fib_t.txt','input/fib_zeroho.txt'))
 
 class missingTest(unittest.TestCase):
     def test_default(self):
-        args = ['--vcf','input/macaca_missingdata.vcf.gz',
-                '--out','input/gmd_test.txt']
-        regionsWithData(args)
+        regionsWithData(vcf = 'input/macaca_missingdata.vcf.gz',
+                        out = 'input/gmd_test.txt')
         self.assertTrue(filecmp.cmp('input/gmd_test.txt','input/gmd_test_default.txt'))
 
     def test_extend(self):
-        args = ['--vcf','input/macaca_missingdata.vcf.gz',
-                '--extend-regions',
-                '--out','input/gmd_test.txt']
-        regionsWithData(args)
+        regionsWithData(vcf = 'input/macaca_missingdata.vcf.gz',
+                        extend_regions = True,
+                        out = 'input/gmd_test.txt')
         self.assertTrue(filecmp.cmp('input/gmd_test.txt','input/gmd_test_extend.txt'))
 
     def test_allowOneMiss(self):
-        args = ['--vcf','input/macaca_missingdata.vcf.gz',
-                '--missing-count','1',
-                '--out','input/gmd_test.txt']
-        regionsWithData(args)
+        regionsWithData(vcf = 'input/macaca_missingdata.vcf.gz',
+                        missing_count = 1,
+                        out = 'input/gmd_test.txt')
         self.assertTrue(filecmp.cmp('input/gmd_test.txt','input/gmd_test_miss1.txt'))
 
     def test_allsize(self):
-        args = ['--vcf','input/macaca_missingdata.vcf.gz',
-                '--size','0',
-                '--out','input/gmd_test.txt']
-        regionsWithData(args)
+        regionsWithData(vcf = 'input/macaca_missingdata.vcf.gz',
+                        size = 0,
+                        out = 'input/gmd_test.txt')
         self.assertTrue(filecmp.cmp('input/gmd_test.txt','input/gmd_test_size0.txt'))
 
 
@@ -154,64 +150,6 @@ class geneRegionTest(unittest.TestCase):
         self.assertTrue(val == 'after')
 
 
-class snpTest(unittest.TestCase):
-
-
-    def test_generateSequence_insert(self):
-        vcf_to_seq(['input/chr11.subsamples.vcf.gz',
-             'input/human_g1k_chr11.fasta',
-             'input/insert_region.txt', '--indels'])
-        self.assertEqual(filecmp.cmp('input/chr11.subsamples.fasta',
-                         'input/chr11.insert.example.fasta'), True)
-
-    def test_generateSequence_del(self):
-        vcf_to_seq(['input/chr11.subsamples.vcf.gz',
-             'input/human_g1k_chr11.fasta',
-             'input/del_region.txt', '--indels'])
-        self.assertEqual(filecmp.cmp('input/chr11.subsamples.fasta',
-                         'input/chr11.del.example.fasta'), True)
-
-    def test_generateSequence_multi(self):
-        vcf_to_seq(['input/chr11.subsamples.vcf.gz',
-             'input/human_g1k_chr11.fasta',
-             'input/multi_inregion.txt'])
-        self.assertEqual(filecmp.cmp('input/chr11.subsamples.fasta',
-                         'input/chr11.multi.example.fasta'), True)
-
-    def test_subsample(self):
-        vcf_to_seq(['input/chr11.vcf.gz',
-             'input/human_g1k_chr11.fasta',
-             'input/snp_region.txt',
-             '--subsamp-list', 'input/subsample_list.txt'])
-        self.assertEqual(filecmp.cmp('input/chr11.fasta',
-                         'input/chr11.snp.example.fasta'), True)
-
-    def test_generateSequence_unzipped(self):
-        vcf_to_seq(['input/chr11.unzipped.vcf',
-             'input/human_g1k_chr11.fasta',
-             'input/snp_region.txt'])
-        self.assertEqual(filecmp.cmp('input/chr11.unzipped.fasta',
-                         'input/chr11.snp.example.fasta'), True)
-
-    def test_generateSequence_uz_adj(self):
-        vcf_to_seq(['input/chr11.unzipped.vcf',
-             'input/human_g1k_chr11.fasta',
-            'input/adj_regions.txt'])
-        self.assertEqual(filecmp.cmp('input/chr11.unzipped.fasta',
-                         'input/chr11.adjacent.fasta'), True)
-
-
-    def test_generateSequence_mismatchref(self):
-        args = ['input/chr11.subsamples.vcf.gz',
-             'input/human_g1k_messy.fasta',
-             'input/snp_region.txt']
-
-        self.assertRaises(Exception, vcf_to_seq, args)
-
-    def tearDown(self):
-        tryRemove('input/chr11.subsamples.fasta')
-        tryRemove('input/chr11.fasta')
-        tryRemove('input/chr11.unzipped.fasta')
 
 class checkCompressionTest(unittest.TestCase):
 
@@ -242,45 +180,43 @@ class checkCompressionTest(unittest.TestCase):
 class reduceTest(unittest.TestCase):
 
     def test_vcf_region_write_simple(self):
-        vcf_region_write(['input/chr11.subsamples.vcf.gz',
-                         '--bed','input/snp_region.txt',
-                         '--out','input/chr11.test.vcf.gz'])
-        #self.assertTrue(filecmp.cmp('input/chr11.snp.sr.vcf.gz',
-        #               'input/chr11.test.vcf.gz'))
+        vcf_region_write(vcf = 'input/chr11.subsamples.vcf.gz',
+                         bed = 'input/snp_region.txt',
+                         out = 'input/chr11.test.vcf.gz')
         self.assertTrue(compareVcfsZipped('input/chr11.snp.sr.vcf.gz','input/chr11.test.vcf.gz'))
 
     def test_vcf_region_write_unzipped(self):
-        vcf_region_write(['input/chr11.unzipped.vcf',
-                          '--bed','input/snp_region.txt',
-                          '--out','input/chr11.test.vcf'])
+        vcf_region_write(vcf = 'input/chr11.unzipped.vcf',
+                         bed = 'input/snp_region.txt',
+                         out = 'input/chr11.test.vcf')
         self.assertTrue(filecmp.cmp('input/chr11.snp.sr.vcf',
                         'input/chr11.test.vcf'))
 
     def test_vcf_region_write_first(self):
-        vcf_region_write(['input/chr11.unzipped.vcf',
-                          '--bed','input/first_region.txt',
-                          '--out','input/chr11.test.vcf'])
+        vcf_region_write(vcf = 'input/chr11.unzipped.vcf',
+                         bed = 'input/first_region.txt',
+                         out = 'input/chr11.test.vcf')
         self.assertTrue(filecmp.cmp('input/chr11.first.vcf',
                         'input/chr11.test.vcf'))
 
     def test_vcf_region_write_last(self):
-        vcf_region_write(['input/chr11.unzipped.vcf',
-                          '--bed','input/last_region.txt',
-                          '--out','input/chr11.test.vcf'])
+        vcf_region_write(vcf = 'input/chr11.unzipped.vcf',
+                         bed = 'input/last_region.txt',
+                         out = 'input/chr11.test.vcf')
         self.assertTrue(filecmp.cmp('input/chr11.last.vcf',
                         'input/chr11.test.vcf'))
 
     def test_vcf_region_write_multi(self):
-        vcf_region_write(['input/chr11.unzipped.vcf',
-                          '--bed','input/multi_big_region.txt',
-                          '--out','input/chr11.test.vcf'])
+        vcf_region_write(vcf = 'input/chr11.unzipped.vcf',
+                         bed = 'input/multi_big_region.txt',
+                         out = 'input/chr11.test.vcf')
         self.assertTrue(filecmp.cmp('input/chr11.multi.big.vcf',
                         'input/chr11.test.vcf'))
 
     def test_vcf_region_write_adj(self):
-        vcf_region_write(['input/chr11.unzipped.vcf',
-                          '--bed','input/adj_big_region.txt',
-                          '--out','input/chr11.test.vcf'])
+        vcf_region_write(vcf = 'input/chr11.unzipped.vcf',
+                         bed = 'input/adj_big_region.txt',
+                         out = 'input/chr11.test.vcf')
         self.assertTrue(filecmp.cmp('input/chr11.adj.big.vcf',
                         'input/chr11.test.vcf'))
 
@@ -291,55 +227,60 @@ class reduceTest(unittest.TestCase):
 
 
 
-class configTest(unittest.TestCase):
-
-    def test_vcf_to_seq_config(self):
-        vcf_to_seq(['input/chr11.subsamples.vcf.gz',
-                    'input/human_g1k_chr11.fasta',
-                    'input/insert_region.txt',
-                    '--conf','input/config.config'])
-        self.assertTrue(filecmp.cmp('input/chr11.insert.example.fasta',
-                        'input/chr11.subsamples.fasta'))
-
-    def test_vcf_to_seq_config_required(self):
-        vcf_to_seq(['--conf', 'input/withreq.conf'])
-        self.assertTrue(filecmp.cmp('input/chr11.snp.example.fasta',
-                        'input/chr11.subsamples.fasta'))
-
 class fourgameteTest(unittest.TestCase):
 
     def test_hk(self):
         region_list = [[[192385, 196945], [198986, 202254], [202547, 202813],
          [206421, 207401], [207400, 215365], [217814, 218641]]]
-        test_list = sample_fourgametetest_intervals(["--vcfs","input/chr11subsamples4gtest.vcf.gz","--hk","--retl"])
+        #test_list = sample_fourgametetest_intervals(["--vcfs","input/chr11subsamples4gtest.vcf.gz","--hk","--retl"])
+        test_list = sample_fourgametetest_intervals(vcfs = "input/chr11subsamples4gtest.vcf.gz",
+                                                    hk = True,
+                                                    retl = True)
         self.assertEqual(region_list, test_list)
 
     def test_comp(self):
         region_list = [[[192385, 196943], [192386, 202252], [198987, 202546],
          [201585, 202811], [202548, 207399], [206422, 215363], [207401, 218140],
           [207463, 218639], [217815, 221584]]]
-        test_list = sample_fourgametetest_intervals(["--vcfs","input/chr11subsamples4gtest.vcf.gz","--4gcompat","--retl",'--ovlpi','--ovlps'])
+        #test_list = sample_fourgametetest_intervals(["--vcfs","input/chr11subsamples4gtest.vcf.gz","--4gcompat","--retl",'--ovlpi','--ovlps'])
+        test_list = sample_fourgametetest_intervals(vcfs = "input/chr11subsamples4gtest.vcf.gz",
+                                                    fourgcompat = True,
+                                                    retl = True,
+                                                    ovlpi = True,
+                                                    ovlps = True)
         self.assertEqual(region_list,test_list)
 
     def test_vcf(self):
-        sample_fourgametetest_intervals(["--vcfs","input/chr11.subsamples.vcf.gz",'--4gcompat','--reti','--out','input/chr11.4g.vcf','--numinf','2'])
+        #sample_fourgametetest_intervals(["--vcfs","input/chr11.subsamples.vcf.gz",'--4gcompat','--reti','--out','input/chr11.4g.vcf','--numinf','2'])
+        sample_fourgametetest_intervals(vcfs = 'input/chr11.subsamples.vcf.gz',
+                                        fourgcompat = True,
+                                        reti = True,
+                                        out = 'input/chr11.4g.vcf',
+                                        numinf = 2)
         self.assertTrue(filecmp.cmp('input/chr11.4gtest1.vcf','input/chr11.4g.vcf'))
         tryRemove('input/chr11.4g.vcf')
 
     def test_consecutive(self):
-        sample_fourgametetest_intervals(["--vcfs","input/chr11.4gsmall.vcf",'--4gcompat','--reti','--out','input/chr11.4g.vcf','--numinf','2','--ovlpi','--ovlps'])
+        #sample_fourgametetest_intervals(["--vcfs","input/chr11.4gsmall.vcf",'--4gcompat','--reti','--out','input/chr11.4g.vcf','--numinf','2','--ovlpi','--ovlps'])
+        sample_fourgametetest_intervals(vcfs = 'input/chr11.4gsmall.vcf',
+                                        fourgcompat = True,
+                                        reti = True,
+                                        out = 'input/chr11.4g.vcf',
+                                        numinf = 2,
+                                        ovlpi = True,
+                                        ovlps = True)
         self.assertTrue(filecmp.cmp('input/chr11.4gtest2.vcf','input/chr11.4g.vcf'))
         tryRemove('input/chr11.4g.vcf')
 
 
 class imaTest(unittest.TestCase):
     def test_ima(self):
-        vcf_to_ima(['--vcf','input/chr11.subsamples.vcf.gz',
-                    '--reference-fasta','input/human_g1k_chr11.fasta',
-                    '--bed','input/snp_region.txt',
-                    '--model-file','input/testmodel.model',
-                    '--zero-ho',
-                    '--out','input/chr11.subsamples.ima.u'])
+        vcf_to_ima( vcf = 'input/chr11.subsamples.vcf.gz',
+                    reference_fasta = 'input/human_g1k_chr11.fasta',
+                    bed = 'input/snp_region.txt',
+                    model_file = 'input/testmodel.model',
+                    zero_ho = True,
+                    out = 'input/chr11.subsamples.ima.u')
         self.assertTrue(filecmp.cmp('input/chr11.ima.u',
                         'input/chr11.subsamples.ima.u'))
 
