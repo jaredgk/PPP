@@ -9,14 +9,15 @@ From Source
 The most current version of the PPP can be installed by obtaining the source code from the PPP GitHub repository. This can be done with:
 
 .. code-block:: bash
+
     git clone https://github.com/jaredgk/PPP
 
-It can then be installed with either of these two commands, after CDing into the created directory:
+It can then be installed with either of these two commands, after CDing into the created directory (first allows editing the source code, second installs from source):
 .. code-block:: bash
 
-    pip install -e . #Allows for editing the source
+    pip install -e . 
     
-    python setup.py install #For installation
+    python setup.py install 
     
 #########
 From PyPi
@@ -25,6 +26,7 @@ From PyPi
 The PPP can also be easily installed via the PyPi repository via pip:
 
 .. code-block:: bash
+
     pip install py-popgen
     
 ##########   
