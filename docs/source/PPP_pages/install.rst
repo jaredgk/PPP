@@ -2,11 +2,43 @@
 Installation
 ============
 
-Once downloaded, the PPP may be installed using the following pip command within the source directory:
+***********
+From Source
+***********
+
+The most current version of the PPP can be installed by obtaining the source code from the PPP GitHub repository. This can be done with:
+
+.. code-block:: bash
+    git clone https://github.com/jaredgk/PPP
+
+It can then be installed with either of these two commands, after CDing into the created directory:
+.. code-block:: bash
+
+    pip install -e . #Allows for editing the source
+    
+    python setup.py install #For installation
+    
+*********
+From PyPi
+*********
+
+The PPP can also be easily installed via the PyPi repository via pip:
+
+.. code-block:: bash
+    pip install py-popgen
+    
+**********    
+From Conda
+**********
+
+The PPP has conda packages available for python versions 3.6 and 3.7. To install in a clean environment, run the following:
 
 .. code-block:: bash
 
-    pip install -e .
+    conda create -n py-popgen python=3.7
+    conda activate py-popgen
+    conda install -c jaredgk -c bioconda py-popgen
+
 
 ###################
 Python Dependencies
