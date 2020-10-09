@@ -39,6 +39,9 @@ The PPP has conda packages available for python versions 3.6 and 3.7. To install
     conda activate py-popgen
     conda install -c jaredgk -c bioconda py-popgen
 
+============
+Dependencies
+============
 
 ###################
 Python Dependencies
