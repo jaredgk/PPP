@@ -13,6 +13,7 @@ The most current version of the PPP can be installed by obtaining the source cod
     git clone https://github.com/jaredgk/PPP
 
 It can then be installed with either of these two commands, after CDing into the created directory (first allows editing the source code, second installs from source):
+
 .. code-block:: bash
 
     pip install -e . 
