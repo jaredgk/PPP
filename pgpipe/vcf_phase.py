@@ -113,6 +113,8 @@
         estimation.
     **--shapeit-window** *<Mb_float>*
         Argument used to define the model window size in Mb.
+    **--shapeit-force**
+        Argument used to diable the missing data error (i.e. --force). Use at your own risk.
 
     *************************************
     BEAGLE Phasing Command-line Arguments
@@ -275,6 +277,7 @@ def phase_argument_parser(passed_arguments = []):
     phase_parser.add_argument('--shapeit-states', help = 'Number of conditioning states for haplotype estimation (shapeit)', type = int)
     phase_parser.add_argument('--shapeit-window', help = 'Model window size in Mb (shapeit)', type = float)
     phase_parser.add_argument('--shapeit-use-mt', help = 'Use chrMT rather than chrM', action = 'store_true')
+    phase_parser.add_argument('--shapeit-force', help = 'Diable the missing data error (i.e. --force). Use at your own risk', action = 'store_true')
 
     # Beagle-specific options
     phase_parser.add_argument('--beagle-ref', help = 'Reference panel filename (bref3 or VCF formats)', type = str, action = parser_confirm_file())
@@ -489,6 +492,8 @@ def run (**kwargs):
         Number of conditioning states for haplotype estimation
     --shapeit-window : float
         Model window size in Mb
+    --shapeit-force : bool
+        Used to disable the missing data error
     --beagle-ref : str
         Reference panel filename (bref3 or VCF formats)
     --beagle-burn-iter : int
@@ -842,6 +847,10 @@ def run (**kwargs):
         # Assign the random seed, if specified
         if phase_args.random_seed:
             phase_call_args.extend(['--seed', str(phase_args.random_seed)])
+
+        # Disable the missing data error, if specified
+        if phase_args.shapeit_force:
+            phase_call_args.append('--force')
 
         # Check if only a single shapeit run is required
         if phase_args.phase_chr or len(chrs_in_vcf) == 1:
