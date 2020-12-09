@@ -373,7 +373,7 @@ class Model:
 
             pop_json[pop] = OrderedDict()
 
-            pop_json[pop]['indv'] = self.ind_dict[pop]
+            pop_json[pop]['inds'] = self.ind_dict[pop]
 
         model_json['pops'] = pop_json
 

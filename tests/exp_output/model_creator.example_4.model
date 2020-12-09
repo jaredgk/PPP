@@ -4,7 +4,7 @@
         "tree": "",
         "pops": {
             "Paniscus": {
-                "indv": [
+                "inds": [
                     "Pan_paniscus-A914_Hortense",
                     "Pan_paniscus-A915_Kosana",
                     "Pan_paniscus-A917_Dzeeta",
@@ -27,7 +27,7 @@
         "tree": "",
         "pops": {
             "Paniscus": {
-                "indv": [
+                "inds": [
                     "Pan_paniscus-A914_Hortense",
                     "Pan_paniscus-A915_Kosana",
                     "Pan_paniscus-A917_Dzeeta",
@@ -44,7 +44,7 @@
                 ]
             },
             "Troglodytes": {
-                "indv": [
+                "inds": [
                     "Pan_troglodytes_troglodytes-A957_Vaillant",
                     "Pan_troglodytes_troglodytes-A958_Doris",
                     "Pan_troglodytes_troglodytes-A959_Julie",
@@ -58,7 +58,7 @@
         "tree": "",
         "pops": {
             "Paniscus": {
-                "indv": [
+                "inds": [
                     "Pan_paniscus-A914_Hortense",
                     "Pan_paniscus-A915_Kosana",
                     "Pan_paniscus-A917_Dzeeta",
@@ -75,7 +75,7 @@
                 ]
             },
             "Troglodytes": {
-                "indv": [
+                "inds": [
                     "Pan_troglodytes_troglodytes-A957_Vaillant",
                     "Pan_troglodytes_troglodytes-A958_Doris",
                     "Pan_troglodytes_troglodytes-A959_Julie",
@@ -83,7 +83,7 @@
                 ]
             },
             "Schweinfurthii": {
-                "indv": [
+                "inds": [
                     "Pan_troglodytes_schweinfurthii-100037_Vincent",
                     "Pan_troglodytes_schweinfurthii-100040_Andromeda",
                     "Pan_troglodytes_schweinfurthii-9729_Harriet",
