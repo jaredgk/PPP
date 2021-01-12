@@ -42,11 +42,17 @@ It can then be installed with either of these two commands, after CDing into the
     
     python setup.py install 
 
+############
+Dependencies
+############
+
+If installing PPP from source, multiple python and non-python depencencies must also be installed. 
+
 -------------------
 Python Dependencies
 -------------------
 
-If installing PPP from source, multiple python and non-python dependencies must also be installed. The PPP requries a number of python libraries, including:
+The PPP requries a number of python libraries, including:
 
 * `The SciPy Ecosystem <https://www.scipy.org/about.html>`_ (i.e. numpy, scipy, pandas, matplotlib, etc.)
 * `Pysam <https://github.com/pysam-developers/pysam>`_
@@ -56,9 +62,9 @@ If installing PPP from source, multiple python and non-python dependencies must 
 
 We recommend users install and maintain these libraries using either `pip <https://pypi.org/project/pip/>`_ or `Anaconda 3 <https://www.anaconda.com/distribution/#download-section>`_.
 
-##################
+------------------
 Other Dependencies
-##################
+------------------
 
 The PPP also requries a number of executables to be installed, including:
 
