@@ -20,7 +20,7 @@ The PPP has conda packages available for python versions 3.6 and 3.7. To install
 
 .. code-block:: bash
 
-    conda create -n py-popgen python=3.7
+    conda create -n py-popgen python=3.7.7
     conda activate py-popgen
     conda install -c jaredgk -c bioconda py-popgen
 
