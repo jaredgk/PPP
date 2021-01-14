@@ -793,11 +793,14 @@ def run (**kwargs):
                 bcftools_call_args.extend(['--remove-INFO', info_to_exclude])
     '''
 
-    # Save the BCFtools expression argument
-    bcftools_expression_arg = '(%s)' % ' && '.join(bcftools_expressions)
+    # Make sure there is an expression prior to adding --include call
+    if len(bcftools_expressions) > 0:
 
-    # Add the expression argument to the argument list
-    bcftools_call_args.extend(['--include', bcftools_expression_arg])
+        # Save the BCFtools expression argument
+        bcftools_expression_arg = '(%s)' % ' && '.join(bcftools_expressions)
+
+        # Add the expression argument to the argument list
+        bcftools_call_args.extend(['--include', bcftools_expression_arg])
 
     logging.info('bcftools parameters assigned')
 
