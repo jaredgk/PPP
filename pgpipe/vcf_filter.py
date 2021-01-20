@@ -814,6 +814,7 @@ def run (**kwargs):
         # Assign the output filename
         bcftools_call_args.extend(['-o', bcftools_output_filename])
 
+        print(bcftools_call_args)
         # Call bcftools with the specifed arguments
         bcftools_err = call_bcftools(bcftools_call_args)
 
@@ -854,5 +855,16 @@ def run (**kwargs):
 
 if __name__ == "__main__":
     initLogger()
-    run(**vcf_filter_parser())
+##    run(**vcf_filter_parser())
 
+    debugargs = ['--vcf','..//jhtests//Pttdebug.vcf',
+            '--out','..//jhtests//Ptt_highcov_debug.vcf',
+            '--out-format','vcf',
+            '--filter-include-snps',
+            '--filter-include-indv','Pan_troglodytes_troglodytes-A957_Vaillant',
+            '--filter-include-indv','Pan_troglodytes_troglodytes-A958_Doris',
+            '--filter-include-indv','Pan_troglodytes_troglodytes-A959_Julie',
+            '--overwrite']
+    run(**vcf_filter_parser(passed_arguments=debugargs))
+
+    
