@@ -348,7 +348,7 @@ class BaseData():
                 if not self.extend_noninf:
                     tempcint[0] = self.poslist[cints[ci][0]-1]
                     if ci == len(cints)-1:
-                        tempcint[1] = self.poslist[self.informpolysites[-1]]-1
+                        tempcint[1] = self.poslist[self.informpolysites[-1]-1]-1
                     else:
                         tempcint[1] = self.poslist[self.informpolysites[self.informpolysites.index(cints[ci][1])+1]-1]-1
                 else:
