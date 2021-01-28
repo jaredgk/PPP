@@ -163,7 +163,10 @@
             chrX\t154913754
             chrY\t57772954
 
-        Appropriate files may be downloaded from the UCSC Genome Browser.
+        Appropriate files may be downloaded from the `UCSC Genome Browser <http://hgdownload.soe.ucsc.edu/downloads.html>`_. 
+        The supported **ASSEMBLY.chrom.sizes** file for each assembly may be found by 
+        clicking *Genome sequence files and select annotations* (followed by
+        *Standard genome sequence files and select annotations* on select assemblies).
     
     #############################
     Output Command-line Arguments
