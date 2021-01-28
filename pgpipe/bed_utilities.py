@@ -6,15 +6,14 @@
     a single BED; v) merge features within one or more BED files; vi) create a BED of 
     complementary features.
 
-    ******************
+    ##################
     Command-line Usage
-    ******************
+    ##################
     The BED utilites function may be called using the following command:
 
     .. code-block:: bash
         
         bed_utilities.py
-
 
     ########
     Utilites
