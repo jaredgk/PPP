@@ -23,8 +23,8 @@
     Windows Utility
     ***************
 
-    Given a chromosome size file, the windows utility will generate a BED file of 
-    interval features.
+    Given a chromosome size file and a window size, the windows utility will generate a 
+    BED file of interval features.
 
     =============
     Example usage
@@ -220,6 +220,12 @@
         do not overlap - from a BED file (complement).
 
     *************************************
+    Window Utility Command-line Arguments
+    *************************************
+    **--window-size** *<window_size_int>*
+        Argument used to define the window/interval size to return.
+
+    *************************************
     Sample Utility Command-line Arguments
     *************************************
     **--sample-size** *<sample_size_int>*
@@ -269,7 +275,7 @@
         Argument used to define the BED/VCF/VCF.gz file used to remove features that 
         do not intersect with the given file's features/variants.
         removing features/positions.
-        
+
     ************************************
     Merge Utility Command-line Arguments
     ************************************
