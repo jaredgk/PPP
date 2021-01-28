@@ -20,7 +20,7 @@ An example Model file may be seen below:
     [
     {
         "name": "2Pop",
-        "tree": (Troglodytes,Verus);
+        "tree": "(Troglodytes,Verus);",
         "pops": {
             "Verus": {
                 "inds": [
