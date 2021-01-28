@@ -100,7 +100,7 @@ class ModelFile(dict):
         if not overwrite:
             # Check if the file already exists
             if os.path.isfile(ind_filename):
-                raise IOError('Individuals file exists.')
+                raise IOError('Individuals file exists. Use --overwrite to ignore')
 
         # Create the population file
         ind_file = open(ind_filename, 'w')
