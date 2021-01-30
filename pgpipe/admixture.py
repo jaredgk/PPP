@@ -110,9 +110,9 @@ import subprocess
 
 from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.plink import confirm_ped_prefix, confirm_bed_prefix, confirm_ped_files, confirm_bed_files
-from pgpipe.misc import confirm_executable
+from pgpipe.misc import confirm_executable, argprase_kwargs
 
-def admix_parser(passed_arguments):
+def admix_parser(passed_arguments = []):
     '''admix Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -171,15 +171,18 @@ def admix_parser(passed_arguments):
 
 
     if passed_arguments:
-        return admix_parser.parse_args(passed_arguments)
+        return vars(admix_parser.parse_args(passed_arguments))
     else:
-        return admix_parser.parse_args()
+        return vars(admix_parser.parse_args())
 
+def run(**kwargs):
 
-def run(passed_arguments = []):
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, admix_parser)
 
-    # Grab admixture arguments from command line
-    admix_args = admix_parser(passed_arguments)
+    # Assign arguments
+    admix_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(admix_args, func_name = 'admixture')    
@@ -277,9 +280,7 @@ def run(passed_arguments = []):
     # Check if the executable was found
     if not admixture_path:
         raise IOError('admixture not found. Please confirm the executable is installed')
-
-    #admixture_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','admixture')
-
+        
     # Run 'admixture' executable file with options provided by user
     admixture_call = subprocess.Popen([admixture_path] + list(map(str, admix_call_args)), stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
@@ -292,4 +293,4 @@ def run(passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**admix_parser())
