@@ -1,0 +1,373 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>informative_loci_filter.py: Informative Loci Filter &mdash; PPP 0.1.7 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="vcf_split.py: VCF Split Function" href="vcf_split.html" />
+    <link rel="prev" title="vcf_calc.py: VCF Statistic Calculator Function" href="vcf_calc.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../functions.html">PPP Core Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="vcf_filter.html">vcf_filter.py: VCF Filter Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_calc.html">vcf_calc.py: VCF Statistic Calculator Function</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">informative_loci_filter.py: Informative Loci Filter</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#input-arguments">Input Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output-arguments">Output Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#filtering-arguments">Filtering Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#region-arguments">Region Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#model-arguments">Model Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-arguments">Other Arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_split.html">vcf_split.py: VCF Split Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_phase.html">vcf_phase.py: VCF Phase Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_four_gamete.html">vcf_four_gamete.py: Four Gamete Test Function</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../input_file_generators.html">PPP Input File Generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analyses.html">PPP Analyses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities.html">PPP Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Model File and Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../functions.html">PPP Core Functions</a> &raquo;</li>
+        
+      <li>informative_loci_filter.py: Informative Loci Filter</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Functions/loci_filter.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-informative_loci_filter">
+<span id="informative-loci-filter-py-informative-loci-filter"></span><h1>informative_loci_filter.py: Informative Loci Filter<a class="headerlink" href="#module-informative_loci_filter" title="Permalink to this headline">¶</a></h1>
+<p>This function checks to make sure that a locus has enough sites to be 
+considered informative in either the four-gamete test or an IM run. 
+Given a BED file and a VCF file, informative_loci_filter will find regions 
+in the VCF that have a specified number of variant sites.</p>
+<a class="reference internal image-reference" href="../../_images/PPP_Loci_Filter.png"><img alt="../../_images/PPP_Loci_Filter.png" class="align-center" src="../../_images/PPP_Loci_Filter.png" style="width: 100%;" /></a>
+<p>In this illustration of the locus filtering process, locus_0004 is
+removed due to only having three variant sites (highlighted in green)
+when the threshold is set to four.</p>
+<p>Because many variants are not considered useful in these situations, filters 
+are provided for removing sites with missing data, non-biallelic sites, 
+indels, CpGs, and singletons from determining if there are a sufficient 
+number of sites in the region. Output is either a BED file of a set number 
+of random regions that pass the criteria, or a file with all regions that pass. 
+It can also remove regions that are below a minimum specified length. If a 
+model file is specified, only the individuals in the selected population will 
+be considered for singleton and missing data filters.</p>
+<div class="section" id="input-arguments">
+<h2>Input Arguments<a class="headerlink" href="#input-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--vcf</strong> <em>&lt;vcf_name&gt;</em></dt><dd><p>Name of input VCF file</p>
+</dd>
+<dt><strong>--bed</strong> <em>&lt;bed_file&gt;</em></dt><dd><p>Name of input BED file</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="output-arguments">
+<h2>Output Arguments<a class="headerlink" href="#output-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--out</strong> <em>&lt;out_name&gt;</em></dt><dd><p>Name of output BED file</p>
+</dd>
+<dt><strong>--randcount</strong> <em>&lt;number_of_regions&gt;</em></dt><dd><p>If set, will output set number of regions randomly selected
+from those that pass the criteria. Default behavior is to output
+all regions that match criteria.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="filtering-arguments">
+<h2>Filtering Arguments<a class="headerlink" href="#filtering-arguments" title="Permalink to this headline">¶</a></h2>
+<dl>
+<dt><strong>--remove-multi</strong></dt><dd><p>Do not count tri-allelic+ sites toward number of valid variants in
+a region</p>
+</dd>
+<dt><strong>--remove-missing</strong> <em>&lt;max_misscount&gt;</em></dt><dd><p>Do not count sites with more than max_misscount missing individuals.
+Default of -1 indicates all sites are included, 0 indicates sites
+with any missing data are not counted..</p>
+</dd>
+<dt><strong>--remove-indels</strong></dt><dd><blockquote>
+<div><p>Do not count indels toward number of valid variants in a region</p>
+</div></blockquote>
+<dl class="simple">
+<dt><strong>--parsecpg</strong> <em>&lt;fasta_reference_filename&gt;</em></dt><dd><p>Optional argument that if set, will detect whether or not variants
+are CpGs. A check is made to make sure the positions in the FASTA
+line up with the correct variant reference allele.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>--informative-count</strong> <em>&lt;minimum_allele_count&gt;</em></dt><dd><p>Minimum number of haplotypes with both alleles at a site. Default
+is 2, meaning there must be two of each of reference and alternate
+allele in the target individuals. Can be set to 1 to filter 
+out invariant sites.</p>
+</dd>
+<dt><strong>--minsites</strong> <em>&lt;min_sites&gt;</em></dt><dd><p>Minimum number of variants required for a region to pass the filtering
+criteria. Variants that match specified arguments will not be counted
+towards this total.</p>
+</dd>
+<dt><strong>--min-length</strong> <em>&lt;min_length&gt;</em></dt><dd><p>Minimum base length of region for region to be considered.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="region-arguments">
+<h2>Region Arguments<a class="headerlink" href="#region-arguments" title="Permalink to this headline">¶</a></h2>
+<dl>
+<dt><strong>--bed-column-index</strong> <em>&lt;start_idx&gt;</em>,*&lt;end_idx&gt;*,*&lt;chrom_idx&gt;*</dt><dd><p>Comma-separated string of the zero-based indices of the start, end,
+and chromosome columns in the input file, so the file doesn't need to
+be reformatted. Default for a regular BED file is 1,2,0.</p>
+</dd>
+<dt><strong>--zero-ho</strong></dt><dd><p>If set, indicates input BED regions are on zero-based, half-open
+coordinate system, as opposed to one-based, closed. For example, the
+first million bases on a chromosome would be:</p>
+<blockquote>
+<div><p>Zero-based, half-open: 0,1000000
+One-based, closed:     1,1000000</p>
+</div></blockquote>
+</dd>
+<dt><strong>--pad</strong> <em>&lt;pad_length&gt;</em></dt><dd><p>If set, regions in input file will be extended by pad_length bases
+on both sides.</p>
+</dd>
+<dt><strong>--keep-full-line</strong></dt><dd><p>If set, regions output will be the same line as was present in the 
+input file. Default behavior is to output start/end/chrom columns
+in that order, without any other data.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="model-arguments">
+<h2>Model Arguments<a class="headerlink" href="#model-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--model-file</strong> <em>&lt;model_filename&gt;</em></dt><dd><p>Name of model file that contains individuals to be considered
+for filtering.</p>
+</dd>
+<dt><strong>--model</strong> <em>&lt;model_name&gt;</em></dt><dd><p>If model file contains more than one model, name of model
+to be used.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="other-arguments">
+<h2>Other Arguments<a class="headerlink" href="#other-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--no-sorting</strong></dt><dd><p>Will output regions in order they were in input file.
+Default behavior is to sort regions before filtering.</p>
+</dd>
+<dt><strong>--tbi</strong> <em>&lt;tabix_index&gt;</em></dt><dd><p>If input VCF is compressed and tabix file is not default,
+provide the tabix filename here.</p>
+</dd>
+<dt><strong>--no-xy</strong></dt><dd><p>Removes regions on X/Y chromosomes from consideration.</p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="vcf_split.html" class="btn btn-neutral float-right" title="vcf_split.py: VCF Split Function" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="vcf_calc.html" class="btn btn-neutral float-left" title="vcf_calc.py: VCF Statistic Calculator Function" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

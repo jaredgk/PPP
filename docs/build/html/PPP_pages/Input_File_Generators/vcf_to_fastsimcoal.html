@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>vcf_to_fastsimcoal.py: VCF to fastsimcoal Conversion Function &mdash; PPP 0.1.7 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="vcf_to_dadi.py: VCF to dadi Conversion Function" href="vcf_to_dadi.html" />
+    <link rel="prev" title="vcf_to_gphocs.py: VCF to GPhocs Conversion Function" href="vcf_to_gphocs.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">PPP Core Functions</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../input_file_generators.html">PPP Input File Generators</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="vcf_format_conversions.html">vcf_format_conversions.py: VCF to Plink/EIGENSTRAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_to_ima.html">vcf_to_ima.py: VCF to IMa Conversion Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_to_treemix.html">vcf_to_treemix.py: VCF to treemix Conversion Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_to_gphocs.html">vcf_to_gphocs.py: VCF to GPhocs Conversion Function</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">vcf_to_fastsimcoal.py: VCF to fastsimcoal Conversion Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#required-arguments">Required Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optional-aguments">Optional Aguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-usage">Example usage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_to_dadi.html">vcf_to_dadi.py: VCF to dadi Conversion Function</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../analyses.html">PPP Analyses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities.html">PPP Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Model File and Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../input_file_generators.html">PPP Input File Generators</a> &raquo;</li>
+        
+      <li>vcf_to_fastsimcoal.py: VCF to fastsimcoal Conversion Function</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Input_File_Generators/vcf_to_fastsimcoal.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-vcf_to_fastsimcoal">
+<span id="vcf-to-fastsimcoal-py-vcf-to-fastsimcoal-conversion-function"></span><h1>vcf_to_fastsimcoal.py: VCF to fastsimcoal Conversion Function<a class="headerlink" href="#module-vcf_to_fastsimcoal" title="Permalink to this headline">¶</a></h1>
+<p>Generates Site Frequency Spectrum (SFS) files for fastsimcoal
+based on instructions in fastsimcoal ver 2.6 manual.</p>
+<p>Generates one-dimensional (1D), two-dimensional (2D) and multidimensional SFS files</p>
+<p>All generated SFS files are contained in a zip file archive.</p>
+<p>Excoffier, L. and M. Foll. 2011. fastsimcoal: a continuous-time coalescent
+simulator of genomic diversity under arbitrarily complex evolutionary scenarios.
+Bioinformatics 27: 1332-1334.</p>
+<div class="section" id="required-arguments">
+<h2>Required Arguments<a class="headerlink" href="#required-arguments" title="Permalink to this headline">¶</a></h2>
+<dl>
+<dt><strong>--vcf</strong> <em>&lt;input_vcf_filename&gt;</em></dt><dd><p>The name of the vcf file.  This can be a bgzipped vcf file. .</p>
+</dd>
+<dt><strong>--model-file</strong> <em>&lt;model_file_name&gt;</em></dt><dd><p>The name of a PPP model file.</p>
+</dd>
+<dt><strong>--modelname</strong> <em>&lt;model_name&gt;</em></dt><dd><p>The name of a model in the model file.  The treemix file to be
+generated will contain the allele counts for each SNP in each of
+the populations.  The treemix run will estimate the phylogeny
+for the populations in the model.</p>
+</dd>
+<dt><strong>--dim</strong> <em>&lt;dimension file type signifiers&gt;</em></dt><dd><p>One or more of '1', '2', or 'm', for 1D, 2D or multidimensional output files.</p>
+<dl class="simple">
+<dt>For 1D files:</dt><dd><ul class="simple">
+<li><p>the filename suffix is _DAFpop#.obs for an array of derived allele counts.
+where '#' is replaced by the population number</p></li>
+<li><p>the filename suffix is _MAFpop#.obs for an array of minor allele counts.</p></li>
+</ul>
+</dd>
+<dt>For 2D files:</dt><dd><ul class="simple">
+<li><p>the filename suffix is _jointDAFpop#_&amp;.obs for an array of derived allele counts.
+where # and &amp; are population numbers, and # is larger than &amp;</p></li>
+<li><p>the filename suffix is _jointDAFpop#_&amp;.obs for an array of minor allele counts.</p></li>
+</ul>
+</dd>
+<dt>For a multidimensional file:</dt><dd><ul class="simple">
+<li><p>the filename suffix is _DSFS.obs for an array of derived allele counts.</p></li>
+<li><p>the filename suffix is _MSFS.obs for an array of minor allele counts.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</div>
+<div class="section" id="optional-aguments">
+<h2>Optional Aguments<a class="headerlink" href="#optional-aguments" title="Permalink to this headline">¶</a></h2>
+<dl>
+<dt><strong>--basename</strong> <em>&lt;name of outpuf file prefix&gt;</em></dt><dd><p>This is used to specify the prefix of the output files and the prefix of the
+zip file archive. The default is
+&quot;ppp_fsc&quot; in the same folder as the vcf file</p>
+</dd>
+<dt><strong>--bed-file</strong> <em>&lt;BED_file_name&gt;</em></dt><dd><p>The BED file is a sorted UCSC-style bedfile containing chromosome locations of
+the SNPs to be included in the output files. The BED file has no header.
+The first column is the chromosome name (this must match the chromosome
+name in the vcf file).
+The second column is start position (0-based, open interval)
+The third column is end position (closed interval).
+Any other columns are ignored.</p>
+</dd>
+<dt><strong>--outgroup_fasta</strong> <em>&lt;name of alternative reference sequence&gt;</em></dt><dd><p>This option is used to specify the name of a fasta file to use as an
+alternative reference to that used for the vcf file.</p>
+<p>This fasta file must have been properly aligned to the reference
+used in the vcf file.</p>
+<p>This option can be useful, for example, if an ancestral or outgroup reference is
+available that more accurately identifies the ancestral (and thus derived)
+allele at each SNP than does the reference used to make the vcf file.</p>
+</dd>
+<dt><strong>--downsamplesizes</strong> <em>&lt;down sample sizes&gt;</em></dt><dd><p>A sequence of integers,  one for each of the populations in the model in
+the same order as populations listed in the model. The values 
+specify the down sampling to be used for each respective population.
+For a population with k&gt;=1 diploid individuals (2k&gt;=2 genomes) in the model,
+the downsample count d  must be 2&lt;=d&lt;=2k.</p>
+</dd>
+<dt><strong>--folded</strong> <em>&lt;True/False&gt;</em></dt><dd><p>The folded option indicates that the folded sfs should be returned.
+If folded is False (default) the sfs reports the count of the derived allele.
+If True,  the sfs reports of the count of the minor (less frequent) allele.</p>
+</dd>
+<dt><strong>--randomsnpprop</strong> <em>&lt;floating point value between 0 and 1&gt;</em></dt><dd><p>This option can be used to randomly sample a subset of SNPs. The default
+is to sample all biallelic SNPs.</p>
+</dd>
+<dt><strong>--seed</strong> <em>&lt;integer&gt;</em></dt><dd><p>This is used with --randomsnpprop as the seed for the random number generator.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="example-usage">
+<h2>Example usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h2>
+<p>Example command-lines:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vcf_to_fastsimcoal.py -h
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vcf_to_fastsimcoal.py --vcf pan_example2.vcf.gz --model-file panmodels.model --modelname 5Pop --downsamplesizes <span class="m">3</span> <span class="m">3</span> <span class="m">3</span> <span class="m">4</span> <span class="m">2</span>  --basename vcf_fsc2 --folded --dim <span class="m">1</span> <span class="m">2</span> m  --outgroup-fasta chr22_pan_example2_ref.fa
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="vcf_to_dadi.html" class="btn btn-neutral float-right" title="vcf_to_dadi.py: VCF to dadi Conversion Function" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="vcf_to_gphocs.html" class="btn btn-neutral float-left" title="vcf_to_gphocs.py: VCF to GPhocs Conversion Function" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

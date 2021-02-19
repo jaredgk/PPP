@@ -1,0 +1,428 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>vcf_bed_to_seq.py: Generate sequences from VCF/BED Files &mdash; PPP 0.1.7 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="stat_sampler.py: STAT File Sampler" href="stat_sampler.html" />
+    <link rel="prev" title="bed_utilities.py: BED Utilites" href="bed_utilities.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">PPP Core Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../input_file_generators.html">PPP Input File Generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analyses.html">PPP Analyses</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../utilities.html">PPP Utilities</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="vcf_utilities.html">vcf_utilities.py: VCF Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bed_utilities.html">bed_utilities.py: BED Utilites</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">vcf_bed_to_seq.py: Generate sequences from VCF/BED Files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#required-arguments">Required Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optional-aguments">Optional Aguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-usage">Example usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#importing-functions">Importing Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#get-model-sequences-from-region">get_model_sequences_from_region()</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#get-model-sequences">get_model_sequences()</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stat_sampler.html">stat_sampler.py: STAT File Sampler</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Model File and Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../utilities.html">PPP Utilities</a> &raquo;</li>
+        
+      <li>vcf_bed_to_seq.py: Generate sequences from VCF/BED Files</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Utilities/vcf_bed_to_seq.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-vcf_bed_to_seq">
+<span id="vcf-bed-to-seq-py-generate-sequences-from-vcf-bed-files"></span><h1>vcf_bed_to_seq.py: Generate sequences from VCF/BED Files<a class="headerlink" href="#module-vcf_bed_to_seq" title="Permalink to this headline">¶</a></h1>
+<p>For generating a file with reconstituted sequences for regions of a vcf file.</p>
+<p>Given a vcf file, a corresponding fasta reference file, a population model,
+and a specific interval, this script will return a file containing reconstituted
+sequences - two for each diploid individual.</p>
+<p>This script can be run in stand-alone mode,  or for more flexibility it can
+be imported to give access to more general functions for generating
+reconstituted sequences.</p>
+<div class="section" id="required-arguments">
+<h2>Required Arguments<a class="headerlink" href="#required-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--vcf</strong> <em>&lt;input_vcf_filename&gt;</em></dt><dd><p>The name of the vcf file.  This can be a bgzipped vcf file. .</p>
+</dd>
+<dt><strong>--model-file</strong> <em>&lt;model_file_name&gt;</em></dt><dd><p>The name of a PPP model file.</p>
+</dd>
+<dt><strong>--modelname</strong> <em>&lt;model_name&gt;</em></dt><dd><p>The name of a model in the model file.</p>
+</dd>
+<dt><strong>--fasta-reference</strong> <em>&lt;reference fasta file&gt;</em></dt><dd><p>The reference genome fasta file is required in order to generate full
+sequences from the SNP data in the vcf file.</p>
+</dd>
+<dt><strong>--region</strong> <em>&lt;region string&gt;</em></dt><dd><p>The region of the reference to return sequences from.
+Format: chromosome name,colon (:),first base number,dash(-),last base number.
+e.g. chr1:100392-101391&quot;</p>
+</dd>
+<dt><strong>--out</strong> <em>&lt;out file name&gt;</em></dt><dd><ul class="simple">
+<li><p>the name of an output file. If --out is omitted the default is ppp_vcf_to_sequences.out</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="optional-aguments">
+<h2>Optional Aguments<a class="headerlink" href="#optional-aguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--return-single</strong> <em>&lt;True/False&gt;</em></dt><dd><p>If true,  only a single sequence is returned for each individual in the model.
+The sequence for a given individual uses the first allele given for that
+individual for each SNP in the vcf file.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="example-usage">
+<h2>Example usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h2>
+<p>Example command-lines:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vcf_bed_to_seq.py -h
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vcf_bed_to_seq.py --vcf pan_example.vcf.gz --fasta-reference pan_example_ref.fa --model-file panmodels.model --modelname 4Pop --region <span class="m">21</span>:4431001-4499000  --out vcf_bed_to_seq_test.out
+</pre></div>
+</div>
+</div>
+<div class="section" id="importing-functions">
+<h2>Importing Functions<a class="headerlink" href="#importing-functions" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>This file has two functions that can be useful for getting lists of reconstituted
+sequences from a vcf file and a fasta reference file.</p>
+</div></blockquote>
+<div class="section" id="get-model-sequences-from-region">
+<h3>get_model_sequences_from_region()<a class="headerlink" href="#get-model-sequences-from-region" title="Permalink to this headline">¶</a></h3>
+<p>Returns a list of sequences for a region in a vcf file and a samtools/pysam style region string.</p>
+<div class="section" id="id1">
+<h4>Required Arguments<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Each argument requires the use of the argument name.</p>
+</div></blockquote>
+<dl class="simple">
+<dt><strong>vcf</strong></dt><dd><p>Either a vcf_reader  (i.e. see vf.VcfReader()) or the name of a vcf file (can be bgzipped)</p>
+</dd>
+<dt><strong>popmodel</strong></dt><dd><p>An instance of Class model. The individuals in the model must also be in the vcf file</p>
+</dd>
+<dt><strong>seq_reference</strong></dt><dd><p>A string that either contains the DNA sequence for the region or is a string containing the name of a fasta file. If a fasta file name,
+the chromosome name(s) in the fasta file must match those in the vcf file</p>
+</dd>
+<dt><strong>region</strong></dt><dd><p>Either a samtools/pysam style region string (&quot;chromosome name:start-end&quot;)
+where the chromosome name matches that used in the vcf file
+where start and end are the 1-based endpoints (closed interval)
+Or an instance of class Region (Regions uses 0-based open interval on the left)</p>
+</dd>
+<dt><strong>return_single</strong></dt><dd><p>If True,  return only the first sequence for an individual
+else, return two sequences  (default False)</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="optional-arguments">
+<h4>Optional arguments<a class="headerlink" href="#optional-arguments" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Each optional argument requires the use of the argument name.</p>
+</div></blockquote>
+<dl class="simple">
+<dt><strong>return_single</strong></dt><dd><p>If True,  return only the first sequence for an individual
+else, return two sequences  (default False)</p>
+</dd>
+<dt><strong>out</strong></dt><dd><p>The name of a file to which the sequences are to be written (or appended if the file exists).</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="id2">
+<h4>Example usage<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<p>Example python code</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vcf_bed_to_seq</span> <span class="kn">as</span> <span class="nn">vbs</span>
+<span class="n">myregion</span><span class="p">,</span><span class="n">sequences</span> <span class="o">=</span> <span class="n">vbs</span><span class="o">.</span><span class="n">get_model_sequences_from_region</span><span class="p">(</span><span class="n">vcf</span><span class="o">=</span><span class="s2">&quot;pan_example.vcf.gz&quot;</span><span class="p">,</span>
+          <span class="n">popmodel</span><span class="o">=</span><span class="n">mymodel</span><span class="p">,</span><span class="n">seq_reference</span><span class="o">=</span><span class="s2">&quot;pan_example_ref.fa&quot;</span><span class="p">,</span>
+          <span class="n">region</span><span class="o">=</span><span class="s2">&quot;21:4431001-4499000&quot;</span><span class="p">,</span><span class="n">return_single</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+          <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;chr21regionsequences.out&quot;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+<div class="section" id="get-model-sequences">
+<h3>get_model_sequences()<a class="headerlink" href="#get-model-sequences" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Returns a generator for getting sets of sequences from regions given in a BED file for individuals in a model.
+Each call to next() returns a list of sequences for the next region in the BED file</p>
+</div></blockquote>
+<div class="section" id="arguments">
+<h4>Arguments<a class="headerlink" href="#arguments" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Each argument requires the use of the argument name. All arguments are required with
+the exception taht either BED_filename or region_string (but not both) must be used.</p>
+</div></blockquote>
+<dl class="simple">
+<dt><strong>vcf</strong></dt><dd><p>the name of the vcf file (can be bgzipped)</p>
+</dd>
+<dt><strong>model_file</strong></dt><dd><p>name of a model file</p>
+</dd>
+<dt><strong>modelname</strong></dt><dd><p>The name of a model in model_file
+Either both model_file and modelname must be used, or popmodel must be used</p>
+</dd>
+<dt><strong>popmodel</strong></dt><dd><p>An instance of class model. The individuals in the model must also be in the vcf file
+Either popmmodel or both model_file and modelname must be used</p>
+</dd>
+<dt><strong>fasta_reference</strong></dt><dd><p>A fasta file with one more sequences corresponding to the vcf file
+typically these are reference chromosome sequences
+the chromosome name(s) in the fasta file must
+match those in the vcf file</p>
+</dd>
+<dt><strong>BED_filename</strong></dt><dd><p>A sorted BED file giving regions from which to pull sequences
+the first column with the chromosome name must match a name in
+the fasta_reference file
+The chromosome names in the BED file must match those in the fasta file
+and the vcf file</p>
+</dd>
+<dt><strong>region_string</strong></dt><dd><p>A pysam style region string,  if only one region is to be returned</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="id3">
+<h4>Example usage<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<p>Example python code:</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">get_model_sequences</span><span class="p">(</span><span class="n">vcf</span><span class="o">=</span><span class="s2">&quot;pan_example.vcf.gz&quot;</span><span class="p">,</span>
+            <span class="n">popmodel</span><span class="o">=</span><span class="n">mymodel</span><span class="p">,</span><span class="n">fasta_reference</span><span class="o">=</span><span class="s2">&quot;pan_example_ref.fa&quot;</span><span class="p">,</span>
+            <span class="n">BED_filename</span> <span class="o">=</span> <span class="s2">&quot;pan_example_regions.bed&quot;</span><span class="p">)</span>
+<span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="c1"># Will raise StopIteration if lines is exhausted</span>
+        <span class="k">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+        <span class="k">break</span>   <span class="c1"># end loop</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="stat_sampler.html" class="btn btn-neutral float-right" title="stat_sampler.py: STAT File Sampler" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="bed_utilities.html" class="btn btn-neutral float-left" title="bed_utilities.py: BED Utilites" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

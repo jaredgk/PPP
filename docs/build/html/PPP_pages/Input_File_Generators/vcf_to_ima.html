@@ -1,0 +1,353 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>vcf_to_ima.py: VCF to IMa Conversion Function &mdash; PPP 0.1.7 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="vcf_to_treemix.py: VCF to treemix Conversion Function" href="vcf_to_treemix.html" />
+    <link rel="prev" title="vcf_format_conversions.py: VCF to Plink/EIGENSTRAT" href="vcf_format_conversions.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">PPP Core Functions</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../input_file_generators.html">PPP Input File Generators</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="vcf_format_conversions.html">vcf_format_conversions.py: VCF to Plink/EIGENSTRAT</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">vcf_to_ima.py: VCF to IMa Conversion Function</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#input-arguments">Input Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output-arguments">Output Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#model-options">Model Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#filtering-options">Filtering Options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-options">Other Options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_to_treemix.html">vcf_to_treemix.py: VCF to treemix Conversion Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_to_gphocs.html">vcf_to_gphocs.py: VCF to GPhocs Conversion Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_to_fastsimcoal.html">vcf_to_fastsimcoal.py: VCF to fastsimcoal Conversion Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_to_dadi.html">vcf_to_dadi.py: VCF to dadi Conversion Function</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../analyses.html">PPP Analyses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities.html">PPP Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Model File and Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../input_file_generators.html">PPP Input File Generators</a> &raquo;</li>
+        
+      <li>vcf_to_ima.py: VCF to IMa Conversion Function</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Input_File_Generators/vcf_to_ima.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-vcf_to_ima">
+<span id="vcf-to-ima-py-vcf-to-ima-conversion-function"></span><h1>vcf_to_ima.py: VCF to IMa Conversion Function<a class="headerlink" href="#module-vcf_to_ima" title="Permalink to this headline">¶</a></h1>
+<p>Create IMa input file from four-gamete filtered VCF files.</p>
+<p>An IM analysis requires an IM-formatted input file that contains multiple 
+loci, where each locus has sequence information for variant sites as 
+determined by multiple individuals (which are grouped by population).
+To produce this file, this script takes either a VCF file with a
+BED file that indicates loci to be used or a VCF file per locus. A model
+file will be used to split the samples in the VCF(s) into populations.</p>
+<p>For each locus, a header line is created that contains several pieces of
+information, including number of individuals per population at this locus,
+number of sites in sequences provided, mutation model, inheritance scalar,
+and mutation rate per year at locus (over locus, not per base pair). 
+Population sizes and sequence ordering are handled internally, the 
+inheritance scalar and mutation rate can be set via commandline.</p>
+<p>Loci provided as input must pass the four-gamete filtering criteria. 
+In addition, if filtering has not been previously done options are
+available to filter out indels (default), multiallelic sites, and 
+CpGs (with reference genome). Sites with missing data can either be
+filtered by dropping individuals missing data from a locus from 
+analysis at that locus, or by replacing the missing site with a 
+reference allele.</p>
+<div class="section" id="input-arguments">
+<h2>Input Arguments<a class="headerlink" href="#input-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--vcf</strong> <em>&lt;input_filename&gt;</em></dt><dd><p>Filename for input VCF if using BED file with locus information</p>
+</dd>
+<dt><strong>--vcfs</strong> <em>&lt;vcf_filename_1&gt;</em>...*&lt;vcf_filename_n&gt;*</dt><dd><p>One or multiple VCF input filenames where each file contains
+sequences for a single locus. A file with lines corresponding
+to filenames can be provided with <strong>--vcfs</strong> <em>&#64;&lt;vcf_filelist&gt;</em></p>
+</dd>
+<dt><strong>--model-file</strong> <em>&lt;model_filename&gt;</em></dt><dd><p>Filename of model file.</p>
+</dd>
+<dt><strong>--model</strong> <em>&lt;model name&gt;</em></dt><dd><p>If model file contains multiple models, use this argument
+to specify name of population to use.</p>
+</dd>
+<dt><strong>--reference-fasta</strong> <em>&lt;reference_filename&gt;</em></dt><dd><p>Filename for reference FASTA file. File can be uncompressed or
+bg-zipped, but must be indexed with faidx. When option is specified,
+default options are to include sequence in output loci but not filter
+for CpGs (use --parse-cpg)</p>
+</dd>
+<dt><strong>--bed</strong> <em>&lt;bed_filename&gt;</em></dt><dd><p>Filename for BED file specifying loci if only one VCF is provided. 
+Can be used with multiple VCFs if line count aligns, used for getting
+correct locus length.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="output-arguments">
+<h2>Output Arguments<a class="headerlink" href="#output-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--out</strong> <em>&lt;out_filename&gt;</em></dt><dd><p>Output filename.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="model-options">
+<h2>Model Options<a class="headerlink" href="#model-options" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--mutrate</strong> <em>&lt;mutation rate&gt;</em></dt><dd><p>Set mutation rate per base pair (default is 1e-9). This value is
+multiplied by locus length to get mutation rate per locus.</p>
+</dd>
+<dt><strong>--inheritance-scalar</strong> <em>&lt;scalar&gt;</em></dt><dd><p>Sets inheritance scalar for all loci. Default behavior is to 
+set scalar to 1 for non-X/Y/MT chromosomes, .75 for 'X' and
+'chrX', and .25 for 'y', 'chrY', 'MT', and 'chrMT'.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="filtering-options">
+<h2>Filtering Options<a class="headerlink" href="#filtering-options" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--remove-multiallele</strong></dt><dd><p>Set all multiallelic sites to be reference.</p>
+</dd>
+<dt><strong>--drop-missing-sites</strong> <em>&lt;individual_count&gt;</em></dt><dd><p>Drops all sites where more than 'individual_count' individuals
+are missing data. Default is -1 (no dropping), and 0 will 
+drop all sites missing data and replace them with the reference
+allele.</p>
+</dd>
+<dt><strong>--drop-missing-inds</strong></dt><dd><p>If set, if an individual is missing data at a locus, that 
+individual will not be included at that locus and population
+counts for that locus will be adjusted.</p>
+</dd>
+<dt><strong>--remove-cpg</strong></dt><dd><p>Requires --reference-fasta. If set, will replace CpG sites with
+reference allele at site, setting them as invariant.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="other-options">
+<h2>Other Options<a class="headerlink" href="#other-options" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--zero-ho</strong></dt><dd><p>Use if input BED file uses zero-based, half-open coordinates instead
+of one-based, closed.</p>
+</dd>
+<dt><strong>--bed-column-index</strong> <em>&lt;start_col,end_col,chrom_col&gt;</em></dt><dd><p>Comma-separated list of zero-based indexes of start, end, and 
+chromosome name columns in input BED file. Default value for
+traditionally structured BED is 1,2,0</p>
+</dd>
+<dt><strong>--noseq</strong></dt><dd><p>If set, and --reference-fasta is provided, will not output 
+invariant sites to IM file.</p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="vcf_to_treemix.html" class="btn btn-neutral float-right" title="vcf_to_treemix.py: VCF to treemix Conversion Function" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="vcf_format_conversions.html" class="btn btn-neutral float-left" title="vcf_format_conversions.py: VCF to Plink/EIGENSTRAT" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

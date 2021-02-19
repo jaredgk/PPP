@@ -1,0 +1,445 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>bed_utilities.py: BED Utilites &mdash; PPP 0.1.7 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="vcf_bed_to_seq.py: Generate sequences from VCF/BED Files" href="vcf_bed_to_seq.html" />
+    <link rel="prev" title="vcf_utilities.py: VCF Utilities" href="vcf_utilities.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">PPP Core Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../input_file_generators.html">PPP Input File Generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analyses.html">PPP Analyses</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../utilities.html">PPP Utilities</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="vcf_utilities.html">vcf_utilities.py: VCF Utilities</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">bed_utilities.py: BED Utilites</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-usage">Command-line Usage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#utilites">Utilites</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sample-utility">Sample Utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sort-utility">Sort Utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#extend-utility">Extend Utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#subtract-utility">Subtract Utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complement-utility">Complement Utility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#merge-utility">Merge Utility</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#input-command-line-arguments">Input Command-line Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#output-command-line-arguments">Output Command-line Arguments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#utility-command-line-specification">Utility Command-line Specification</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#sample-utility-command-line-arguments">Sample Utility Command-line Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#subtract-utility-command-line-arguments">Subtract Utility Command-line Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#extend-utility-command-line-arguments">Extend Utility Command-line Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#merge-utility-command-line-arguments">Merge Utility Command-line Arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_bed_to_seq.html">vcf_bed_to_seq.py: Generate sequences from VCF/BED Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stat_sampler.html">stat_sampler.py: STAT File Sampler</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Model File and Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../utilities.html">PPP Utilities</a> &raquo;</li>
+        
+      <li>bed_utilities.py: BED Utilites</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Utilities/bed_utilities.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-bed_utilities">
+<span id="bed-utilities-py-bed-utilites"></span><h1>bed_utilities.py: BED Utilites<a class="headerlink" href="#module-bed_utilities" title="Permalink to this headline">¶</a></h1>
+<p>Automates various utilites for BED-formatted files. This currently includes: i)
+sample a BED file; ii) subtract from a BED that overlap with a second BED file; 
+iii) extend a BED upstream, downstream, or both upstream and downstream; iv) sort 
+a single BED; v) merge features within one or more BED files; vi) create a BED of 
+complementary features.</p>
+<div class="section" id="command-line-usage">
+<h2>Command-line Usage<a class="headerlink" href="#command-line-usage" title="Permalink to this headline">¶</a></h2>
+<p>The BED utilites function may be called using the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bed_utilities.py
+</pre></div>
+</div>
+<div class="section" id="utilites">
+<h3>Utilites<a class="headerlink" href="#utilites" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="sample-utility">
+<h2>Sample Utility<a class="headerlink" href="#sample-utility" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="../../_images/PPP_BED_Sample.png"><img alt="../../_images/PPP_BED_Sample.png" class="align-center" src="../../_images/PPP_BED_Sample.png" style="width: 100%;" /></a>
+<p>Given a BED file and a sample size, the sample utility will generate a pseudorandomly 
+sampled BED. Please note that the random seed may be used to reproduced the sample.</p>
+<p>Sample 20 features from a BED file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bed_utilities.py --utility sample --bed examples/files/chr1_sites.bed --sample-size <span class="m">20</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sort-utility">
+<h2>Sort Utility<a class="headerlink" href="#sort-utility" title="Permalink to this headline">¶</a></h2>
+<p>Given an unsorted BED file, the sort utility will generate a sorted BED file.</p>
+<p>Sort an unsorted BED file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bed_utilities.py --utility sort --bed examples/files/chr1_sites.unsorted.bed
+</pre></div>
+</div>
+</div>
+<div class="section" id="extend-utility">
+<h2>Extend Utility<a class="headerlink" href="#extend-utility" title="Permalink to this headline">¶</a></h2>
+<p>Given a BED file and an extend length, the extend utility will increase the length of each 
+feature upstream, downstream, or both upstream and downstream.</p>
+<p>Extend upstream by 1kb:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bed_utilities.py --utility extend --bed examples/files/chr1_sites.bed --chrom-file examples/files/chr_sizes.txt --extend-upstream <span class="m">1000</span>
+</pre></div>
+</div>
+<p>Extend downstream by 1kb:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bed_utilities.py --utility extend --bed examples/files/chr1_sites.bed --chrom-file examples/files/chr_sizes.txt --extend-downstream <span class="m">1000</span>
+</pre></div>
+</div>
+<p>Extend flanks (i.e. both upstream and downstream) by 1kb:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bed_utilities.py --utility extend --bed examples/files/chr1_sites.bed --chrom-file examples/files/chr_sizes.txt--extend-flanks <span class="m">1000</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="subtract-utility">
+<h2>Subtract Utility<a class="headerlink" href="#subtract-utility" title="Permalink to this headline">¶</a></h2>
+<p>Given two BED files, the subtract utility will remove BED features from a BED file
+if they overlap with the features from a second BED file.</p>
+<p>Remove BED features if they overlap features within the subtract BED file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bed_utilities.py --utility subtract --bed examples/files/chr1_sites.bed --subtract-bed examples/files/chr1_sites.1.bed --subtract-entire-feature
+</pre></div>
+</div>
+</div>
+<div class="section" id="complement-utility">
+<h2>Complement Utility<a class="headerlink" href="#complement-utility" title="Permalink to this headline">¶</a></h2>
+<p>Given a BED file, the complementary utility will generate a BED file of complementary 
+features.</p>
+<p>Return a BED with features that do not overlap within the given file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bed_utilities.py --utility complement --bed examples/files/chr1_sites.bed --chrom-file examples/files/chr_sizes.txt
+</pre></div>
+</div>
+</div>
+<div class="section" id="merge-utility">
+<h2>Merge Utility<a class="headerlink" href="#merge-utility" title="Permalink to this headline">¶</a></h2>
+<p>Given one or more BED files, the merge utility will generate a single sorted BED file of
+merged BED features.</p>
+<p>Merge BED features from a single BED file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bed_utilities.py --utility merge --bed examples/files/chr1_sites.bed 
+</pre></div>
+</div>
+<p>Merge BED features from multiple BED files:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bed_utilities.py --utility merge --beds examples/files/chr1_sites.1.bed examples/files/chr1_sites.2.bed examples/files/chr1_sites.3.bed examples/files/chr1_sites.4.bed
+</pre></div>
+</div>
+<div class="section" id="dependencies">
+<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="https://bedtools.readthedocs.io/en/latest/">BEDtools</a></p></li>
+</ul>
+</div>
+<div class="section" id="input-command-line-arguments">
+<h3>Input Command-line Arguments<a class="headerlink" href="#input-command-line-arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt><strong>--bed</strong> <em>&lt;input_filename&gt;</em></dt><dd><p>Argument used to define the filename of the BED file.</p>
+</dd>
+<dt><strong>--beds</strong> <em>&lt;input_filename&gt;</em> <em>&lt;input1_filename, input2_filename, etc.&gt;</em></dt><dd><p>Argument used to define the filename of the BED file(s). May be used multiple 
+times.</p>
+</dd>
+<dt><strong>--chrom-file</strong> <em>&lt;chrom_filename&gt;</em></dt><dd><p>Argument used to define the filename of a file with the sizes of each
+chromosome file. Appropriate files may be downloaded from the UCSC Genome
+Browser.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="output-command-line-arguments">
+<h3>Output Command-line Arguments<a class="headerlink" href="#output-command-line-arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt><strong>--out</strong> <em>&lt;output_filename&gt;</em></dt><dd><p>Argument used to define the complete output filename.</p>
+</dd>
+<dt><strong>--overwrite</strong></dt><dd><p>Argument used to define if previous output should be overwritten.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="utility-command-line-specification">
+<h3>Utility Command-line Specification<a class="headerlink" href="#utility-command-line-specification" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt><strong>--utility</strong> <em>&lt;sample, subtract, extend, sort, merge, complement&gt;</em></dt><dd><p>Argument used to define the desired utility. Current utilities include: sample
+features from a BED file (sample); subtract features from a BED file that overlap 
+with features within a second BED file (subtract); extend the flanks of features 
+upstream, downstream, or both within a single BED file (extend); sort the 
+features within a single BED file (sort); merge features within one or more BED 
+files (merge); create a BED file of complementary features - i.e. features that 
+do not overlap - from a BED file (complement).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="sample-utility-command-line-arguments">
+<h2>Sample Utility Command-line Arguments<a class="headerlink" href="#sample-utility-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--sample-size</strong> <em>&lt;sample_size_int&gt;</em></dt><dd><p>Argument used to define the total sample size.</p>
+</dd>
+<dt><strong>--random-seed</strong> <em>&lt;seed_int&gt;</em></dt><dd><p>Argument used to define the seed value for the random number generator.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="subtract-utility-command-line-arguments">
+<h2>Subtract Utility Command-line Arguments<a class="headerlink" href="#subtract-utility-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--subtract-bed</strong> <em>&lt;subtract_file_filename&gt;</em></dt><dd><p>Argument used to define the BED file used for removing features/positions.</p>
+</dd>
+<dt><strong>--subtract-entire-feature</strong></dt><dd><p>Argument used to define if entire features within the input BED should be 
+removed if they overlap with features in subtract-bed.</p>
+</dd>
+<dt><strong>--min-reciprocal-overlap</strong> <em>&lt;overlap_float&gt;</em></dt><dd><p>Argument used to define the minimum reciprocal overlap of features required 
+for removal (e.g. 0.1 indicates 10% overlap).</p>
+</dd>
+<dt><strong>--min-input-overlap</strong> <em>&lt;overlap_float&gt;</em></dt><dd><p>Argument used to define the minimum overlap of input features required for 
+removal.</p>
+</dd>
+<dt><strong>--min-subtract-overlap</strong> <em>&lt;overlap_float&gt;</em></dt><dd><p>Argument used to define the minimum overlap of subtract-bed features required 
+for removal.</p>
+</dd>
+<dt><strong>--subtract-entire-feature</strong></dt><dd><p>Argument used to define that features should be removed from the input BED if
+the minimum overlap of <strong>--min-input-overlap</strong> or <strong>--min-subtract-overlap</strong> 
+is reached.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="extend-utility-command-line-arguments">
+<h2>Extend Utility Command-line Arguments<a class="headerlink" href="#extend-utility-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--extend-flanks</strong> <em>&lt;bp_int&gt;</em></dt><dd><p>Argument used to define the length of base pairs (bp) to extend both upstream
+and downstream of features.</p>
+</dd>
+<dt><strong>--extend-upstream</strong> <em>&lt;bp_int&gt;</em></dt><dd><p>Argument used to define the length of base pairs (bp) to extend upstream of 
+features.</p>
+</dd>
+<dt><strong>--extend-downstream</strong> <em>&lt;bp_int&gt;</em></dt><dd><p>Argument used to define the length of base pairs (bp) to extend downstream of 
+features.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="merge-utility-command-line-arguments">
+<h2>Merge Utility Command-line Arguments<a class="headerlink" href="#merge-utility-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--max-merge-distance</strong> <em>&lt;bp_int&gt;</em></dt><dd><p>Argument used to define the maximum distance allowed between features to be 
+merged.</p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="vcf_bed_to_seq.html" class="btn btn-neutral float-right" title="vcf_bed_to_seq.py: Generate sequences from VCF/BED Files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="vcf_utilities.html" class="btn btn-neutral float-left" title="vcf_utilities.py: VCF Utilities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,445 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>model_creator.py: Model File Creator &mdash; PPP 0.1.7 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Development" href="../develop.html" />
+    <link rel="prev" title="Model File and Creation" href="../model.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">PPP Core Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../input_file_generators.html">PPP Input File Generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analyses.html">PPP Analyses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities.html">PPP Utilities</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../model.html">Model File and Creation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">model_creator.py: Model File Creator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-usage">Command-line Usage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#example-1-simple-model">Example 1: Simple Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-2-model-using-files">Example 2: Model Using Files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-3-update-model-in-model-file">Example 3: Update Model in Model File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example-4-update-population-in-model-file">Example 4: Update Population in Model File</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#standard-model-command-line-arguments">Standard Model Command-line Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#model-update-compatible-command-line-arguments">Model Update: Compatible Command-line Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#population-update-compatible-command-line-arguments">Population Update: Compatible Command-line Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output-command-line-arguments">Output Command-line Arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../develop.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../model.html">Model File and Creation</a> &raquo;</li>
+        
+      <li>model_creator.py: Model File Creator</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Functions/model_creator.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-model_creator">
+<span id="model-creator-py-model-file-creator"></span><h1>model_creator.py: Model File Creator<a class="headerlink" href="#module-model_creator" title="Permalink to this headline">¶</a></h1>
+<p>Many PPP functions were designed to automatically assign relevant populations 
+and/or individuals using a <em>Model</em> file. To enable this functionality, the 
+model_creator.py function may be used to produce <em>Model</em> files by either: i) 
+manually entering the necessary information or ii) by using files with the 
+relevant information. It is also all possible to create multiple models 
+simultaneously and assign populations to more than a single model.</p>
+<a class="reference internal image-reference" href="../../_images/PPP_Model.png"><img alt="../../_images/PPP_Model.png" class="align-center" src="../../_images/PPP_Model.png" style="width: 100%;" /></a>
+<p>A simple way to visualize models are as a hierarchy. Each <em>Model</em> may contain 
+one or more <em>Populations</em> and each <em>Population</em> may contain one or more 
+<em>Individuals</em>.</p>
+<div class="section" id="command-line-usage">
+<h2>Command-line Usage<a class="headerlink" href="#command-line-usage" title="Permalink to this headline">¶</a></h2>
+<p>The model creator may be called using the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>model_creator.py
+</pre></div>
+</div>
+<div class="section" id="example-1-simple-model">
+<h3>Example 1: Simple Model<a class="headerlink" href="#example-1-simple-model" title="Permalink to this headline">¶</a></h3>
+<p>A basic model only require a single population (pop) with a single in individual (ind).
+Only three commands are required:</p>
+<ol class="arabic simple">
+<li><p>Create and name a model: <em>--model 1Pop</em></p></li>
+<li><p>Assign a pop to a model: <em>--model-pop 1Pop Paniscus</em></p></li>
+<li><p>Assign an ind to a pop:  <em>--pop-ind Paniscus Pan_paniscus-9731_LB502</em></p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>model_creator.py --model 1Pop --model-pop 1Pop Paniscus --pop-ind Paniscus Pan_paniscus-9731_LB502
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-2-model-using-files">
+<h3>Example 2: Model Using Files<a class="headerlink" href="#example-2-model-using-files" title="Permalink to this headline">¶</a></h3>
+<p>A model may also be created using two file options:</p>
+<ol class="arabic simple">
+<li><p>Assign multiple pops to model: <em>--model-pop-file 2Pop 2Pops.txt</em></p></li>
+<li><p>Assign multiple inds to pop:   <em>--pop-ind-file Paniscus Paniscus.txt</em></p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>model_creator.py --model 2Pop --model-pop-file 2Pop examples/files/2Pops.txt --pop-ind-file Paniscus examples/files/Paniscus.txt --pop-ind-file Troglodytes examples/files/Troglodytes.txt
+</pre></div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">examples/files/2Pops.txt</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Paniscus
+Troglodytes
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">examples/files/Paniscus.txt</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Pan_paniscus-9731_LB502
+Pan_paniscus-A915_Kosana
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">examples/files/Troglodytes.txt</span><a class="headerlink" href="#id3" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Pan_troglodytes_troglodytes-A957_Vaillant
+Pan_troglodytes_troglodytes-A958_Doris
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="example-3-update-model-in-model-file">
+<h3>Example 3: Update Model in Model File<a class="headerlink" href="#example-3-update-model-in-model-file" title="Permalink to this headline">¶</a></h3>
+<p>A model may be updated if desired using the following options:</p>
+<ol class="arabic simple">
+<li><p>Assign the model file:                             <em>--model-file input.model</em></p></li>
+<li><p>Assign the model to update:                        <em>--update-model 2Pop</em></p></li>
+<li><p>Assign a pop to remove from a model:               <em>--model-rm-pop 2Pop Troglodytes</em></p></li>
+<li><p>Assign a new or previously created pop to a model: <em>--model-pop 2Pop Schweinfurthii</em></p></li>
+<li><p>Assign multiple inds to pop (if new):              <em>--pop-ind-file Schweinfurthii Schweinfurthii.txt</em></p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>model_creator.py --model-file examples/files/input.model --update-model 2Pop --model-pop 2Pop Schweinfurthii --model-rm-pop 2Pop Troglodytes
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-4-update-population-in-model-file">
+<h3>Example 4: Update Population in Model File<a class="headerlink" href="#example-4-update-population-in-model-file" title="Permalink to this headline">¶</a></h3>
+<p>A population may be updated if desired using the following options:</p>
+<ol class="arabic simple">
+<li><p>Assign the model file:             <em>--model-file input.model</em></p></li>
+<li><p>Assign the pop to update:          <em>--update-pop Paniscus</em></p></li>
+<li><p>Assign a ind to add to a pop:      <em>--pop-ind Paniscus Pan_paniscus-Unknown</em></p></li>
+<li><p>Assign a ind to remove from a pop: <em>--pop-rm-ind Paniscus Pan_paniscus-9731_LB502</em></p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>model_creator.py --model-file examples/files/input.model --update-pop Paniscus --pop-ind Paniscus Pan_paniscus-Unknown --pop-rm-ind Paniscus Pan_paniscus-9731_LB502
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="standard-model-command-line-arguments">
+<h2>Standard Model Command-line Arguments<a class="headerlink" href="#standard-model-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<p>Except for <strong>--model-file</strong> all other model-based arguments may be used 
+multiple times.</p>
+<dl class="simple">
+<dt><strong>--model-file</strong> <em>&lt;str&gt;</em></dt><dd><p>Argument used to define the name of a model file.</p>
+</dd>
+<dt><strong>--model</strong> <em>&lt;model_str&gt;</em></dt><dd><p>Argument used to define the name of a model to create.</p>
+</dd>
+<dt><strong>--update-model</strong> <em>&lt;str&gt;</em></dt><dd><p>Argument used to define the name of a model to update. Allows 
+for: i) tree update and ii) populations to be added.</p>
+</dd>
+<dt><strong>--update-pop</strong> <em>&lt;str&gt;</em></dt><dd><p>Argument used to define the name of a population to update. 
+Allows for individuals to be added.</p>
+</dd>
+<dt><strong>--model-tree</strong> <em>&lt;model_str&gt;</em> <em>&lt;newick_str&gt;</em></dt><dd><p>Argument used to assign a population tree to a model, in Newick format.</p>
+</dd>
+<dt><strong>--model-tree-file</strong> <em>&lt;model_str&gt;</em> <em>&lt;newick_file&gt;</em></dt><dd><p>Argument used to assign a population tree file to a model, in Newick 
+format.</p>
+</dd>
+<dt><strong>--model-pop</strong> <em>&lt;model_str&gt;</em> <em>&lt;pop_str&gt;</em></dt><dd><p>Argument used to assign a population to a model.</p>
+</dd>
+<dt><strong>--model-pops</strong> <em>&lt;model_str&gt;</em> <em>&lt;pop1_str&gt;</em> <em>&lt;pop2_str&gt;</em> ..</dt><dd><p>Argument used to assign a multiple populations to a model.</p>
+</dd>
+<dt><strong>--model-pop-file</strong> <em>&lt;model_str&gt;</em> <em>&lt;pop_file&gt;</em></dt><dd><p>Argument used to assign a multiple populations to a model using a file.</p>
+</dd>
+<dt><strong>--pop-ind</strong> <em>&lt;pop_str&gt;</em> <em>&lt;ind_str&gt;</em></dt><dd><p>Argument used to assign a individual to a population.</p>
+</dd>
+<dt><strong>--pop-inds</strong> <em>&lt;pop_str&gt;</em> <em>&lt;ind1_str&gt;</em> <em>&lt;ind2_str&gt;</em> ..</dt><dd><p>Argument used to assign a multiple individuals to a population.</p>
+</dd>
+<dt><strong>--pop-ind-file</strong> <em>&lt;pop_str&gt;</em> <em>&lt;ind_file&gt;</em></dt><dd><p>Argument used to assign a multiple individuals to a population using a file.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="model-update-compatible-command-line-arguments">
+<h2>Model Update: Compatible Command-line Arguments<a class="headerlink" href="#model-update-compatible-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<p>Please note: <strong>--update-model</strong> is required to update a model.</p>
+<dl class="simple">
+<dt><strong>--update-model</strong> <em>&lt;str&gt;</em></dt><dd><p>Argument used to define the name of a model to update. Allows for: 
+i) tree update and ii) populations to be added and/or removed.</p>
+</dd>
+<dt><strong>--model-file</strong> <em>&lt;str&gt;</em></dt><dd><p>Argument used to define the name of a model file.</p>
+</dd>
+<dt><strong>--model-tree</strong> <em>&lt;model_str&gt;</em> <em>&lt;newick_str&gt;</em></dt><dd><p>Argument may be used to replace a population tree, in Newick format.</p>
+</dd>
+<dt><strong>--model-tree-file</strong> <em>&lt;model_str&gt;</em> <em>&lt;newick_file&gt;</em></dt><dd><p>Argument may be used to replace a population usng a tree file, in 
+Newick format.</p>
+</dd>
+<dt><strong>--model-pop</strong> <em>&lt;model_str&gt;</em> <em>&lt;pop_str&gt;</em></dt><dd><p>Argument used to assign a population to the model begin updated.</p>
+</dd>
+<dt><strong>--model-pops</strong> <em>&lt;model_str&gt;</em> <em>&lt;pop1_str&gt;</em> <em>&lt;pop2_str&gt;</em> ..</dt><dd><p>Argument used to assign multiple populations to the model begin updated.</p>
+</dd>
+<dt><strong>--model-pop-file</strong> <em>&lt;model_str&gt;</em> <em>&lt;pop_file&gt;</em></dt><dd><p>Argument used to assign multiple populations to the model begin updated 
+using a file.</p>
+</dd>
+<dt><strong>--model-rm-pop</strong> <em>&lt;model_str&gt;</em> <em>&lt;pop_str&gt;</em></dt><dd><p>Argument used to remove a population to the model begin updated.</p>
+</dd>
+<dt><strong>--model-rm-pops</strong> <em>&lt;model_str&gt;</em> <em>&lt;pop1_str&gt;</em> <em>&lt;pop2_str&gt;</em> ..</dt><dd><p>Argument used to remove multiple populations to the model begin updated.</p>
+</dd>
+<dt><strong>--model-rm-pop-file</strong> <em>&lt;model_str&gt;</em> <em>&lt;pop_file&gt;</em></dt><dd><p>Argument used to remove multiple populations to the model begin updated 
+using a file.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="population-update-compatible-command-line-arguments">
+<h2>Population Update: Compatible Command-line Arguments<a class="headerlink" href="#population-update-compatible-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<p>Please note: <strong>--update-pop</strong> is required to update a population.</p>
+<dl class="simple">
+<dt><strong>--update-pop</strong> <em>&lt;str&gt;</em></dt><dd><p>Argument used to define the name of a population to update. Allows for 
+individuals to be added.</p>
+</dd>
+<dt><strong>--model-file</strong> <em>&lt;str&gt;</em></dt><dd><p>Argument used to define the name of a model file.</p>
+</dd>
+<dt><strong>--pop-ind</strong> <em>&lt;pop_str&gt;</em> <em>&lt;ind_str&gt;</em></dt><dd><p>Argument used to assign a individual to the population begin updated.</p>
+</dd>
+<dt><strong>--pop-inds</strong> <em>&lt;pop_str&gt;</em> <em>&lt;ind1_str&gt;</em> <em>&lt;ind2_str&gt;</em> ..</dt><dd><p>Argument used to assign multiple individuals to the population begin 
+updated.</p>
+</dd>
+<dt><strong>--pop-ind-file</strong> <em>&lt;pop_str&gt;</em> <em>&lt;ind_file&gt;</em></dt><dd><p>Argument used to assign multiple individuals to thr population begin 
+updated using a file.</p>
+</dd>
+<dt><strong>--pop-rm-ind</strong> <em>&lt;pop_str&gt;</em> <em>&lt;ind_str&gt;</em></dt><dd><p>Argument used to remove a individual to the population begin updated.</p>
+</dd>
+<dt><strong>--pop-rm-inds</strong> <em>&lt;pop_str&gt;</em> <em>&lt;ind1_str&gt;</em> <em>&lt;ind2_str&gt;</em> ..</dt><dd><p>Argument used to remove multiple individuals to the population begin 
+updated.</p>
+</dd>
+<dt><strong>--pop-rm-ind-file</strong> <em>&lt;pop_str&gt;</em> <em>&lt;ind_file&gt;</em></dt><dd><p>Argument used to remove multiple individuals to thr population begin 
+updated using a file.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="output-command-line-arguments">
+<h2>Output Command-line Arguments<a class="headerlink" href="#output-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--out</strong> <em>&lt;output_filename&gt;</em></dt><dd><p>Argument used to define the complete output filename.</p>
+</dd>
+<dt><strong>--overwrite</strong></dt><dd><p>Argument used to define if previous output should be overwritten.</p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../develop.html" class="btn btn-neutral float-right" title="Development" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../model.html" class="btn btn-neutral float-left" title="Model File and Creation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,548 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>vcf_BED_to_seqs.py: Generate sequences from VCF/BED Files &mdash; PPP 0.1.7 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Model File and Creation" href="../model.html" />
+    <link rel="prev" title="bed_utilities.py: BED Utilites" href="bed_utilities.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">PPP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../input_file_generators.html">PPP Input File Generators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analyses.html">PPP Analyses</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../utilities.html">PPP Utilities</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="vcf_utilities.html">vcf_utilities.py: VCF Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bed_utilities.html">bed_utilities.py: BED Utilites</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">vcf_BED_to_seqs.py: Generate sequences from VCF/BED Files</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#comments">Comments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#basic-syntax">Basic Syntax</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#links-and-downloads">Links and Downloads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#headings">Headings</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#level-2">Level 2</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#lists">Lists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tables">Tables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#boxes">Boxes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#code">Code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#math">Math</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#images-and-figures">Images and Figures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#misc-elements">Misc Elements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#citations">Citations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#footnotes">Footnotes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Model File and Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Citations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../example_pipeline_pan.html">Example Jupyter Pipleine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../example_pipeline_pan.html#Setting-Filepaths">Setting Filepaths</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../utilities.html">PPP Utilities</a> &raquo;</li>
+        
+      <li>vcf_BED_to_seqs.py: Generate sequences from VCF/BED Files</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Utilities/vcf_BED_to_seqs.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="vcf-bed-to-seqs-py-generate-sequences-from-vcf-bed-files">
+<h1>vcf_BED_to_seqs.py: Generate sequences from VCF/BED Files<a class="headerlink" href="#vcf-bed-to-seqs-py-generate-sequences-from-vcf-bed-files" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-vcf_BED_to_seqs"></span><p>A Sphinx example and cheat sheet.</p>
+<div class="section" id="comments">
+<h2>Comments<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>.. comment This is a comment!
+</pre></div>
+</div>
+</div>
+<div class="section" id="basic-syntax">
+<h2>Basic Syntax<a class="headerlink" href="#basic-syntax" title="Permalink to this headline">¶</a></h2>
+<p><em>italic</em></p>
+<p><strong>bold</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">verbatim</span> <span class="pre">with</span> <span class="pre">special</span> <span class="pre">characters</span> <span class="pre">such</span> <span class="pre">as</span> <span class="pre">*,</span> <span class="pre">also</span> <span class="pre">useful</span> <span class="pre">for</span> <span class="pre">inline</span> <span class="pre">code</span> <span class="pre">examples</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">*</span><span class="n">italic</span><span class="o">*</span>
+
+<span class="o">**</span><span class="n">bold</span><span class="o">**</span>
+
+<span class="sb">``</span><span class="n">verbatim</span> <span class="k">with</span> <span class="n">special</span> <span class="n">characters</span> <span class="n">such</span> <span class="k">as</span> <span class="o">*</span><span class="p">,</span> <span class="n">also</span> <span class="n">useful</span> <span class="k">for</span> <span class="n">inline</span> <span class="n">code</span> <span class="n">examples</span><span class="sb">``</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="links-and-downloads">
+<h2>Links and Downloads<a class="headerlink" href="#links-and-downloads" title="Permalink to this headline">¶</a></h2>
+<p>Hyperlink: <a class="reference external" href="https://davidstutz.de">David Stutz</a></p>
+<p>Download: <code class="xref download docutils literal notranslate"><span class="pre">__init__.py</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Hyperlink</span><span class="p">:</span> <span class="sb">`David Stutz &lt;https://davidstutz.de&gt;`</span><span class="n">_</span>
+
+<span class="n">Download</span><span class="p">:</span> <span class="p">:</span><span class="n">download</span><span class="p">:</span><span class="sb">`__init__.py &lt;../../module/__init__.py&gt;`</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="headings">
+<h2>Headings<a class="headerlink" href="#headings" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="level-2">
+<h3>Level 2<a class="headerlink" href="#level-2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="level-3">
+<h4>Level 3<a class="headerlink" href="#level-3" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="level-4">
+<h5>Level 4<a class="headerlink" href="#level-4" title="Permalink to this headline">¶</a></h5>
+<div class="section" id="level-5">
+<h6>Level 5<a class="headerlink" href="#level-5" title="Permalink to this headline">¶</a></h6>
+<p>Note that level 5 does not impose any styling, but is added to the table of contents
+on the left.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Headings</span>
+<span class="c1">########</span>
+
+<span class="n">Level</span> <span class="mi">2</span>
+<span class="o">*******</span>
+
+<span class="n">Level</span> <span class="mi">3</span>
+<span class="o">=======</span>
+
+<span class="n">Level</span> <span class="mi">4</span>
+<span class="o">-------</span>
+
+<span class="n">Level</span> <span class="mi">5</span>
+<span class="o">^^^^^^^</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="lists">
+<h2>Lists<a class="headerlink" href="#lists" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Item 1</p></li>
+<li><p>Item 2</p></li>
+<li><p>Item 3</p></li>
+<li><p>Multi-
+line item</p></li>
+</ul>
+<ol class="arabic simple">
+<li><p>Item 1</p></li>
+<li><p>Item 2</p></li>
+<li><p>Item 3</p></li>
+<li><p>Item 4</p></li>
+<li><p>Item 5</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">*</span> <span class="n">Item</span> <span class="mi">1</span>
+<span class="o">*</span> <span class="n">Item</span> <span class="mi">2</span>
+<span class="o">*</span> <span class="n">Item</span> <span class="mi">3</span>
+
+<span class="o">*</span> <span class="n">Multi</span><span class="o">-</span>
+  <span class="n">line</span> <span class="n">item</span>
+
+<span class="mf">1.</span> <span class="n">Item</span> <span class="mi">1</span>
+<span class="mf">2.</span> <span class="n">Item</span> <span class="mi">2</span>
+<span class="mf">3.</span> <span class="n">Item</span> <span class="mi">3</span>
+
+<span class="c1">#. Item 4</span>
+<span class="c1">#. Item 5</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tables">
+<h2>Tables<a class="headerlink" href="#tables" title="Permalink to this headline">¶</a></h2>
+<p>Complex variant:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Header 1</p></th>
+<th class="head"><p>Header 2</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Cell 1.1</p></td>
+<td><p>Cell 1.2</p></td>
+</tr>
+<tr class="row-odd"><td colspan="2"><p>Multi-column</p></td>
+</tr>
+<tr class="row-even"><td><p>Cell 3.1</p></td>
+<td rowspan="2"><p>Multi-row</p></td>
+</tr>
+<tr class="row-odd"><td><p>Cell 4.1</p></td>
+</tr>
+</tbody>
+</table>
+<p>Another, simpler variant:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Header 1</p></th>
+<th class="head"><p>Header 2</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Cell 1.1</p></td>
+<td><p>Cell 1.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>Cell 2.1</p></td>
+<td><p>Cell 2.2</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">+------------+------------+</span>
+<span class="o">|</span> <span class="n">Header</span> <span class="mi">1</span>   <span class="o">|</span> <span class="n">Header</span> <span class="mi">2</span>   <span class="o">|</span>
+<span class="o">+============+============+</span>
+<span class="o">|</span> <span class="n">Cell</span> <span class="mf">1.1</span>   <span class="o">|</span> <span class="n">Cell</span> <span class="mf">1.2</span>   <span class="o">|</span>
+<span class="o">+------------+------------+</span>
+<span class="o">|</span> <span class="n">Multi</span><span class="o">-</span><span class="n">column</span>            <span class="o">|</span>
+<span class="o">+------------+------------+</span>
+<span class="o">|</span> <span class="n">Cell</span> <span class="mf">3.1</span>   <span class="o">|</span> <span class="n">Multi</span><span class="o">-</span><span class="n">row</span>  <span class="o">|</span>
+<span class="o">+------------+</span>            <span class="o">|</span>
+<span class="o">|</span> <span class="n">Cell</span> <span class="mf">4.1</span>   <span class="o">|</span>            <span class="o">|</span>
+<span class="o">+------------+------------+</span>
+
+<span class="o">========</span> <span class="o">========</span>
+<span class="n">Header</span> <span class="mi">1</span> <span class="n">Header</span> <span class="mi">2</span>
+<span class="o">========</span> <span class="o">========</span>
+<span class="n">Cell</span> <span class="mf">1.1</span> <span class="n">Cell</span> <span class="mf">1.2</span>
+<span class="n">Cell</span> <span class="mf">2.1</span> <span class="n">Cell</span> <span class="mf">2.2</span>
+<span class="o">========</span> <span class="o">========</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="boxes">
+<h2>Boxes<a class="headerlink" href="#boxes" title="Permalink to this headline">¶</a></h2>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>See also box ...</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Warning box ...</p>
+</div>
+</div>
+<div class="section" id="code">
+<h2>Code<a class="headerlink" href="#code" title="Permalink to this headline">¶</a></h2>
+<p>Simple code box:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;done ...&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Line numbers and language option:</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">print</span><span class="p">(</span><span class="s1">&#39;done ...&#39;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="math">
+<h2>Math<a class="headerlink" href="#math" title="Permalink to this headline">¶</a></h2>
+<p>Note that backslashes need to be escaped!</p>
+<p>If the math isn't rendered directly, refresh using Shift + F5 or Ctrl + Shift + R (in most browsers).</p>
+<p>Inline: <span class="math notranslate nohighlight">\(\alpha\)</span></p>
+<p>Block:</p>
+<div class="math notranslate nohighlight">
+\[\sum_{i = 1}^n w_i x_i\]</div>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span>Inline: :math:`<span class="k">\alpha</span>`
+
+Block:
+
+.. math::
+
+    <span class="k">\sum</span><span class="nb">_{</span>i = 1<span class="nb">}^</span>n w<span class="nb">_</span>i x<span class="nb">_</span>i
+</pre></div>
+</div>
+</div>
+<div class="section" id="images-and-figures">
+<h2>Images and Figures<a class="headerlink" href="#images-and-figures" title="Permalink to this headline">¶</a></h2>
+<p>Image:</p>
+<img alt="PPP_pages/Utilities/../images/pocoo.png" src="PPP_pages/Utilities/../images/pocoo.png" />
+<p>Figure:</p>
+<div class="align-center figure" id="id3">
+<img alt="Pocoo" src="PPP_pages/Utilities/../images/pocoo.png" />
+<p class="caption"><span class="caption-text">Pocoo figure ...</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Image</span><span class="p">:</span>
+
+<span class="o">..</span> <span class="n">image</span><span class="p">::</span> <span class="o">../</span><span class="n">images</span><span class="o">/</span><span class="n">pocoo</span><span class="o">.</span><span class="n">png</span>
+
+<span class="n">Figure</span><span class="p">:</span>
+
+<span class="o">..</span> <span class="n">figure</span><span class="p">::</span> <span class="o">../</span><span class="n">images</span><span class="o">/</span><span class="n">pocoo</span><span class="o">.</span><span class="n">png</span>
+    <span class="p">:</span><span class="n">align</span><span class="p">:</span> <span class="n">center</span>
+    <span class="p">:</span><span class="n">alt</span><span class="p">:</span> <span class="n">Pocoo</span>
+    <span class="p">:</span><span class="n">figclass</span><span class="p">:</span> <span class="n">align</span><span class="o">-</span><span class="n">center</span>
+    
+    <span class="n">Pocoo</span> <span class="n">figure</span> <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="misc-elements">
+<h2>Misc Elements<a class="headerlink" href="#misc-elements" title="Permalink to this headline">¶</a></h2>
+<p>Topic:</p>
+<div class="topic">
+<p class="topic-title first">My Topic</p>
+<p>My topic text ...</p>
+</div>
+<p>Sidebar:</p>
+<div class="sidebar">
+<p class="sidebar-title">My Sidebar</p>
+<p>My sidebar text ...</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">topic</span><span class="p">::</span> <span class="n">My</span> <span class="n">Topic</span>
+
+    <span class="n">My</span> <span class="n">topic</span> <span class="n">text</span> <span class="o">...</span>
+
+<span class="o">..</span> <span class="n">sidebar</span><span class="p">::</span> <span class="n">My</span> <span class="n">Sidebar</span>
+    
+    <span class="n">My</span> <span class="n">sidebar</span> <span class="n">text</span> <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="citations">
+<h2>Citations<a class="headerlink" href="#citations" title="Permalink to this headline">¶</a></h2>
+<p>Citation in text <a class="reference internal" href="#r4e346434b400-stutz2015" id="id1">[Stutz2015]</a></p>
+<dl class="citation">
+<dt class="label" id="r4e346434b400-stutz2015"><span class="brackets"><a class="fn-backref" href="#id1">Stutz2015</a></span></dt>
+<dd><ol class="upperalpha simple" start="4">
+<li><p>Stutz. Superpixel Segmentation: An Evaluation. GCPR, 2015.</p></li>
+</ol>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Citation</span> <span class="ow">in</span> <span class="n">text</span> <span class="p">[</span><span class="n">R4e346434b400</span><span class="o">-</span><span class="n">Stutz2015</span><span class="p">]</span><span class="n">_</span>
+
+<span class="o">..</span> <span class="p">[</span><span class="n">R4e346434b400</span><span class="o">-</span><span class="n">Stutz2015</span><span class="p">]</span> <span class="n">D</span><span class="o">.</span> <span class="n">Stutz</span><span class="o">.</span> <span class="n">Superpixel</span> <span class="n">Segmentation</span><span class="p">:</span> <span class="n">An</span> <span class="n">Evaluation</span><span class="o">.</span> <span class="n">GCPR</span><span class="p">,</span> <span class="mf">2015.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="footnotes">
+<h2>Footnotes<a class="headerlink" href="#footnotes" title="Permalink to this headline">¶</a></h2>
+<p>The footnote section needs to be added at the end ...</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Footnote</span> <span class="p">[</span><span class="c1">#f]_</span>
+
+<span class="o">..</span> <span class="n">comment</span><span class="p">::</span> <span class="o">...</span>
+
+<span class="o">..</span> <span class="n">rubric</span><span class="p">::</span> <span class="n">Footnotes</span>
+
+<span class="o">..</span> <span class="p">[</span><span class="c1">#f] Footenote text ...</span>
+</pre></div>
+</div>
+<p>Footnote <a class="footnote-reference brackets" href="#f" id="id2">1</a></p>
+<p class="rubric">Footnotes</p>
+<dl class="footnote brackets">
+<dt class="label" id="f"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dd><p>Footenote text ...</p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../model.html" class="btn btn-neutral float-right" title="Model File and Creation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="bed_utilities.html" class="btn btn-neutral float-left" title="bed_utilities.py: BED Utilites" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

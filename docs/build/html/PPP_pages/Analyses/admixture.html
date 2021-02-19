@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>admixture.py: Admixture Analysis &mdash; PPP 0.1.7 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="ima3_wrapper.py: IMa3 Analysis" href="ima3_wrapper.html" />
+    <link rel="prev" title="eigenstrat_fstats.py: F-statistics Analysis" href="eigenstrat_fstats.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PPP
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../functions.html">PPP Core Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../input_file_generators.html">PPP Input File Generators</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../analyses.html">PPP Analyses</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="eigenstrat_fstats.html">eigenstrat_fstats.py: F-statistics Analysis</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">admixture.py: Admixture Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#command-line-usage">Command-line Usage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#example-usage">Example usage</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#input-command-line-arguments">Input Command-line Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output-command-line-arguments">Output Command-line Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#required-command-line-arguments">Required Command-line Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optional-command-line-arguments">Optional Command-line Arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ima3_wrapper.html">ima3_wrapper.py: IMa3 Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plink_linkage_disequilibrium.html">plink_linkage_disequilibrium.py: Linkage Disequilibrium Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vcf_to_sfs.html">vcf_to_sfs.py: Site Frequency Spectrum generator</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities.html">PPP Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model.html">Model File and Creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact Us</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PPP</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../analyses.html">PPP Analyses</a> &raquo;</li>
+        
+      <li>admixture.py: Admixture Analysis</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/PPP_pages/Analyses/admixture.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-admixture">
+<span id="admixture-py-admixture-analysis"></span><h1>admixture.py: Admixture Analysis<a class="headerlink" href="#module-admixture" title="Permalink to this headline">¶</a></h1>
+<p>Automates the estimation of individual ancestries using Admixture. The
+functions allows for input as: i) Binary-PED files or ii) PED 12-formatted
+files. The function is also capable of configuring the optional arguments
+of Admixture.</p>
+<div class="section" id="command-line-usage">
+<h2>Command-line Usage<a class="headerlink" href="#command-line-usage" title="Permalink to this headline">¶</a></h2>
+<p>The admixture automater may be called using the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>admixture.py
+</pre></div>
+</div>
+<div class="section" id="example-usage">
+<h3>Example usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h3>
+<p>Estimating individual ancestries for each sample within <em>hapmap3.bed</em>
+for three ancestral populations.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>admixture.py --binary-ped-prefix hapmap3 --pop <span class="m">3</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="http://software.genetics.ucla.edu/admixture/">Admixture</a></p></li>
+</ul>
+</div>
+<div class="section" id="input-command-line-arguments">
+<h2>Input Command-line Arguments<a class="headerlink" href="#input-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--ped-12-prefix</strong> <em>&lt;input_prefix&gt;</em></dt><dd><p>Argument used to define the filename prefix shared by the 12-formatted ped 
+file (.ped) and the map file (.map). Should not be used alongside the 
+specific file arguments (e.g. --ped).</p>
+</dd>
+<dt><strong>--ped-12</strong> <em>&lt;ped_filename&gt;</em></dt><dd><p>Argument used to define the filename of the plink 12-formatted ped file 
+(.ped). Must be called alongside --map. Cannot be called alongside 
+--ped-prefix.</p>
+</dd>
+<dt><strong>--map</strong> <em>&lt;map_filename&gt;</em></dt><dd><p>Argument used to define the filename of the plink map file (.map). Must be 
+called alongside --ped. Cannot be called alongside --ped-prefix.</p>
+</dd>
+<dt><strong>--binary-ped-prefix</strong> <em>&lt;input_prefix&gt;</em></dt><dd><p>Argument used to define the filename prefix shared by the binary ped file
+(.bed), the fam file (.fam), and the bim file (.bim). Should not be used 
+alongside the specific file arguments (e.g. --binary-ped).</p>
+</dd>
+<dt><strong>--binary-ped</strong> <em>&lt;binary_ped_filename&gt;</em></dt><dd><p>Argument used to define the filename of the plink binary ped file (.bed). 
+Must be called alongside --fam and --bim. Cannot be called alongside 
+--binary-ped-prefix.</p>
+</dd>
+<dt><strong>--fam</strong> <em>&lt;fam_filename&gt;</em></dt><dd><p>Argument used to define the filename of the plink fam file (.fam). Must be 
+called alongside --binary-ped and --bim. Cannot be called alongside 
+--binary-ped-prefix.</p>
+</dd>
+<dt><strong>--bim</strong> <em>&lt;bim_filename&gt;</em></dt><dd><p>Argument used to define the filename of the plink bim file (.bim). Must be 
+called alongside --binary-ped and --fam. Cannot be called alongside 
+--binary-ped-prefix.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="output-command-line-arguments">
+<h2>Output Command-line Arguments<a class="headerlink" href="#output-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--overwrite</strong></dt><dd><p>Argument used to define if previous output should be overwritten.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="required-command-line-arguments">
+<h2>Required Command-line Arguments<a class="headerlink" href="#required-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--pop</strong> <em>&lt;K_int&gt;</em></dt><dd><p>Argument used to defines the number of ancestral populations.</p>
+</dd>
+<dt><strong>--admix-method</strong> <em>&lt;em, block&gt;</em></dt><dd><p>Argument used to define the algorithm to use. Two algorithm are supported: 
+Block relaxation algorithm (block) or EM algorithm (em). By default, the 
+Block relaxation algorithm is used.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="optional-command-line-arguments">
+<h2>Optional Command-line Arguments<a class="headerlink" href="#optional-command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="simple">
+<dt><strong>--acceleration</strong> <em>&lt;acceleration_int&gt;</em></dt><dd><p>Argument used to defines the value of quasi-Newton acceleration method.</p>
+</dd>
+<dt><strong>--major-converge-likelihood</strong> <em>&lt;likelihood_float&gt;</em></dt><dd><p>Argument used to define the major terminaton criterion. Halt when the
+log-likelihood increases by less than the specified value between
+iterations.</p>
+</dd>
+<dt><strong>--major-converge-iter</strong> <em>&lt;iter_int&gt;</em></dt><dd><p>Argument used to define the major terminaton criterion. Defines the
+maximum number of iterations.</p>
+</dd>
+<dt><strong>--minor-converge-likelihood</strong> <em>&lt;likelihood_float&gt;</em></dt><dd><p>Argument used to define the minor terminaton criterion. Halt when the
+log-likelihood increases by less than the specified value between
+iterations.</p>
+</dd>
+<dt><strong>--minor-converge-iter</strong> <em>&lt;iter_int&gt;</em></dt><dd><p>Argument used to define the minor terminaton criterion. Defines the
+maximum number of iterations.</p>
+</dd>
+<dt><strong>--bootstrap</strong> <em>&lt;bootstrap_int&gt;</em></dt><dd><p>Argument used to define the number of bootstrap replicates.</p>
+</dd>
+<dt><strong>--random-seed</strong> <em>&lt;seed_int&gt;</em></dt><dd><p>Argument used to define the seed value for the random number generator.</p>
+</dd>
+<dt><strong>--threads</strong> <em>&lt;thread_int&gt;</em></dt><dd><p>Argument used to define the number of threads to be used for computation.</p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ima3_wrapper.html" class="btn btn-neutral float-right" title="ima3_wrapper.py: IMa3 Analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="eigenstrat_fstats.html" class="btn btn-neutral float-left" title="eigenstrat_fstats.py: F-statistics Analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, PPP Development Team. This material is based upon work supported by the National Science Foundation under Grant Number (NSF ABI 1564659 to Arun Sethuraman and Jody Hey)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

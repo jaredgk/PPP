@@ -1,0 +1,5 @@
+===============================
+autodoc_template.py: Show sphynx autodc examples
+===============================
+.. automodule:: autodoc_template
+
