@@ -260,17 +260,20 @@ def run (**kwargs):
 if __name__ == "__main__":
     initLogger()
     run(**gphocs_parser())
-    exit()
-    debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz',
-            '--reference',"..//jhtests//pan_example_ref.fa",
-            '--model-file',"..//jhtests//panmodels.model",
-            '--modelname',"4Pop",
-            '--bed-file',"..//jhtests//pan_example_regions.bed",
-            '--out','..//jhtests//results//vcf_gphocs_test.out']
-    run(debugargs)
-    debugargs = ['--vcf','..//jhtests//pan_example2.vcf.gz','--reference',
-                 "..//jhtests//chr22_pan_example2_ref.fa",
-            '--model-file',"..//jhtests//panmodels.model",'--modelname',"4Pop",
-            '--bed-file',"..//jhtests//pan_test_regions.bed",
-            '--out','..//jhtests//results//vcf_gphocs_test2.out','--diploid','False']
-    run(debugargs)
+    sys.exit()
+    # test using a vcf file
+    debugargs = """--vcf //home//jodyhey//temp//PPP//tests//input//pan_example.vcf.gz --reference //home//jodyhey//temp//PPP//tests//input//pan_example_ref.fa  --model-file //home//jodyhey//temp//PPP//tests//input//panmodels.model  --modelname 4Pop             --bed-file //home//jodyhey//temp//PPP//tests//input//pan_example_regions.bed  --out ..//jhtests//results//vcf_gphocs_test.out  """
+    # debugargs = ['--vcf','//home//jodyhey//temp//PPP//tests//input//pan_example.vcf.gz',
+            # '--reference',"//home//jodyhey//temp//PPP//tests//input//pan_example_ref.fa",
+            # '--model-file',"//home//jodyhey//temp//PPP//tests//input//panmodels.model",
+            # '--modelname',"4Pop",
+            # '--bed-file',"//home//jodyhey//temp//PPP//tests//input//pan_example_regions.bed",
+            # '--out','..//jhtests//results//vcf_gphocs_test.out']
+    # test using a vcf file and a bed file, this one does not work because file is in wrong folder
+    debugargs = "--vcf ..//jhtests//pan_example2.vcf.gz --reference ..//jhtests//chr22_pan_example2_ref.fa --model-file ..//jhtests//panmodels.model --modelname 4Pop --bed-file ..//jhtests//pan_test_regions.bed --out ..//jhtests//results//vcf_gphocs_test2.out --diploid False"
+    # debugargs = ['--vcf','..//jhtests//pan_example2.vcf.gz','--reference',
+    #              "..//jhtests//chr22_pan_example2_ref.fa",
+    #         '--model-file',"..//jhtests//panmodels.model",'--modelname',"4Pop",
+    #         '--bed-file',"..//jhtests//pan_test_regions.bed",
+    #         '--out','..//jhtests//results//vcf_gphocs_test2.out','--diploid','False']
+    # run(**gphocs_parser(passed_arguments=debugargs))
