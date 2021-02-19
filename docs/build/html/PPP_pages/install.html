@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; PPP 0.1.7 documentation</title>
+  <title>Installation &mdash; PPP 0.1.11 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="next" title="Usage and Examples" href="examples.html" />
     <link rel="prev" title="Introduction" href="intro.html" /> 
 </head>
 
@@ -85,11 +85,17 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#python-dependencies">Python Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#other-dependencies">Other Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-pypi">From PyPi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-conda">From Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-source">From Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#python-dependencies">Python Dependencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-dependencies">Other Dependencies</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Usage and Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">PPP Core Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input_file_generators.html">PPP Input File Generators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="analyses.html">PPP Analyses</a></li>
@@ -188,12 +194,40 @@
 </style>
 <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>Once downloaded, the PPP may be installed using the following pip command within the source directory:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install -e .
+<div class="section" id="from-pypi">
+<h2>From PyPi<a class="headerlink" href="#from-pypi" title="Permalink to this headline">¶</a></h2>
+<p>The PPP can also be easily installed via the PyPi repository via pip:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install py-popgen
 </pre></div>
 </div>
+</div>
+<div class="section" id="from-conda">
+<h2>From Conda<a class="headerlink" href="#from-conda" title="Permalink to this headline">¶</a></h2>
+<p>The PPP has conda packages available for python versions 3.6 and 3.7. To install in a clean environment, run the following:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda create -n py-popgen <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.7
+conda activate py-popgen
+conda install -c jaredgk -c bioconda py-popgen
+</pre></div>
+</div>
+</div>
+<div class="section" id="from-source">
+<h2>From Source<a class="headerlink" href="#from-source" title="Permalink to this headline">¶</a></h2>
+<p>The most current version of the PPP can be installed by obtaining the source code from the PPP GitHub repository. This can be done with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/jaredgk/PPP
+</pre></div>
+</div>
+<p>It can then be installed with either of these two commands, after CDing into the created directory (first allows editing the source code, second installs from source):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install -e .
+
+python setup.py install
+</pre></div>
+</div>
+</div>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>If installing PPP from source, multiple python and non-python depencencies must also be installed.</p>
 <div class="section" id="python-dependencies">
-<h2>Python Dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h2>
+<h3>Python Dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h3>
 <p>The PPP requries a number of python libraries, including:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.scipy.org/about.html">The SciPy Ecosystem</a> (i.e. numpy, scipy, pandas, matplotlib, etc.)</p></li>
@@ -205,7 +239,7 @@
 <p>We recommend users install and maintain these libraries using either <a class="reference external" href="https://pypi.org/project/pip/">pip</a> or <a class="reference external" href="https://www.anaconda.com/distribution/#download-section">Anaconda 3</a>.</p>
 </div>
 <div class="section" id="other-dependencies">
-<h2>Other Dependencies<a class="headerlink" href="#other-dependencies" title="Permalink to this headline">¶</a></h2>
+<h3>Other Dependencies<a class="headerlink" href="#other-dependencies" title="Permalink to this headline">¶</a></h3>
 <p>The PPP also requries a number of executables to be installed, including:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://vcftools.github.io/index.html">VCFtools</a></p></li>
@@ -219,6 +253,7 @@
 <p>Please note that VCFtools, BCFtools, Samtools, HTSlib, plink 1.9, plink 2.0, and SHAPEIT may be installed using <a class="reference external" href="https://www.anaconda.com/distribution/#download-section">Anaconda 3</a>.</p>
 </div>
 </div>
+</div>
 
 
            </div>
@@ -228,7 +263,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="examples.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="Usage and Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="intro.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

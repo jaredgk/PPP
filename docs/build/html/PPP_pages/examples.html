@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Examples &mdash; PPP 0.1.7 documentation</title>
+  <title>Usage and Examples &mdash; PPP 0.1.11 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -85,10 +85,13 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#function-examples">Function Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#jupyter-notebook-pipelines">Jupyter Notebook Pipelines</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="jupyter/example_pipeline_pan.html">Example Jupyter Pipleine</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage and Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#command-line-usage-and-examples">Command-line Usage and Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-usage-and-examples">Module Usage and Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#example-jupyter-notebooks">Example Jupyter Notebooks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="jupyter/example_pipeline_pan.html">Example Jupyter Pipleine</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -146,7 +149,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Examples</li>
+      <li>Usage and Examples</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -189,28 +192,44 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="examples">
-<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="function-examples">
-<h2>Function Examples<a class="headerlink" href="#function-examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="usage-and-examples">
+<h1>Usage and Examples<a class="headerlink" href="#usage-and-examples" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="command-line-usage-and-examples">
+<h2>Command-line Usage and Examples<a class="headerlink" href="#command-line-usage-and-examples" title="Permalink to this headline">¶</a></h2>
 <p>PPP functions may be called at the command-line as shown in this example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vcf_filter.py --vcf examples/files/merged_chr1_10000.vcf.gz --filter-only-biallelic --out-format bcf
 </pre></div>
 </div>
-<p>Details on the usage of each specific function may be found within the <em>Example usage</em> section of the function’s documentation. In addition, all files shown within these examples may be found within <strong>examples/files</strong> directory of the PPP repository.</p>
+<p>Details on the usage and arguments of each function may be found within the relevant documentation. In addition, all files specified within these examples may be found within the <strong>examples/files</strong> directory of the PPP repository.</p>
 </div>
-<div class="section" id="jupyter-notebook-pipelines">
-<h2>Jupyter Notebook Pipelines<a class="headerlink" href="#jupyter-notebook-pipelines" title="Permalink to this headline">¶</a></h2>
-<p>All PPP functions may also be used within a <a class="reference external" href="https://jupyter.org/">Jupyter Notebook</a>. We have included two example notebooks.</p>
+<div class="section" id="module-usage-and-examples">
+<h2>Module Usage and Examples<a class="headerlink" href="#module-usage-and-examples" title="Permalink to this headline">¶</a></h2>
+<p>PPP functions may also be imported from the <strong>pgpipe</strong> module for use within a python script or a <a class="reference external" href="https://jupyter.org/">Jupyter Notebook</a> as shown in this example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pgpipe.vcf_filter</span> <span class="k">as</span> <span class="nn">vcf_filter</span>
+
+<span class="n">vcf_filter</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">vcf</span> <span class="o">=</span> <span class="s1">&#39;examples/files/merged_chr1_10000.vcf.gz&#39;</span><span class="p">,</span> <span class="n">filter_only_biallelic</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">out_format</span> <span class="o">=</span> <span class="s1">&#39;bcf&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In comparison to calling functions at the command-line, imported functions require:</p>
+<ul class="simple">
+<li><p>The pgpipe module must be imported</p></li>
+<li><p>Each function is called using .run(): <strong>vcf_filter.run() or pgpipe.vcf_filter.run()</strong></p></li>
+<li><p>The use of underscores within arguments rather than dashes: <strong>--out-format vs. out_format</strong></p></li>
+<li><p>Setting the value to True when arguments do not require a value: <strong>--filter-only-biallelic vs. filter_only_biallelic = True</strong></p></li>
+</ul>
+<div class="section" id="example-jupyter-notebooks">
+<h3>Example Jupyter Notebooks<a class="headerlink" href="#example-jupyter-notebooks" title="Permalink to this headline">¶</a></h3>
+<p>We have included two example notebooks within the <strong>examples/jupyter</strong> directory of the PPP repository.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="jupyter/example_pipeline_pan.html">Example Jupyter Pipleine</a></li>
 </ul>
 </div>
-<p>The Jupyter Notebooks may also be download:</p>
+<p>Jupyter Notebooks may also be download using the following links:</p>
 <ul class="simple">
-<li><p><a class="reference download internal" download="" href="../_downloads/c3bb657922daa592f1049e474adc08ef/example_pipeline_pan.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Example</span> <span class="pre">Jupyter</span> <span class="pre">Pipleine</span></code></a>.</p></li>
+<li><p><a class="reference download internal" download="" href="../_downloads/65e7e92081877410e96c45fe275ce924/example_pipeline_pan.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Example</span> <span class="pre">Jupyter</span> <span class="pre">Pipleine</span></code></a>.</p></li>
 </ul>
+</div>
 </div>
 </div>
 

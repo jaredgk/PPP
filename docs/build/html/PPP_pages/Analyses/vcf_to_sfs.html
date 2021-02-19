@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>vcf_to_sfs.py: Site Frequency Spectrum generator &mdash; PPP 0.1.7 documentation</title>
+  <title>vcf_to_sfs.py: Site Frequency Spectrum generator &mdash; PPP 0.1.11 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -85,7 +85,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Usage and Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">PPP Core Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../input_file_generators.html">PPP Input File Generators</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../analyses.html">PPP Analyses</a><ul class="current">
@@ -346,9 +346,9 @@ if out is not None,  this will write a tab-delimited file of the array</p>
 2
 3
 4
-5</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vcf_to_sfs</span> <span class="kn">as</span> <span class="nn">vs</span>
+5</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vcf_to_sfs</span> <span class="k">as</span> <span class="nn">vs</span>
 <span class="n">mysfs</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">build_sfs</span><span class="p">(</span><span class="n">pan_example2</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">gz</span><span class="p">,</span><span class="n">panmodels</span><span class="o">.</span><span class="n">model</span><span class="p">,</span><span class="s1">&#39;4Pop&#39;</span><span class="p">,</span>
-        <span class="n">folded</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">downsamplesizes</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span>
+        <span class="n">folded</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">downsamplesizes</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span>
         <span class="n">altreference</span><span class="o">=</span><span class="s1">&#39;chr22_pan_example2_ref.fa&#39;</span><span class="p">,</span>
         <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;mysfsfile.txt&#39;</span><span class="p">)</span>
 </pre></div>
@@ -374,7 +374,7 @@ sfs corresponds.</p></li>
 <p>Example python code:</p>
 <div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
-3</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vcf_to_sfs</span> <span class="kn">as</span> <span class="nn">vs</span>
+3</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">vcf_to_sfs</span> <span class="k">as</span> <span class="nn">vs</span>
 <span class="n">myreducedsfs</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">reduce_sfs_dim</span><span class="p">(</span><span class="n">mysfs</span><span class="p">,</span><span class="n">mypopmodel</span><span class="p">,</span>
         <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span><span class="s1">&#39;B&#39;</span><span class="p">,</span><span class="s1">&#39;C&#39;</span><span class="p">],</span><span class="n">out</span><span class="o">=</span><span class="s2">&quot;myreducedsfs_file.txt&quot;</span><span class="p">)</span>
 </pre></div>

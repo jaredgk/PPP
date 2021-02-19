@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Example Jupyter Pipleine &mdash; PPP 0.1.7 documentation</title>
+  <title>Example Jupyter Pipleine &mdash; PPP 0.1.11 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="PPP Core Functions" href="../functions.html" />
-    <link rel="prev" title="Examples" href="../examples.html" /> 
+    <link rel="prev" title="Usage and Examples" href="../examples.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,11 +85,11 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Examples</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../examples.html#function-examples">Function Examples</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../examples.html#jupyter-notebook-pipelines">Jupyter Notebook Pipelines</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Example Jupyter Pipleine</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Setting-Filepaths">Setting Filepaths</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Usage and Examples</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../examples.html#command-line-usage-and-examples">Command-line Usage and Examples</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../examples.html#module-usage-and-examples">Module Usage and Examples</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../examples.html#example-jupyter-notebooks">Example Jupyter Notebooks</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Example Jupyter Pipleine</a></li>
 </ul>
 </li>
 </ul>
@@ -149,7 +149,7 @@
     
       <li><a href="../../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../examples.html">Examples</a> &raquo;</li>
+          <li><a href="../examples.html">Usage and Examples</a> &raquo;</li>
         
       <li>Example Jupyter Pipleine</li>
     
@@ -175,21 +175,35 @@
 /* CSS for nbsphinx extension */
 
 /* remove conflicting styling from Sphinx themes */
-div.nbinput.container,
-div.nbinput.container div.prompt,
-div.nbinput.container div.input_area,
-div.nbinput.container div[class*=highlight],
-div.nbinput.container div[class*=highlight] pre,
-div.nboutput.container,
-div.nboutput.container div.prompt,
-div.nboutput.container div.output_area,
-div.nboutput.container div[class*=highlight],
-div.nboutput.container div[class*=highlight] pre {
-    background: none;
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
     border: none;
-    padding: 0 0;
+    padding: 0;
     margin: 0;
     box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
 }
 
 /* avoid gaps between output lines */
@@ -290,7 +304,7 @@ div.nboutput.container div.output_area {
 div.nbinput.container div.input_area {
     border: 1px solid #e0e0e0;
     border-radius: 2px;
-    background: #f5f5f5;
+    /*background: #f5f5f5;*/
 }
 
 /* override MathJax center alignment in output cells */
@@ -356,6 +370,7 @@ div.nboutput.container div.output_area.rendered_html,
 div.nboutput.container div.output_area > div.output_javascript,
 div.nboutput.container div.output_area:not(.rendered_html) > img{
     padding: 5px;
+    margin: 0;
 }
 
 /* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
@@ -436,10 +451,10 @@ div.rendered_html tbody tr:hover {
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 
-<span class="kn">from</span> <span class="nn">pgpipe</span> <span class="k">import</span> <span class="n">four_gamete</span><span class="p">,</span> <span class="n">vcf_split_pysam</span><span class="p">,</span> <span class="n">vcf_to_ima</span><span class="p">,</span> <span class="n">vcf_filter</span><span class="p">,</span> <span class="n">vcf_calc</span><span class="p">,</span> <span class="n">vcf_sampler</span><span class="p">,</span> <span class="n">vcf_phase</span><span class="p">,</span> <span class="n">stat_sampler</span><span class="p">,</span> <span class="n">vcf_split</span>
-<span class="kn">from</span> <span class="nn">pgpipe.logging_module</span> <span class="k">import</span> <span class="n">initLogger</span>
-<span class="kn">from</span> <span class="nn">pgpipe.informative_loci_filter</span> <span class="k">import</span> <span class="n">filter_bed_regions</span>
-<span class="kn">from</span> <span class="nn">pgpipe.subtract_bed</span> <span class="k">import</span> <span class="n">filter_stat</span>
+<span class="kn">from</span> <span class="nn">pgpipe</span> <span class="kn">import</span> <span class="n">four_gamete</span><span class="p">,</span> <span class="n">vcf_split_pysam</span><span class="p">,</span> <span class="n">vcf_to_ima</span><span class="p">,</span> <span class="n">vcf_filter</span><span class="p">,</span> <span class="n">vcf_calc</span><span class="p">,</span> <span class="n">vcf_sampler</span><span class="p">,</span> <span class="n">vcf_phase</span><span class="p">,</span> <span class="n">stat_sampler</span><span class="p">,</span> <span class="n">vcf_split</span>
+<span class="kn">from</span> <span class="nn">pgpipe.logging_module</span> <span class="kn">import</span> <span class="n">initLogger</span>
+<span class="kn">from</span> <span class="nn">pgpipe.informative_loci_filter</span> <span class="kn">import</span> <span class="n">filter_bed_regions</span>
+<span class="kn">from</span> <span class="nn">pgpipe.subtract_bed</span> <span class="kn">import</span> <span class="n">filter_stat</span>
 <span class="kn">import</span> <span class="nn">pysam</span>
 
 <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Imports complete&quot;</span><span class="p">)</span>
@@ -734,7 +749,7 @@ IMa input created
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1">#Admixture analysis, optional</span>
-<span class="kn">from</span> <span class="nn">pgpipe</span> <span class="k">import</span> <span class="n">convert</span><span class="p">,</span> <span class="n">admixture</span><span class="p">,</span> <span class="n">graph_plotter</span>
+<span class="kn">from</span> <span class="nn">pgpipe</span> <span class="kn">import</span> <span class="n">convert</span><span class="p">,</span> <span class="n">admixture</span><span class="p">,</span> <span class="n">graph_plotter</span>
 <span class="n">phased_string</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">phased_files</span><span class="p">)</span>
 <span class="n">loci_vcf</span> <span class="o">=</span> <span class="n">vcf_dir</span><span class="o">+</span><span class="s1">&#39;Phased/phased_merged.vcf.gz&#39;</span>
 <span class="n">concatcall</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="s1">&#39;vcf-concat &#39;</span><span class="o">+</span><span class="n">phased_string</span><span class="o">+</span> <span class="s1">&#39; | bgzip -c &gt; &#39;</span><span class="o">+</span><span class="n">loci_vcf</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
@@ -769,7 +784,7 @@ IMa input created
         <a href="../functions.html" class="btn btn-neutral float-right" title="PPP Core Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../examples.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../examples.html" class="btn btn-neutral float-left" title="Usage and Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

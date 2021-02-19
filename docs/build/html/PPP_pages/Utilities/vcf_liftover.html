@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>VCF Liftover &mdash; PPP 0.1.7 documentation</title>
+  <title>VCF Liftover &mdash; PPP 0.1.11 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -83,7 +83,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Usage and Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">PPP Core Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../input_file_generators.html">PPP Input File Generators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../analyses.html">PPP Analyses</a></li>
@@ -180,81 +180,8 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="module-vcf_liftover">
-<span id="vcf-liftover"></span><h1>VCF Liftover<a class="headerlink" href="#module-vcf_liftover" title="Permalink to this headline">¶</a></h1>
-<p>Automates the liftover function from picard for VCF-formatted files.</p>
-<div class="section" id="command-line-usage">
-<h2>Command-line Usage<a class="headerlink" href="#command-line-usage" title="Permalink to this headline">¶</a></h2>
-<p>The VCF liftover function may be called using the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vcf_liftover.py
-</pre></div>
-</div>
-<div class="section" id="example-usage">
-<h3>Example usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h3>
-<p>Converting an hg19 VCF file <a href="#id1"><span class="problematic" id="id2">**</span></a>chr22.vcf.gz ** to hg38.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>vcf_liftover.py --vcf chr22.vcf.gz --chain hg19ToHg38.over.chain
-</pre></div>
-</div>
-</div>
-</div>
-<div class="section" id="dependencies">
-<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p><a class="reference external" href="https://broadinstitute.github.io/picard/">Picard</a></p></li>
-</ul>
-</div>
-<div class="section" id="input-command-line-arguments">
-<h2>Input Command-line Arguments<a class="headerlink" href="#input-command-line-arguments" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt><strong>--vcf</strong> <em>&lt;input_filename&gt;</em></dt><dd><p>Argument used to define the filename of the VCF file for liftover.</p>
-</dd>
-<dt><strong>--chain</strong> <em>&lt;chain_filename&gt;</em></dt><dd><p>Argument used to define the filename of the chain file required
-for liftover.</p>
-</dd>
-<dt><strong>--ref</strong> <em>&lt;ref_filename&gt;</em></dt><dd><p>Argument used to define the filename of the reference FASTA.</p>
-</dd>
-<dt><strong>--ref-dict</strong> <em>&lt;dict_filename&gt;</em></dt><dd><p>Argument used to define the filename of the reference dictionary, 
-if the naming scheme is non-standard.</p>
-</dd>
-</dl>
-</div>
-<div class="section" id="output-command-line-arguments">
-<h2>Output Command-line Arguments<a class="headerlink" href="#output-command-line-arguments" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt><strong>--out</strong> <em>&lt;output_filename&gt;</em></dt><dd><p>Argument used to define the complete output filename, overrides <strong>--out-prefix</strong>.</p>
-</dd>
-<dt><strong>--out-prefix</strong> <em>&lt;output_prefix&gt;</em></dt><dd><p>Argument used to define the output prefix (i.e. filename without file extension)</p>
-</dd>
-<dt><strong>--out-format</strong> <em>&lt;vcf, vcf.gz, bcf&gt;</em></dt><dd><p>Argument used to define the desired output format. Formats include: uncompressed 
-VCF (vcf); compressed VCF (vcf.gz) [default]; and BCF (bcf).</p>
-</dd>
-<dt><strong>--reject</strong> <em>&lt;reject_filename&gt;</em></dt><dd><p>Argument used to define the complete reject filename, overrides 
-<strong>--reject-prefix</strong>. The reject file containsrecords that could not be lifted 
-over.</p>
-</dd>
-<dt><strong>--reject-prefix</strong> <em>&lt;reject_prefix&gt;</em></dt><dd><p>Argument used to define the reject prefix (i.e. filename without file extension)</p>
-</dd>
-<dt><strong>--reject-format</strong> <em>&lt;vcf, vcf.gz, bcf&gt;</em></dt><dd><p>Argument used to define the desired format of the reject output. Formats include: 
-uncompressed VCF (vcf); compressed VCF (vcf.gz); and BCF (bcf). If no format is
-given, the format defined in <strong>--out-format</strong> is used.</p>
-</dd>
-<dt><strong>--overwrite</strong></dt><dd><p>Argument used to define if previous output should be overwritten.</p>
-</dd>
-</dl>
-</div>
-<div class="section" id="liftover-command-line-arguments">
-<h2>Liftover Command-line Arguments<a class="headerlink" href="#liftover-command-line-arguments" title="Permalink to this headline">¶</a></h2>
-<dl class="simple">
-<dt><strong>--liftover-min-matchs</strong> <em>&lt;match_float&gt;</em></dt><dd><p>Argument used to define the minimum percentage required for liftover of a variant.</p>
-</dd>
-<dt><strong>--picard-max-records</strong> <em>&lt;record_int&gt;</em></dt><dd><p>Argument used to define the number of records to store in memory for picard.</p>
-</dd>
-<dt><strong>--keep-index</strong></dt><dd><p>Argument used to define if the output VCF index created by picard should be kept.</p>
-</dd>
-<dt><strong>--picard-path</strong> <em>&lt;path&gt;</em></dt><dd><p>Argument used to define the path to locate picard.jar.</p>
-</dd>
-</dl>
-</div>
+<div class="section" id="vcf-liftover">
+<h1>VCF Liftover<a class="headerlink" href="#vcf-liftover" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
