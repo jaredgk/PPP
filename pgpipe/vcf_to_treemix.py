@@ -84,6 +84,7 @@ Example command-lines:
 
 
 import os
+import sys
 import logging
 import argparse
 import subprocess
@@ -309,17 +310,18 @@ def run (**kwargs):
 if __name__ == "__main__":
     initLogger()
     run(**treemix_parser())
-    exit()
+    sys.exit()
+    # clumsy way of passing arguments for debugging,  for use with idle 
     debugargs = ['--vcf','../jhtests/pan_example.vcf.gz','--model-file',
             "../jhtests/panmodels.model",'--modelname',"4Pop",
             '--out','../jhtests/results/vcf_treemixtest1','--bed-file',"../jhtests/pan_example_regions.bed",'--kblock','1000']
     run(**debugargs)
-    exit()
+    sys.exit()
     debugargs = ['--vcf','../jhtests/pan_example.vcf.gz','--model-file',
             "../jhtests/panmodels.model",'--modelname',"4Pop",
             '--out','../jhtests/results/vcf_treemixtest2']
     run(debugargs)
-    exit()
+    sys.exit()
 
 
 

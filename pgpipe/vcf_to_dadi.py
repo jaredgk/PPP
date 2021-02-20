@@ -304,8 +304,9 @@ def run (**kwargs):
 if __name__ == "__main__":
     initLogger()
     run(**dadisnp_parser())
-    exit()
-                      
+    
+    sys.exit()
+    # clumsy way of passing arguments for debugging,  for use with idle                   
     debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz','--model-file',
                  "..//jhtests//panmodels.model",
                  '--modelname',"4Pop",'--out','../jhtests/results/vcf_dadisnp_bedfile_test.out',

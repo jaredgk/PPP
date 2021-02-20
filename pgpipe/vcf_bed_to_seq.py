@@ -322,7 +322,8 @@ def get_model_sequences_from_region(vcf=None,popmodel=None,
 
     if called_from_run or out != None: #write/append sequences to a file 
         if out == None:
-            out = os.path.dirname(vcffile) + "//ppp_vcf_to_sequences.out"
+            assert not isinstance(vcf,vf.VcfReader) # vcf should be a file
+            out = os.path.dirname(vcf) + "//ppp_vcf_to_sequences.out"
         if called_from_run == False and os.path.exists(out):
             f = open(out,'a')
         else:
@@ -403,10 +404,10 @@ def get_model_sequences(vcf=None,model_file = None,modelname=None,
     if popmodel and (model_file or modelname):
         raise Exception("must specify _either_ popmodel or both model_file and modelname")
     if xor(model_file,modelname):
-        raise Eception("both model_file and modelname must be given, unless popmodel is being used")
+        raise Exception("both model_file and modelname must be given, unless popmodel is being used")
     if not popmodel:
         popmodels = read_model_file(model_file)
-        popmodel = popmodels[model]
+        popmodel = popmodels[modelname]
     # make an instance of VcfReader 
     vcf_reader = vf.VcfReader(vcf,popmodel=popmodel)
     with open(BED_filename,'r') as bf:
@@ -495,7 +496,8 @@ def run (**kwargs):
 if __name__ == "__main__":
     initLogger()
     run(**parser())
-    exit()
+    sys.exit()
+    # clumsy way of passing arguments for debugging,  for use with idle 
     debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz','--fasta-reference',
                  "..//jhtests//pan_example_ref.fa",
             '--model-file',"..//jhtests//panmodels.model",'--modelname',"4Pop",

@@ -646,9 +646,9 @@ def run (**kwargs):
     
 if __name__ == "__main__":
     initLogger()
-    run(**sfs_parcer())
-    exit()
-
+    run(**sfs_parser())
+    sys.exit()
+    # clumsy way of passing arguments for debugging,  for use with idle 
     debugargs=['--vcf',"..//jhtests//pan_example2.vcf.gz",
                '--model-file',"..//jhtests//panmodels.model",'--modelname','4Pop',
                '--downsamplesizes','3','3','3','4',

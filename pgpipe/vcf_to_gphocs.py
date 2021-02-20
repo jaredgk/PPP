@@ -263,6 +263,7 @@ if __name__ == "__main__":
     sys.exit()
     # test using a vcf file
     debugargs = """--vcf //home//jodyhey//temp//PPP//tests//input//pan_example.vcf.gz --reference //home//jodyhey//temp//PPP//tests//input//pan_example_ref.fa  --model-file //home//jodyhey//temp//PPP//tests//input//panmodels.model  --modelname 4Pop             --bed-file //home//jodyhey//temp//PPP//tests//input//pan_example_regions.bed  --out ..//jhtests//results//vcf_gphocs_test.out  """
+    # clumsy way of passing arguments for debugging,  for use with idle 
     # debugargs = ['--vcf','//home//jodyhey//temp//PPP//tests//input//pan_example.vcf.gz',
             # '--reference',"//home//jodyhey//temp//PPP//tests//input//pan_example_ref.fa",
             # '--model-file',"//home//jodyhey//temp//PPP//tests//input//panmodels.model",
