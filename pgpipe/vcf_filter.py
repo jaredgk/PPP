@@ -183,6 +183,14 @@
         Argument used to include positions with the specified filter flag.
     **--filter-exclude-filtered** *<filter_flag>*
         Argument used to exclude positions with the specified filter flag.
+
+    #############################
+    Other Command-line Arguments
+    #############################
+    **--force-samples**
+        Argument used to ignore the error rasied when a sample that does not exist
+        within the input VCF.
+
 '''
 
 import os
@@ -265,8 +273,9 @@ def vcf_filter_parser(passed_arguments = []):
 
     vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Defines the desired output format', type = str, choices = out_format_list, default = out_format_default)
 
-    # General arguments.
+    # General arguments
     vcf_parser.add_argument('--overwrite', help = "Overwrite previous output", action = 'store_true')
+    vcf_parser.add_argument('--force-samples', help = "Ignore the error rasied when a sample that does not exist", action = 'store_true')
 
     # Galaxy Option to pipe log to stdout
     vcf_parser.add_argument('--log-stdout', help = argparse.SUPPRESS, action = 'store_true')
@@ -654,6 +663,10 @@ def run (**kwargs):
         if vcf_args.filter_mac_max != None:
             bcftools_call_args.extend(['--max-ac', vcf_args.filter_mac_max])
 
+    # Check if samples should be forced
+    if vcf_args.force_samples:
+        bcftools_call_args.append('--force-samples')
+    
     # List to store expression for BCFtools include expression functionality
     bcftools_expressions = []
 
@@ -817,7 +830,6 @@ def run (**kwargs):
         # Assign the output filename
         bcftools_call_args.extend(['-o', bcftools_output_filename])
 
-        print(bcftools_call_args)
         # Call bcftools with the specifed arguments
         bcftools_err = call_bcftools(bcftools_call_args)
 
@@ -858,8 +870,8 @@ def run (**kwargs):
 
 if __name__ == "__main__":
     initLogger()
-##    run(**vcf_filter_parser())
-
+    run(**vcf_filter_parser())
+    sys.exit()
     debugargs = ['--vcf','..//jhtests//Pttdebug.vcf',
             '--out','..//jhtests//Ptt_highcov_debug.vcf',
             '--out-format','vcf',

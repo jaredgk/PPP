@@ -185,8 +185,9 @@ import shutil
 from pgpipe.eigenstrat_wrapper import *
 from pgpipe.model import read_model_file, pops_not_in_model
 from pgpipe.logging_module import initLogger, logArgs
+from pgpipe.misc import argprase_kwargs
 
-def admix_parser (passed_arguments):
+def admix_parser (passed_arguments = []):
     '''admix Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -265,9 +266,9 @@ def admix_parser (passed_arguments):
     admix_parser.add_argument('--admix-o-pop-file', dest = 'o_file', help = 'O populations for admixure analysis', type = str, action = parser_confirm_file())
 
     if passed_arguments:
-        return admix_parser.parse_args(passed_arguments)
+        return vars(admix_parser.parse_args(passed_arguments))
     else:
-        return admix_parser.parse_args()
+        return vars(admix_parser.parse_args())
 
 def read_admix_pops_file (pop_filename):
 
@@ -286,10 +287,14 @@ def read_admix_pops_file (pop_filename):
     # Return the admix pops
     return admix_pops
 
-def run(passed_arguments = []):
+def run(**kwargs):
 
-    # Grab admixtools arguments from command line
-    admix_args = admix_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, admix_parser)
+
+    # Assign arguments
+    admix_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(admix_args, func_name='admixtools')
@@ -555,4 +560,4 @@ def run(passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**admix_parser())

@@ -311,7 +311,7 @@ if __name__ == "__main__":
     initLogger()
     run(**treemix_parser())
     sys.exit()
-    # clumsy way of passing arguments for debugging,  for use with idle 
+    # for debugging
     debugargs = ['--vcf','../jhtests/pan_example.vcf.gz','--model-file',
             "../jhtests/panmodels.model",'--modelname',"4Pop",
             '--out','../jhtests/results/vcf_treemixtest1','--bed-file',"../jhtests/pan_example_regions.bed",'--kblock','1000']

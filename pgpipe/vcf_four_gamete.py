@@ -104,6 +104,7 @@ import pysam
 from pgpipe.logging_module import initLogger
 from pgpipe.genome_region import Region, RegionList
 from pgpipe.vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, VcfReader
+from pgpipe.bcftools import check_for_index, create_index
 from pgpipe.misc import argprase_kwargs
 
 
@@ -924,6 +925,8 @@ def sample_fourgametetest_intervals(**kwargs):
         if len(args.vcfname) > 1 and args.out_prefix is not None:
             raise Exception(("Multiple VCFs require --out-prefix flag"))
         for vcfname in args.vcfname:
+            if check_for_index(vcfname) == False:
+                create_index(vcfname)
             basedata = BaseData(args, "VCF",vcfname)
             intervals = getIntervalList(args,basedata)
             #sys.stderr.write(str(intervals)+'\n')

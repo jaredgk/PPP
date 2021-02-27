@@ -7,14 +7,12 @@ import shutil
 import logging
 import pandas as pd
 
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
-
 from pgpipe.logging_module import initLogger, logArgs
 
 from pgpipe.picard import call_picard
+from pgpipe.misc import argprase_kwargs
 
-def fasta_utility_parser(passed_arguments):
+def fasta_utility_parser(passed_arguments = []):
     '''fasta Argument Parser - Assigns arguments from command line'''
 
     def parser_confirm_file ():
@@ -55,11 +53,11 @@ def fasta_utility_parser(passed_arguments):
     fasta_parser.add_argument('--picard-path', help = "Defines path to locate picard.jar", type = str)
 
     if passed_arguments:
-        return fasta_parser.parse_args(passed_arguments)
+        return vars(fasta_parser.parse_args(passed_arguments))
     else:
-        return fasta_parser.parse_args()
+        return vars(fasta_parser.parse_args())
 
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
     Liftover for VCF-formatted files
 
@@ -95,8 +93,12 @@ def run (passed_arguments = []):
         Output file already exists
     '''
 
-    # Grab FASTA arguments from command line
-    fasta_args = fasta_utility_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, fasta_utility_parser)
+
+    # Assign arguments
+    fasta_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(fasta_args, func_name = 'fasta_utilities')
@@ -115,5 +117,5 @@ def run (passed_arguments = []):
 
 
 if __name__ == "__main__":
-    #initLogger()
-    run()
+    initLogger()
+    run(**fasta_utility_parser())

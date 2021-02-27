@@ -124,13 +124,11 @@ import glob
 import copy
 import logging
 
-# Call PPP-based scripts
-#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir,'pppipe')))
-
 from pgpipe.logging_module import initLogger, logArgs
 from pgpipe.plink import *
+from pgpipe.misc import argprase_kwargs
 
-def plink_argument_parser(passed_arguments):
+def plink_argument_parser(passed_arguments = []):
     '''Phase Argument Parser - Assigns arguments for vcftools from command line.
     Depending on the argument in question, a default value may be specified'''
 
@@ -209,14 +207,14 @@ def plink_argument_parser(passed_arguments):
     plink_parser.add_argument('--threads', help = "Set the number of threads", type = int, default = 1)
 
     if passed_arguments:
-        return plink_parser.parse_args(passed_arguments)
+        return vars(plink_parser.parse_args(passed_arguments))
     else:
         if len(sys.argv) == 1:
             plink_parser.print_help(sys.stderr)
             sys.exit(1)
-        return plink_parser.parse_args()
+        return vars(plink_parser.parse_args())
 
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
         PLINK-based LD Analysis
 
@@ -226,10 +224,6 @@ def run (passed_arguments = []):
 
         Parameters
         ----------
-        --vcf : str
-            Specifies the input VCF filename
-        --vcf-fid : str
-            Specifies the family ID for all samples
         --ped : str
             Specifies the input PED filename
         --map : str
@@ -294,8 +288,12 @@ def run (passed_arguments = []):
 
     '''
 
-    # Grab plink arguments from command line
-    plink_args = plink_argument_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, plink_argument_parser)
+
+    # Assign arguments
+    plink_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(plink_args, func_name = 'plink_ld')
@@ -358,7 +356,7 @@ def run (passed_arguments = []):
         plink_input_args = ['--file', plink_args.ped_prefix]
 
     # Confirm if a prefix has been specified and the files exist
-    elif plink_args.bed_prefix and confirm_ped_prefix(plink_args.bed_prefix):
+    elif plink_args.bed_prefix and confirm_bed_prefix(plink_args.bed_prefix):
 
         # Assign the bed input from a prefix
         plink_input_args = ['--bfile', plink_args.bed_prefix]
@@ -550,4 +548,4 @@ def run (passed_arguments = []):
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**plink_argument_parser())

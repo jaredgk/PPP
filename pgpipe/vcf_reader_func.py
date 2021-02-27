@@ -565,9 +565,9 @@ def getRecordListUnzipped(vcf_reader, prev_last_rec, region=None, chrom=None,
     if (prev_last_rec is not None and
         region.containsRecord(prev_last_rec) == 'in'):
         lst.append(prev_last_rec)
-    elif (prev_last_rec is not None and
-         region.containsRecord(prev_last_rec) == 'after'):
-        return [],prev_last_rec  #jh added ',prev_last_rec'  6/5/2020
+#    elif (prev_last_rec is not None and
+#         region.containsRecord(prev_last_rec) == 'after'):
+#        return [],prev_last_rec  #jh added ',prev_last_rec'  6/5/2020
     rec = next(vcf_reader,None)
     if rec is None:
         return lst,None

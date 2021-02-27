@@ -468,7 +468,7 @@ def check_plink_for_errors (plink_stderr):
 
     # Print warning, if found
     if 'Warning' in plink_stderr:
-        logging.warning(plink_stderr)
+        logging.warning(plink_stderr.replace('\n',' '))
 
     # Print output if error found. Build up as errors are discovered
     elif plink_stderr:

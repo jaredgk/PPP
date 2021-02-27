@@ -349,7 +349,7 @@ if __name__ == "__main__":
     initLogger()
     run(**fscmsfs_parser)
     sys.exit()
-    # clumsy way of passing arguments for debugging,  for use with idle 
+    # for debugging
     debugargs=['--vcf',"..//jhtests//pan_example.vcf.gz",
                '--model-file',"..//jhtests//panmodels.model",'--modelname','3Pop',
            '--dim','1','2','m','--basename','../jhtests/results/vcf_fsc1']#,'--folded']

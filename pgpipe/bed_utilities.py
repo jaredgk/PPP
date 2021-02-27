@@ -6,9 +6,9 @@
     a single BED; v) merge features within one or more BED files; vi) create a BED of 
     complementary features.
 
-    ******************
+    ##################
     Command-line Usage
-    ******************
+    ##################
     The BED utilites function may be called using the following command:
 
     .. code-block:: bash
@@ -19,6 +19,22 @@
     ########
     Utilites
     ########
+
+    ***************
+    Windows Utility
+    ***************
+
+    Given a chromosome size file and a window size, the windows utility will generate a 
+    BED file of interval features.
+
+    =============
+    Example usage
+    =============
+    Return a BED with interval features that do not extend outside the chromosomes:
+
+    .. code-block:: bash
+        
+        bed_utilities.py --utility windows --chrom-file hg18.chrom.sizes --window-size 1000 --out hg18_windows.bed
 
     **************
     Sample Utility
@@ -116,6 +132,22 @@
         
         bed_utilities.py --utility complement --bed examples/files/chr1_sites.bed --chrom-file examples/files/chr_sizes.txt
 
+    *****************
+    Intersect Utility
+    *****************
+
+    Given a BED file and an intersect file, return only the interval features within the BED
+    file that overlap with the intersect file. 
+
+    =============
+    Example usage
+    =============
+    Return a BED with only intersecting interval features:
+
+    .. code-block:: bash
+        
+        bed_utilities.py --utility intersect --bed hg18_windows.bed --intersect-file Intersect.vcf.gz --out hg18_intersects.bed
+
     *************
     Merge Utility
     *************
@@ -153,8 +185,20 @@
         times.
     **--chrom-file** *<chrom_filename>*
         Argument used to define the filename of a file with the sizes of each
-        chromosome file. Appropriate files may be downloaded from the UCSC Genome
-        Browser.
+        chromosome. Chromosome size files must be tab-delimited as follows:
+
+        .. code-block:: bash
+
+            chr1\t247249719
+            chr2\t242951149
+            ...
+            chrX\t154913754
+            chrY\t57772954
+
+        Appropriate files may be downloaded from the `UCSC Genome Browser <http://hgdownload.soe.ucsc.edu/downloads.html>`_. 
+        The supported **ASSEMBLY.chrom.sizes** file for each assembly may be found by 
+        clicking **Genome sequence files and select annotations** (followed by
+        **Standard genome sequence files and select annotations** on select assemblies).
     
     #############################
     Output Command-line Arguments
@@ -175,6 +219,12 @@
         features within a single BED file (sort); merge features within one or more BED 
         files (merge); create a BED file of complementary features - i.e. features that 
         do not overlap - from a BED file (complement).
+
+    *************************************
+    Window Utility Command-line Arguments
+    *************************************
+    **--window-size** *<window_size_int>*
+        Argument used to define the window/interval size to return.
 
     *************************************
     Sample Utility Command-line Arguments
@@ -218,6 +268,14 @@
     **--extend-downstream** *<bp_int>*
         Argument used to define the length of base pairs (bp) to extend downstream of 
         features.
+
+    ****************************************
+    Intersect Utility Command-line Arguments
+    ****************************************
+    **--intersect-file** *<intersect_file_filename>*
+        Argument used to define the BED/VCF/VCF.gz file used to remove features that 
+        do not intersect with the given file's features/variants.
+        removing features/positions.
 
     ************************************
     Merge Utility Command-line Arguments
@@ -276,15 +334,26 @@ def bed_argument_parser(passed_arguments = []):
     bed_parser = argparse.ArgumentParser()
 
     # Input arguments
-    bed_input = bed_parser.add_mutually_exclusive_group(required = True)
+    bed_input = bed_parser.add_mutually_exclusive_group()
     bed_input.add_argument('--bed', help = 'Defines the filename of the BED file', type = str, action = parser_confirm_file())
     bed_input.add_argument('--beds', help = 'Defines the filenames of the BED files (may be used multiple times)', type = str, nargs = '+', action = parser_confirm_file_list())
     bed_parser.add_argument('--chrom-file', help = 'File of chromosome sizes', type = str, action = parser_confirm_file())
 
     # Utility based arguments
-    utility_list = ['sample', 'subtract', 'extend', 'sort', 'merge', 'complement']
+    utility_list = ['sample', 'subtract', 'extend', 'sort', 'merge', 'complement', 'windows', 'intersect']
     bed_parser.add_argument('--utility', metavar = metavar_list(utility_list), help = 'Specifies the utility to be used', type = str, choices = utility_list, required = True)
 
+    # Intersect-specific arguments
+    intersect_group = bed_parser.add_argument_group('Intersect Utility Arguments')
+    intersect_group.add_argument('--intersect-file', help = 'File to intersect', type = str, action = parser_confirm_file())
+    intersect_group.add_argument('--return_only_intersects', help = 'Only return intersecting intervals', action = 'store_true')
+    intersect_group.add_argument('--sorted-intersect', help = 'Invokes the sorted algorithm. Use to reduce memory usage with a large --intersect-file. Requires both files to be sorted in the same manner', action = 'store_true')
+
+    # Window-specific arguments
+    window_group = bed_parser.add_argument_group('Windows Utility Arguments')
+    window_group.add_argument('--window-size', help = 'Size (in bp) of windows to be created', type = int)
+    window_group.add_argument('--window-step', help = 'Step size (in bp) between new windows. Defaults to the window size', type = int)
+ 
     # Sample-specific arguments
     sample_group = bed_parser.add_argument_group('Sample Utility Arguments')
     sample_group.add_argument('--sample-size', help="Defines the total sample size", type = int)
@@ -429,6 +498,10 @@ def run (**kwargs):
     # Assign arguments
     bed_args = argparse.Namespace(**kwargs)
 
+    # Confirm an input BED has been given, unless windows are being created
+    if bed_args.utility != 'windows' and (not bed_args.bed and not bed_args.beds):
+        raise Exception('--bed or --beds required')
+
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(bed_args, 'bed_utilities')
 
@@ -491,7 +564,7 @@ def run (**kwargs):
     else:
 
         # Check if the utility requires a chromosome size file
-        if bed_args.utility in ['complement', 'extend']:
+        if bed_args.utility in ['complement', 'extend', 'windows']:
 
             # Check if a chromosome sizes file has been defined
             if not bed_args.chrom_file:
@@ -586,6 +659,43 @@ def run (**kwargs):
             # Assign the --chrom-file argument
             bedtools_arg_list.extend(['-g', bed_args.chrom_file])
 
+        # Check if the create windows utility has been selected
+        elif bed_args.utility == 'windows':
+
+            # Assign the utility
+            bedtools_arg_list.append(f'make{bed_args.utility}')
+
+            # Assign the --chrom-file argument
+            bedtools_arg_list.extend(['-g', bed_args.chrom_file])
+
+            # Check if --window-size has been specified 
+            if bed_args.window_size:
+                bedtools_arg_list.extend(['-w', bed_args.window_size])
+
+            # Check if --window-step has been specified 
+            if bed_args.window_step:
+                bedtools_arg_list.extend(['-s', bed_args.window_step])
+
+        # Check if the create intersect utility has been selected
+        elif bed_args.utility == 'intersect':
+
+            # Assign the utility
+            bedtools_arg_list.append(bed_args.utility)
+
+            # Assign the input arguments
+            bedtools_arg_list.extend(['-a', bed_args.bed])
+
+            # Assign the --chrom-file argument
+            bedtools_arg_list.extend(['-b', bed_args.intersect_file])
+
+            # Check if --return-only-intersect has not been specified 
+            if not bed_args.return_only_intersects:
+                bedtools_arg_list.append('-u')
+
+            # Check if --sorted-intersect has not been specified
+            if bed_args.sorted_intersect:
+                bedtools_arg_list.append('-sorted')
+            
         # Catch unknown utilities    
         else:
             raise Exception('%s is an unknown utility. Please check input' % bed_args.utility)
