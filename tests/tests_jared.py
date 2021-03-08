@@ -15,6 +15,7 @@ from pgpipe.vcf_four_gamete import sample_fourgametetest_intervals
 from pgpipe.vcf_to_ima import vcf_to_ima
 from pgpipe.bed_invert import get_intergenic
 from pgpipe.get_nonmissing_chunks import regionsWithData
+from pgpipe.informative_loci_filter import filter_bed_regions
 from pgpipe import vcf_phase
 
 def compareVcfsNoComments(va,vb):
@@ -284,6 +285,16 @@ class imaTest(unittest.TestCase):
         self.assertTrue(filecmp.cmp('input/chr11.ima.u',
                         'input/chr11.subsamples.ima.u'))
 
+    def test_imaSingle(self):
+        vcf_to_ima( vcfs = 'input/chr11.snp.sr.vcf.gz',
+                    reference_fasta = 'input/human_g1k_chr11.fasta',
+                    bed = 'input/snp_region.txt',
+                    model_file = 'input/testmodel.model',
+                    zero_ho = True,
+                    out = 'input/chr11.subsamples.ima.u')
+        self.assertTrue(filecmp.cmp('input/chr11.ima.u',
+                        'input/chr11.subsamples.ima.u'))
+
 class phaseTest(unittest.TestCase):
     def test_shapeit(self):
         vcf_phase.run(vcf = 'input/chr11.adj.big.vcf',
@@ -309,6 +320,45 @@ class phaseTest(unittest.TestCase):
 
     def tearDown(self):
         tryRemove('input/chr11.test.vcf')
+
+class informativeRegionTest(unittest.TestCase):
+    def test_noFilter(self):
+        filter_bed_regions(vcf = 'input/chr11.unzipped.vcf',
+                           bed = 'input/chr11_informative_test.bed',
+                           out = 'input/chr11_informative_test_run.bed',
+                           minsites = 130)
+        self.assertTrue(filecmp.cmp('input/chr11_informative_test_run.bed',
+                        'input/chr11_informative_test_out.bed'))
+
+    def test_cpgFilter(self):
+        filter_bed_regions(vcf = 'input/chr11.unzipped.vcf',
+                           bed = 'input/chr11_informative_test.bed',
+                           out = 'input/chr11_informative_test_run.bed',
+                           minsites = 115,
+                           parsecpg = 'input/human_g1k_chr11.fasta')
+        self.assertTrue(filecmp.cmp('input/chr11_informative_test_run.bed',
+                        'input/chr11_informative_test_out.bed'))
+
+    def test_indelFilter(self):
+        filter_bed_regions(vcf = 'input/chr11.unzipped.vcf',
+                           bed = 'input/chr11_informative_test.bed',
+                           out = 'input/chr11_informative_test_run.bed',
+                           minsites = 140,
+                           remove_indels = True)
+        self.assertTrue(filecmp.cmp('input/chr11_informative_test_run.bed',
+                        'input/chr11_informative_test_out.bed'))
+
+    def test_informativeFilter(self):
+        filter_bed_regions(vcf = 'input/chr11.unzipped.vcf',
+                           bed = 'input/chr11_informative_test.bed',
+                           out = 'input/chr11_informative_test_run.bed',
+                           minsites = 175,
+                           informative_count = 1)
+        self.assertTrue(filecmp.cmp('input/chr11_informative_test_run.bed',
+                        'input/chr11_informative_test_out.bed'))
+
+    def tearDown(self):
+        tryRemove('input/chr11_informative_test_run.bed')
 
 
 

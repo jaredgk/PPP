@@ -123,8 +123,9 @@ from pgpipe.vcf_reader_func import getPassSites, VcfReader
 from pgpipe.genome_region import Region, RegionList
 from pgpipe.logging_module import initLogger
 from pgpipe.model import Model, read_single_model
+from pgpipe.misc import argprase_kwargs
 
-def createParser():
+def parseArguments(passed_arguments = []):
     parser = argparse.ArgumentParser(description=("Given a VCF file and a"
             " list of intervals (BED style), will output regions that have"
             " over a certain number of qualifying variants in the region"))
@@ -133,8 +134,8 @@ def createParser():
                         "with regions for inspection"))
     parser.add_argument("--bed-column-index",dest="gene_col",help=("Three "
                         "comma-separated integers indicating columns for "
-                        "start,end,and chromosme in BED file (default 1,2,0"))
-    parser.add_argument("--out",dest="outname",help=("Output filename,"
+                        "start, end, and chromosme in BED file (default 1,2,0)"))
+    parser.add_argument("--out",dest="outname",help=("Output filename, "
                         "default is stdout"))
     parser.add_argument("--zero-ho", dest="zeroho", action="store_true",
                         help="BED input in zero-based, half-open format")
@@ -145,7 +146,7 @@ def createParser():
                         action="store_true", help=("Do not count indels "
                         "toward informative site count"))
     parser.add_argument("--remove-multi", dest="remove_multiallele",
-                        action="store_true",help=("Do not count multiallelic"
+                        action="store_true",help=("Do not count multiallelic "
                         "sites toward informative site count"))
     parser.add_argument("--remove-missing", dest="remove_missing", 
                         default=-1, type=int, help=("Will filter out site if"
@@ -179,13 +180,18 @@ def createParser():
     parser.add_argument("--no-sorting",dest="sort_lists",action="store_false",
                         help=("Guarantees output regions are in same order"
                         "as input file"))
-    return parser
+    if passed_arguments:
+        return vars(parser.parse_args(passed_arguments))
+    else:
+        return vars(parser.parse_args())
 
 
-def filter_bed_regions(sys_args):
-    #parser = argparse.parse_args(sys_args)
-    parser = createParser()
-    args = parser.parse_args(sys_args)
+def filter_bed_regions(**kwargs):
+    #parser = createParser()
+    #args = parser.parse_args(sys_args)
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs,parseArguments)
+    args = argparse.Namespace(**kwargs)
     if args.outname is not None:
         outf = open(args.outname,'w')
     else:
@@ -194,19 +200,12 @@ def filter_bed_regions(sys_args):
     popmodel = None
     if args.modelname is not None:
         popmodel = read_single_model(args.modelname,args.poptag)
-        #popmodels = read_model_file(args.modelname)
-        #if len(popmodels) != 1:
-        #    popmodel = popmodels[args.poptag]
-        #else:
-        #    pp = list(popmodels.keys())
-        #    popmodel = popmodels[pp[0]]
     
     vcf_reader = VcfReader(args.vcfname,index=args.tabix_index,popmodel=popmodel)
     fasta_seq = None
     if args.refname is not None:
         fasta_seq = pysam.FastaFile(args.refname)
 
-    #regions = RegionList(filename=args.bedname,zeroho=args.zeroho,zeroclosed=args.zeroclosed,sortlist=(not args.randcoun))
     randomize = False
     if args.randcount != -1:
         randomize = True
@@ -235,6 +234,7 @@ def filter_bed_regions(sys_args):
                     remove_missing=args.remove_missing,
                     inform_level=args.informative_count,
                     fasta_ref=fasta_seq)
+        #print (pass_list.count(True),region.toStr())
         if pass_list.count(True) >= int(args.minsites):
             #print (region.toStr(sep='\t'))
             idx_output.append(i)
@@ -254,7 +254,9 @@ def filter_bed_regions(sys_args):
     for i in idx_output:
         outf.write(regions.regions[i].toStr(sep='\t')+'\n')
 
+    outf.close()
+
 
 if __name__ == '__main__':
     initLogger()
-    filter_bed_regions(sys.argv[1:])
+    filter_bed_regions(**parseArguments())

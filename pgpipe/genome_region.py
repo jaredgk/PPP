@@ -118,10 +118,13 @@ class Region:
     def containsRecord(self, rec):
         k1 = self.getChromKey()
         kr = getChromKey(rec.chrom)
+        #print ("region:",k1,", record:",kr)
         if k1 != kr:
             if keyComp(k1,kr):
-                return 'before'
-            return 'after'
+                #return 'before'
+                return 'after'
+            return 'before'
+            #return 'after'
         comp_pos = rec.pos-1
 ##        print(comp_pos,self.start,self.end)
         if comp_pos < self.start:

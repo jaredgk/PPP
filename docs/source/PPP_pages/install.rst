@@ -34,12 +34,18 @@ The most current version of the PPP can be installed by obtaining the source cod
 
     git clone https://github.com/jaredgk/PPP
 
-It can then be installed with either of these two commands, after CDing into the created directory (first allows editing the source code, second installs from source):
+To install the local repository copy and allow edits to the source code to be included with imports without any additional steps, run the following commands:
+
+.. code-block:: bash
+    
+    cd PPP
+    pip install -e . 
+    
+To install the repository without pip, run the following (note that any modifications to the source code will not be used at runtime unless the setup command is run again):
 
 .. code-block:: bash
 
-    pip install -e . 
-    
+    cd PPP
     python setup.py install 
 
 ############
