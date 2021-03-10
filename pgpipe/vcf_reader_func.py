@@ -1,3 +1,11 @@
+'''
+    The VcfReader class is a pysam-based wrapper for reading and writing 
+    records from VCF files that integrates with other PPP functionality, 
+    including the GenomeRegion class for handling BED regions/files, and the 
+    Model class for specifying subpopulations and samples. It can read input 
+    from unzipped VCF, bg-zipped VCF, and BCF files. It c
+
+'''
 import sys
 import pysam
 import logging
@@ -15,6 +23,23 @@ from pgpipe.model import read_model_file
 #from pgpipe import test_cython
 
 def checkIfGzip(filename):
+    '''
+    File Format Checker
+
+    Identifies the file format of the given file.
+
+    Parameters
+    ----------
+    filename : string
+        Filepath of target file
+
+    Return
+    ------
+    type : string
+        'BCF', 'bgzip', 'gzip', 'nozip', or 'other', where all -zip options 
+        indicate a VCF file.
+
+    '''
     try:
         gf = gzip.open(filename)
         gl = gf.readline()
@@ -32,6 +57,22 @@ def checkIfGzip(filename):
         return 'nozip'
 
 def checkHeader(filename):
+    '''
+    VCF File Format Checker
+
+    Identifies the format of a VCF file with given filename
+
+    Parameters
+    ----------
+    filename : string
+        Filepath of target file
+
+    Return 
+    ------
+    type : string
+        'bgzip', 'gzip', or 'nozip'. Note that VcfReader cannot read gzipped VCF files.
+
+    '''
     f = open(filename,'rb')
     l = f.readline()
     f.close()
@@ -79,6 +120,29 @@ def checkFormat(vcfname):
 
 def checkIfCpG(record,fasta_ref,add_chr=False):
     #Note: will not detect multiallelic/indel combos
+    '''
+    Checks if a given record in variant file is a CpG. Currently does not 
+    support checking sites where there are two or more alternate alleles and
+    one of them is an indel.
+
+    Parameters
+    ----------
+    record : Pysam VariantRecord object
+        Record from VCF file to be checked
+    fasta_ref : Pysam FastaFile object
+        Reference genome sequence, must be from start of chromosome
+    add_chr : boolean
+        If true, prefixes chromosome pulled from record with 'chr' to resolve
+        situations where record doesn't have 'chr' in chromosome name but
+        reference does
+
+    Return
+    ------
+    Boolean
+        Returns true if record is located at a CpG, and false otherwise. 
+
+
+    '''
     dr = None
     pos = record.pos
     c = record.chrom
@@ -109,12 +173,39 @@ def checkIfCpG(record,fasta_ref,add_chr=False):
     return False
 
 def checkForDuplicates(rec_list,pass_list):
+    '''
+    Finds if a list of VariantRecords has multiple records at same position
+
+    Parameters
+    ----------
+    rec_list : list (pysam VariantRecord objects)
+        List of target records
+
+    pass_list : list (Boolean)
+        List with an entry for each record, either with each entry preset to 
+        True, or with results from a different filtering function. Will be 
+        modified to include False entries for duplicate records.
+    '''
     for i in range(len(rec_list)-1):
         if rec_list[i].pos == rec_list[i+1].pos:
             pass_list[i] = False
             pass_list[i+1] = False
 
 def checkForMultiallele(rec_list,pass_list):
+    '''
+    Finds if a list of VariantRecords has multi-allelic sites, and marks the 
+    matching entry in a 'pass_list' of booleans to indicate a failure.
+
+    Parameters
+    ----------
+    rec_list : list (pysam VariantRecord objects)
+        List of target records
+
+    pass_list : list (Boolean)
+        List with an entry for each record, either with each entry preset to 
+        True, or with results from a different filtering function. Will be 
+        modified to include False entries for multi-allelic sites.
+    '''
     for i in range(len(rec_list)):
         if i != len(rec_list)-1 and rec_list[i].pos == rec_list[i+1].pos:
             pass_list[i] = False
@@ -123,6 +214,35 @@ def checkForMultiallele(rec_list,pass_list):
             pass_list[i] = False
 
 def checkPopWithoutMissing(rec_list,model,pop_keys,min_per_pop=5):
+    '''
+    Checks that given populations in a model each have a minimum number of 
+    individuals with data for the region in question. Returns true if 
+    each population has at least min_per_pop individuals with no missing
+    data in target region, false otherwise.
+
+    Parameters
+    ----------
+    rec_list : list (pysam VariantRecord objects)
+        List of target records in a region
+
+    model : model file
+        Model file
+
+    pop_keys : list (string)
+        List of subpopulations in model file to examine
+
+    min_per_pop : int
+        Minimum number of individuals in a subpopulation that have no missing
+        data.
+
+    Return
+    ------
+    boolean
+        True if enough individuals in each population have all their data,
+        false otherwise.
+
+    
+    '''
     for pop in pop_keys:
         present_count = 0
         for i in range(len(pop_keys[pop])):
