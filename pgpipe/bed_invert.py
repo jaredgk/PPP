@@ -52,7 +52,6 @@
 import sys
 import pysam
 from pgpipe.genome_region import Region, RegionList, getIntervalsBetween
-import pgpipe.argparse_sets
 from pgpipe.misc import argprase_kwargs
 import argparse
 
