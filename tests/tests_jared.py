@@ -69,36 +69,40 @@ class funcTest(unittest.TestCase):
 class intergenicTest(unittest.TestCase):
     def test_oneidx(self):
         get_intergenic(bed = 'input/fib_in.txt',
-                       out = 'input/fib_t.txt')
+                       out = 'input/fib_t.txt',
+                       oneidx_start = True)
         self.assertTrue(filecmp.cmp('input/fib_t.txt','input/fib_oneidx.txt'))
     def test_zeroho(self):
         get_intergenic(bed = 'input/fib_in.txt',
-                       out = 'input/fib_t.txt',
-                       zero_ho = True)
+                       out = 'input/fib_t.txt')
         self.assertTrue(filecmp.cmp('input/fib_t.txt','input/fib_zeroho.txt'))
 
 class missingTest(unittest.TestCase):
     def test_default(self):
         regionsWithData(vcf = 'input/macaca_missingdata.vcf.gz',
-                        out = 'input/gmd_test.txt')
+                        out = 'input/gmd_test.txt', 
+                        oneidx_start = True)
         self.assertTrue(filecmp.cmp('input/gmd_test.txt','input/gmd_test_default.txt'))
 
     def test_extend(self):
         regionsWithData(vcf = 'input/macaca_missingdata.vcf.gz',
                         extend_regions = True,
-                        out = 'input/gmd_test.txt')
+                        out = 'input/gmd_test.txt',
+                        oneidx_start = True)
         self.assertTrue(filecmp.cmp('input/gmd_test.txt','input/gmd_test_extend.txt'))
 
     def test_allowOneMiss(self):
         regionsWithData(vcf = 'input/macaca_missingdata.vcf.gz',
                         missing_count = 1,
-                        out = 'input/gmd_test.txt')
+                        out = 'input/gmd_test.txt',
+                        oneidx_start = True)
         self.assertTrue(filecmp.cmp('input/gmd_test.txt','input/gmd_test_miss1.txt'))
 
     def test_allsize(self):
         regionsWithData(vcf = 'input/macaca_missingdata.vcf.gz',
                         size = 0,
-                        out = 'input/gmd_test.txt')
+                        out = 'input/gmd_test.txt',
+                        oneidx_start = True)
         self.assertTrue(filecmp.cmp('input/gmd_test.txt','input/gmd_test_size0.txt'))
 
 
@@ -129,24 +133,24 @@ class geneRegionTest(unittest.TestCase):
 
 
     def test_RL_overlap(self):
-        rl = RegionList('input/overlap_regions.txt')
+        rl = RegionList('input/overlap_regions.txt', zeroho = False)
         self.assertTrue(rl.hasOverlap())
 
     def test_CR_in(self):
         rec = self.getARecord()
-        rl = RegionList(genestr="11:142500:142600")
+        rl = RegionList(genestr="11:142500:142600", zeroho = False)
         self.assertTrue(rl.regions[0].containsRecord(rec) == 'in')
 
     def test_CR_before(self):
         rec = self.getARecord()
-        rl = RegionList(genestr="11:142531:142600")
+        rl = RegionList(genestr="11:142531:142600", zeroho = False)
         val = rl.regions[0].containsRecord(rec)
         sys.stderr.write(str(val)+'\n')
         self.assertTrue(rl.regions[0].containsRecord(rec) == 'before')
 
     def test_CR_after(self):
         rec = self.getARecord()
-        rl = RegionList(genestr="11:142500:142529")
+        rl = RegionList(genestr="11:142500:142529", zeroho = False)
         val = rl.regions[0].containsRecord(rec)
         self.assertTrue(val == 'after')
 
@@ -280,7 +284,6 @@ class imaTest(unittest.TestCase):
                     reference_fasta = 'input/human_g1k_chr11.fasta',
                     bed = 'input/snp_region.txt',
                     model_file = 'input/testmodel.model',
-                    zero_ho = True,
                     out = 'input/chr11.subsamples.ima.u')
         self.assertTrue(filecmp.cmp('input/chr11.ima.u',
                         'input/chr11.subsamples.ima.u'))
@@ -290,7 +293,6 @@ class imaTest(unittest.TestCase):
                     reference_fasta = 'input/human_g1k_chr11.fasta',
                     bed = 'input/snp_region.txt',
                     model_file = 'input/testmodel.model',
-                    zero_ho = True,
                     out = 'input/chr11.subsamples.ima.u')
         self.assertTrue(filecmp.cmp('input/chr11.ima.u',
                         'input/chr11.subsamples.ima.u'))
@@ -357,8 +359,8 @@ class informativeRegionTest(unittest.TestCase):
         self.assertTrue(filecmp.cmp('input/chr11_informative_test_run.bed',
                         'input/chr11_informative_test_out.bed'))
 
-    def tearDown(self):
-        tryRemove('input/chr11_informative_test_run.bed')
+    #def tearDown(self):
+    #    tryRemove('input/chr11_informative_test_run.bed')
 
 
 

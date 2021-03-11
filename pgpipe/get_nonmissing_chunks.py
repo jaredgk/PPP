@@ -14,8 +14,9 @@ def parseArguments(passed_arguments = []):
     parser.add_argument('--vcf',dest="vcfname",type=str,
                         help=("Name of input VCF file, default is stdin"))
     parser.add_argument('--size',dest="window_size",type=int,default=1000)
-    parser.add_argument('--zero-ho',dest="zero_ho",action="store_true",
-                        help=("Output list in zero-based half-open format"))
+    parser.add_argument('--oneidx-start',dest="oneidx", action="store_true",
+                        help=("Region list start coordinates indexed from 1, "
+                        "not 0"))
     parser.add_argument('--zero-closed',dest="zero_closed",action="store_true",
                         help=("Output list in zero-based closed format"))
     parser.add_argument('--extend-regions',dest="extend",action="store_true",
@@ -58,7 +59,7 @@ def fixChromName(chrom,addchr,removechr):
 def outputLine(chrom,start_pos,end_pos,args):
     sp = start_pos
     ep = end_pos
-    if args.zero_ho:
+    if (not args.oneidx):
         sp -= 1
     elif args.zero_closed:
         sp -= 1
@@ -101,9 +102,10 @@ def regionsWithData(**kwargs):
     
     Other Parameters
     ----------------
-    --zero-ho : bool
-        If set, treats regions in BED file as 0-based, (h)alf (o)pen
-        coordinates rather than 1-based, closed.
+    --oneidx-start
+        If set, use human-readable coordinates for BED file (i.e. 1-100 for
+        first 100 bases in a genome) as opposed to default of zero-based, 
+        half-open (0-100).
     --extend-regions : bool
         If set, will extend regions past the flanking included SNPs
         to the halfway point between the end SNP and the SNP with

@@ -86,9 +86,13 @@
     #############
     Other Options
     #############
-    **--zero-ho**
-        Use if input BED file uses zero-based, half-open coordinates instead
-        of one-based, closed.
+    **--oneidx-start**
+        If set, indicates input BED regions are formatted as one-indexed, 
+        closed intervals, as opposed to the BED default of zero-based, 
+        half-open intervals. For example, the first million bases on a 
+        chromosome would be:
+            Zero-based, half-open: 0,1000000
+            One-based, closed:     1,1000000
     **--bed-column-index** *<start_col,end_col,chrom_col>*
         Comma-separated list of zero-based indexes of start, end, and 
         chromosome name columns in input BED file. Default value for
@@ -218,8 +222,9 @@ def parseArguments(passed_arguments = []):
                         "pop model file"))
     parser.add_argument("--model",dest="poptag",help=("If model file has "
                         "multiple models, use model with this name"))
-    parser.add_argument("--zero-ho", dest="zeroho", action="store_true",
-                        help="Region coordinates are zero-based, half-open")
+    parser.add_argument('--oneidx-start',dest="oneidx", action="store_true",
+                        help=("Region list start coordinates indexed from 1, "
+                        "not 0"))
     parser.add_argument("--zero-closed", dest="zeroclosed",action="store_true",
                         help="Region coordinates are zero-based, closed")
     parser.add_argument("--keep-indels", dest="indel_flag", action="store_true",
@@ -486,9 +491,10 @@ def vcf_to_ima(**kwargs):
         Comma-separated list of length 3 with 0-based indexes of start, end,
         and chromosome data in input BED file. Default for normal BED is
         "1,2,0".
-    --zero-ho : bool
-        If set, treats regions in BED file as 0-based, (h)alf (o)pen
-        coordinates rather than 1-based, closed. 
+    --oneidx-start
+        If set, use human-readable coordinates for BED file (i.e. 1-100 for
+        first 100 bases in a genome) as opposed to default of zero-based, 
+        half-open (0-100).
     --out : str
         Name for output file. Defaults to 'input.ima.u"
     --remove-multiallele : bool
@@ -582,7 +588,7 @@ def vcf_to_ima(**kwargs):
     regions_provided = False
     if args.genename is not None:
         regions_provided = True
-        region_list = RegionList(filename=args.genename, zeroho=args.zeroho,
+        region_list = RegionList(filename=args.genename, zeroho=(not args.oneidx),
                             zeroclosed=args.zeroclosed,
                             colstr=args.gene_col)
         logging.info('Region list read')

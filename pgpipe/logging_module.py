@@ -1,5 +1,6 @@
 import sys
 import logging
+import pgpipe
 
 
 
@@ -85,6 +86,7 @@ def initLogger(filename='pipeline.log', filelevel='INFO',
         logging.error("%s" % (val), exc_info=(etype,val,tb))
 
     sys.excepthook = exp_handler
+    logging.warning('PPP, version ' + pgpipe.__version__)
 
 
 def logArgs(args, func_name=None, print_nones=False):

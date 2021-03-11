@@ -29,10 +29,11 @@
         Comma-separated string of the zero-based indices of the start, end,
         and chromosome columns in the input file, so the file doesn't need to
         be reformatted. Default for a regular BED file is 1,2,0.
-    **--zero-ho**
-        If set, indicates input BED regions are on zero-based, half-open
-        coordinate system, as opposed to one-based, closed. For example, the
-        first million bases on a chromosome would be:
+    **--oneidx-start**
+        If set, indicates input BED regions are formatted as one-indexed, 
+        closed intervals, as opposed to the BED default of zero-based, 
+        half-open intervals. For example, the first million bases on a 
+        chromosome would be:
             Zero-based, half-open: 0,1000000
             One-based, closed:     1,1000000
     **--pad** *<pad_length>*
@@ -69,8 +70,9 @@ def parseArguments(passed_arguments = []):
                         help=("Comma-separated list of length 3 with 0-based"
                         " indexes of start, end, and chromosome data in input"
                         " BED file. Default for normal BED is 1,2,0"))
-    parser.add_argument('--zero-ho', dest="zeroho", action="store_true",
-                        help="Region list is 1 indexed, not 0")
+    parser.add_argument('--oneidx-start',dest="oneidx", action="store_true",
+                        help=("Region list start coordinates indexed from 1, "
+                        "not 0"))
     parser.add_argument('--zero-closed', dest="zeroclosed", action="store_true",
                         help="Use zero-based, closed coordinates")
     parser.add_argument('--pad', dest="pad_count", default=0,
@@ -108,9 +110,10 @@ def get_intergenic(**kwargs):
         Comma-separated list of length 3 with 0-based indexes of start, end,
         and chromosome data in input BED file. Default for normal BED is
         "1,2,0".
-    --zero-ho : bool
-        If set, treats regions in BED file as 0-based, (h)alf (o)pen 
-        coordinates rather than 1-based, closed
+    --oneidx-start
+        If set, use human-readable coordinates for BED file (i.e. 1-100 for
+        first 100 bases in a genome) as opposed to default of zero-based, 
+        half-open (0-100).
     --pad : int
         Distance to pad input windows. If padding between two 
         consecutive regions cross, will not output region for area.
@@ -136,7 +139,7 @@ def get_intergenic(**kwargs):
     if args.region_name is None:
         raise Exception("BED input filename required")
     reg_list = RegionList(filename=args.region_name, colstr=args.colstr,
-                          zeroho=args.zeroho, zeroclosed=args.zeroclosed)
+                          zeroho=(not args.oneidx), zeroclosed=args.zeroclosed)
     out_list = getIntervalsBetween(reg_list, int(args.pad_count))
     out_list.printList(file_name=args.output_name, add_chr=args.add_chr)
 

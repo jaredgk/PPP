@@ -76,10 +76,11 @@
         Comma-separated string of the zero-based indices of the start, end,
         and chromosome columns in the input file, so the file doesn't need to
         be reformatted. Default for a regular BED file is 1,2,0.
-    **--zero-ho**
-        If set, indicates input BED regions are on zero-based, half-open
-        coordinate system, as opposed to one-based, closed. For example, the
-        first million bases on a chromosome would be:
+    **--oneidx-start**
+        If set, indicates input BED regions are formatted as one-indexed, 
+        closed intervals, as opposed to the BED default of zero-based, 
+        half-open intervals. For example, the first million bases on a 
+        chromosome would be:
             Zero-based, half-open: 0,1000000
             One-based, closed:     1,1000000
     **--pad** *<pad_length>*
@@ -137,8 +138,9 @@ def parseArguments(passed_arguments = []):
                         "start, end, and chromosme in BED file (default 1,2,0)"))
     parser.add_argument("--out",dest="outname",help=("Output filename, "
                         "default is stdout"))
-    parser.add_argument("--zero-ho", dest="zeroho", action="store_true",
-                        help="BED input in zero-based, half-open format")
+    parser.add_argument('--oneidx-start',dest="oneidx", action="store_true",
+                        help=("Region list start coordinates indexed from 1, "
+                        "not 0"))
     parser.add_argument("--zero-closed", dest="zeroclosed",action="store_true")
     parser.add_argument("--parsecpg", dest="refname",help=("If filtering "
                         "for CpGs, provide reference filename here"))
@@ -210,7 +212,7 @@ def filter_bed_regions(**kwargs):
     if args.randcount != -1:
         randomize = True
 
-    regions = RegionList(filename=args.bedname,zeroho=args.zeroho,
+    regions = RegionList(filename=args.bedname,zeroho=(not args.oneidx),
                          zeroclosed=args.zeroclosed,sortlist=args.sort_lists,
                          colstr=args.gene_col,
                          keep_full_line=args.keep_full_line)
@@ -252,7 +254,7 @@ def filter_bed_regions(**kwargs):
     if regions.header is not None:
         outf.write(regions.header+'\n')
     for i in idx_output:
-        outf.write(regions.regions[i].toStr(sep='\t')+'\n')
+        outf.write(regions.regions[i].toStr(sep='\t',zeroho=regions.zeroho)+'\n')
 
     outf.close()
 

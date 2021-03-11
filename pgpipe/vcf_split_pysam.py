@@ -26,7 +26,9 @@ def parseArguments(passed_arguments = []):
     region_group.add_argument("--bed", dest="genename", help=("Tab-delimited"
                               " file with two (start-end) or three "
                               "(chromosome) columns"))
-    parser.add_argument('--zero-ho', dest="zeroho", action="store_true")
+    parser.add_argument('--oneidx-start',dest="oneidx", action="store_true",
+                        help=("Region list start coordinates indexed from 1, "
+                        "not 0"))
     parser.add_argument('--zero-closed', dest="zeroclosed", action="store_true")
     parser.add_argument("--out", dest="output_name", help= (
                         "Optional name for output other than default"))
@@ -265,10 +267,10 @@ def vcf_region_write(**kwargs):
         vcf_out = pysam.VariantFile(output_name, 'w', header=header)
 
     if args.gene_str is not None:
-        region_list = RegionList(genestr=args.gene_str,zeroho=args.zeroho,
+        region_list = RegionList(genestr=args.gene_str,zeroho=(not args.oneidx),
                                  zeroclosed=args.zeroclosed)
     elif args.genename is not None:
-        region_list = RegionList(filename=args.genename,zeroho=args.zeroho,
+        region_list = RegionList(filename=args.genename,zeroho=(not args.oneidx),
                                  zeroclosed=args.zeroclosed,
                                  colstr=args.gene_col,sortlist=False)
     else:
