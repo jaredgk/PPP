@@ -1,6 +1,0 @@
-before_install:
-  - pip install --user pysam
-
-
-
-script: python jared/tests.py
