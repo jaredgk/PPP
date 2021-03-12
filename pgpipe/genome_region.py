@@ -118,15 +118,11 @@ class Region:
     def containsRecord(self, rec):
         k1 = self.getChromKey()
         kr = getChromKey(rec.chrom)
-        #print ("region:",k1,", record:",kr)
         if k1 != kr:
             if keyComp(k1,kr):
-                #return 'before'
                 return 'after'
             return 'before'
-            #return 'after'
         comp_pos = rec.pos-1
-##        print(comp_pos,self.start,self.end)
         if comp_pos < self.start:
             return 'before'
         if comp_pos >= self.end:
@@ -143,7 +139,6 @@ class Region:
         elif zeroclosed:
             end -= 1
         return str(self.chrom)+sep+str(start)+sep+str(end)
-        #return str(start)+sep+str(end)+sep+str(self.chrom)
 
     def getReference(self, refseq):
         return refseq.fetch(self.chrom,self.start,self.end)
@@ -154,7 +149,7 @@ class Region:
 class RegionList:
 
     def __init__(self, filename=None, genestr=None, reglist=None,
-                 zeroclosed=False, zeroho=False,
+                 zeroclosed=False, zeroho=True,
                  colstr=None, sortlist=True, checkoverlap=None,
                  sortmethod=None, sortorder=None, chromfilter=None,
                  list_template=None, randomize=False,keep_full_line=False):
@@ -316,6 +311,11 @@ class RegionList:
             start -= 1
         elif self.zeroclosed:
             end += 1
+        if start < 0:
+            raise Exception('Region start coordinate is less than 0')
+        if end < 0:
+            raise Exception('Region end coordinate is less than 0')
+        #Add exception if end is after start? 
         fullline = (('\t'.join(la)) if self.keep_full_line else None)
         self.regions.append(Region(start,end,chrom,fullline))
 
@@ -447,15 +447,8 @@ def subtractBed(stat_list, filter_list):
     stat_region = stat_list.regions[stat_idx]
     filter_region = filter_list.regions[filter_idx]
     while stat_idx < len(stat_list.regions):
-        #try:
-        #    print (stat_list.regions[stat_idx].toStr(),filter_list.regions[filter_idx].toStr())
-        #except:
-        #    break
-        #print (stat_list.regions[stat_idx].toStr())
         while filter_idx < len(filter_list.regions) and stat_list.regions[stat_idx].end > filter_list.regions[filter_idx].start:
-            #print (filter_list.regions[filter_idx].toStr())
             if stat_list.regions[stat_idx].start < filter_list.regions[filter_idx].end:
-                #print ("drop "+str(stat_idx))
                 drop_list[stat_idx] = True
                 break
             filter_idx+=1
