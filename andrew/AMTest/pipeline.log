@@ -1,7 +1,0 @@
-2019-03-11 16:02:05,398 - logArgs - INFO: Argument bed_prefix: out
-2019-03-11 16:02:05,399 - logArgs - INFO: Argument model_file: input.short.model
-2019-03-11 16:02:05,399 - logArgs - INFO: Argument model: 2Pop
-2019-03-11 16:02:05,399 - logArgs - INFO: Argument out_prefix: out
-2019-03-11 16:02:05,399 - read_model_file - INFO: Finished reading model file (input.short.model)
-2019-03-11 16:02:05,399 - bed_to_eigenstrat - INFO: Beginning eigenstrat conversion
-2019-03-11 16:02:05,619 - call_convertf - INFO: convertf call complete

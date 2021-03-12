@@ -1,9 +1,0 @@
-
-<data format="tabular" name="output">
-  <filter> len(selected['pop_files']) &lt; 3 or (selected['calc_statistic'] not in ["windowed-weir-fst", "weir-fst"]) </filter>
-</data>
-
-<collection type="list" name="output_list">
-  <filter> 'pop_files' in selected and len(selected['pop_files']) &gt;= 3 and (selected['calc_statistic'] in ["windowed-weir-fst", "weir-fst"]) </filter>
-  <discover_datasets pattern="(?P&lt;name&gt;.*)" directory="Statistic_Files" format="tabular"/>
-</collection>
