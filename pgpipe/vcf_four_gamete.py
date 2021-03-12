@@ -103,7 +103,7 @@ import pysam
 
 from pgpipe.logging_module import initLogger
 from pgpipe.genome_region import Region, RegionList
-from pgpipe.vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, VcfReader
+from pgpipe.vcf_reader_func import vcfRegionName, getRecordsInRegion, VcfReader
 from pgpipe.bcftools import check_for_index, create_index
 from pgpipe.misc import argprase_kwargs
 
