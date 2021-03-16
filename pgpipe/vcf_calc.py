@@ -56,8 +56,8 @@
     **--out-prefix** *<output_prefix>*
         Argument used to define the output prefix (i.e. filename without file extension)
     **--out-dir** *<output_dir_name>*
-        Argument used to define the output directory. Only used if multiple output files 
-        are created.
+        Argument used to define the output directory. Only used if 3+ populations are
+        specified.
     **--overwrite**
         Argument used to define if previous output should be overwritten.
     
@@ -71,26 +71,40 @@
         (freq), Fit (het-fit), Fis (het-fis), and the hardy-weinberg equilibrium 
         (hardy-weinberg).
 
-    ***********************************
-    Statistic Command-line Requirements
-    ***********************************
+    **************************
+    Models with 3+ populations
+    **************************
+    If a model is specified with 3 or more populations, the following statistics will
+    result in the creation of an output directory - see **--out-dir** - of pairwise
+    comparisons: *weir-fst*, *windowed-weir-fst*, *site-pi*, *window-pi*.
+
+    ***********************************************
+    Statistic Command-line Requirements and Options
+    ***********************************************
     It should be noted that some of the statistics in the VCF calculator require additional
     arguments (i.e. **--pop-file**, **--statistic-window-size**, **--statistic-window-step**).
-    These statistics may be found below with their additional requirements. If a statistic is
-    not given, only the statistic specification (i.e. **--calc-statistic**) is required.
+    These statistics may be found below with their additional requirements and optional 
+    arguments. If a statistic is not given, only the statistic specification (i.e. 
+    **--calc-statistic**) is required.
 
     **--calc-statistic** *weir-fst*
         Requires: **--pop-file**/**--model**.
 
     **--calc-statistic** *windowed-weir-fst*
-        Requires: **--pop-file**/**--model**, **--statistic-window-size**, and
-        **--statistic-window-step**.
+        Requires: **--pop-file**/**--model** and **--statistic-window-size**. If
+        **--statistic-window-step** is not given, it will default to the value of
+        **--statistic-window-size**.
 
     **--calc-statistic** *TajimaD*
         Requires: **--statistic-window-size**
 
+     **--calc-statistic** *site-pi*
+        Optional: **--pop-file**/**--model**.
+
     **--calc-statistic** *windowed-pi*
-        Requires: **--statistic-window-size** and **--statistic-window-step**.
+        Requires: **--statistic-window-size**. . If **--statistic-window-step** is 
+        not given, it will default to the value of **--statistic-window-size**.
+        Optional: **--pop-file**/**--model**.
 
     **--calc-statistic** *het-fis*
         Requires: **--pop-file**/**--model**.
@@ -327,6 +341,14 @@ def run (**kwargs):
         Incompatible arguments
     '''
 
+    def return_ind_args (pop_files):
+        ind_args = []
+        for pop_file in pop_files:
+            with open(pop_file, 'r') as pop_data:
+                for pop_str in pop_data:
+                    ind_args.extend(['--indv', pop_str.strip()])
+        return ind_args
+
     def calc_exception (selected_model, exc_type, exc_value, exc_traceback):
 
         # Check if the selected model was correctly assigned
@@ -392,7 +414,7 @@ def run (**kwargs):
         logging.info('%s assigned as model' % selected_model)
 
         # Check if the specified statistic is fst-based or fis-based
-        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis']:
+        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis', 'window-pi', 'site-pi']:
 
             # Create the population files
             selected_model.create_pop_files(file_ext = '.txt', overwrite = vcf_args.overwrite)
@@ -419,7 +441,7 @@ def run (**kwargs):
     if vcf_args.pop_file:
 
         # Check if the specified statistic is fst-based or fis-based
-        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis']:
+        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'het-fis', 'window-pi', 'site-pi']:
 
             # Store the population files
             vcftools_pop_files = vcf_args.pop_file
@@ -461,6 +483,10 @@ def run (**kwargs):
         if vcf_args.filter_exclude_bed:
             vcftools_call_args.extend(['--exclude-bed', vcf_args.filter_exclude_bed])
 
+    # Confirm if window step size default should be assigned
+    if not vcf_args.statistic_window_step and vcf_args.statistic_window_size:
+        vcf_args.statistic_window_step = vcf_args.statistic_window_size
+
     # Check if windowed Fst is specified
     if vcf_args.calc_statistic == 'windowed-weir-fst':
 
@@ -471,10 +497,6 @@ def run (**kwargs):
         # Confirm that the window size has been assigned
         if not vcf_args.statistic_window_size:
             raise Exception('%s requires a specifed window size to operate' % vcf_args.calc_statistic)
-
-        # Confirm that window step size has been assigned
-        if not vcf_args.statistic_window_step:
-            raise Exception('%s requires a specifed window step size to operate' % vcf_args.calc_statistic)
 
         # Assigns the required window arguments
         vcftools_call_args.extend(['--fst-window-size', vcf_args.statistic_window_size, '--fst-window-step', vcf_args.statistic_window_step])
@@ -516,10 +538,6 @@ def run (**kwargs):
         # Confirm that the window size has been assigned
         if not vcf_args.statistic_window_size:
             raise Exception('%s requires a specifed window size to operate' % vcf_args.calc_statistic)
-
-        # Confirm that window step size has been assigned
-        if not vcf_args.statistic_window_step:
-            raise Exception('%s requires a specifed window step size to operate' % vcf_args.calc_statistic)
 
         # Assigns all the vcftools arguments for calculating pi
         vcftools_call_args.extend(['--window-pi', vcf_args.statistic_window_size, '--window-pi-step', vcf_args.statistic_window_step])
@@ -595,7 +613,7 @@ def run (**kwargs):
         check_for_vcftools_output(vcftools_output_filename)
 
         # Check if the ouput will require the output directory
-        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst'] and len(vcftools_pop_files) > 2:
+        if vcf_args.calc_statistic in ['windowed-weir-fst', 'weir-fst', 'window-pi', 'site-pi'] and len(vcftools_pop_files) > 2:
 
             # Check if the output directory is present and report the error
             if os.path.exists(vcf_args.out_dir):
@@ -624,6 +642,55 @@ def run (**kwargs):
 
             # Assign the population files
             pop_call_args.extend(['--weir-fst-pop', first_pop_filepath, '--weir-fst-pop', second_pop_filepath])
+
+            # Extract filename from first filepath
+            first_pop_filename = return_filename(first_pop_filepath)
+
+            # Extract filename from second filepath
+            second_pop_filename = return_filename(second_pop_filepath)
+
+            # Create the population prefix, and join to the output directory
+            pop_prefix = os.path.join(vcf_args.out_dir, vcf_args.out_prefix)
+
+            # Update the population prefix with the population names
+            pop_prefix += '.%s.%s' % (first_pop_filename, second_pop_filename)
+
+            # The filename population file
+            pop_filename = pop_prefix + vcftools_out_suffix
+
+            # vcftools subprocess call, with stdout
+            vcftools_err = call_vcftools(vcfname_arg + pop_call_args, output_filename = pop_filename)
+
+            # Check if the log should be piped to the stdout
+            if vcf_args.log_stdout:
+
+                # Write the log to stdout
+                sys.stdout.write(vcftools_err)
+
+            # Check if log should be saved as a file
+            else:
+
+                # Produce the vcftools log file, in append mode
+                produce_vcftools_log(vcftools_err, vcftools_output_filename, append_mode = True)
+
+    # Run vcftools once if the statistic isn't het-fis
+    elif vcf_args.calc_statistic in ['window-pi', 'site-pi'] and len(vcftools_pop_files) > 2:
+
+        def return_filename (filepath):
+            return os.path.basename(filepath).split(os.extsep)[0]
+
+        # Create the output directory
+        if not os.path.exists(vcf_args.out_dir):
+            os.makedirs(vcf_args.out_dir)
+
+        # Loop each population file
+        for first_pop_filepath, second_pop_filepath in itertools.combinations(vcftools_pop_files, 2):
+
+            # Create the population-specific call
+            pop_call_args = copy.deepcopy(vcftools_call_args)
+
+            # Assign the population files
+            pop_call_args.extend(return_ind_args([first_pop_filepath, second_pop_filepath]))
 
             # Extract filename from first filepath
             first_pop_filename = return_filename(first_pop_filepath)
@@ -685,6 +752,12 @@ def run (**kwargs):
 
             # Assigns the population files to the vcftools call
             vcftools_call_args.extend([pop_args for pop_file in vcftools_pop_files for pop_args in ['--weir-fst-pop', pop_file]])
+
+        # Check if either Pi statistic is specified
+        elif vcf_args.calc_statistic in ['window-pi', 'site-pi'] and vcftools_pop_files:
+
+            # Assign the population files
+            vcftools_call_args.extend(return_ind_args(vcftools_pop_files))
 
         # vcftools subprocess call
         vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args, output_filename = vcftools_output_filename)
