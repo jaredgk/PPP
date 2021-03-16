@@ -22,9 +22,12 @@ def compareVcfsNoComments(va,vb):
     vfa = open(va,'r')
     vfb = open(vb,'r')
     for line in vfa:
-        l2 = vfb.readline()
         if line[0] == '#':
             continue
+        l2 = vfb.readline()
+        if l2[0] == '#':
+            while l2[0] == '#':
+                l2 = vfb.readline()
         if line != l2:
             return False
     return True
@@ -262,7 +265,8 @@ class fourgameteTest(unittest.TestCase):
                                         reti = True,
                                         out = 'input/chr11.4g.vcf',
                                         numinf = 2)
-        self.assertTrue(filecmp.cmp('input/chr11.4gtest1.vcf','input/chr11.4g.vcf'))
+        self.assertTrue(compareVcfsNoComments('input/chr11.4gtest1.vcf','input/chr11.4g.vcf'))
+        #self.assertTrue(filecmp.cmp('input/chr11.4gtest1.vcf','input/chr11.4g.vcf'))
         tryRemove('input/chr11.4g.vcf')
 
     def test_consecutive(self):
@@ -274,8 +278,9 @@ class fourgameteTest(unittest.TestCase):
                                         numinf = 2,
                                         ovlpi = True,
                                         ovlps = True)
-        self.assertTrue(filecmp.cmp('input/chr11.4gtest2.vcf','input/chr11.4g.vcf'))
-        tryRemove('input/chr11.4g.vcf')
+        self.assertTrue(compareVcfsNoComments('input/chr11.4gtest2.vcf','input/chr11.4g.vcf'))
+        #self.assertTrue(filecmp.cmp('input/chr11.4gtest2.vcf','input/chr11.4g.vcf'))
+        #tryRemove('input/chr11.4g.vcf')
 
 
 class imaTest(unittest.TestCase):

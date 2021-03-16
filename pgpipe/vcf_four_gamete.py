@@ -117,6 +117,7 @@ class BaseData():
         self.records = []
         self.extend_noninf = args.extend_noninf
         self.extend_inf = args.extend_inf
+        self.regionsize = None
         if format == 'VCF':
             self.onlysnps = True
             vcff = VcfReader(filename,index=args.tabix_index)
@@ -124,6 +125,10 @@ class BaseData():
             self.checkVcfRegion()
             self.header = vcff.reader.header
             vcff.close()
+            if region is None:
+                self.regionsize = self.records[-1].pos - self.records[0].pos
+            else:
+                self.regionsize = len(region)
         elif format == "FASTA":
             self.onlysnps = False
             f = open(filename,"r")
@@ -154,6 +159,7 @@ class BaseData():
                     break
             numseq = int(s.split()[0])
             seqlen = int(s.split()[1])
+            self.regionsize = seqlen
             s = f.readline().split()
 
             numnoncode = int(s[1])
@@ -767,13 +773,14 @@ def outputSubregion(args, interval, basedata, region=None, filename=None):
     else:
         subregion = Region(interval[0]-1,interval[1],region.chrom)
     subrecords = getRecordsInRegion(subregion, basedata.records)
+    records_d = len(basedata.records) - 1
+    density = float(records_d) / float(basedata.regionsize)
     if filename is None:
         subfn = vcfRegionName(args.out_prefix,subregion,"vcf.gz")
     else:
         subfn = filename
-    #print (interval)
-    #print (subfn)
     subf = pysam.VariantFile(subfn, 'w', header=basedata.header)
+    subf.header.add_line('##SNPDensity='+str(density))
     for record in subrecords:
         subf.write(record)
     subf.close()
@@ -866,7 +873,6 @@ def sample_fourgametetest_intervals(**kwargs):
     if args.log_name is not None:
         initLogger(filename=log_name)
     logArgs(args)
-    #argdic = vars(args)
     interval_list = []
     multiple_regions = False
     region_output = False
@@ -881,7 +887,6 @@ def sample_fourgametetest_intervals(**kwargs):
         regname = args.vcfreg[1]
         if regname != '-':
             region_list = RegionList(filename=regname)
-            #region_output = True
             multiple_regions = (len(region_list.regions) > 1)
             if multiple_regions and not out_list and args.out is not None:
                 raise Exception(("VCF with multiple regions cannot have "
@@ -928,7 +933,6 @@ def sample_fourgametetest_intervals(**kwargs):
                 create_index(vcfname)
             basedata = BaseData(args, "VCF",vcfname)
             intervals = getIntervalList(args,basedata)
-            #sys.stderr.write(str(intervals)+'\n')
             interval_list.append(intervals)
             if args.out_prefix is not None:
                 if args.returntype == 'returnlist':
@@ -961,16 +965,9 @@ def sample_fourgametetest_intervals(**kwargs):
             intervals = getIntervalList(args, "SIT", sitname)
             interval_list.append(intervals)
 
-
-
-
     return interval_list
-        #
-
 
 if __name__ == '__main__':
     #initLogger()
-
-    #sample_fourgametetest_intervals(sys.argv[1:])
     sample_fourgametetest_intervals(**parseArguments())
 
