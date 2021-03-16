@@ -126,7 +126,7 @@ from pgpipe.misc import argprase_kwargs
 
 class locus():
     #Name, pops, store for seqs, length, mut model, scalar, mutrate
-    def __init__(self, gener, rec_list, popmodel, args):
+    def __init__(self, gener, rec_list, popmodel, args, snp_density = None):
         if args.inhet_sc is None:
             if gener.chrom in ['X','chrX']:
                 self.inhet_sc = 0.75
@@ -156,6 +156,8 @@ class locus():
         else:
             self.seq_len = len(rec_list)
         self.mutrate = self.gene_len * args.mutrate
+        if snp_density is not None and not args.no_density:
+            self.mutrate += args.mutrate / snp_density
 
     def addSeq(self,seq,pop):
         try:
@@ -274,6 +276,8 @@ def parseArguments(passed_arguments = []):
     parser.add_argument("--out-prefix",dest="multi_out",type=str,
                         help=("If output is fasta, generate one file"
                         "per loci."))
+    parser.add_argument('--no-density-header',dest="no_density",action="store_true",
+                        help=("If set, will not pull density info from VCF header"))
     if passed_arguments:
         return vars(parser.parse_args(passed_arguments))
     else:
@@ -609,6 +613,7 @@ def vcf_to_ima(**kwargs):
     for i in range(total_regions):
         #if regions_provided:
         #region = region_list.regions[i]
+        snp_density = None
         if args.multi_out is not None:
             try:
                 output_file.close()
@@ -625,6 +630,7 @@ def vcf_to_ima(**kwargs):
                                       popmodel=popmodel,
                                       use_allpop=use_allpop)
             rec_list = vcf_reader.getRecordList()
+            snp_density = vcf_reader.getSnpDensityFromHeader()
             vcf_reader.reader.close()
             if regions_provided:
                 region = region_list.regions[i]
@@ -647,7 +653,7 @@ def vcf_to_ima(**kwargs):
                 ref_seq = fasta_ref.fetch(vf.flipChrom(region.chrom),region.start,region.end)
             checkRefAlign(rec_list, fasta_ref, region.chrom, args.ref_check)
         if not args.fasta:
-            temp_locus = locus(region, rec_list, popmodel, args)
+            temp_locus = locus(region, rec_list, popmodel, args, snp_density=snp_density)
             #reg_header = getLocusHeader(region, popmodel, rec_list,mut_rate=args.mutrate,inhet_sc=args.inhet_sc,include_seq=(fasta_ref is not None))
             #output_file.write(reg_header+'\n')
         popnum = 0

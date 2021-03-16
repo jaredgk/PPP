@@ -1186,5 +1186,11 @@ class VcfReader():
                 return trec
         except StopIteration as e:
             return None
+
+    def getSnpDensityFromHeader(self):
+        for x in self.reader.header.records:
+            if x.key == 'SNPDensity':
+                return float(x.value)
+        return None
             
 
