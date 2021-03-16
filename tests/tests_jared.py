@@ -29,7 +29,11 @@ def compareVcfsNoComments(va,vb):
             while l2[0] == '#':
                 l2 = vfb.readline()
         if line != l2:
+            vfa.close()
+            vfb.close()
             return False
+    vfa.close()
+    vfb.close()
     return True
 
 def compareVcfsZipped(va,vb):
@@ -148,7 +152,6 @@ class geneRegionTest(unittest.TestCase):
         rec = self.getARecord()
         rl = RegionList(genestr="11:142531:142600", zeroho = False)
         val = rl.regions[0].containsRecord(rec)
-        sys.stderr.write(str(val)+'\n')
         self.assertTrue(rl.regions[0].containsRecord(rec) == 'before')
 
     def test_CR_after(self):
