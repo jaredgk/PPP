@@ -1,6 +1,0 @@
-To install Galaxy installation with PPP functionality:
-1) Download Galaxy source from https://github.com/galaxyproject/galaxy
-2) From local copy of PPP repo, copy the folders in galaxy_ppp/PPP/ into the main galaxy directory. This will override some files.
-3) If running locally, in the galaxy folder,rename the file config/galaxy.local.yml to config/galaxy.yml (overriding existing version of file)
-4) To run as administrator, search config/galaxy.yml for 'admin_users' and add a dummy email address as your account name.
-5) To run galaxy, use command 'sudo run.sh'. Your instance can be found by going to address 127.0.0.1:8080 in a web browser
