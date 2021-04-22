@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/jodyhey/miniconda3/envs/py-popgen/bin/python
 '''
 Generates an input sequence file for the G-Phocs program from a
 vcf file and a fasta reference file.
@@ -217,23 +217,23 @@ def gphocs_parser(passed_arguments=[]):
                 setattr(args, self.dest, value)
         return customAction
 
-    gphocs_parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    gphocs_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
-    gphocs_parser.add_argument('--reference', help = 'Defines the fasta referemce filename',required = True, type = str, action = parser_confirm_file())
-    gphocs_parser.add_argument('--model-file', help = 'Defines the model filename',required = True, type = str, action = parser_confirm_file())
-    gphocs_parser.add_argument('--modelname', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
-    gphocs_parser.add_argument("--bed-file",help="Defines the BED filename", type = str, required = True, action = parser_confirm_file())
-    gphocs_parser.add_argument('--out', help = 'Defines the complete output filename', type = str)
-    gphocs_parser.add_argument('--diploid',default = True,
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
+    parser.add_argument('--reference', help = 'Defines the fasta referemce filename',required = True, type = str, action = parser_confirm_file())
+    parser.add_argument('--model-file', help = 'Defines the model filename',required = True, type = str, action = parser_confirm_file())
+    parser.add_argument('--modelname', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
+    parser.add_argument("--bed-file",help="Defines the BED filename", type = str, required = True, action = parser_confirm_file())
+    parser.add_argument('--out', help = 'Defines the complete output filename', type = str)
+    parser.add_argument('--diploid',default = True,
                                 help="specifies whether the sample is diploid."
                                 "If True then IUPAC ambiguity codes are used for heterozygous positions."
                                 "If False, then only the first sequence of each individual is returned.")
-    gphocs_parser.add_argument("--nloci",type=int,help="Number of 'loci' (BED file regions) to return."
+    parser.add_argument("--nloci",type=int,help="Number of 'loci' (BED file regions) to return."
                                "if None returns all regions in the BED file")
     if passed_arguments:
-        return vars(gphocs_parser.parse_args(passed_arguments))
+        return vars(parser.parse_args(passed_arguments))
     else:
-        return vars(gphocs_parser.parse_args())
+        return vars(parser.parse_args())
 
 
 def run (**kwargs):
@@ -241,11 +241,11 @@ def run (**kwargs):
 ##    gphocs_args = gphocs_parser(passed_arguments)
     # Update kwargs with defaults
     if __name__ != "__main__":
-        kwargs = argprase_kwargs(kwargs, gphocs_parser)
+        args = argprase_kwargs(kwargs, gphocs_parser)
+        gphocs_args = argparse.Namespace(**args)    
     # Assign arguments
-    
-    gphocs_args = argparse.Namespace(**kwargs)
-
+    else:
+        gphocs_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(gphocs_args, func_name = 'make_gphocs_sequence_file')
@@ -259,18 +259,27 @@ def run (**kwargs):
 
 if __name__ == "__main__":
     initLogger()
-    run(**gphocs_parser())
-    exit()
-    debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz',
-            '--reference',"..//jhtests//pan_example_ref.fa",
-            '--model-file',"..//jhtests//panmodels.model",
-            '--modelname',"4Pop",
-            '--bed-file',"..//jhtests//pan_example_regions.bed",
-            '--out','..//jhtests//results//vcf_gphocs_test.out']
-    run(debugargs)
-    debugargs = ['--vcf','..//jhtests//pan_example2.vcf.gz','--reference',
-                 "..//jhtests//chr22_pan_example2_ref.fa",
-            '--model-file',"..//jhtests//panmodels.model",'--modelname',"4Pop",
-            '--bed-file',"..//jhtests//pan_test_regions.bed",
-            '--out','..//jhtests//results//vcf_gphocs_test2.out','--diploid','False']
-    run(debugargs)
+    args = gphocs_parser(sys.argv[1:])
+    run(**args)
+    sys.exit()
+    # for debugging
+    # debugargs = ['--vcf','//home//jodyhey//temp//PPP//tests//input//pan_example.vcf.gz',
+    #         '--reference',"//home//jodyhey//temp//PPP//tests//input//pan_example_ref.fa",
+    #         '--model-file',"//home//jodyhey//temp//PPP//tests//input//panmodels.model",
+    #         '--modelname',"4Pop",
+    #         '--bed-file',"//home//jodyhey//temp//PPP//tests//input//pan_example_regions.bed",
+    #         '--out','..//jhtests//results//vcf_gphocs_test.out']
+    # test using a vcf file and a bed file, this one does not work because file is in wrong folder
+    # debugargs = "--vcf ..//jhtests//pan_example2.vcf.gz --reference ..//jhtests//chr22_pan_example2_ref.fa --model-file ..//jhtests//panmodels.model --modelname 4Pop --bed-file ..//jhtests//pan_test_regions.bed --out ..//jhtests//results//vcf_gphocs_test2.out --diploid False"
+    # args = gphocs_parser(debugargs)
+    # run(**args)
+    # sys.exit()    
+    # debugargs = ['--vcf','..//jhtests//pan_example2.vcf.gz','--reference',
+    #              "..//jhtests//chr22_pan_example2_ref.fa",
+    #         '--model-file',"..//jhtests//panmodels.model",'--modelname',"4Pop",
+    #         '--bed-file',"..//jhtests//pan_test_regions.bed",
+    #         '--out','..//jhtests//results//vcf_gphocs_test2.out','--diploid','False']
+    # args = gphocs_parser(debugargs)
+    # run(**args)
+    # sys.exit()    
+

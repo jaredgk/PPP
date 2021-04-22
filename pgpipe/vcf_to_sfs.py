@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/jodyhey/miniconda3/envs/PPPdev/bin/python
 '''
 For generating the site frequency spectrum (sfs)for a
 population model from a vcf file.
@@ -625,17 +625,15 @@ def sfs_parser(passed_arguments=[]):
         return vars(sfs_parser.parse_args())
 
 def run (**kwargs):
-    # Update kwargs with defaults
     if __name__ != "__main__":
-        kwargs = argprase_kwargs(kwargs, sfs_parser)
-    # Assign arguments
-    sfs_args = argparse.Namespace(**kwargs)    
-
-
+        args = argprase_kwargs(kwargs, sfs_parser)
+        sfs_args=argparse.Namespace(**args)
+    else:
+        sfs_args= argparse.Namespace(**kwargs)
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(sfs_args, func_name = 'build_sfs')
 
-##    print(sfs_args)
+    # print(sfs_args)
 
     build_sfs(sfs_args.vcf,sfs_args.model_file,sfs_args.modelname,BEDfilename=sfs_args.bed_file,
               altreference = sfs_args.outgroup_fasta,folded = sfs_args.folded,
@@ -646,27 +644,37 @@ def run (**kwargs):
     
 if __name__ == "__main__":
     initLogger()
-    run(**sfs_parcer())
-    exit()
-
-    debugargs=['--vcf',"..//jhtests//pan_example2.vcf.gz",
-               '--model-file',"..//jhtests//panmodels.model",'--modelname','4Pop',
-               '--downsamplesizes','3','3','3','4',
-               '--folded','--outgroup-fasta',"..//jhtests//chr22_pan_example2_ref.fa",
-               '--out',"..//jhtests//results//vcf_to_sfs_test1.txt"]
-    run(debugargs)
-    debugargs=['--vcf',"..//jhtests//pan_example.vcf.gz",
-               '--model-file',"..//jhtests//panmodels.model",'--modelname','5Pop',
-               '--downsamplesizes','3','3','3','4','2',
-               '--folded','--outgroup-fasta',"..//jhtests//pan_example_ref.fa",
-               '--out',"..//jhtests//results//vcf_to_sfs_test2.txt"]
-    
+    args= sfs_parser(sys.argv[1:])
+    run(**args)
+    sys.exit()
+    ## for debugging
+    # debugargs=['--vcf',"..//tests//input//pan_example2.vcf.gz",
+    #            '--model-file',"..//tests//input//panmodels.model",'--modelname','4Pop',
+    #            '--downsamplesizes','3','3','3','4',
+    #            '--folded','--outgroup-fasta',"..//tests//input//chr22_pan_example2_ref.fa",
+    #            '--out',"..//jhtests//results//vcf_to_sfs_test1.txt"]
+    # args= sfs_parser(debugargs)
+    # run(**args)
+    # sys.exit()
+    # debugargs=['--vcf',"..//jhtests//pan_example.vcf.gz",
+    #            '--model-file',"..//jhtests//panmodels.model",'--modelname','5Pop',
+    #            '--downsamplesizes','3','3','3','4','2',
+    #            '--folded','--outgroup-fasta',"..//jhtests//pan_example_ref.fa",
+    #            '--out',"..//jhtests//results//vcf_to_sfs_test2.txt"]
+    # args= sfs_parser(debugargs)
+    # run(**args)
+    # sys.exit()
 ##    debugargs=['--vcf',"..//jhtests//pan_example2.vcf.gz",
 ##               '--model-file',"..//jhtests//panmodels.model",'--model','2Pop',
 ##               '--outgroup-fasta',"..//jhtests//chr22_pan_example2.fa",
 ##               '--out',"..//jhtests//test_vcf_to_sfs_2pop.txt"]
-    
+    # args= sfs_parser(debugargs)
+    # run(**args)
+    # sys.exit()
 ##    debugargs = ['--vcf','pan_example.vcf.gz','--reference',"pan_example2_ref.fa",
 ##            '--model-file',"panmodels.model",'--model',"4Pop",
 ##            '--bed-file',"twochr_test.bed",'--out','testgphocsparser.out']#,'--diploid','False','--nloci','4']
-    run(debugargs)
+    # args= sfs_parser(debugargs)
+    # run(**args)
+    # sys.exit()
+    

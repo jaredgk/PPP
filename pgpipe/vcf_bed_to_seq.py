@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/jodyhey/miniconda3/envs/py-popgen/bin/python
 
 '''
 For generating a file with reconstituted sequences for regions of a vcf file.
@@ -28,10 +28,11 @@ Required Arguments
 **--fasta-reference** *<reference fasta file>*
     The reference genome fasta file is required in order to generate full
     sequences from the SNP data in the vcf file.
+
 **--region** *<region string>*
     The region of the reference to return sequences from.
     Format: chromosome name,colon (:),first base number,dash(-),last base number.
-    e.g. chr1:100392-101391"
+    e.g. chr1:100392-101391
 
 **--out** *<out file name>*
     - the name of an output file. If --out is omitted the default is ppp_vcf_to_sequences.out
@@ -201,9 +202,6 @@ from pgpipe.genome_region import Region, RegionList
 import pysam
 from pgpipe.misc import argprase_kwargs
 
-
-
-
 def xor(val1,val2):
     """
        makes booleans of val1 and val2 and then return bitwise xor  (i.e. True/False)
@@ -260,7 +258,7 @@ def get_model_sequences_from_region(vcf=None,popmodel=None,
         out is the name of a file to contain the sequences
             
 
-        called_from_run is true only if build_sfs() was called from run()
+        called_from_run is true only if the call to this function came from run()
             in this case the out file name is set to a default value
 
         
@@ -406,7 +404,7 @@ def get_model_sequences(vcf=None,model_file = None,modelname=None,
         raise Eception("both model_file and modelname must be given, unless popmodel is being used")
     if not popmodel:
         popmodels = read_model_file(model_file)
-        popmodel = popmodels[model]
+        popmodel = popmodels[modelname] #JH changed this 2/26/2021,  was popmodel = popmodels[model]
     # make an instance of VcfReader 
     vcf_reader = vf.VcfReader(vcf,popmodel=popmodel)
     with open(BED_filename,'r') as bf:
@@ -466,12 +464,12 @@ def parser(passed_arguments=[]):
         return vars(parser.parse_args())
 
 def run (**kwargs):
-
     # Update kwargs with defaults
     if __name__ != "__main__":
-        kwargs = argprase_kwargs(kwargs, parser)
-    # Assign arguments
-    args = argparse.Namespace(**kwargs)
+        args = argprase_kwargs(kwargs, parser)
+        args=argparse.Namespace(**args)
+    else:
+        args= argparse.Namespace(**kwargs)   
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(args, func_name = 'get_model_sequences_from_region')
@@ -486,19 +484,18 @@ def run (**kwargs):
     fasta_access = pysam.FastaFile(args.fasta_reference)
     seqstr = fasta_access.fetch(region=args.region)
        
-    get_model_sequences_from_region(vcf=args.vcf,popmodel=popmodel,
-        seq_reference=seqstr, region=args.region,return_single=args.return_single,
-        called_from_run=True,out=args.out)
-    
-    
+    get_model_sequences_from_region(vcf=args.vcf,popmodel=popmodel,seq_reference=seqstr, region=args.region,return_single=args.return_single,called_from_run=True,out=args.out)    
     
 if __name__ == "__main__":
     initLogger()
-    run(**parser())
-    exit()
-    debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz','--fasta-reference',
-                 "..//jhtests//pan_example_ref.fa",
-            '--model-file',"..//jhtests//panmodels.model",'--modelname',"4Pop",
-            '--region',"21:4431001-4499000",
-            '--out','..//jhtests//results//vcf_bed_to_seq_test.out']    
-    run(debugargs)
+    args= parser(sys.argv[1:])
+    run(**args)
+    sys.exit()
+    # debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz','--fasta-reference',
+    #              "..//jhtests//pan_example_ref.fa",
+    #         '--model-file',"..//jhtests//panmodels.model",'--modelname',"4Pop",
+    #         '--region',"21:4431001-4499000",
+    #         '--out','..//jhtests//results//vcf_bed_to_seq_test.out']    
+    # args= parser(debugargs)
+    # run(**args)
+    # sys.exit()

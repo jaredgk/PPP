@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/jodyhey/miniconda3/envs/py-popgen/bin/python
 '''
 The treemix program was developed by Pickrell and Prichard (2012)
 to estimate phylogeny and admixture for closely related populations.
@@ -84,6 +84,7 @@ Example command-lines:
 
 
 import os
+import sys
 import logging
 import argparse
 import subprocess
@@ -262,13 +263,13 @@ def treemix_parser(passed_arguments=[]):
                 setattr(args, self.dest, value)
         return customAction
 
-    treemix_parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    treemix_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
-    treemix_parser.add_argument('--model-file', help = 'Defines the model filename',required = True, type = str, action = parser_confirm_file())
-    treemix_parser.add_argument('--modelname', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
-    treemix_parser.add_argument("--bed-file",help="Defines the BED filename", type = str, action = parser_confirm_file())
-    treemix_parser.add_argument('--out', help = 'Defines the complete output filename', type = str)
-    treemix_parser.add_argument("--kblock",type=int,default = 1000,help="For treemix option of having SNPs in 'blocks'."
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
+    parser.add_argument('--model-file', help = 'Defines the model filename',required = True, type = str, action = parser_confirm_file())
+    parser.add_argument('--modelname', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
+    parser.add_argument("--bed-file",help="Defines the BED filename", type = str, action = parser_confirm_file())
+    parser.add_argument('--out', help = 'Defines the complete output filename', type = str)
+    parser.add_argument("--kblock",type=int,default = 1000,help="For treemix option of having SNPs in 'blocks'."
                                 "The number of SNPs in a block when --bed-file is used (default 1000)"
                                 "If the actual number of SNPs is less than kblock, then additional"
                                 "invariant rows are added to the data file so the total numbers of"
@@ -276,9 +277,9 @@ def treemix_parser(passed_arguments=[]):
 
 
     if passed_arguments:
-        return vars(treemix_parser.parse_args(passed_arguments))
+        return vars(parser.parse_args(passed_arguments))
     else:
-        return vars(treemix_parser.parse_args())
+        return vars(parser.parse_args())
 
 
 def run (**kwargs):
@@ -286,12 +287,11 @@ def run (**kwargs):
 
     # Update kwargs with defaults
     if __name__ != "__main__":
-        kwargs = argprase_kwargs(kwargs, treemix_parser)
-
-    # Assign arguments
-    treemix_args = argparse.Namespace(**kwargs)    
-    
-
+        args = argprase_kwargs(kwargs, treemix_parser)
+        treemix_args=argparse.Namespace(**args)
+    else:
+        treemix_args= argparse.Namespace(**kwargs)	        
+  
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(treemix_args, func_name = 'make_treemix_file')
 
@@ -309,17 +309,20 @@ def run (**kwargs):
 if __name__ == "__main__":
     initLogger()
     run(**treemix_parser())
-    exit()
-    debugargs = ['--vcf','../jhtests/pan_example.vcf.gz','--model-file',
-            "../jhtests/panmodels.model",'--modelname',"4Pop",
-            '--out','../jhtests/results/vcf_treemixtest1','--bed-file',"../jhtests/pan_example_regions.bed",'--kblock','1000']
-    run(**debugargs)
-    exit()
-    debugargs = ['--vcf','../jhtests/pan_example.vcf.gz','--model-file',
-            "../jhtests/panmodels.model",'--modelname',"4Pop",
-            '--out','../jhtests/results/vcf_treemixtest2']
-    run(debugargs)
-    exit()
+    sys.exit()
+    # for debugging 
+    # debugargs = ['--vcf','../tests/input/pan_example.vcf.gz','--model-file',
+    #         "../tests/input/panmodels.model",'--modelname',"4Pop",
+    #         '--out','../jhtests/results/vcf_treemixtest1','--bed-file',"../tests/input/pan_example_regions.bed",'--kblock','1000']
+    # args= treemix_parser(debugargs)
+    # run(**args)
+    # sys.exit()
+    # debugargs = ['--vcf','../tests/input/pan_example.vcf.gz','--model-file',
+    #         "../tests/input/panmodels.model",'--modelname',"4Pop",
+    #         '--out','../jhtests/results/vcf_treemixtest2']
+    # args= treemix_parser(debugargs)
+    # run(**args)
+    # sys.exit()
 
 
 

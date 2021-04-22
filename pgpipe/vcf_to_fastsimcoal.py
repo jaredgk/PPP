@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/jodyhey/miniconda3/envs/py-popgen/bin/python
 '''
 Generates Site Frequency Spectrum (SFS) files for fastsimcoal
 based on instructions in fastsimcoal ver 2.6 manual.
@@ -323,23 +323,24 @@ def fscmsfs_parser(passed_arguments=[]):
 
 
 def run (**kwargs):
-    
-    # Update kwargs with defaults
     if __name__ != "__main__":
-        kwargs = argprase_kwargs(kwargs, fscmsfs_parser)
+        args = argprase_kwargs(kwargs, fscmsfs_parser)
+        fscmsfs_args = argparse.Namespace(**args)
+    else:
     # Assign arguments
-    args = argparse.Namespace(**kwargs)
-    
-##    print(args)
+        fscmsfs_args = argparse.Namespace(**kwargs)
     # Adds the arguments (i.e. parameters) to the log file
-    logArgs(args, func_name = 'make_fscmsfs_file')
+    logArgs(fscmsfs_args, func_name = 'make_fscmsfs_file')
 
-    if args.basename == None:
-        args.basename = os.path.dirname(args.vcf) + "//ppp_fsc"
+    if fscmsfs_args.basename == None:
+        fscmsfs_args.basename = os.path.dirname(fscmsfs_args.vcf) + "//ppp_fsc"
                                                                                                               
-    fscmsfs_run_infostring =make_fscmsfs_file(args.vcf,args.model_file,args.modelname,args.basename,args.dim,
-            args.downsamplesizes,args.folded,args.outgroup_fasta,
-            args.bed_file,args.randomsnpprop,args.seed)
+    fscmsfs_run_infostring =make_fscmsfs_file(fscmsfs_args.vcf,
+            fscmsfs_args.model_file,fscmsfs_args.modelname,
+            fscmsfs_args.basename,fscmsfs_args.dim,
+            fscmsfs_args.downsamplesizes,fscmsfs_args.folded,
+            fscmsfs_args.outgroup_fasta,
+            fscmsfs_args.bed_file,fscmsfs_args.randomsnpprop,fscmsfs_args.seed)
     
     logging.info(fscmsfs_run_infostring)
 
@@ -347,22 +348,29 @@ def run (**kwargs):
 
 if __name__ == "__main__":
     initLogger()
-    run(**fscmsfs_parser)
-    exit()
-    debugargs=['--vcf',"..//jhtests//pan_example.vcf.gz",
-               '--model-file',"..//jhtests//panmodels.model",'--modelname','3Pop',
-           '--dim','1','2','m','--basename','../jhtests/results/vcf_fsc1']#,'--folded']
-    run(debugargs)
-    debugargs=['--vcf',"..//jhtests//pan_example2.vcf.gz",
-               '--model-file',"..//jhtests//panmodels.model",'--modelname','5Pop',
-               '--downsamplesizes','3','3','3','4','2','--basename','../jhtests/results/vcf_fsc2',
-               '--folded','--dim','1','2','m','--outgroup-fasta',"..//jhtests//chr22_pan_example2_ref.fa"]
-    run(debugargs)    
-##    debugargs=['--vcf',"sfs_test.vcf",'--model-file',
-##               "pantest.model",'--model','5Pop','--downsamplesizes','3','3','3','4','3',
-##               '--folded','--dim','1','2','m']
-##    run(debugargs)    
-##    debugargs=['--vcf',"sfs_test.vcf",'--model-file',
-##               "pantest.model",'--model','5Pop','--dim','1','2','m']    
-##    run(debugargs)    
+    args=fscmsfs_parser(sys.argv[1:])
+    run(**args)
+    sys.exit()
+    # for debugging
+    # debugargs=['--vcf',"../tests/input/pan_example.vcf.gz",
+    #            '--model-file',"../tests/input/panmodels.model",'--modelname','3Pop',
+    #        '--dim','1','2','m','--basename','../jhtests/results/vcf_fsc1']#,'--folded']
+    # args=fscmsfs_parser(debugargs)
+    # run(**args)
+    # sys.exit()
+    # debugargs=['--vcf',"..//jhtests//pan_example2.vcf.gz",
+    #            '--model-file',"..//jhtests//panmodels.model",'--modelname','5Pop',
+    #            '--downsamplesizes','3','3','3','4','2','--basename','../jhtests/results/vcf_fsc2',
+    #            '--folded','--dim','1','2','m','--outgroup-fasta',"..//jhtests//chr22_pan_example2_ref.fa"]
+    # args=fscmsfs_parser(debugargs)
+    # run(**args)
+    # sys.exit()
+
+#    debugargs=['--vcf',"sfs_test.vcf",'--model-file',
+#               "pantest.model",'--model','5Pop','--downsamplesizes','3','3','3','4','3',
+#               '--folded','--dim','1','2','m']
+
+#    debugargs=['--vcf',"sfs_test.vcf",'--model-file',
+#               "pantest.model",'--model','5Pop','--dim','1','2','m']    
+
 

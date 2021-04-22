@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/jodyhey/miniconda3/envs/py-popgen/bin/python
 '''
 Generates a dadi snp file from a vcf file.
 
@@ -264,34 +264,35 @@ def dadisnp_parser(passed_arguments=[]):
                 setattr(args, self.dest, value)
         return customAction
 
-    dadisnp_parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    dadisnp_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
-    dadisnp_parser.add_argument('--model-file', help = 'Defines the model filename',required = True, type = str, action = parser_confirm_file())
-    dadisnp_parser.add_argument('--modelname', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
-    dadisnp_parser.add_argument("--bed-file",help="Defines the BED filename", type = str, action = parser_confirm_file())
-    dadisnp_parser.add_argument('--out', help = 'Defines the complete output filename', type = str)
-    dadisnp_parser.add_argument('--outgroup-fasta',help="The name of a fasta format file containing"
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
+    parser.add_argument('--model-file', help = 'Defines the model filename',required = True, type = str, action = parser_confirm_file())
+    parser.add_argument('--modelname', help = 'Defines the model and the individual(s)/population(s) to include', required = True,type = str)
+    parser.add_argument("--bed-file",help="Defines the BED filename", type = str, action = parser_confirm_file())
+    parser.add_argument('--out', help = 'Defines the complete output filename', type = str)
+    parser.add_argument('--outgroup-fasta',help="The name of a fasta format file containing"
                                  " the ancestral or outgroup sequence, by default the 'ref' allele "
                                  "of the vcf file is treated as the outgroup")
-    dadisnp_parser.add_argument('--comment',help="comment (in quotes) to be added to the snp file ")
+    parser.add_argument('--comment',help="comment (in quotes) to be added to the snp file ")
 
     if passed_arguments:
-        return vars(dadisnp_parser.parse_args(passed_arguments))
+        return vars(parser.parse_args(passed_arguments))
     else:
-        return vars(dadisnp_parser.parse_args())
+        return vars(parser.parse_args())
 
 
 def run (**kwargs):
     # Update kwargs with defaults
     if __name__ != "__main__":
-        kwargs = argprase_kwargs(kwargs, dadisnp_parser)
-    # Assign arguments
-    dadisnp_args = argparse.Namespace(**kwargs)    
+        args = argprase_kwargs(kwargs, dadisnp_parser)
+        dadisnp_args = argparse.Namespace(**args)        
+    else:
+        dadisnp_args = argparse.Namespace(**kwargs)    
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(dadisnp_args, func_name = 'make_dadisnp_file')
 
-##    print(dadisnp_args)
+    # print(dadisnp_args)
     popmodels = read_model_file(dadisnp_args.model_file)
     popmodel = popmodels[dadisnp_args.modelname]
     dadisnp_run_infostring =make_dadisnp_file(dadisnp_args.vcf,popmodel,dadisnp_args.out,
@@ -303,26 +304,27 @@ def run (**kwargs):
 
 if __name__ == "__main__":
     initLogger()
-    run(**dadisnp_parser())
-    exit()
-                      
-    debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz','--model-file',
-                 "..//jhtests//panmodels.model",
-                 '--modelname',"4Pop",'--out','../jhtests/results/vcf_dadisnp_bedfile_test.out',
-                 '--comment','testing bedfile','--bed-file',"..//jhtests//pan_example_regions.bed"]
-    run(debugargs)
-    debugargs = ['--vcf',"..//jhtests//pan_example2.vcf.gz",'--model-file',"..//jhtests//panmodels.model",
-                 '--modelname',"4Pop",'--out','..//jhtests//results//vcf_dadisnp_test.out',
-                 '--comment','testing comment']
-    #'--outgroup-fasta',"..//jhtests//chr22_pan_example2_ref.fa",'--bed-file',"..//jhtests//pan_example_regions.bed",]
-    run(debugargs)    
-    debugargs = ['--vcf',"..//jhtests//pan_example2.vcf.gz",'--model-file',
-                 "..//jhtests//panmodels.model",
-                 '--modelname',"4Pop",'--out','..//jhtests//results//vcf_dadisnp_fasta_test.out',
-                 '--comment','testing outgroup-fasta','--outgroup-fasta',
-                 "..//jhtests//chr22_pan_example2_ref.fa"]
+    args = dadisnp_parser(sys.argv[1:])
+    run(**args)
+    sys.exit()
+    # for debugging
+    # debugargs = ['--vcf','..//jhtests//pan_example.vcf.gz','--model-file',
+    #              "..//jhtests//panmodels.model",
+    #              '--modelname',"4Pop",'--out','../jhtests/results/vcf_dadisnp_bedfile_test.out',
+    #              '--comment','testing bedfile','--bed-file',"..//jhtests//pan_example_regions.bed"]
+    # run(debugargs)
+    # debugargs = ['--vcf',"..//jhtests//pan_example2.vcf.gz",'--model-file',"..//jhtests//panmodels.model",
+    #              '--modelname',"4Pop",'--out','..//jhtests//results//vcf_dadisnp_test.out',
+    #              '--comment','testing comment']
+    # #'--outgroup-fasta',"..//jhtests//chr22_pan_example2_ref.fa",'--bed-file',"..//jhtests//pan_example_regions.bed",]
+    # run(debugargs)    
+    # debugargs = ['--vcf',"..//jhtests//pan_example2.vcf.gz",'--model-file',
+    #              "..//jhtests//panmodels.model",
+    #              '--modelname',"4Pop",'--out','..//jhtests//results//vcf_dadisnp_fasta_test.out',
+    #              '--comment','testing outgroup-fasta','--outgroup-fasta',
+    #              "..//jhtests//chr22_pan_example2_ref.fa"]
 
-    run(debugargs)
+    # run(debugargs)
 
 
 
