@@ -55,6 +55,8 @@
         Argument used to define the filename of the plink bim file (.bim). Must be 
         called alongside --binary-ped and --fam. Cannot be called alongside 
         --binary-ped-prefix.
+    **--allow-extra-chr**
+        Argument used to force invalid chromosome names to be accepted.
     
     #############################
     Output Command-line Arguments
@@ -80,11 +82,12 @@
         Argument used to define the correlation statistic to report. Two options are 
         supported: the raw inter-variant allele count correlations (r) and squared 
         correlations (r2).
-    **--ld-format** *<square, square-zero, triangle, table>*
-        Argument used to define the matrix result format. Four formats are supported:
-        A symmetric matrix (square); a square matrix in which the cells of the upper 
-        right triangle are zeroed out (square-zero); only the lower-triangular of the 
-        matrix (triangle); and the matrix as a table (table). 
+    **--ld-format** *<table, square, square-zero, triangle, inter-chr>*
+        Argument used to define the matrix result format. Five formats are supported: The 
+        matrix as a limited window in table format (table); A symmetric matrix (square); 
+        a square matrix in which the cells of the upper right triangle are zeroed out 
+        (square-zero); only the lower-triangular of the matrix (triangle); the matrix with 
+        all pairs in a table (inter-chr).
 	**--ld-window-snps** *<snp_int>*
 		Argument used to define the maximum number of SNPs between LD comparisons.
 	**--ld-window-kb** *<snp_int>*
@@ -175,7 +178,7 @@ def plink_argument_parser(passed_arguments = []):
     ld_default = 'r2'
     plink_parser.add_argument('--ld-statistic', metavar = metavar_list(ld_statistics), help = 'Specifies the LD statistic', type = str, choices = ld_statistics, default = ld_default)
 
-    shape_formats = ['triangle', 'square', 'square-zero', 'table']
+    shape_formats = ['table', 'triangle', 'square', 'square-zero', 'inter-chr']
     shape_default = 'table'
     plink_parser.add_argument('--ld-format', metavar = metavar_list(shape_formats), help = 'Specifies the format of the LD results', type = str, choices = shape_formats, default = shape_default)
 
@@ -203,6 +206,7 @@ def plink_argument_parser(passed_arguments = []):
     plink_parser.add_argument('--out-prefix', help = 'Defines the output filename prefix', default = 'out')
 
     # General arguments.
+    plink_parser.add_argument('--allow-extra-chr', help = "Force invalid chromosome names to be accepted", action = 'store_true')
     plink_parser.add_argument('--overwrite', help = "Overwrite previous output files", action = 'store_true')
     plink_parser.add_argument('--threads', help = "Set the number of threads", type = int, default = 1)
 
@@ -308,7 +312,7 @@ def run (**kwargs):
     plink_input_args = []
 
     # Check if the user has selected the table ld format
-    if plink_args.ld_format == 'table':
+    if plink_args.ld_format in ['table', 'inter-chr']:
 
         # Check if the output format isn't supported
         if plink_args.out_format not in ['standard', 'gzipped']:
@@ -397,7 +401,11 @@ def run (**kwargs):
         # Add the ld format to the ld argument list
         plink_ld_args.append('square0')
 
-    # Check if the format is a table
+    # Check if the format is a limited window table
+    elif plink_args.ld_format == 'table':
+        pass
+
+    # Check if the format is all pairs table
     elif plink_args.ld_format == 'table':
 
         # Add the ld format to the ld argument list
@@ -483,11 +491,9 @@ def run (**kwargs):
         plink_ld_args.extend(['--ld-window-cm', plink_args.ld_window_cm])
 
     # Check if the user set a r2 threshold
-    if plink_args.table_r2_threshold:
-
+    if plink_args.table_r2_threshold != None:
         # Assign the r2 threshold
         plink_ld_args.extend(['--ld-window-r2', plink_args.table_r2_threshold])
-
 
     # Check if the user has specified SNP(s) to analyze
     if plink_args.table_snp:
@@ -509,6 +515,10 @@ def run (**kwargs):
 
         # Assign the snp file
         plink_ld_args.extend(['--ld-snp-list', plink_args.table_snps])
+
+    # Check if invalid chromosome names should be accepted
+    if plink_args.allow_extra_chr:
+        plink_ld_args.append('--allow-extra-chr')
 
     logging.info('LD parameters assigned')
 
