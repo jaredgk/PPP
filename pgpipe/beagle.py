@@ -113,15 +113,15 @@ def standard_beagle_call (beagle_path, beagle_call_args, output_prefix):
             Output file prefix
     '''
 
-    # Assign location of picard jar file
+    # Assign location of beagle jar file
     if beagle_path is None:
 
-        # Create a string with the picard path
+        # Create a string with the beagle path
         beagle_jar = confirm_executable('beagle.jar')
         
     else:
         # Use path if specified
-        beagle_jar = os.path.join(picard_path, 'beagle.jar')
+        beagle_jar = os.path.join(beagle_path, 'beagle.jar')
 
     # Check if executable is installed
     if not beagle_jar:
