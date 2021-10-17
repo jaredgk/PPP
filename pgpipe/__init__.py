@@ -17,7 +17,7 @@
 
 # Basic Information
 __title__     = "py-popgen"
-__version__   = '0.1.10'
+__version__   = '0.1.13'
 __summary__   = "Software platform for facilitating population genomic analyses"
 __url__       = "https://ppp.csusm.edu/"
 __license__   = "MIT"
