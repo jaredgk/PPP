@@ -621,6 +621,7 @@ def vcf_to_ima(**kwargs):
                 pass
             output_filename = next(outnamegen)
             output_file = open(output_filename,'w')
+        #rec_list is a list of vcf records,  i.e. variant sites
         if single_file:
             region = region_list.regions[i]
             rec_list = vcf_reader.getRecordList(region)
@@ -640,6 +641,12 @@ def vcf_to_ima(**kwargs):
             #Make this modify rec list in place
             t = vf.filterSites(rec_list,remove_cpg=args.parsecpg,remove_indels=(not args.indel_flag),remove_multiallele=args.remove_multiallele,remove_missing=args.remove_missing,inform_level=1,fasta_ref=fasta_ref)
             rec_list = t
+            # when args.printseq is False and fasta_ref is not none,  the output file prints the full sequence
+            # but the locus info line only has the count of variant sites
+            #  bit of a kludge fix here,  JH 2/9/2022
+            # set fasta_ref back to None if args.printseq is false
+            if args.printseq == False and fasta_ref != None:
+                fasta_ref = None
         if len(rec_list) == 0:
             logging.warning(("Region %s has no variants "
                             "in VCF file") % (region.toStr()))
