@@ -4,8 +4,8 @@ import logging
 import subprocess
 import copy
 
-from pgpipe.vcf_reader_func import checkFormat
-from pgpipe.misc import confirm_executable
+from vcf_reader_func import checkFormat
+from misc import confirm_executable
 
 def log_bcftools_reference ():
 

@@ -1,6 +1,8 @@
 <tool id="vcf_calc" name="Calculate statistics with VCF" version="1.0.0.1">
 
-  <description>files using vcftools</description>
+  <description>Automates the calculation of site/windowed fixation index (Fst), Tajima's D,
+    nucleotide diversity (Pi), allele frequency, and heterozygosity using
+    VCFTools.</description>
 
   <command><![CDATA[
   python $__tool_directory__/vcf_calc.py
@@ -54,20 +56,20 @@
             --statistic-window-step $stat.statistic_window_step
           #end if
 
-          #if $pos_file.filter_include_positions
-            --filter-include-positions $pos_file.filter_include_positions
+          #if $filter.filter_include_positions
+            --filter-include-positions $filter.filter_include_positions
           #end if
 
-          #if $pos_file.filter_exclude_positions
-            --filter-exclude-positions $pos_file.filter_exclude_positions
+          #if $filter.filter_exclude_positions
+            --filter-exclude-positions $filter.filter_exclude_positions
           #end if
 
-          #if $pos_file.filter_include_bed
-            --filter-include-bed $pos_file.filter_include_bed
+          #if $filter.filter_include_bed
+            --filter-include-bed $filter.filter_include_bed
           #end if
 
-          #if $pos_file.filter_exclude_bed
-            --filter-exclude-bed $pos_file.filter_exclude_bed
+          #if $filter.filter_exclude_bed
+            --filter-exclude-bed $filter.filter_exclude_bed
           #end if
 
   ]]></command>
