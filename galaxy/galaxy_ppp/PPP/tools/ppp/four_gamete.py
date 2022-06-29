@@ -97,9 +97,9 @@ import logging
 import random
 import pysam
 
-from pgpipe.logging_module import initLogger
-from pgpipe.genome_region import Region, RegionList
-from pgpipe.vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, VcfReader
+from logging_module import initLogger
+from genome_region import Region, RegionList
+from vcf_reader_func import getRecordList, vcfRegionName, getRecordsInRegion, VcfReader
 
 
 class BaseData():
