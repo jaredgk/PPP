@@ -14,7 +14,7 @@
                 ln -fs $input_vcf input.vcf.gz &&
                 ln -fs $input_vcf.metadata.tabix_index input.vcf.gz.tbi &&
             #end if
-            python $__tool_directory__/informative_filter.py
+            python $__tool_directory__/informative_loci_filter.py
             #if $input_vcf.is_of_type('vcf_bgzip')
             --vcf input.vcf.gz
             #else
@@ -34,6 +34,7 @@
             #if $cpg_cond.cpg_bool:
             --parsecpg $cpg_cond.cpg_reg
             #end if
+            --keep-full-line
             #if $input_vcf.is_of_type('vcf_bgzip'):
             --tbi $input_vcf.metadata.tabix_index
             #end if

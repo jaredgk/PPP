@@ -510,6 +510,7 @@ class BaseData():
                 self.poslist.append(record.pos)
                 self.records.append(record)
         self.seqs = [[base_list[row][col] for row in range(0, len(base_list))] for col in range(0, len(base_list[0]))]
+        
 
 
 def createParser():
@@ -950,6 +951,5 @@ def sample_fourgametetest_intervals(sys_args):
 
 if __name__ == '__main__':
     initLogger()
-
     sample_fourgametetest_intervals(sys.argv[1:])
 

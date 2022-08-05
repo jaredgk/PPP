@@ -4,8 +4,8 @@
 
   <requirements>
       <requirement type="package" version="0.12.0.1">pysam</requirement>
-      <requirement type="package" >numpy</requirement>
       <requirement type="package" >pandas</requirement>
+      <requirement type="package" >numpy</requirement>
   </requirements>
 
   <command><![CDATA[

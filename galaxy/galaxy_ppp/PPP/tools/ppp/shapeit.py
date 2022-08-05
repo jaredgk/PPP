@@ -5,26 +5,23 @@ import shutil
 import argparse
 import glob
 import logging
+import pkg_resources
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
+#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 
 from vcf_reader_func import checkFormat
 from logging_module import initLogger, logArgs
-from plink import convert_haps_to_vcf
-#from vcftools import bgzip_decompress_vcfgz
-#from bcftools import convert_to_bcf, check_for_index, create_index
+from misc import confirm_executable
 
 def check_shapeit_for_errors (shapeit_stdout, output_prefix):
     '''
         Checks the shapeit stdout for errors
-
         Parameters
         ----------
         shapeit_stdout : str
             shapeit stdout
         output_prefix : str
             Output filename prefix
-
         Raises
         ------
         Exception
@@ -38,25 +35,22 @@ def check_shapeit_for_errors (shapeit_stdout, output_prefix):
     # Print output if not completed and no error found. Unlikely to be used, but included.
     else:
         # Remove intermediate files before reporting the error
-        remove_intermediate_files(output_prefix, error_intermediates = True)
+        remove_shapeit_intermediate_files(output_prefix, error_intermediates = True)
         raise Exception(str(shapeit_stdout))
 
-def remove_intermediate_files (output_prefix, error_intermediates = False):
+def remove_shapeit_intermediate_files (output_prefix, error_intermediates = False):
     '''
         Removes shapeit intermediate files
-
         This function is used to remove the various intermediate files created
         by shapeit. The exact intermediate files to be removed are defined by
         the error-state of shapeit. The function will also return warnings if
         the intermediate files were not found.
-
         Parameters
         ----------
         output_prefix : str
             Output filename prefix
         error_intermediates : bool, optional
             Defines if shapeit encountered an error
-
     '''
     if error_intermediates:
 
@@ -99,28 +93,70 @@ def remove_intermediate_files (output_prefix, error_intermediates = False):
 
     logging.info('shapeit-related files removed')
 
+def check_for_shapeit_intermediate_files (output_prefix, overwrite = False):
+
+    # Check if intermediates files should not be overwritten
+    if not overwrite:
+
+        # List to hold intermediate files
+        shapeit_intermediate_files = []
+    
+        # Check if a phase.ind.mm file exists
+        if os.path.isfile(output_prefix + '.phase.ind.mm'):
+
+            # Add the intermediate file to the list
+            shapeit_intermediate_files.append(output_prefix + '.phase.ind.mm')
+
+        # Check if a phase.snp.mm file exists
+        if os.path.isfile(output_prefix + '.phase.snp.mm'):
+
+            # Add the intermediate file to the list
+            shapeit_intermediate_files.append(output_prefix + '.phase.snp.mm')
+
+        # Check if a haps file exists
+        if os.path.isfile(output_prefix + '.haps'):
+
+            # Add the intermediate file to the list
+            shapeit_intermediate_files.append(output_prefix + '.haps')
+
+        # Check if a sample file exists
+        if os.path.isfile(output_prefix + '.sample'):
+
+            # Add the intermediate file to the list
+            shapeit_intermediate_files.append(output_prefix + '.sample')
+
+        # Check if intermediate_files were found, and report the error
+        if shapeit_intermediate_files:
+            raise Exception('shapeit intermediate files exist (%s)' % ', '.join(shapeit_intermediate_files))
+
 def standard_shapeit_call (shapeit_call_args, output_prefix):
     '''
         Calls shapeit using subprocess
-
         This function is used to call shapeit and passes the resulting stdout
         to check_shapeit_for_errors to check for errors. The function also
         passes output_prefix to check_shapeit_for_errors to delete shapeit
         intermediate files if shapeit results in an error.
-
         Parameters
         ----------
         shapeit_call_args : list
             Argument list for shapeit
         output_prefix : str
             Output filename prefix
-
     '''
 
     logging.info('shapeit phasing parameters assigned')
 
-    # Phasing subprocess call
-    phase_call = subprocess.Popen(['shapeit'] + shapeit_call_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    # Confirm where the specifed executable is located
+    shapeit_path = confirm_executable('shapeit')
+
+    # Check if the executable was found
+    if not shapeit_path:
+        raise IOError('shapeit not found. Please confirm the executable is installed')
+
+    #shapeit_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'bin','shapeit')
+
+    #sys.stderr.write(str(shapeit_path)+'\n')
+    phase_call = subprocess.Popen([shapeit_path] + shapeit_call_args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     phase_stdout, phase_stderr = phase_call.communicate()
 
     # Check if code is running in python 3
@@ -136,10 +172,8 @@ def standard_shapeit_call (shapeit_call_args, output_prefix):
 def call_shapeit (shapeit_call_args, output_prefix, output_format):
     '''
         Calls shapeit and automates file conversions
-
         The function is used to call shapeit and also automates conversion to
         VCF, VCF.GZ, and BCF using plink2
-
         Parameters
         ----------
         shapeit_call_args : list
@@ -148,13 +182,7 @@ def call_shapeit (shapeit_call_args, output_prefix, output_format):
             Output filename prefix
         output_format : str
             Output file format
-
     '''
 
     # Standard call to beagle
     standard_shapeit_call(shapeit_call_args, output_prefix)
-
-    # Convert haps-format to vcf
-    convert_haps_to_vcf(output_prefix, output_format)
-
-    logging.info('HAPS conversion to VCF complete')

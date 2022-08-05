@@ -1,6 +1,77 @@
+'''
+    As a single statistic file may include far more loci/windows than
+    a technique is capable of analyzing, it is often necessary to 
+    sample the loci/windows from the file. Given a statistic file and 
+    a sampling scheme, stat_sampler will generate a pseudorandomly
+    sampled file.
+    .. image:: ../../PPP_assets/PPP_STAT_Sample.png
+        :width: 100 %
+        :align: center
+    In this illustration of the sampling process, the loci found within 
+    Data.VCF are pseudorandomly sampled using the corrdinates found within 
+    the given statistic file.
+    Two pseudorandomly sampling schemes are provided: i) a random sampler 
+    that will randomly select loci/windows and ii) a uniform sampler that 
+    will evenly sample across equal-sized bins of the given statistic. 
+    Please note that all sampling is done without replacement.
+    For BED-based sampling, please see :doc:`../Utilities/bed_utilities.rst`.
+    ##################
+    Command-line Usage
+    ##################
+    The statistic sampler may be called using the following command:
+    .. code-block:: bash
+        
+        stat_sampler.py
+    *************
+    Example usage
+    *************
+    Randomly sampling 20 windows from a windowed Fst statistic file 
+    **merged_chr1_10000.windowed.weir.fst**.
+    .. code-block:: bash
+        
+        stat_sampler.py --statistic-file examples/files/merged_chr1_10000.windowed.weir.fst --calc-statistic windowed-weir-fst --sampling-scheme random --sample-size 20
+    Uniform sampling 20 windows from four bins from a windowed pi statistic file 
+    **merged_chr1_10000.windowed.pi**.
+    .. code-block:: bash
+        
+        stat_sampler.py --statistic-file examples/files/merged_chr1_10000.windowed.pi --calc-statistic window-pi --sampling-scheme uniform --uniform-bins 4 --sample-size 20
+    ############################
+    Input Command-line Arguments
+    ############################
+    **--statistic-file** *<statistic_filename>*
+        Argument used to define the filename of the statistic file for sampling.
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**.
+        Cannot be used if multiple output files are created.
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+    ###############################
+    Sampling Command-line Arguments
+    ###############################
+    **--calc-statistic** *<windowed-weir-fst, TajimaD, window-pi>*
+        Argument used to define the statistic to be sampled. Windowed Fst 
+        (windowed-weir-fst), Tajima's D (TajimaD), and windowed nucleotide 
+        diversity (window-pi).
+    **--sampling-scheme** *<random, uniform>*
+        Argument used to define the sampling scheme. Random [Default]
+        sampling or uniform sampling across of number of equal-sized
+        bins.
+    **--uniform-bins** *<bin_int>*
+        Argument used to define the number of bins in uniform sampling.
+    **--sample-size** *<sample_size_int>*
+        Argument used to define the total sample size. If using the uniform 
+        sampling scheme, this number must be divisible by the number of bins.
+    **--random-seed** *<seed_int>*
+        Argument used to define the seed value for the random number generator.
+'''
+
 import os
 import sys
-import random
 import argparse
 import itertools
 import logging
@@ -10,23 +81,26 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
-
-# Import log initializer
 from logging_module import initLogger, logArgs
-
-# Import basic vcftools functions
 from vcftools import *
-
-# Import basic vcf
 from bcftools import check_for_index, create_index
-
-# Model file related functions
 from model import read_model_file
+from misc import argprase_kwargs
 
-def sampler_parser(passed_arguments):
-    '''Sampler Argument Parser - Assigns arguments from command line.'''
+def sampler_parser(passed_arguments = []):
+    '''
+    Stat Sampler Phase Argument Parser
+    Assign the parameters for stat sampler using argparse.
+    Parameters
+    ----------
+    passed_arguments : list, optional
+        Parameters passed by another function. sys.argv is used if
+        not given. 
+    Raises
+    ------
+    IOError
+        If the input, or other specified files do not exist
+    '''
 
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
@@ -44,45 +118,43 @@ def sampler_parser(passed_arguments):
     sampler_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Other input arguments.
-    sampler_parser.add_argument('--statistic-file', help='Specifies the statistic file for filtering', required = True, type = str, action = parser_confirm_file())
+    sampler_parser.add_argument('--statistic-file', help='Defines the filename of the statistic file for sampling', required = True, type = str, action = parser_confirm_file())
 
     # Statistic based arguments.
     statistic_list = ['windowed-weir-fst', 'TajimaD', 'window-pi']
-    statistic_default = 'windowed-weir-fst'
-    sampler_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'Specifies the statistic calculated ', type=str, choices = statistic_list, default = statistic_default)
+    sampler_parser.add_argument('--calc-statistic', metavar = metavar_list(statistic_list), help = 'Defines the statistic to be sampled', type=str, choices = statistic_list)
 
     # Sampling methods. Currently mutually exclusive to only allow a single sampling method
     sampling_list = ['uniform', 'random']
     sampling_default = 'random'
-    sampler_parser.add_argument('--sampling-scheme', metavar = metavar_list(sampling_list), help = 'Specifies the sampling scheme ', type=str, choices = sampling_list, default = sampling_default)
+    sampler_parser.add_argument('--sampling-scheme', metavar = metavar_list(sampling_list), help = 'Defines the sampling scheme', type=str, choices = sampling_list, default = sampling_default)
 
     # Sampling options
-    sampler_parser.add_argument('--uniform-bins', help="Number of bins in uniform sampling", type = int)
-    sampler_parser.add_argument('--sample-size', help="Total sample size. If using the uniform sampling scheme, this number must be divisible by the bins", type = int)
+    sampler_parser.add_argument('--uniform-bins', help="Defines the number of bins in uniform sampling", type = int)
+    sampler_parser.add_argument('--sample-size', help="Defines the total sample size. If using the uniform sampling, this number must be divisible by the bins.", type = int)
 
     # Random options
-    sampler_parser.add_argument('--random-seed', help="Defines the random seed value for the random number generator", type = int, default = random.randint(1, 1000000000))
+    sampler_parser.add_argument('--random-seed', help="Defines the seed value for the random number generator", type = int, default = np.random.randint(1, high = 1000000000))
 
     # Output arguents
-    sampler_parser.add_argument('--out', help = 'Specifies the filename of the sampled statistic file', type = str)
+    sampler_parser.add_argument('--out', help = 'Defines the complete output filename, overrides **--out-prefix**', type = str)
 
-    sampler_parser.add_argument('--out-prefix', help = 'Specifies the filename prefix of the sampled statistic file', type = str, default = 'out')
+    sampler_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', type = str, default = 'out')
 
     # General arguments
-    sampler_parser.add_argument('--overwrite', help = "Specifies if previous output files should be overwritten", action = 'store_true')
+    sampler_parser.add_argument('--overwrite', help = "Defines if previous output should be overwritten", action = 'store_true')
+
 
     if passed_arguments:
-        return sampler_parser.parse_args(passed_arguments)
+        return vars(sampler_parser.parse_args(passed_arguments))
     else:
-        return sampler_parser.parse_args()
+        return vars(sampler_parser.parse_args())
 
 def random_vcftools_sampler (stat_file_data, sample_size, with_replacements = False):
     '''
         Random Sampler.
-
         Returns a list of randomly selected elements from stat_file_data. The
         length of this list is defined by sample_size.
-
         Parameters
         ----------
         stat_file_data : list
@@ -91,12 +163,10 @@ def random_vcftools_sampler (stat_file_data, sample_size, with_replacements = Fa
             Size of the total sample
         with_replacements : bool, optional
             If the function should sample with replacements
-
         Returns
         -------
         random_samples : list
             List of the randomly sampled statistics
-
     '''
 
     # Use numpy choice to randomly sample the stat_file_data
@@ -111,12 +181,10 @@ def random_vcftools_sampler (stat_file_data, sample_size, with_replacements = Fa
 def uniform_vcftools_sampler (stat_file_data, uniform_bins, sample_size):
     '''
         Uniform Sampler.
-
         Seperates the elements of stat_file_data into equal sized bins (number
         of bins specified by uniform_bins arg). The samples in the bins are
         then randomly selected. The number of selected samples is defined by
         sample_size / uniform_bins.
-
         Parameters
         ----------
         stat_file_data : list
@@ -125,7 +193,6 @@ def uniform_vcftools_sampler (stat_file_data, uniform_bins, sample_size):
             Number of uniform bins
         sample_size : int
             Size of the total sample
-
         Returns
         -------
         uniform_samples : list
@@ -179,7 +246,6 @@ def uniform_vcftools_sampler (stat_file_data, uniform_bins, sample_size):
 def assign_statistic_column (sample_headers, statistic):
     '''
         Assigns the statistic column.
-
         Determines the column with the associated values for the specified
         statistic. This function is required only for the uniform sampler, as
         the random sampler does not need to know the values to function. Due to
@@ -187,19 +253,16 @@ def assign_statistic_column (sample_headers, statistic):
         determine the associated column header for each specified statistic.
         This is done using the statistic_converter variable, which will need to
         be updated along with --calc-statistic to add more statistics.
-
         Parameters
         ----------
         sample_headers : list
             List of headers from the statistic file
         statistic : str
             The specified statistic
-
         Returns
         -------
         uniform_samples : list
             List of the uniformly sampled statistics
-
         Raises
         ------
         Exception
@@ -231,71 +294,67 @@ def assign_statistic_column (sample_headers, statistic):
     # Return the converted statistic
     return converted_statistic
 
-def run (passed_arguments = []):
+def run (**kwargs):
     '''
-        Statistics sampler.
-
-        Automates the sampling process of a specified statistic output file. The
-        function allows the user to select both the statistic in question and
-        the sampling scheme. Please note that all sampling is done without
-        replacement.
-
-        Parameters
-        ----------
-        --statistic-file : str
-            Specifies the statistic file for filtering
-        --calc-statistic : str
-            Specifies the statistic to calculate. Choices: windowed-weir-fst
-            (default) and TajimaD
-        --statistic-window-size : int
-            Specifies the window size of the statistic if not specified in the
-            file
-        --sampling-scheme : str
-            Specifies the sampling scheme to use. Choices: random (default) and
-            uniform
-        --uniform-bins : int
-            Specifies the number of bins for the uniform sampler
-        --sample-size : int
-            Specifies the total sample size. Note: If using the uniform sampling
-            scheme, this number must be divisible by number of uniform bins
-        --random-seed : int
-            Specifies the random seed value for the random number generator
-        --out : str
-            Specifies the sampled statistic output filename
-        --out-prefix : str
-            Specifies the sampled statistic output filename prefix
-
-        Returns
-        -------
-        output : file
-            Sampled statistic file
-        log : file
-            Log file output
-
-        Raises
-        ------
-        IOError
-            Statistic file does not exist
-        IOError
-            Output file already exists
-        ValueError
-            Sample size larger than the number of samples
-        ValueError
-            Sample size not divisible by the bin count
-        ValueError
-            Window size argument conflicts with values
-        TypeError
-            Window size argument not defined (if necessary)
+    Statistics sampler.
+    Automates the sampling process of a specified statistic output file. The
+    function allows the user to select both the statistic in question and
+    the sampling scheme. Please note that all sampling is done without
+    replacement.
+    Parameters
+    ----------
+    --statistic-file : str
+        Specifies the statistic file for filtering
+    --calc-statistic : str
+        Specifies the statistic to calculate. Choices: windowed-weir-fst
+        (default) and TajimaD
+    --statistic-window-size : int
+        Specifies the window size of the statistic if not specified in the
+        file
+    --sampling-scheme : str
+        Specifies the sampling scheme to use. Choices: random (default) and
+        uniform
+    --uniform-bins : int
+        Specifies the number of bins for the uniform sampler
+    --sample-size : int
+        Specifies the total sample size. Note: If using the uniform sampling
+        scheme, this number must be divisible by number of uniform bins
+    --random-seed : int
+        Specifies the random seed value for the random number generator
+    --out : str
+        Specifies the sampled statistic output filename
+    --out-prefix : str
+        Specifies the sampled statistic output filename prefix
+    Raises
+    ------
+    IOError
+        Output file already exists
+    ValueError
+        Sample size larger than the number of samples
+    ValueError
+        Sample size not divisible by the bin count
+    ValueError
+        Window size argument conflicts with values
+    TypeError
+        Window size argument not defined (if necessary)
     '''
 
-    # Get arguments from command line
-    sampler_args = sampler_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, sampler_parser)
+
+    # Assign arguments
+    sampler_args = argparse.Namespace(**kwargs)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(sampler_args, func_name = 'stat_sampler')
 
     # Set the random seed
     np.random.seed(sampler_args.random_seed)
+
+    # Check if a sample size has been specified
+    if not sampler_args.sample_size:
+        raise Exception('No sample size specified. Please use --sample-size')
 
     # Set the output filename using the out-prefix
     sampled_out_filename = sampler_args.out_prefix + '.sampled'
@@ -331,12 +390,19 @@ def run (passed_arguments = []):
     # UPDATE Planned
     # Improve from equal to too few samples (i.e. samples = 100, sample_size = 95)
     elif len(stat_file_data) == sampler_args.sample_size:
+
         # Warns the user of poor sampling
         logging.warning('Sample size equal to number of datapoints within '
                         'statistic file')
 
     # Run the uniform sampler
     if sampler_args.sampling_scheme == 'uniform':
+
+        # Check that uniform bins have been specified
+        if not sampler_args.uniform_bins:
+            raise Exception('No uniform bin count specified. Please use --uniform-bin')
+
+        # Check that the sample size is divisible by the bins
         if sampler_args.sample_size % sampler_args.uniform_bins != 0:
             raise ValueError('Sample size not divisible by the bin count')
 
@@ -360,10 +426,10 @@ def run (passed_arguments = []):
     sampled_samples = stat_file_data[stat_file_data.index.isin(selected_samples)].copy()
 
     # Create selected samples TSV file with the defined output filename
-    sampled_samples.to_csv(sampled_out_filename, sep = '\t', float_format = '%g')
+    sampled_samples.to_csv(sampled_out_filename, sep = '\t', float_format = '%g', index = False)
 
     logging.info('Created selected samples file')
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**sampler_parser())

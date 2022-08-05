@@ -1,3 +1,20 @@
+'''
+    The genome_reigon module provides two classes: Region, which represents 
+    a region in a genome, and RegionList, which contains a list of Regions. 
+    Coordinates are assumed to be in zero-based, half-open format (include
+    start coordinate, exclude end), so the first hundred bases of a genome 
+    would be represented as 0:100. Can read regions from a file, string, or
+    list. If columns are not formatted following usual BED convention, 
+    `collist` can be provided, which will indicate which columns correspond
+    to the start, end, and chromosome columns in a data input. (A string 
+    can be specified with `colstr` for command-line use) By default, the 
+    list will be sorted in 'version' order, so numerical components of 
+    a string will be sorted numerically, everything else by string. Lists
+    can be also be randomized, and if using an extended BED file, the full
+    input line can be read in and later printed out. 
+'''
+
+
 import sys
 import re
 import logging
@@ -49,14 +66,17 @@ class Region:
     sort_method = "natural"
     sort_order = None
 
-    def __init__(self, start, end, chrom):
+    def __init__(self, start, end, chrom, fullline = None):
         """Zero-based, half open coordinates and chromosome info for
         a region in a genome. Coords will be formatted according to
         flags passed to RegionList, then stored in a single format.
+        If fullline is provided, when region is written out this 
+        string will be written instead of just the region info. 
         """
         self.start = start
         self.end = end
         self.chrom = chrom
+        self.fullline = fullline
         #if chrom[0:3] == 'chr':
         #    self.chrom = chrom[3:]
         #else:
@@ -71,7 +91,6 @@ class Region:
     def getChromKey(self):
         """Splits chromosone name for natural sort. Ints and strs are
         grouped with adjacent elements of the same type
-
         Example: 'front88place' returns ['front',88,'place']
         """
         return getChromKey(self.chrom)
@@ -115,12 +134,16 @@ class Region:
         return self.end-self.start
 
     def containsRecord(self, rec):
+        '''
+        Returns the position of the input VCF record in
+        relation to this region. 
+        '''
         k1 = self.getChromKey()
         kr = getChromKey(rec.chrom)
         if k1 != kr:
             if keyComp(k1,kr):
-                return 'before'
-            return 'after'
+                return 'after'
+            return 'before'
         comp_pos = rec.pos-1
         if comp_pos < self.start:
             return 'before'
@@ -129,6 +152,8 @@ class Region:
         return 'in'
 
     def toStr(self, zeroho=False, zeroclosed=False, sep=':'):
+        if self.fullline is not None:
+            return self.fullline
         start = self.start
         end = self.end
         if not zeroho:
@@ -136,7 +161,6 @@ class Region:
         elif zeroclosed:
             end -= 1
         return str(self.chrom)+sep+str(start)+sep+str(end)
-        #return str(start)+sep+str(end)+sep+str(self.chrom)
 
     def getReference(self, refseq):
         return refseq.fetch(self.chrom,self.start,self.end)
@@ -147,16 +171,16 @@ class Region:
 class RegionList:
 
     def __init__(self, filename=None, genestr=None, reglist=None,
-                 zeroclosed=False, zeroho=False,
-                 colstr=None, sortlist=True, checkoverlap=None,
+                 zeroclosed=False, zeroho=True,
+                 colstr=None, collist=None, sortlist=True, checkoverlap=None,
                  sortmethod=None, sortorder=None, chromfilter=None,
-                 list_template=None, randomize=False):
+                 list_template=None, randomize=False,keep_full_line=False):
         """Class for storing gene region information
-
-        Will either read a file or take a single gene region in a string
-        as input, then create an object with some metadata and a list of
-        gene regions.
-
+        Will create a list that stores genomic regions imported from
+        a file, string, or list. List can be sorted in various ways,
+        filtered for regions on one or multiple chromosomes, convert
+        between coordinate systems, and integrated with other PPP
+        functions.
         Parameters
         ----------
         filename : str (None)
@@ -164,27 +188,57 @@ class RegionList:
         genestr : str (None)
             Semicolon-separated list of region data, either in "start:end"
             or "start:end:chrom" format.
-        oneidx : bool (False)
-            If true, region will be read in as a one-index based string.
-            This results in one position being subtracted from the start
-            and end coordinates
+        zeroho : bool (False)
+            If true, input is in zero-based, half-open coordinates. Since
+            pysam uses this format, coordinates will be unaltered
+            (default is to use one-based closed coordinates)
+        zeroclosed : bool (False)
+            If true, uses zero-based, closed coordinates, which adds 1
+            to the end value for a region. Rarely if ever used option.
         colstr : str (None)
-            If reading in from a file with many columns, will indicate
-            what columns hold start/end data and chrom data if three
-            items are given.
-        defaultchrom : str (None)
-            If no chromosome data is provided in the region file or string,
-            will set the chromosome to this value
-        halfopen : bool (True)
-            If true, the region range will be [start,end), so the start
-            coordinate will be included in the region but the end
-            will not
-
+            Three-element string separated by commas, with
+            each element being an integer corresponding to the 0-based
+            index of the column of the start, end, and chromosome values
+            for input region(s).
+        collist : list (int)
+            Three-element list with integer indices corresponding to the
+            column index for start, end and chromosome values (in that
+            order) from the input source. 
+        sortlist : bool (True)
+            Will sort list once initialized using assigned sorting scheme.
+        checkoverlap : str (None, 'error','fix')
+            If None, will not check for overlaps. If 'error', will raise
+            an exception if overlap is found. If 'fix', overlapping
+            regions will be merged. Note zero-based, half-open intervals
+            do not overlap when adjacent ones share end/start position,
+            but one-based closed intervals do.
+        sortmethod : str (None,'natural','string','list')
+            Determines method for sorting. 'natural' is pre-set method,
+            passing None to the constructor will ensure sort type is
+            unchanged from other calls. This sorts akin to 'sort -V' unix
+            command, which breaks a string into ints and substrings for
+            sorting. 'string' will sort via regular string method. 'list'
+            will use list passed to sortorder as ordering of chromosomes.
+        sortorder : list (None)
+            If 'list' sortmethod is used, regions will be sorted according
+            to the order specified in this list.
+        chromfilter : str (None)
+            If set, will allow only regions from passed chromosome
+            into the region list.
+        list_template : RegionList (None)
+            If creating new list with regions from a different list,
+            will use options from given list instead of arguments passed
+            for the following arguments: zeroho, zeroclosed, sortlist,
+            checkoverlap, and sortorder.
+        randomize : bool (False)
+            If set, will randomly shuffle regions in list.
+        keep_full_line : bool (False)
+           If set, will store the original unmodified string corresponding 
+           to a region for later output
         Exceptions
         ----------
         Both filename and genestr are None
         colstr has less than 2 or more than 3 values
-
         """
         self.collist = None
         if list_template is not None:
@@ -193,12 +247,21 @@ class RegionList:
             sortlist = list_template.sortlist
             checkoverlap = list_template.checkoverlap
             sortorder = list_template.sortorder
-
-        if self.collist is None:
-            if colstr is None:
-                self.collist = [1, 2, 0]
-            else:
-                self.parseCols(colstr)
+        if collist is not None and colstr is not None:
+            raise Exception(("Only one of collist and colstr can be specified"))
+        #if self.collist is None:
+            #if colstr is None:
+            #    self.collist = [1, 2, 0]
+            #else:
+            #    self.parseCols(colstr)
+        if collist is not None: 
+            self.collist = collist
+        elif colstr is not None:
+            self.parseCols(colstr)
+        else:
+            self.collist = [1,2,0]
+        if len(self.collist) != 3:
+            raise Exception(("Column list must have exactly three values"))
         if filename is None and genestr is None and reglist is None:
             raise Exception(("A filename, region string, or list of "
                              "region strings must be provided for " "creating a gene region list"))
@@ -217,6 +280,8 @@ class RegionList:
         self.zeroho = zeroho
         self.zeroclosed = zeroclosed
         self.chromfilter = chromfilter
+        self.keep_full_line = keep_full_line
+        self.header = None
         if sortmethod is not None:
             setRegionSort(sortmethod,sortlist=sortorder)
         if filename is not None:
@@ -239,17 +304,31 @@ class RegionList:
             shuffle(self.regions)
 
     def initFile(self,filename):
-        """Initialize RegionList with a region file
+        """Initialize RegionList with a region file. Will skip
+        commented lines. 
         """
+        past_header = False
         with open(filename, 'r') as regionfile:
             for line in regionfile:
                 if line[0] == '#':
+                    self.header = line.strip()
+                    past_header = True
                     continue
                 la = line.strip().split()
+                if not past_header:
+                    past_header = True
+                    try:
+                        t = int(la[self.collist[0]])
+                    except ValueError as e:
+                        self.header = line.strip()
+                        continue
                 self.initRegion(la)
 
 
     def initStr(self,genestr):
+        '''
+        Initialize region from string. Assumes start/end/chrom are colon-delimited. 
+        '''
         la = genestr.split(':')
         self.initRegion(la)
 
@@ -261,6 +340,12 @@ class RegionList:
 
 
     def initRegion(self,la):
+        '''
+        Initialize region from list and append to RegionList's list of regions.
+        Uses collist to specify which element is the start, end, and 
+        chromosome. Exceptions if either start or end coordinate is less than 
+        0.
+        '''
         start = int(la[self.collist[0]])
         end = int(la[self.collist[1]])
         chrom = la[self.collist[2]]
@@ -270,7 +355,13 @@ class RegionList:
             start -= 1
         elif self.zeroclosed:
             end += 1
-        self.regions.append(Region(start,end,chrom))
+        if start < 0:
+            raise Exception('Region start coordinate is less than 0')
+        if end < 0:
+            raise Exception('Region end coordinate is less than 0')
+        #Add exception if end is after start? 
+        fullline = (('\t'.join(la)) if self.keep_full_line else None)
+        self.regions.append(Region(start,end,chrom,fullline))
 
 
     def parseCols(self,cols):
@@ -286,6 +377,11 @@ class RegionList:
                                        sep=sep)
 
     def hasOverlap(self):
+        '''
+        Checks to see if any two regions in a list overlap. 
+        Sorts list into separate var, then compares overlap between adjacent
+        regions. 
+        '''
         region_hold = sorted(self.regions)
         for i in range(len(region_hold)-1):
             if region_hold[i].chrom == region_hold[i+1].chrom:
@@ -297,6 +393,10 @@ class RegionList:
         return False
 
     def fixOverlap(self):
+        '''
+        Merged regions that overlap into a single region. Will sort the list,
+        and is not capable of returning regions to their original position. 
+        '''
         region_hold = []
         self.regions.sort()
         i = 0
@@ -315,15 +415,26 @@ class RegionList:
         self.regions = region_hold
 
     def printList(self, file_handle=None, file_name=None,
-                  return_str=False, delim="\t", add_chr=False):
+                  return_str=False, delim="\t", add_chr=False,
+                  remove_chr=False):
+        '''
+        Prints regions from RegionList, to a given file handle or filename
+        unless neither is specified, in which case output is written to
+        stdout. If full line was read in during list creation, that is what
+        will be written out. 
+        '''
         if file_handle is None and file_name is None:
             file_handle = sys.stdout
-            #raise Exception("Either file_handle or file_name must be set")
         if file_name is not None:
             file_handle = open(file_name, 'w')
         if return_str:
             out_str = ''
+        if self.header is not None:
+            file_handle.write(self.header+'\n')
         for region in self.regions:
+            if region.fullline is not None:
+                file_handle.write(region.fullline+'\n')
+                continue
             start = region.start
             end = region.end
             if not self.zeroho:
@@ -331,13 +442,17 @@ class RegionList:
             elif self.zeroclosed:
                 end -= 1
             chrom = region.chrom
-            if add_chr:
+            if add_chr and chrom[:3] != 'chr':
                 chrom = "chr"+region.chrom
+            if remove_chr and chrom[:3] == 'chr':
+                chrom = region.chrom[3:]
             reg_str = chrom+delim+str(start)+delim+str(end)+'\n'
             if return_str:
                 out_str += reg_str
             else:
                 file_handle.write(reg_str)
+        if file_name is not None:
+            file_handle.close()
         if return_str:
             return out_str
 
@@ -350,10 +465,27 @@ class RegionList:
     def filterOutXY(self):
         self.filterByChrom(['X','Y','chrX','chrY'])
 
+    def expandRegions(self,expand_size):
+        '''
+        Expands regions from start and end by specified value. 
+        Does not merge regions, which can be done separately with fixOverlap. 
+        '''
+        for i in range(len(self.regions)):
+            self.regions[i].start = max(self.regions[i].start-expand_size,0)
+            self.regions[i].end += expand_size
+
     #TO do:
     #Add sort method for strictly text based sorting
 
 def getIntervalsBetween(region_list, padding=0, firstline=True):
+    '''
+    Returns a new RegionList with regions that represent positions not
+    contained in the input list. Padding can be provided to exclude 
+    regions within a given distance of the input list. Note that 
+    a region will not be created between the last region on a chromosome
+    and the end of the chromosome, as the position of the end of the
+    chromosome is unknown. 
+    '''
     region_hold = []
     if len(region_list.regions) < 2:
         raise Exception("Region list for complement requires at least two regions")
@@ -374,3 +506,26 @@ def getIntervalsBetween(region_list, padding=0, firstline=True):
     out_list.zeroho = region_list.zeroho
     out_list.zeroclosed = region_list.zeroclosed
     return out_list
+
+def subtractBed(stat_list, filter_list):
+    '''
+    Modifies stat_list so that any regions that overlaps with any region
+    in filter_list is dropped. Regions are not trimmed to exclude the 
+    region in the filter list, just entirely dropped. 
+    '''
+    stat_idx = 0
+    filter_idx = 0
+    stat_list.regions.sort()
+    filter_list.regions.sort()
+    drop_list = [False for i in stat_list.regions]
+    stat_region = stat_list.regions[stat_idx]
+    filter_region = filter_list.regions[filter_idx]
+    while stat_idx < len(stat_list.regions):
+        while filter_idx < len(filter_list.regions) and stat_list.regions[stat_idx].end > filter_list.regions[filter_idx].start:
+            if stat_list.regions[stat_idx].start < filter_list.regions[filter_idx].end:
+                drop_list[stat_idx] = True
+                break
+            filter_idx+=1
+        stat_idx += 1
+    stat_list.regions = [stat_list.regions[i] for i in range(len(stat_list.regions)) if drop_list[i] is False]
+    return 

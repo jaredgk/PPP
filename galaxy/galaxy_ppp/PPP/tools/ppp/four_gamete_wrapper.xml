@@ -11,18 +11,26 @@
             python $__tool_directory__/four_gamete.py
             --vcfs $input
             --out $output
-            --4gcompat
+            #if str($test_arg) == 'hk':
+            --hk
+            #else:
+            --4gcompat 
+            #end if 
+            #if str($return.return_arg) == 'reti':
             --reti
-            #if str($select_arg) == 'left':
+            #if str($return.select_arg) == 'left':
             --left
-            #elif str($select_arg) == 'right':
+            #elif str($return.select_arg) == 'right':
             --right
-            #elif str($select_arg) == 'randomi':
+            #elif str($return.select_arg) == 'randomi':
             --rani
-            #elif str($select_arg) == 'maxlen':
+            #elif str($return.select_arg) == 'maxlen':
             --maxlen
             #else:
             --ranb
+            #end if
+            #else:
+            --retl
             #end if
             --numinf $infsites
             #if  $input.is_of_type('vcf_bgzip')
@@ -37,17 +45,30 @@
     <inputs>
         <param format="vcf,vcf_bgzip,bcf" name="input" type="data" label="VCF input" />
         <param type="integer" name="infsites" label="Number of informative sites required in subregion" value="2" min="0" />
-        <param name="select_arg" type="select" label="Subregion to Select">
-            <option value="left">Left-most</option>
-            <option value="right" selected="True">Right-most</option>
-            <option value="randomi">Random (equal probability per region)</option>
-            <option value="randomb">Random (probability equal to size)</option>
-            <option value="maxlen">Longest Subregion</option>
+        <param name='test_arg' type='select' label='Test Type'>
+            <option value="hk">HK (one or more recomb events)</option>
+            <option value='4gcompat'>Intervals with Zero recombination</option>
         </param>
+        
+        <conditional name='return'>
+          <param name='return_arg' type='select' label='Return Regions'>
+              <option value='reti'>Return Single Region</option>
+              <option value='retl'>Return all passing regions</option>
+          </param>
+          
+          <when value='reti'>
+		<param name="select_arg" type="select" label="Subregion to Select">
+		    <option value="left">Left-most</option>
+		    <option value="right" selected="True">Right-most</option>
+		    <option value="randomi">Random (equal probability per region)</option>
+		    <option value="randomb">Random (probability equal to size)</option>
+		    <option value="maxlen">Longest Subregion</option>
+		</param>
+	   </when>
+	</conditional>
         <param type="boolean" name="ovlps" truevalue="--ovlps" falsevalue="" label="Include non-informative variants between edge of region and variant that breaks region" />
         <param type="boolean" name="ovlpi" truevalue="--ovlpi" falsevalue="" label="Include informative variants from overlapping regions" />
-        <param type="boolean" name="removeMultiallele" truevalue="--remove-multiallele" falsevalue="" label="Remove multi-alleleic sites" />
-        <param type="boolean" name="includeMissing" truevalue="--include-missing" falsevalue="" label="Include sites with missing data" />
+        
     </inputs>
     <outputs>
         <data format="vcf" name="output"/>

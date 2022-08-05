@@ -1,6 +1,8 @@
 <tool id="vcf_filter" name="Filter VCF" version="1.0.0.1">
-
-  <description>files using vcftools</description>
+  <requirements>
+        <requirement type="package" version='1.15.1'>bcftools</requirement>
+  </requirements>
+  <description>Filter files using BCFtools</description>
 
   <command><![CDATA[
   python $__tool_directory__/vcf_filter.py
@@ -9,17 +11,51 @@
           --out-format $out_format
           --out $output
           --overwrite
-
-          #if $filter_min_alleles
-            --filter-min-alleles $filter_min_alleles
+          
+          #if $gt.biallelic == 'True':
+            --filter-only-biallelic
+          #else:
+            #if $gt.countProp.gt_filter_type == 'allele_ct':
+              --filter-min-alleles $gt.countProp.filter_min_alleles
+              --filter-max-alleles $gt.countProp.filter_max_alleles
+            #end if            
+            #if $gt.countProp.gt_filter_type == 'maf_prop'
+              --filter-maf-min $gt.filter_maf_min
+              --filter-maf-max $gt.filter_maf_max
+            #end if
+          
+            #if $gt.countProp.gt_filter_type == 'mac_int'
+              --filter-mac-min $gt.filter_mac_min
+              --filter-mac-max $gt.filter_mac_max
+            #end if
+          #end if 
+           
+          
+          #if $gt.indels
+            --filter-include-indels
+          #end if 
+          #if $gt.indels == 'False'
+            --filter-exclude-indels
           #end if
-
-          #if $filter_max_alleles
-            --filter-max-alleles $filter_max_alleles
+          
+          #if $snp.filter_include_snps
+            #set include_snps = [include_snp.strip() for include_snp in str($snp.filter_include_snps).split(",")]
+            --filter-include-snp $include_snps
           #end if
-
-          #if $filter_max_missing
-            --filter-max-missing $filter_max_missing
+          #if $snp.filter_exclude_snps
+            #set exclude_snps = [exclude_snp.strip() for exclude_snp in str($snp.filter_exclude_snps).split(",")]
+            --filter-exclude-snp $exclude_snps
+          #end if
+          
+          #if $snp.filter_include_snp_file
+            --filter-include-snp-file $snp.filter_include_snp_file
+          #end if
+          #if $snp.filter_exclude_snp_file
+            --filter-exclude-snp-file $snp.filter_exclude_snp_file
+          #end if
+           
+          #if $snp.filter_max_missing
+            --filter-max-missing $snp.filter_max_missing
           #end if
 
           #if $ind.assign_type == 'model_file'
@@ -45,56 +81,40 @@
               --filter-exclude-indv-file $ind_file.filter_exclude_indv_file
             #end if
           #end if
+          
 
-          #if $pos.filter_include_chr
-            #set include_chrs = [include_chr.strip() for include_chr in str($pos.filter_include_chr).split(",")]
-            --filter-include-chr $include_chrs
+          #if $pos.filter_include_pos
+            #set include_pos = [include_pos.strip() for include_pos in str($pos.filter_include_pos).split(',')]
+            --filter-include-pos include_pos
+          #end if 
+          #if $pos.filter_exclude_pos
+            #set exclude_pos = [exclude_pos.strip() for exclude_pos in str($pos.filter_exclude_pos).split(',')]
+            --filter-exclude-pos exclude_pos
+          #end if 
+
+          #if $pos.filter_include_positions
+            --filter-include-pos-file $pos.filter_include_positions
           #end if
 
-          #if $pos.filter_exclude_chr
-            #set exclude_chrs = [exclude_chr.strip() for exclude_chr in str($pos.filter_exclude_chr).split(",")]
-            --filter-exclude-chr $exclude_chrs
+          #if $pos.filter_exclude_positions
+            --filter-exclude-pos-file $pos.filter_exclude_positions
           #end if
 
-          #if $pos.filter_from_bp
-            --filter-from-bp $pos.filter_from_bp
+          #if $pos.filter_include_bed
+            --filter-include-bed $pos.filter_include_bed
           #end if
 
-          #if $pos.filter_to_bp
-            --filter-to-bp $filter_to_bp
-          #end if
-
-          #if $pos.filter_distance
-            --filter-distance $pos.filter_distance
-          #end if
-
-          #if $pos_file.filter_include_positions
-            --filter-include-positions $pos_file.filter_include_positions
-          #end if
-
-          #if $pos_file.filter_exclude_positions
-            --filter-exclude-positions $pos_file.filter_exclude_positions
-          #end if
-
-          #if $pos_file.filter_include_bed
-            --filter-include-bed $pos_file.filter_include_bed
-          #end if
-
-          #if $pos_file.filter_exclude_bed
-            --filter-exclude-bed $pos_file.filter_exclude_bed
+          #if $pos.filter_exclude_bed
+            --filter-exclude-bed $pos.filter_exclude_bed
           #end if
 
           #if $flag.filter_include_pass
-            --filter-include-pass $flag.filter_include_pass
+            --filter-include-passed 
           #end if
-
-          #if $flag.filter_include_filtered
-            --filter-include-filtered $flag.filter_include_filtered
-          #end if
-
-          #if $flag.filter_exclude_filtered
-            --filter-exclude-filtered $flag.filter_exclude_filtered
-          #end if
+          
+          #if $flag.filter_exclude_pass
+            --filter-exclude-passed 
+          #end if 
   ]]></command>
 
   <inputs>
@@ -115,6 +135,7 @@
       <param name="assign_type" type="select" label="Individuals-filter method" refresh_on_change='True'>
         <option value="model_file" selected="True" >Model File</option>
         <option value="ind_data">Individuals or Individual File(s)</option>
+        <option value="neither">Neither Filter</option>
       </param>
       <when value="model_file">
         <param format="model" name="model_file" type="data" label="Model File" optional="True"/>
@@ -152,37 +173,78 @@
       </when>
     </conditional>
 
-    <param name="filter_min_alleles" type="integer" value="2" label="Minimum alleles" help="Include only sites with a greater than or equal number of alleles"/>
-    <param name="filter_max_alleles" type="integer" value="2" label="Maximum alleles" help="Include only sites with a lesser than or equal number of alleles"/>
-    <param name="filter_max_missing" type="float" value="1.0" label="Max Missing Proportion" help="Exclude sites by the proportion of missing data. 0.0 include all missing data, 1.0 excludes all missing data"/>
-
-    <section name="pos" title="Position Filters" expanded="False" help="Filters that include/exclude sites due on their chromosome and/or position">
-      <param name="filter_include_chr" type="text" label="Chromosome to include" optional="True" area="True" help="Comma seperate multiple entries">
-        <sanitizer>
-          <valid initial="string.printable">
-            <remove value="&#10;"/>
-          </valid>
-          <mapping initial="none">
-            <add source="&#10;" target=","/>
-          </mapping>
-        </sanitizer>
-      </param>
-      <param name="filter_exclude_chr" type="text" label="Chromosome to exclude" optional="True" area="True" help="Comma seperate multiple entries">
-        <sanitizer>
-          <valid initial="string.printable">
-            <remove value="&#10;"/>
-          </valid>
-          <mapping initial="none">
-            <add source="&#10;" target=","/>
-          </mapping>
-        </sanitizer>
-      </param>
-      <param name="filter_from_bp" type="integer" label="Lower bound of sites to include" optional="True" help="Should only be used with single chromosome"/>
-      <param name="filter_to_bp" type="integer" label="Upper bound of sites to include" optional="True" help="Should only be used with single chromosome"/>
-      <param name="filter_distance" type="integer" label="Distance no two sites may be within" optional="True"/>
+    <section name='gt' title='Allele/Genotype-Based Filters' expanded='True' help=''>
+      <param name='biallelic' type="boolean" label="Include only sites that are biallelic"/>
+      <conditional name='countProp'>
+            <param name="gt_filter_type" type="select" label="Filter by Allele Count, MAF proportion, MAC values" refresh_on_change='True'>
+              <option value="allele_ct" selected="True" >Allele Count</option>
+              <option value="maf_prop">MAF Proportion</option>
+              <option value="mac_int">MAC Values</option>
+            </param>
+            <when value='allele_ct'> 
+              <param name="filter_min_alleles" type="integer" value="2" label="Minimum alleles" help="Include only sites with a greater than or equal number of alleles"/>
+              <param name="filter_max_alleles" type="integer" value="2" label="Maximum alleles" help="Include only sites with a lesser than or equal number of alleles"/>
+            </when>
+            <when value='maf_prop'>
+              <param name="filter_maf_min" type="float" value='0.05' label="Minimum MAF Value" help="Include only sites with a greater than or equal MAF values"/>
+              <param name="filter_maf_max" type="float" value='0.05' label="Maximum MAF Value" help="Include only sites with a lesser than or equal MAF values"/>
+            </when>
+            <when value='mac_int'>
+              <param name="filter_mac_min" type="float" value='2' label="Minimum MAC Value" help="Include only sites with a greater than or equal MAC values"/>
+              <param name="filter_mac_max" type="float" value='2' label="Maximum MAC Value" help="Include only sites with a lesser than or equal MAC values"/>
+            </when>
+          </conditional>
+      <param name='indels' type='boolean' value='False' label='Include INDELS' help='Include a site if they include an insertion or deletion.  False will exclude these sites'/>
     </section>
-
-    <section name="pos_file" title="Position Filters (File-based)" expanded="False" help="Filters that include/exclude sites using files">
+    
+    <section name='snp' title='SNP Filters' expanded='False' help=''>
+      <param name='snps' type='boolean' value='True' label='Include SNPS' optional='True' help='Include a site if they contain a SNP.  False will exclude these sites'/>
+      <param name="filter_include_snps" type="text" label="SNP IDs to include" optional="True" area="True" help="Argument used to include SNP(s) with the matching ID, i.e. rs####.  Comma seperate multiple entries.">
+          <sanitizer>
+            <valid initial="string.printable">
+              <remove value="&#10;"/>
+            </valid>
+            <mapping initial="none">
+              <add source="&#10;" target=","/>
+            </mapping>
+          </sanitizer>
+        </param>
+        <param name="filter_exclude_snps" type="text" label="SNP IDs to exclude" optional="True" area="True" help="Argument used to exclude SNP(s) with the matching ID, i.e. rs####.  Comma seperate multiple entries.">
+          <sanitizer>
+            <valid initial="string.printable">
+              <remove value="&#10;"/>
+            </valid>
+            <mapping initial="none">
+              <add source="&#10;" target=","/>
+            </mapping>
+          </sanitizer>
+        </param>
+      <param format="tabular" name="filter_include_snp_file" type="data" label="Include SNP File" optional="True" help="File of SNP IDs to include"/>
+      <param format="tabular" name="filter_exclude_snp_file" type="data" label="Exclude SNP File" optional="True" help="File of SNP IDs to include"/>
+      <param name="filter_max_missing" type="float" value="1.0" label="Max Missing Proportion" help="Exclude sites by the proportion of missing data. 0.0 include all missing data, 1.0 excludes all missing data"/>
+    </section>
+    
+    <section name="pos" title="Position Filters" expanded="False" help="Filters that include/exclude sites due on their chromosome and/or position">
+      <param name="filter_include_pos" type="text" label="Chromosome or Positions to include" optional="True" area="True" help="May be used to include: an entire chromosome (i.e. chr); a single position (i.e. chr:pos); a chromosomal locus (i.e. chr:start-end); or a chromosomal span (i.e. chr:start-/chr:0-end). Comma seperate multiple entries.">
+        <sanitizer>
+          <valid initial="string.printable">
+            <remove value="&#10;"/>
+          </valid>
+          <mapping initial="none">
+            <add source="&#10;" target=","/>
+          </mapping>
+        </sanitizer>
+      </param>
+      <param name="filter_exclude_pos" type="text" label="Chromosome or Positions to exclude" optional="True" area="True" help="May be used to exclude: an entire chromosome (i.e. chr); a single position (i.e. chr:pos); a chromosomal locus (i.e. chr:start-end); or a chromosomal span (i.e. chr:start-/chr:0-end). Comma seperate multiple entries.">
+        <sanitizer>
+          <valid initial="string.printable">
+            <remove value="&#10;"/>
+          </valid>
+          <mapping initial="none">
+            <add source="&#10;" target=","/>
+          </mapping>
+        </sanitizer>
+      </param>
       <param format="tabular" name="filter_include_positions" type="data" label="Include Positions File" optional="True" help="Tab-seperated file of chromosomes and positions"/>
       <param format="tabular" name="filter_exclude_positions" type="data" label="Exclude Positions File" optional="True" help="Tab-seperated file of chromosomes and positions"/>
       <param format="bed" name="filter_include_bed" type="data" label="Include Positions File (BED format)" optional="True"/>
@@ -191,8 +253,8 @@
 
     <section name="flag" title="Flag Filters" expanded="False">
       <param name="filter_include_pass" type="boolean" label="Include only sites with the filter flag 'PASS'" optional="True"/>
-      <param format="tabular" name="filter_include_filtered" type="data" label="Include sites with the given filter flag" optional="True"/>
-      <param format="tabular" name="filter_exclude_filtered" type="data" label="Exclude sites with the given filter flag" optional="True"/>
+      <param name="filter_exclude_pass" type="boolean" label="Exclude sites with the filter flag 'PASS'" optional="True"/>
+      
     </section>
 
  </inputs>

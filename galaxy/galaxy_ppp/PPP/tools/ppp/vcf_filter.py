@@ -1,22 +1,207 @@
+#!/usr/bin/env python
+'''
+    Depending on the analysis being conducted, a number of variant sites and/or 
+    samples may be unsuitable and must be removed. Given an unfiltered VCF and 
+    the desired filters, vcf_filter will apply the filters and produce a filtered 
+    VCF. Filters may be used independently or combined as needed. In addition, a
+    number of the filters are seperated into two types: include (include/keep 
+    all relevant variant sites or samples) and exclude (exclude/remove all 
+    relevant variant sites or samples).
+    .. image:: ../../PPP_assets/PPP_Filter.png
+        :width: 100 %
+        :align: center
+    In this illustration of the filtering process (within a locus of interest), variant 
+    sites were kept only if they: i) were biallelic and ii) passed all filters. These 
+    requirements resulted in the removal of two variant sites (i.e. 197557 and 198510) 
+    within the given locus.
+    ##################
+    Command-line Usage
+    ##################
+    The VCF file filter may be called using the following command:
+    .. code-block:: bash
+        
+        vcf_filter.py
+    *************
+    Example usage
+    *************
+    Command-line to create a BCF with only biallelic sites:
+    .. code-block:: bash
+        
+        vcf_filter.py --vcf examples/files/merged_chr1_10000.vcf.gz --filter-only-biallelic --out-format bcf
+    Command-line to only include variants on chr1 from 1 to 1509546:
+    .. code-block:: bash
+        
+        vcf_filter.py --vcf examples/files/merged_chr1_10000.bcf --filter-include-pos chr1:1-1509546
+    Command-line to remove indels and ouput a BCF file:
+    .. code-block:: bash
+        
+        vcf_filter.py --vcf examples/files/merged_chr1_10000.indels.vcf.gz --filter-exclude-indels --out-format bcf
+    ############
+    Dependencies 
+    ############
+    * `BCFtools <https://samtools.github.io/bcftools/bcftools.html>`_    
+    ############################
+    Input Command-line Arguments
+    ############################
+    **--vcf** *<input_filename>*
+        Argument used to define the filename of the VCF file to be filtered.
+    **--model-file** *<model_filename>*
+        Argument used to define the model file. Please note that this argument cannot be 
+        used with the individual-based filters.
+    **--model** *<model_str>*
+        Argument used to define the model (i.e. the individual(s) to include). Please note
+        that this argument cannot be used with the individual-based filters.
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--out-format** *<vcf, vcf.gz, bcf, bed, sites>*
+        Argument used to define the desired output format. Formats include: uncompressed 
+        VCF (vcf); compressed VCF (vcf.gz) [default]; BCF (bcf); variants in bed format; 
+        or variants in sites format.
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+    #############################
+    Filter Command-line Arguments
+    #############################
+    The filtering arguments below are roughly seperated into catagoires. Please not that
+    mulitple filters are seperated into two opposing function types **include** and 
+    **exclude**.
+    **************************
+    Individual-Based Arguments
+    **************************
+    Please note that all individual-based arguments are not compatible with either the 
+    **--model** or **--model-file** command-line arguments.
+    **--filter-include-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to include. This argument may be used 
+        multiple times if desired.
+    **--filter-exclude-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to exclude. This argument may be used 
+        multiple times if desired.
+    **--filter-include-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to include.
+    **--filter-exclude-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to exclude.
+    *******************************
+    Allele/Genotype-Based Arguments
+    *******************************
+    **--filter-only-biallelic**
+        Argument used to only include variants that are biallelic.
+    **--filter-min-alleles** *min_int*
+        Argument used to include variants with a number of allele >= to the 
+        given number.
+    **--filter-max-alleles** *max_int*
+        Argument used to include variants with a number of allele <= to the 
+        given number.
+    **--filter-maf-min** *maf_proportion*
+        Argument used to include variants with equal or greater MAF values.
+    **--filter-maf-max** *maf_proportion*
+        Argument used to include variants with equal or lesser MAF values.
+    **--filter-mac-min** *mac_int*
+        Argument used to include variants with equal or greater MAC values.
+    **--filter-mac-max** *mac_int*
+        Argument used to include variants with equal or lesser MAC values.
+    **--filter-include-indels**
+        Argument used to include variants if they contain an insertion or a deletion. 
+    **--filter-exclude-indels**
+        Argument used to exclude variants if they contain an insertion or a deletion.
+    **--filter-include-snps**
+        Argument used to include variants if they contain a SNP. 
+    **--filter-exclude-snps**
+        Argument used to exclude variants if they contain a SNP. 
+    **--filter-include-snp** *<rs#>* *<rs#1, rs#2, etc.>*
+        Argument used to include SNP(s) with the matching ID. This argument may be used 
+        multiple times if desired.
+    **--filter-exclude-snp** *<rs#>* *<rs#1, rs#2, etc.>*
+        Argument used to exclude SNP(s) with the matching ID. This argument may be used 
+        multiple times if desired.
+    **--filter-include-snp-file** *<snp_filename>*
+        Argument used to define a file of SNP IDs to include.
+    **--filter-exclude-snp-file** *<snp_filename>*
+        Argument used to define a file of SNP IDs to exclude.
+    **--filter-max-missing** *proportion_float*
+        Argument used to filter positions by their proportion of missing data, a value of
+        0.0 allows for no missing whereas a value of 1.0 ignores missing data. 
+    **--filter-max-missing-count** *count_int*
+        Argument used to filter positions by the number of samples with missing data, a 
+        value of 0 allows for no samples to have missing data.
+    ************************
+    Position-Based Arguments
+    ************************
+    **--filter-include-pos** *<chr, chr:pos, chr:start-end, chr:start->*
+        Argument used to include matching positions. May be used to include: an
+        entire chromosome (i.e. chr); a single position (i.e. chr:pos); a 
+        chromosomal locus (i.e. chr:start-end); or a chromosomal span (i.e.
+        chr:start-/chr:0-end). This argument may be used multiple times if desired.
+    **--filter-exclude-pos** *<chr, chr:pos, chr:start-end, chr:start->*
+        Argument used to exclude matching positions. May be used to exclude: an
+        entire chromosome (i.e. chr); a single position (i.e. chr:pos); a 
+        chromosomal locus (i.e. chr:start-end); or a chromosomal span (i.e.
+        chr:start-/chr:0-end). This argument may be used multiple times if desired.
+    **--filter-include-pos-file** *<position_filename>*
+        Argument used to define a file of positions to include within a tsv file 
+        (chromosome and position).
+    **--filter-exclude-pos-file** *<position_filename>*
+        Argument used to define a file of positions to exclude within a tsv file 
+        (chromosome and position).
+    **--filter-include-bed** *<position_bed_filename>*
+        Argument used to define a BED file of positions to include. Please note that
+        filename must end in .bed.
+    **--filter-exclude-bed** *<position_bed_filename>*
+        Argument used to define a BED file of positions to exclude. Please note that
+        filename must end in .bed.
+    ********************
+    Flag-Based Arguments
+    ********************
+    **--filter-include-passed**
+        Argument used to include positions with the 'PASS' filter flag.
+    **--filter-exclude-passed**
+        Argument used to exclude positions with the 'PASS' filter flag.
+    **--filter-include-filtered** *<filter_flag>*
+        Argument used to include positions with the specified filter flag.
+    **--filter-exclude-filtered** *<filter_flag>*
+        Argument used to exclude positions with the specified filter flag.
+    #############################
+    Other Command-line Arguments
+    #############################
+    **--force-samples**
+        Argument used to ignore the error rasied when a sample that does not exist
+        within the input VCF.
+'''
+
 import os
 import sys
 import subprocess
 import argparse
 import logging
 
-# Import basic vcftools functions
-from vcftools import *
+# Import basic bcftools functions
+from bcftools import *
 
 # Model file related functions
 from model import read_model_file
 
-# Insert Jared's directory path, required for calling Jared's functions. Change when directory structure changes.
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
-
+# Import logging functions
 from logging_module import initLogger, logArgs
+from misc import argprase_kwargs
 
-def vcf_filter_parser(passed_arguments):
-    '''VCF Argument Parser - Assigns arguments from command line'''
+def vcf_filter_parser(passed_arguments = []):
+    '''
+    VCF Filter Argument Parser
+    Assign the parameters for the VCF Filter using argparse.
+    Parameters
+    ----------
+    passed_arguments : list, optional
+        Parameters passed by another function. sys.argv is used if
+        not given. 
+    Raises
+    ------
+    IOError
+        If the input, or other specified files do not exist
+    '''
 
     def parser_confirm_file ():
         '''Custom action to confirm file exists'''
@@ -31,6 +216,10 @@ def vcf_filter_parser(passed_arguments):
         '''Custom action to add items to a list'''
         class customAction(argparse.Action):
             def __call__(self, parser, args, value, option_string=None):
+
+                # Clean up any commas
+                value = [item.strip(',') for item in value]
+                
                 if not getattr(args, self.dest):
                     setattr(args, self.dest, value)
                 else:
@@ -40,170 +229,214 @@ def vcf_filter_parser(passed_arguments):
     def metavar_list (var_list):
         '''Create a formmated metavar list for the help output'''
         return '{' + ', '.join(var_list) + '}'
-
     vcf_parser = argparse.ArgumentParser(formatter_class = argparse.ArgumentDefaultsHelpFormatter)
 
     # Input arguments.
-    vcf_parser.add_argument('--vcf', help = "Input VCF filename", type = str, required = True, action = parser_confirm_file())
+    vcf_parser.add_argument('--vcf', help = "Defines the filename of the VCF", type = str, required = True, action = parser_confirm_file())
 
     # Model file arguments.
     vcf_parser.add_argument('--model-file', help = 'Defines the model file', type = str, action = parser_confirm_file())
-    vcf_parser.add_argument('--model', help = 'Defines the model to analyze', type = str)
+    vcf_parser.add_argument('--model', help = 'Defines the model and the individual(s) to include', type = str)
 
     # Other file arguments. Expand as needed
-    vcf_parser.add_argument('--out', help = 'Specifies the complete output filename', type = str)
-    vcf_parser.add_argument('--out-prefix', help = 'Specifies the output prefix (vcftools naming scheme)', type = str,  default = 'out')
+    vcf_parser.add_argument('--out', help = 'Defines the complete output filename, overrides --out-prefix', type = str)
+    vcf_parser.add_argument('--out-prefix', help = 'Defines the output prefix (i.e. filename without file extension)', type = str,  default = 'out')
     #vcf_parser.add_argument('--log', help = "Specifies if the vcftools log should be saved", action = 'store_false')
 
-    out_format_list = ['vcf', 'vcf.gz', 'bcf', 'removed_sites', 'kept_sites', 'removed_bed', 'kept_bed']
-    out_format_default = 'removed_sites'
+    out_format_list = ['vcf', 'vcf.gz', 'bcf', 'bed', 'sites']
+    out_format_default = 'vcf.gz'
 
-    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Specifies the output format.', type = str, choices = out_format_list, default = out_format_default)
+    vcf_parser.add_argument('--out-format', metavar = metavar_list(out_format_list), help = 'Defines the desired output format', type = str, choices = out_format_list, default = out_format_default)
 
-    # General arguments.
-    vcf_parser.add_argument('--overwrite', help = "overwrite previous output files", action = 'store_true')
+    # General arguments
+    vcf_parser.add_argument('--overwrite', help = "Overwrite previous output", action = 'store_true')
+    vcf_parser.add_argument('--force-samples', help = "Ignore the error rasied when a sample that does not exist", action = 'store_true')
+
+    # Galaxy Option to pipe log to stdout
+    vcf_parser.add_argument('--log-stdout', help = argparse.SUPPRESS, action = 'store_true')
 
     ### Filters
 
-    # Non-model file arguments
-    vcf_parser.add_argument('--filter-include-indv', help = 'Individual to include. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-indv', help = 'Individual to exclude. Note: This argument may be used multiple times and cannont to be used alonside --model', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-include-indv-file', help = 'Individuals to include in file. Cannont to be used alonside --model', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-indv-file', help = 'Individuals to exclude in file. Cannont to be used alonside --model', action = parser_confirm_file())
+    # Individual list arguments
+    indv_filters = vcf_parser.add_mutually_exclusive_group()
+    indv_filters.add_argument('--filter-include-indv', help = 'Defines the individual(s) to include. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
+    indv_filters.add_argument('--filter-exclude-indv', help = 'Defines the individual(s) to exclude. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
+    
+    # Individual file arguments
+    indv_file_filters = vcf_parser.add_mutually_exclusive_group()
+    indv_file_filters.add_argument('--filter-include-indv-file', help = 'Defines a file of individuals to include', action = parser_confirm_file())
+    indv_file_filters.add_argument('--filter-exclude-indv-file', help = 'Defines a file of individuals to exclude', action = parser_confirm_file())
 
     # Allele count filters
-    vcf_parser.add_argument('--filter-min-alleles', help = 'Only sites with a number of allele >= to the number given should be included', type = int,  default = 2)
-    vcf_parser.add_argument('--filter-max-alleles', help = 'Only sites with a number of allele <= to the number given should be included', type = int,  default = 2)
+    vcf_parser.add_argument('--filter-only-biallelic', help = 'Only include variants that are biallelic', action = 'store_true')
+    vcf_parser.add_argument('--filter-min-alleles', help = 'Include variants with a number of allele >= to the given number', type = int)
+    vcf_parser.add_argument('--filter-max-alleles', help = 'Include variants with a number of allele <= to the given number', type = int)
 
-    # Missing data filter
-    vcf_parser.add_argument('--filter-max-missing', help = 'Exclude sites by the proportion of missing data (0.0: include all, 1.0: no missing data)', type = float)
+    # Missing data filters
+    missing_filters = vcf_parser.add_mutually_exclusive_group()
+    missing_filters.add_argument('--filter-max-missing', help = 'Max proportion of missing data allowed (0.0: no missing data, 1.0: include all data)', type = float)
+    missing_filters.add_argument('--filter-max-missing-count', help = 'Max number of sample with missing data allowed', type = int)
 
-    # Chromosome filters
-    vcf_parser.add_argument('--filter-include-chr', help = 'Chromosome to include. Note: This argument may be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-chr', help = 'Chromosome to exclude. Note: This argument may be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
+    # Indel variant-type filters
+    indel_filters = vcf_parser.add_mutually_exclusive_group()
+    indel_filters.add_argument('--filter-include-indels', help = 'Include variants if they contain an insertion or a deletion', action = 'store_true')
+    indel_filters.add_argument('--filter-exclude-indels', help = 'Exclude variants if they contain an insertion or a deletion', action = 'store_true')
+    
+    # SNP variant-type filter
+    snps_filters = vcf_parser.add_mutually_exclusive_group()
+    snps_filters.add_argument('--filter-include-snps', help = 'Include variants if they contain a SNP', action = 'store_true')
+    snps_filters.add_argument('--filter-exclude-snps', help = 'Exclude variants if they contain a SNP', action = 'store_true')
 
-    # Basic position filters
-    vcf_parser.add_argument('--filter-from-bp', help = 'Lower bound of sites to include (Only usable with a single chromosome)', type = int)
-    vcf_parser.add_argument('--filter-to-bp', help = 'Upper bound of sites to include (Only usable with a single chromosome)', type = int)
+    # Position filters
+    vcf_parser.add_argument('--filter-include-pos', help = 'Defines comma seperated positions (i.e. CHROM:START-END) to include. START and END are optional. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-pos', help = 'Defines comma seperated positions (i.e. CHROM:START-END) to exclude. START and END are optional. May be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
 
-    # Position-based position filters
-    vcf_parser.add_argument('--filter-include-positions', help = 'Sites to include within a chr/pos tab-sperated file', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-positions', help = 'Sites to exclude within a chr/pos tab-sperated file', action = parser_confirm_file())
+    # Position file filters
+    vcf_parser.add_argument('--filter-include-pos-file', help = 'Defines a file of positions to include within a file', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-pos-file', help = 'Defines a file of positions to exclude within a file', action = parser_confirm_file())
 
-    # BED-based position filters
-    vcf_parser.add_argument('--filter-include-bed', help = 'Set of sites to include within a BED file', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-bed', help = 'Set of sites to exclude within a BED file', action = parser_confirm_file())
+    # BED position filters
+    vcf_parser.add_argument('--filter-include-bed', help = 'Defines a BED file of positions to include', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-bed', help = 'Defines a BED file of positions to exclude', action = parser_confirm_file())
 
     # Filter-flag filters
-    vcf_parser.add_argument('--filter-include-passed', help = "Include only sites with the filter flag 'PASS'", action = 'store_true')
-    vcf_parser.add_argument('--filter-include-flag', help = 'Include all sites with the given filter flag', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-flag', help = 'Exclude all sites with the given filter flag', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-include-passed', help = "Include variants with the 'PASS' filter flag", action = 'store_true')
+    vcf_parser.add_argument('--filter-exclude-passed', help = "Exclude variants with the 'PASS' filter flag", action = 'store_true')
+    vcf_parser.add_argument('--filter-include-flag', help = 'Include variants with the specified filter flag', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-flag', help = 'Exclude variants with the specified filter flag', nargs = '+', type = str, action = parser_add_to_list())
 
     # Info-flag filters
-    vcf_parser.add_argument('--filter-include-info', help = 'Include all sites with the given info flag', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-exclude-info', help = 'Exclude all sites with the given info flag', nargs = '+', type = str, action = parser_add_to_list())
+    #vcf_parser.add_argument('--filter-include-info', help = 'Include positions with the specified info flag', nargs = '+', type = str, action = parser_add_to_list())
+    #vcf_parser.add_argument('--filter-exclude-info', help = 'Exclude positions with the specified info flag', nargs = '+', type = str, action = parser_add_to_list())
 
     # SNP filters
-    vcf_parser.add_argument('--filter-include-snp', help = 'Include SNP(s) with matching ID. Note: This argument may be used multiple times.', nargs = '+', type = str, action = parser_add_to_list())
-    vcf_parser.add_argument('--filter-include-snps', help = 'Include all SNPs with matching ID within a file.', action = parser_confirm_file())
-    vcf_parser.add_argument('--filter-exclude-snps', help = 'Include all SNPs with matching ID within a file.', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-include-snp', help = 'Include SNP(s) with the matching ID. This argument may be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
+    vcf_parser.add_argument('--filter-exclude-snp', help = 'Exclude SNP(s) with the matching ID. This argument may be used multiple times', nargs = '+', type = str, action = parser_add_to_list())
+
+    # SNP file fitlers
+    vcf_parser.add_argument('--filter-include-snp-file', help = 'Defines a file of SNP IDs to include', action = parser_confirm_file())
+    vcf_parser.add_argument('--filter-exclude-snp-file', help = 'Defines a file of SNP IDs to exclude', action = parser_confirm_file())
 
     # MAF Filter
-    vcf_parser.add_argument('--filter-maf-min', help = 'Include sites with equal or greater MAF values', type = float)
-    vcf_parser.add_argument('--filter-maf-max', help = 'Include sites with equal or lesser MAF values', type = float)
+    vcf_parser.add_argument('--filter-maf-min', help = 'Include variants with equal or greater MAF values', type = float)
+    vcf_parser.add_argument('--filter-maf-max', help = 'Include variants with equal or lesser MAF values', type = float)
 
     # MAC Filter
-    vcf_parser.add_argument('--filter-mac-min', help = 'Include sites with equal or greater MAC values', type = int)
-    vcf_parser.add_argument('--filter-mac-max', help = 'Include sites with equal or lesser MAC values', type = int)
-
-    # Additional Filters
-    vcf_parser.add_argument('--filter-distance', help = 'Specifies a distance that no two sites may be within', type = int)
+    vcf_parser.add_argument('--filter-mac-min', help = 'Include variants with equal or greater MAC values', type = int)
+    vcf_parser.add_argument('--filter-mac-max', help = 'Include variants with equal or lesser MAC values', type = int)
 
     if passed_arguments:
-        return vcf_parser.parse_args(passed_arguments)
+        return vars(vcf_parser.parse_args(passed_arguments))
     else:
-        return vcf_parser.parse_args()
+        return vars(vcf_parser.parse_args())
 
-def run (passed_arguments = []):
+def run(**kwargs):
     '''
-    Filter VCF files using VCFTools.
-
-    Automates various filters to VCF files using VCFtools.
-
+    Filter function for the PPP
+    This function uses the argparse-based function :py:func:`vcf_filter_parser`
+    to parse either sys.argv or passed_arguments to obtain the parameters below. 
+    The parameters are then translated to their bcftools equivalent. Once all the
+    bcftools-based parameters are assigned, bcftools is called.
     Parameters
     ----------
     --vcf : str
-        Specifies the input VCF filename
+        Input VCF filename
     --out : str
-        Specifies the output filename
+        Complete output filename, overrides --out-prefix
+    --out-prefix : str
+        Output filename prefix
     --out-format : str
-        Specifies the output format {vcf, bcf, removed_sites, kept_sites}
-        (Default: removed_sites)
+        Output format
+    --model-file : str
+        Model filename
+    --model : str
+        Model to use
     --filter-include-indv : list or str
-        Individual to include. Note: This argument may be used multiple times
-        and cannont to be used alonside --model
+        Individual(s) to include. May be used multiple times. Not usable w/ --model
     --filter-exclude-indv : list or str
-        Individual to exclude. Note: This argument may be used multiple times
-        and cannont to be used alonside --model
+        Individual(s) to exclude. May be used multiple times. Not usable w/ --model
     --filter-include-indv-file : str
-        Individuals to include in file. Cannont to be used alonside --model
+        File of individuals to include. Not usable w/ --model
     --filter-exclude-indv-file : str
-        Individuals to exclude in file. Cannont to be used alonside --model
-    --filter-include-chr : list or str
-        Specifies the chromosome(s) to include
-    --filter-exclude-chr : list or str
-        Specifies the chromosome(s) to exclude
+        File of individuals to exclude.  Not usable w/ --model
+    --filter-only-biallelic
+        Only include variants that are biallelic
+    --filter-min-alleles : int
+        Include positions with a number of allele >= to the given number
+    --filter-max-alleles : int
+        Include positions with a number of allele <= to the given number
+    --filter-maf-min
+        Include sites with equal or greater MAF values
+    --filter-maf-max
+        Include sites with equal or lesser MAF values
+    --filter-mac-min
+        Include sites with equal or greater MAC values
+    --filter-mac-max
+        Include sites with equal or lesser MAC values
+    --filter-include-indels
+        Include positions if they contain an insertion or a deletion
+    --filter-exclude-indels
+        Exclude positions if they contain an insertion or a deletion
+    --filter-include-snp
+        Include SNP(s) with the matching ID. May be used multiple times
+    --filter-include-snp-file
+        File of SNP IDs to include
+    --filter-exclude-snp-file
+        File of SNP IDs to exclude
+    --filter-max-missing
+        Filter positions by their missing data proportion. Values should be given
+        as max proportion of missing data to accept. For example, a value of 0.0
+        allows no missing data whereas a value of 0.1 allows for 10% of samples to 
+        have missig data.
+    --filter-include-chr
+        Chromosome(s) to include. May be used multiple times.
+    --filter-exclude-chr
+        Chromosome(s) to exclude. May be used multiple times.
     --filter-from-bp : int
-        Specifies the lower bound of sites to include. May only be used with a single chromosome
+        Lower bound of positions to include. Only usable with a single chromosome
     --filter-to-bp : int
-        Specifies the upper bound of sites to include. May only be used with a single chromosome
+        Upper bound of positions to include. Only usable with a single chromosome
     --filter-include-positions : str
-        Specifies a set of sites to include within a tsv file (chromosome and position)
+        File of positions to include (tsv: chromosome and position)
     --filter-exclude-positions : str
-        Specifies a set of sites to exclude within a tsv file (chromosome and position)
+        File of positions to exclude (tsv: chromosome and position)
     --filter-include-bed : str
-        Specifies a set of sites to include within a BED file
+        BED file of positions to include 
     --filter-exclude-bed : str
-        Specifies a set of sites to exclude within a BED file
-    --filter-include-passed : bool
-        Specifies that only sites with the filter flag 'PASS' should be included (Default: False)
+        BED file of positions to exclude
+    --filter-include-passed
+        Include positions with the 'PASS' filter flag
     --filter-include-filtered : list or str
-        Specifies that all sites with the given filter flag should be included
+        Include positions with the specified filter flag
     --filter-exclude-filtered : list or str
-        Specifies that all sites with the given filter flag should be excluded
+        Exclude positions with the specified filter flag
     --filter-include-info : list or str
-        Specifies that all sites with the given info flag should be included
+        Include positions with the specified info flag
     --filter-exclude-info : list or str
-        Specifies that all sites with the given info flag should be excluded
-    --filter-min-alleles : int
-        Specifies that only sites with a number of allele >= to the number given should be included (Default: 2)
-    --filter-min-alleles : int
-        Specifies that only sites with a number of allele <= to the number given should be included (Default: 2)
-
-    Returns
-    -------
-    output : file
-        Filtered file output
-    log : file
-        Log file output
-
+        Exclude positions with the specified info flag
     Raises
     ------
     IOError
-        Input VCF file does not exist
-    IOError
         Output file already exists and --overwrite is not specified
-
+    Exception
+        Incompatible arguments
     '''
 
-    # Grab VCF arguments from command line
-    vcf_args = vcf_filter_parser(passed_arguments)
+    # Update kwargs with defaults
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, vcf_filter_parser)
+
+    # Assign arguments
+    vcf_args = argparse.Namespace(**kwargs)
+
+    # Check if the input file is indexed
+    vcf_is_indexed = check_for_index(vcf_args.vcf)
 
     # Adds the arguments (i.e. parameters) to the log file
     logArgs(vcf_args, func_name = 'vcf_filter')
 
-    # Argument container for vcftools
-    vcftools_call_args = ['--out', vcf_args.out_prefix]
+    # Argument container for bcftools
+    bcftools_call_args = ['view']
 
     # Check if the user has specified a model file
     if vcf_args.model_file and vcf_args.model:
@@ -234,172 +467,378 @@ def run (passed_arguments = []):
         # Create individuals file
         selected_model.create_ind_file(overwrite = vcf_args.overwrite)
 
-        # Assign the individuals file to vcftools
-        vcftools_call_args.extend(['--keep', selected_model.ind_file])
+        # Assign the individuals file to bcftools
+        bcftools_call_args.extend(['--samples-file', selected_model.ind_file])
 
-    # Holds the filename vcftools assigns to the filtered output
-    vcftools_output_filename = None
+    # Check for incompatible arguments if the user specified only biallelic alleles
+    if vcf_args.filter_only_biallelic:
 
-    # Used to assign the output format to the vcftools call, and assign vcftools output filename
-    if vcf_args.out_format == 'removed_sites':
-        vcftools_call_args.append('--removed-sites')
-        vcftools_output_filename = vcf_args.out_prefix + '.removed.sites'
-    elif vcf_args.out_format == 'kept_sites':
-        vcftools_call_args.append('--kept-sites')
-        vcftools_output_filename = vcf_args.out_prefix + '.kept.sites'
-    elif vcf_args.out_format == 'removed_bed':
-        vcftools_call_args.append('--removed-sites')
-        vcftools_output_filename = vcf_args.out_prefix + '.removed.bed'
-    elif vcf_args.out_format == 'kept_bed':
-        vcftools_call_args.append('--kept-sites')
-        vcftools_output_filename = vcf_args.out_prefix + '.kept.bed'
-    elif vcf_args.out_format == 'bcf':
-        vcftools_call_args.append('--recode')
-        vcftools_output_filename = vcf_args.out_prefix + '.recode.bcf'
-    elif vcf_args.out_format == 'vcf':
-        vcftools_call_args.append('--recode')
-        vcftools_output_filename = vcf_args.out_prefix + '.recode.vcf'
-    elif vcf_args.out_format == 'vcf.gz':
-        vcftools_call_args.append('--recode')
-        vcftools_output_filename = vcf_args.out_prefix + '.recode.vcf.gz'
+        # Check type arguments
+        if vcf_args.filter_include_indels:
+            raise Exception('--filter-only-biallelic and --filter-include-indel arguments are incompatible')
+        if vcf_args.filter_exclude_indels:
+            raise Exception('--filter-only-biallelic and --filter-exclude-indel arguments are incompatible')
+        if vcf_args.filter_include_snps:
+            raise Exception('--filter-only-biallelic and --filter-include-snps arguments are incompatible')
+        if vcf_args.filter_exclude_snps:
+            raise Exception('--filter-only-biallelic and --filter-exclude-snps arguments are incompatible')
+
+        # Check allele arguments
+        if vcf_args.filter_min_alleles:
+            raise Exception('--filter-only-biallelic and --filter-min-alleles arguments are incompatible')
+        if vcf_args.filter_max_alleles:
+            raise Exception('--filter-only-biallelic and --filter-max-alleles arguments are incompatible')
+
+    # Holds the filename suffix bcftools assigns to the filtered output
+    bcftools_out_suffix = None
+
+    # Assign expected bcftools output filename
+    bcftools_output_filename = '%s.%s' % (vcf_args.out_prefix, vcf_args.out_format)
+
+    # Check if the user has specified a output filename
+    if vcf_args.out:
+
+        # Rename the bcftools output filename, using the output filename
+        bcftools_output_filename = vcf_args.out
+
+    # Check if previous output should be overwritten
+    if not vcf_args.overwrite:
+
+        # Confirm the bcftools output and log file do not exist
+        check_for_bcftools_output(bcftools_output_filename)
 
     # Individuals-based filters
     if vcf_args.filter_include_indv_file or vcf_args.filter_exclude_indv_file:
         # Used to include a file of individuals to keep
-        if vcf_args.filter_exclude_indv_file:
-            vcftools_call_args.extend(['--keep', vcf_args.filter_include_indv_file])
+        if vcf_args.filter_include_indv_file:
+            bcftools_call_args.extend(['--samples-file', vcf_args.filter_include_indv_file])
 
         # Used to include a file of individuals to remove
         if vcf_args.filter_exclude_indv_file:
-            vcftools_call_args.extend(['--remove', vcf_args.filter_exclude_indv_file])
+            bcftools_call_args.extend(['--samples-file', '^' + vcf_args.filter_exclude_indv_file])
 
     # Individual-based filters
     if vcf_args.filter_include_indv or vcf_args.filter_exclude_indv:
         if vcf_args.filter_include_indv:
-            for indv_to_include in vcf_args.filter_include_indv:
-                vcftools_call_args.extend(['--indv', indv_to_include])
+            bcftools_call_args.extend(['--samples', ','.join(vcf_args.filter_include_indv)])
         if vcf_args.filter_exclude_indv:
-            for indv_to_exclude in vcf_args.filter_exclude_indv:
-                vcftools_call_args.extend(['--remove-indv', indv_to_exclude])
+            bcftools_call_args.extend(['--samples', '^' + ','.join(vcf_args.filter_exclude_indv)])
 
-    # Chromosome-based filters
-    if vcf_args.filter_include_chr or vcf_args.filter_exclude_chr:
-        if vcf_args.filter_include_chr:
-            for chr_to_include in vcf_args.filter_include_chr:
-                vcftools_call_args.extend(['--chr', chr_to_include])
-        if vcf_args.filter_exclude_chr:
-            for chr_to_exclude in vcf_args.filter_exclude_chr:
-                vcftools_call_args.extend(['--not-chr', chr_to_exclude])
+    # Position-list filter
+    if vcf_args.filter_include_pos or vcf_args.filter_exclude_pos:
 
-    # Site (i.e. basepair) filters
-    if vcf_args.filter_from_bp or vcf_args.filter_to_bp:
-        if vcf_args.filter_include_chr:
-            vcftools_call_args.extend(['--from-bp', vcf_args.filter_from_bp])
-        if vcf_args.filter_exclude_chr:
-            vcftools_call_args.extend(['--to-bp', vcf_args.filter_to_bp])
+        # Check if positions are to be included
+        if vcf_args.filter_include_pos:
+            # Check if the input is indexed
+            if vcf_is_indexed == True:
+                bcftools_call_args.extend(['--regions', ','.join(vcf_args.filter_include_pos)])
 
-    # Position (vcftools output file) filters
-    if vcf_args.filter_include_positions or vcf_args.filter_exclude_positions:
-        if vcf_args.filter_include_positions:
-            vcftools_call_args.extend(['--positions', vcf_args.filter_include_positions])
-        if vcf_args.filter_exclude_positions:
-            vcftools_call_args.extend(['--exclude-positions', vcf_args.filter_exclude_positions])
+            # Check if the input is not indexed
+            elif vcf_is_indexed != True:
+                bcftools_call_args.extend(['--targets', ','.join(vcf_args.filter_include_pos)])
+        
+        # Check if positions are to be excluded
+        if vcf_args.filter_exclude_pos:
+            bcftools_call_args.extend(['--targets', '^' + ','.join(vcf_args.filter_exclude_pos)])
 
-    # Position (BED format file) filters
-    if vcf_args.filter_include_bed or vcf_args.filter_exclude_bed:
+    # Position file filters that do not require indexed input
+    if (vcf_args.filter_include_pos_file or vcf_args.filter_exclude_pos_file) and vcf_is_indexed != True:
+        if vcf_args.filter_include_pos_file:
+            bcftools_call_args.extend(['--targets-file', vcf_args.filter_include_pos_file])
+        if vcf_args.filter_exclude_pos_file:
+            bcftools_call_args.extend(['--targets-file', '^' + vcf_args.filter_exclude_pos_file])
+
+    # Position file filters that requires indexed input
+    if (vcf_args.filter_include_pos_file or vcf_args.filter_exclude_pos_file) and vcf_is_indexed == True:
+        if vcf_args.filter_include_pos_file:
+            bcftools_call_args.extend(['--regions-file', vcf_args.filter_include_pos_file])
+        if vcf_args.filter_exclude_pos_file:
+            bcftools_call_args.extend(['--targets-file', '^' + vcf_args.filter_exclude_pos_file])
+
+    # Position BED filters that do not require indexed input
+    if (vcf_args.filter_include_bed or vcf_args.filter_exclude_bed) and vcf_is_indexed != True:
         if vcf_args.filter_include_bed:
-            vcftools_call_args.extend(['--bed', vcf_args.filter_include_bed])
+            bcftools_call_args.extend(['--targets-file', vcf_args.filter_include_bed])
         if vcf_args.filter_exclude_bed:
-            vcftools_call_args.extend(['--exclude-bed', vcf_args.filter_exclude_bed])
+            bcftools_call_args.extend(['--targets-file', '^' + vcf_args.filter_exclude_bed])
 
-    # Flag-based Filters
-    if vcf_args.filter_include_passed or vcf_args.filter_include_flag or vcf_args.filter_exclude_flag:
+    # Position BED filters that requires indexed input
+    if (vcf_args.filter_include_bed or vcf_args.filter_exclude_bed) and vcf_is_indexed == True:
+        if vcf_args.filter_include_bed:
+            bcftools_call_args.extend(['--regions-file', vcf_args.filter_include_bed])
+        if vcf_args.filter_exclude_bed:
+            bcftools_call_args.extend(['--targets-file', '^' + vcf_args.filter_exclude_bed])
+
+    # Include variants (indel, snp, or both)
+    if vcf_args.filter_include_indels or vcf_args.filter_include_snps:
+
+        # List to store variants to include
+        include_variant_types = []
+
+        # Check if indels should be included
+        if vcf_args.filter_include_indels:
+            
+            # Add the indels type
+            include_variant_types.append('indels')
+
+        # Check if SNPs should be included
+        if vcf_args.filter_include_snps:
+            
+            # Add the snps type
+            include_variant_types.append('snps')
+
+        # Store the types to include argument
+        bcftools_call_args.extend(['--types', '%s' % ','.join(include_variant_types)])
+
+    # Exclude variants (indel, snp, or both)
+    if vcf_args.filter_exclude_indels or vcf_args.filter_exclude_snps:
+
+        # List to store variants to exclude
+        exclude_variant_types = []
+
+        # Check if indels should be excluded
+        if vcf_args.filter_exclude_indels:
+            
+            # Add the indels type
+            exclude_variant_types.append('indels')
+
+        # Check if SNPs should be excluded
+        if vcf_args.filter_exclude_snps:
+            
+            # Add the snps type
+            exclude_variant_types.append('snps')
+
+        # Store the types to include argument
+        bcftools_call_args.extend(['--exclude-types', '%s' % ','.join(exclude_variant_types)])
+
+    # Allele-based filters, min and max 
+    if vcf_args.filter_only_biallelic or vcf_args.filter_min_alleles or vcf_args.filter_max_alleles:
+        if vcf_args.filter_only_biallelic:
+            bcftools_call_args.extend(['--min-alleles', '2', '--max-alleles', '2', '--types', 'snps'])
+        if vcf_args.filter_min_alleles:
+            bcftools_call_args.extend(['--min-alleles', vcf_args.filter_min_alleles])
+        if vcf_args.filter_max_alleles:
+            bcftools_call_args.extend(['--max-alleles', vcf_args.filter_max_alleles])
+
+    # MAF-based filters
+    if vcf_args.filter_maf_min != None or vcf_args.filter_maf_max != None:
+        if vcf_args.filter_maf_min != None:
+            bcftools_call_args.extend(['--min-af', vcf_args.filter_maf_min])
+        if vcf_args.filter_maf_max != None:
+            bcftools_call_args.extend(['--max-af', vcf_args.filter_maf_max])
+
+    # MAC-based filters
+    if vcf_args.filter_mac_min != None or vcf_args.filter_mac_max != None:
+        if vcf_args.filter_mac_min != None:
+            bcftools_call_args.extend(['--min-ac', vcf_args.filter_mac_min])
+        if vcf_args.filter_mac_max != None:
+            bcftools_call_args.extend(['--max-ac', vcf_args.filter_mac_max])
+
+    # Check if samples should be forced
+    if vcf_args.force_samples:
+        bcftools_call_args.append('--force-samples')
+    
+    # List to store expression for BCFtools include expression functionality
+    bcftools_expressions = []
+
+    # SNP filters
+    if vcf_args.filter_include_snp or vcf_args.filter_exclude_snp:
+
+        # Check for SNPs to include
+        if vcf_args.filter_include_snp:
+
+            # Create list to store include SNP expression
+            include_snp_expression_list = []
+
+            # Loop the SNPs
+            for snp_to_include in vcf_args.filter_include_snp:
+                
+                # Save the include SNP expression       
+                include_snp_expression_list.append('%%ID=="%s"' % snp_to_include)
+
+            # Merge the include SNP expression
+            include_snp_expression_str = '%s' % ' || '.join(include_snp_expression_list)
+
+            # Check if parentheses are needed
+            if len(include_snp_expression_list) > 1:
+
+                # Add parentheses
+                include_snp_expression_str = '(%s)' % include_snp_expression_str
+
+            # Add the include expression to the list
+            bcftools_expressions.append(include_snp_expression_str)
+
+        # Check for SNPs to exclude
+        if vcf_args.filter_exclude_snp:
+
+            # Create list to store exclude SNP expression
+            exclude_snp_expression_list = []
+
+            # Loop the SNPs
+            for snp_to_exlude in vcf_args.filter_exclude_snp:
+                
+                # Save the include SNP expression       
+                exclude_snp_expression_list.append('%%ID!="%s"' % snp_to_exlude)
+
+            # Merge the exclude SNP expression
+            exclude_snp_expression_str = '%s' % ' && '.join(exclude_snp_expression_list)
+
+            # Check if parentheses are needed
+            if len(exclude_snp_expression_list) > 1:
+
+                # Add parentheses
+                exclude_snp_expression_str = '(%s)' % exclude_snp_expression_str
+
+            # Add the exclude expression to the list
+            bcftools_expressions.append(exclude_snp_expression_str)
+
+    # SNP-file filters
+    if vcf_args.filter_include_snp_file or vcf_args.filter_exclude_snp_file:
+        if vcf_args.filter_include_snp_file:
+            bcftools_expressions.append('%%ID==@%s' % vcf_args.filter_include_snp_file)
+        if vcf_args.filter_exclude_snp_file:
+            bcftools_expressions.append('%%ID!=@%s' % vcf_args.filter_exclude_snp_file)
+
+    # Missing data filters
+    if vcf_args.filter_max_missing != None or vcf_args.filter_max_missing_count != None:
+        if vcf_args.filter_max_missing != None:
+            bcftools_expressions.append('F_MISSING <= %s' % vcf_args.filter_max_missing)
+        if vcf_args.filter_max_missing_count  != None:
+            bcftools_expressions.append('N_MISSING <= %s' % vcf_args.filter_max_missing_count)
+
+    # PASS flag Filters
+    if vcf_args.filter_include_passed or vcf_args.filter_exclude_passed:
+
         if vcf_args.filter_include_passed:
-            vcftools_call_args.append('--remove-filtered-all')
-        if vcf_args.filter_include_flag:
-            for filtered_to_include in vcf_args.filter_include_flag:
-                vcftools_call_args.extend(['--keep-filtered', filtered_to_include])
-        if vcf_args.filter_exclude_flag:
-            for filtered_to_exclude in vcf_args.filter_exclude_flag:
-                vcftools_call_args.extend(['--remove-filtered', filtered_to_exclude])
+            bcftools_expressions.append('%FILTER=="PASS"')
 
-    # Infor-based filters
+        if vcf_args.filter_exclude_passed:
+            bcftools_expressions.append('%FILTER!="PASS"')
+
+    # General Flag filters
+    if vcf_args.filter_include_flag or vcf_args.filter_exclude_flag:
+
+        # Check for flags to include
+        if vcf_args.filter_include_flag:
+
+            # List to store variants to include
+            include_flag_list = []
+
+            # Loop flags to include
+            for filtered_to_include in vcf_args.filter_include_flag:
+                
+                # Save the flag to include
+                include_flag_list.append('%%FILTER=="%s"' % filtered_to_include)
+
+            # Merge the flags to include
+            include_flag_str = '%s' % ' || '.join(include_flag_list)
+
+            # Check if parentheses are needed
+            if len(include_flag_list) > 1:
+
+                # Add parentheses
+                include_flag_str = '(%s)' % include_flag_str
+
+            # Append the include flag expression
+            bcftools_expressions.append(include_flag_str)
+
+        # Check for flags to exclude
+        if vcf_args.filter_exclude_flag:
+
+            # List to store variants to exclude
+            exclude_flag_list = []
+
+            # Loop flags to exclude
+            for filtered_to_exclude in vcf_args.filter_exclude_flag:
+                
+                # Save the flag to exclude
+                exclude_flag_list.append('%%FILTER!="%s"' % filtered_to_exclude)
+
+            # Merge the flags to exclude
+            exclude_flag_str = '%s' % ' && '.join(exclude_flag_list)
+
+            # Check if parentheses are needed
+            if len(exclude_flag_list) > 1:
+
+                # Add parentheses
+                exclude_flag_str = '(%s)' % exclude_flag_str
+
+            # Append the exclude flag expression
+            bcftools_expressions.append(exclude_flag_str)
+
+    '''
+    # Info-based filters
     if vcf_args.filter_include_info or vcf_args.filter_exclude_info:
         if vcf_args.filter_include_info:
             for info_to_include in vcf_args.filter_include_info:
-                vcftools_call_args.extend(['--keep-INFO', info_to_include])
+                bcftools_call_args.extend(['--keep-INFO', info_to_include])
         if vcf_args.filter_exclude_info:
             for info_to_exclude in vcf_args.filter_exclude_info:
-                vcftools_call_args.extend(['--remove-INFO', info_to_exclude])
+                bcftools_call_args.extend(['--remove-INFO', info_to_exclude])
+    '''
 
-    # Allele-based filters
-    if vcf_args.filter_min_alleles or vcf_args.filter_max_alleles:
-        if vcf_args.filter_min_alleles:
-            vcftools_call_args.extend(['--min-alleles', vcf_args.filter_min_alleles])
-        if vcf_args.filter_max_alleles:
-            vcftools_call_args.extend(['--max-alleles', vcf_args.filter_max_alleles])
+    # Make sure there is an expression prior to adding --include call
+    if len(bcftools_expressions) > 0:
 
-    # Missing data filters
-    if vcf_args.filter_max_missing:
-        vcftools_call_args.extend(['--max-missing', vcf_args.filter_max_missing])
+        # Save the BCFtools expression argument
+        bcftools_expression_arg = '(%s)' % ' && '.join(bcftools_expressions)
 
-    # SNP-based filters
-    if vcf_args.filter_include_snp or vcf_args.filter_include_snps or vcf_args.filter_exclude_snps:
-        if vcf_args.filter_include_snp:
-            for snp_to_include in vcf_args.filter_include_snp:
-                vcftools_call_args.extend(['--snp', snp_to_include])
-        if vcf_args.filter_include_snps:
-            vcftools_call_args.extend(['--snps', vcf_args.filter_include_snps])
-        if vcf_args.filter_exclude_snps:
-            vcftools_call_args.extend(['--exclude', vcf_args.filter_exclude_snps])
+        # Add the expression argument to the argument list
+        bcftools_call_args.extend(['--include', bcftools_expression_arg])
 
-    # MAF-based filters
-    if vcf_args.filter_maf_min or vcf_args.filter_maf_max:
-        if vcf_args.filter_maf_min:
-            vcftools_call_args.extend(['--maf', vcf_args.filter_maf_min])
-        if vcf_args.filter_maf_max:
-            vcftools_call_args.extend(['--max-maf', vcf_args.filter_maf_max])
+    logging.info('bcftools parameters assigned')
 
-    # MAC-based filters
-    if vcf_args.filter_mac_min or vcf_args.filter_mac_max:
-        if vcf_args.filter_mac_min:
-            vcftools_call_args.extend(['--mac', vcf_args.filter_mac_min])
-        if vcf_args.filter_mac_max:
-            vcftools_call_args.extend(['--max-mac', vcf_args.filter_mac_max])
+    # Assign the input file
+    bcftools_call_args.append(vcf_args.vcf)
 
-    # Distance (between sites) filters
-    if vcf_args.filter_distance:
-        vcftools_call_args.extend(['--thin', vcf_args.filter_distance])
-
-    logging.info('vcftools parameters assigned')
-
-    # Check if previous output should be overwritten
-    if not vcf_args.overwrite:
-        if vcf_args.out:
-            # Confirm the vcftools-renamed output and log file do not exist
-            check_for_vcftools_output(vcf_args.out)
-        else:
-            # Confirm the vcftools output and log file do not exist
-            check_for_vcftools_output(vcftools_output_filename)
-
-    # Assigns the file argument for vcftools
-    vcfname_arg = assign_vcftools_input_arg(vcf_args.vcf)
     logging.info('Input file assigned')
 
-    # Call vcftools with the specifed arguments
-    vcftools_err = call_vcftools(vcfname_arg + vcftools_call_args, output_format = vcf_args.out_format, output_filename = vcftools_output_filename)
+    if vcf_args.out_format in ['vcf', 'vcf.gz', 'bcf']:
 
-    # Check if the user specifed the complete output filename
-    if vcf_args.out:
-        os.rename(vcftools_output_filename, vcf_args.out)
-        produce_vcftools_log(vcftools_err, vcf_args.out)
+        # Assign the output format
+        bcftools_call_args.extend(return_output_format_args(vcf_args.out_format))
+
+        # Assign the output filename
+        bcftools_call_args.extend(['-o', bcftools_output_filename])
+
+        # Call bcftools with the specifed arguments
+        bcftools_err = call_bcftools(bcftools_call_args)
+
+    elif vcf_args.out_format in ['bed', 'sites']:
+
+        # Create list for the conversion call
+        bcftools_cvt_args = ['query', '-f']
+
+        # Check if the output format is bed
+        if vcf_args.out_format == 'bed':
+
+            # Add the arguments to create a bed file
+            bcftools_cvt_args.append('%CHROM\t%POS0\t%END\t%ID\n')
+
+        # Check if the output format is sites
+        elif vcf_args.out_format == 'sites':
+
+            # Add the arguments to create a bed file
+            bcftools_cvt_args.append('%CHROM\t%POS\n')
+
+        # Assign the output filename
+        bcftools_cvt_args.extend(['-o', bcftools_output_filename])
+
+        print(bcftools_call_args)
+
+        # Call BCFtools twice
+        pipe_bcftools_bcftools(bcftools_call_args, bcftools_cvt_args)
+
     else:
-        produce_vcftools_log(vcftools_err, vcftools_output_filename)
+        raise Exception('Unknown file format: %s' % vcf_args.out_format)
 
-    # Delete any files that were created for vcftools
+    # Log the bcftools reference
+    log_bcftools_reference()
+
+    # Delete any files that were created for bcftools
     if vcf_args.model_file:
         selected_model.delete_ind_file()
 
 if __name__ == "__main__":
     initLogger()
-    run()
+    run(**vcf_filter_parser())

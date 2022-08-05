@@ -1,0 +1,22 @@
+2022-08-04 11:22:20,130 - logArgs - INFO: Argument vcf: toy_files/vcfs/Sampled_nonmissing/out_199.vcf.gz
+2022-08-04 11:22:20,131 - logArgs - INFO: Argument out: toy_files/vcfs/Phased/phased_199.vcf
+2022-08-04 11:22:20,131 - logArgs - INFO: Argument out_prefix: out
+2022-08-04 11:22:20,131 - logArgs - INFO: Argument out_format: vcf
+2022-08-04 11:22:20,131 - logArgs - INFO: Argument overwrite: True
+2022-08-04 11:22:20,131 - logArgs - INFO: Argument log_stdout: False
+2022-08-04 11:22:20,131 - logArgs - INFO: Argument phase_algorithm: shapeit
+2022-08-04 11:22:20,131 - logArgs - INFO: Argument shapeit_use_mt: False
+2022-08-04 11:22:20,131 - logArgs - INFO: Argument shapeit_force: False
+2022-08-04 11:22:20,131 - run - INFO: Input file assigned
+2022-08-04 11:22:20,132 - confirm_executable - INFO: Calling executable: /home/tu.temple.edu/tuk32868/miniconda3/envs/ppp/bin/bcftools
+2022-08-04 11:22:20,182 - call_bcftools - INFO: bcftools call complete
+2022-08-04 11:22:20,183 - create_index - INFO: Index file created
+2022-08-04 11:22:20,183 - confirm_executable - INFO: Calling executable: /home/tu.temple.edu/tuk32868/miniconda3/envs/ppp/bin/bcftools
+2022-08-04 11:22:20,196 - pipe_bcftools_to_set - INFO: bcftools call complete
+2022-08-04 11:22:20,196 - standard_shapeit_call - INFO: shapeit phasing parameters assigned
+2022-08-04 11:22:20,196 - confirm_executable - INFO: Calling executable: /home/tu.temple.edu/tuk32868/miniconda3/envs/ppp/bin/shapeit
+2022-08-04 11:22:20,245 - standard_shapeit_call - INFO: shapeit phasing complete (HAPS format)
+2022-08-04 11:22:20,252 - standard_plink2_call - INFO: plink2 call complete
+2022-08-04 11:22:20,252 - run - INFO: HAPS conversion to VCF complete
+2022-08-04 11:22:20,253 - remove_shapeit_intermediate_files - INFO: shapeit-related files removed
+2022-08-04 11:22:20,253 - run - INFO: Log file created

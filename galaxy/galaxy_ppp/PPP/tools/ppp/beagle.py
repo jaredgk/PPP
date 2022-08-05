@@ -6,20 +6,19 @@ import argparse
 import glob
 import logging
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'jared')))
+#sys.path.insert(0, os.path.abspath(os.path.join(os.pardir, 'pppipe')))
 
 from vcf_reader_func import checkFormat
 from logging_module import initLogger, logArgs
 from vcftools import bgzip_decompress_vcfgz
-from bcftools import convert_to_bcf, check_for_index, create_index
+from bcftools import convert_vcf, check_for_index, create_index
+from misc import confirm_executable
 
 def delete_beagle_log (output_prefix):
     '''
         Delete beagle log file
-
         This function is used to delete beagle's log file if an error is
         encountered. A warning is produced if the log file cannot be found.
-
         Parameters
         ----------
         output_prefix : str
@@ -35,14 +34,12 @@ def delete_beagle_log (output_prefix):
 def check_beagle_for_errors (beagle_stderr, output_prefix):
     '''
         Checks the beagle stdout for errors
-
         Parameters
         ----------
         beagle_stderr : str
             beagle stderr
         output_prefix : str
             Output file prefix
-
         Raises
         ------
         Exception
@@ -82,15 +79,24 @@ def check_beagle_for_errors (beagle_stderr, output_prefix):
 
         raise Exception(beagle_stderr)
 
+def check_for_beagle_intermediate_files (output_prefix, output_format, overwrite = False):
+
+    # Check if the output format is not vcf.gz
+    if output_format != 'vcf.gz':
+
+        # Check if the intermediate should be removed
+        if not overwrite:
+
+            # Check if an intermediate file exists and riase error
+            if os.path.isfile(output_prefix + '.vcf.gz'):
+                raise Exception('Beagle intermediate (%s) found. Use --overwrite to ignore')
 
 def standard_beagle_call (beagle_path, beagle_call_args, output_prefix):
     '''
         Calls beagle using subprocess
-
         This function is used to call beagle under standard conditions. The
         functions then passes the stderr to check_beagle_for_errors to check
         for errors.
-
         Parameters
         ----------
         beagle_path : str
@@ -102,11 +108,18 @@ def standard_beagle_call (beagle_path, beagle_call_args, output_prefix):
     '''
 
     # Assign location of beagle jar file
-    beagle_jar = os.path.join(beagle_path, 'beagle.jar')
+    if beagle_path is None:
 
-    # Check that beagle.jar exists
-    if not os.path.isfile(beagle_jar):
-        raise IOError('beagle.jar not found. Path specified: %s' % beagle_path)
+        # Create a string with the beagle path
+        beagle_jar = confirm_executable('beagle.jar')
+        
+    else:
+        # Use path if specified
+        beagle_jar = os.path.join(beagle_path, 'beagle.jar')
+
+    # Check if executable is installed
+    if not beagle_jar:
+         raise IOError('beagle.jar not found. Please confirm the executable is installed')
 
     logging.info('beagle phasing parameters assigned')
 
@@ -127,12 +140,10 @@ def standard_beagle_call (beagle_path, beagle_call_args, output_prefix):
 def call_beagle (beagle_path, beagle_call_args, output_prefix, output_format):
     '''
         Automates beagle calls
-
         This function passes the argument list to standard_beagle_call. Once the
         beagle call has finished, the function will automatically convert the
         bgzip compressed output of beagle to BCF and VCF, if either format is
         specified.
-
         Parameters
         ----------
         beagle_path : str
@@ -144,20 +155,23 @@ def call_beagle (beagle_path, beagle_call_args, output_prefix, output_format):
         output_format : str
             Output file format
     '''
-    print beagle_call_args
+
     # Standard call to beagle
     standard_beagle_call(beagle_path, beagle_call_args, output_prefix)
 
-    # Decompress if a VCF files is requested
+    # Check if the desired format is VCF
     if output_format == 'vcf':
+
+        # Decompress the VCF file
         bgzip_decompress_vcfgz(output_prefix + '.vcf.gz')
 
-    # Convert to BCF if requested
+    # Check if the desired format is BCF
     elif output_format == 'bcf':
 
         # Check if there is an index file
         if check_for_index(output_prefix + '.vcf.gz') == False:
             # Create an index if not found
             create_index(output_prefix + '.vcf.gz')
+        
         # Convert vcf.gz to bcf
-        convert_to_bcf(output_prefix + '.vcf.gz', output_prefix)
+        convert_vcf(output_prefix + '.vcf.gz', output_prefix, output_format, overwrite = True)

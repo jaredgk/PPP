@@ -2,28 +2,46 @@ import sys
 import argparse
 import gzip
 import io
+from vcf_reader_func import VcfReader
+from model import Model, read_single_model
+from misc import argprase_kwargs
 
-def createParser():
-    parser = argparse.ArgumentParser()
+def parseArguments(passed_arguments = []):
+    parser = argparse.ArgumentParser(description=("Outputs windows in a "
+                      "VCF file where all sites in the window have below"
+                      " a set limit of missing data. Limit default "
+                      "is any missing data."))
+    parser.add_argument('--vcf',dest="vcfname",type=str,
+                        help=("Name of input VCF file, default is stdin"))
     parser.add_argument('--size',dest="window_size",type=int,default=1000)
-    parser.add_argument('--zero-ho',dest="zero_ho",action="store_true",
-                        help=("Output list in zero-based half-open format"))
+    parser.add_argument('--oneidx-start',dest="oneidx", action="store_true",
+                        help=("Region list start coordinates indexed from 1, "
+                        "not 0"))
     parser.add_argument('--zero-closed',dest="zero_closed",action="store_true",
                         help=("Output list in zero-based closed format"))
     parser.add_argument('--extend-regions',dest="extend",action="store_true",
-                        help=("Regions will be cut at halfway point between valid and invalid site, instead of at site"))
+                        help=("Regions will be cut at halfway point between "
+                        "valid and invalid site, instead of at site"))
     parser.add_argument('--missing-count',dest="missing_count",type=int,
                         help=("Count variants with more than (n) missing "
-                        "samples as a missing site"),default="0")
-    parser.add_argument('--vcf',dest="vcfname",type=str,
-                        help=("Name of input VCF file, default is stdin"))
+                        "samples as a missing site"),default=0)
     parser.add_argument('--out',dest='outname',type=str,
                         help="Output filename (default is stdout)")
     parser.add_argument('--addchr',dest="addchr",action="store_true",
                         help=("Add 'chr' to start of chromosome name"))
     parser.add_argument('--removechr',dest="removechr",action="store_true",
                         help=("Remove 'chr' from start of chromosome name"))
-    return parser
+    parser.add_argument('--model-file',dest="popname",help="Model file if only "
+                        "using subset of inds in a file")
+    parser.add_argument('--model',dest="modelname",help=("Name of population "
+                        "in model file if more than one is contained"))
+    parser.add_argument("--tbi", dest="tabix_index", help="Path to bgzipped "
+                        "file's index if name doesn't match VCF file")
+    if passed_arguments:
+        return vars(parser.parse_args(passed_arguments))
+    else:
+        return vars(parser.parse_args())
+    #return parser
 
 def getl(f,compressed=False):
     l = f.readline()
@@ -41,26 +59,92 @@ def fixChromName(chrom,addchr,removechr):
 def outputLine(chrom,start_pos,end_pos,args):
     sp = start_pos
     ep = end_pos
-    if args.zero_ho:
+    if (not args.oneidx):
         sp -= 1
     elif args.zero_closed:
         sp -= 1
         ep -= 1
     chrom = fixChromName(chrom,args.addchr,args.removechr)
-    return chrom+'\t'+str(start_pos)+'\t'+str(end_pos)+'\n'
+    return chrom+'\t'+str(sp)+'\t'+str(ep)+'\n'
 
-def regionsWithData(sysargs):
-    parser = createParser()
-    args = parser.parse_args(sysargs)
+def regionsWithData(**kwargs):
+    """Returns a BED file with regions where all SNPs contained have
+    less than a given limit of missing data.
+    Given an input VCF file (regular,bgzipped,stdin), will output regions
+    where all SNPs in the region have under a certain threshhold of missing
+    data, as set by --missing-count. The value specified here will cut
+    off regions where more than 'n' individuals are missing data, the 
+    default value for this is 0. Options are included to subsample VCF by
+    individual and only track missing data for those included, adding or 
+    dropping 'chr' form the chromosome name, and setting a minimum size for
+    the length of output windows. 
+    Parameters
+    ----------
+    --vcf : str
+        Filename for VCF input file. If not provided, defaults to stdin
+    --size : int (1000)
+        Outputs regions that have length equal to or greater than 
+        provided value
+    --missing-count : int (0)
+        Any site with more than (n) individuals missing data will be 
+        considered as a region breakpoint. If used with --model-file,
+        will only count individuals that are included in model.
+    --model-file : str
+        Used to subsample VCF and only look at missing data in given
+        individuals
+    --model : str
+        If model file has more than one model, the model name is passed
+        here to specify which one to use.
+    --out : str
+        Output BED filename
+    
+    Other Parameters
+    ----------------
+    --oneidx-start
+        If set, use human-readable coordinates for BED file (i.e. 1-100 for
+        first 100 bases in a genome) as opposed to default of zero-based, 
+        half-open (0-100).
+    --extend-regions : bool
+        If set, will extend regions past the flanking included SNPs
+        to the halfway point between the end SNP and the SNP with
+        missing data
+    --addchr : bool
+        If set, will add 'chr' to any chromosome name
+    --removechr : bool
+        If set, will remove 'chr' from any chromosome name that starts with it
+    --tbi : str
+        Name of tabix index for VCF if using bgzipped file without default
+        tbi index name
+    
+    """
+    #parser = createParser()
+    #args = parser.parse_args(sysargs)
+    if __name__ != "__main__":
+        kwargs = argprase_kwargs(kwargs, parseArguments)
+    args = argparse.Namespace(**kwargs)
     compressed_input = False
+    #if args.vcfname is None:
+    #    instream = sys.stdin
+    #elif args.vcfname[-3:] == '.gz':
+    #    compressed_input = True
+    #    instream = gzip.open(args.vcfname,'r')
+   # else:
+   #     instream = open(args.vcfname,'r')
+
+
     if args.vcfname is None:
-        instream = sys.stdin
-    elif args.vcfname[-3:] == '.gz':
-        #instream = io.TextIOWrapper(io.BufferedReader(gzip.open(args.vcfname),'rb'),encoding="utf-8")
-        compressed_input = True
-        instream = gzip.open(args.vcfname,'r')
+        vcfname = '-'
     else:
-        instream = open(args.vcfname,'r')
+        vcfname = args.vcfname
+
+    popmodel = None
+    if args.popname is not None:
+        popmodel = read_single_model(args.popname,args.modelname)
+
+    vcf_in = VcfReader(vcfname,
+                       popmodel=popmodel,
+                       index=args.tabix_index)
+
     if args.outname is not None:
         outstream = open(args.outname,'w')
     else:
@@ -79,31 +163,31 @@ def regionsWithData(sysargs):
     prev_chrom = ''
 
     in_section = False
-    line = getl(instream,compressed_input)
-    while len(line.strip()) > 0:
-    #for line in instream:
-        if line[0] == '#':
-            line = getl(instream,compressed_input)
-            continue
-        la = line.strip().split()
+    #May be skipping first site, fine here but issue elsewhere
+    for record in vcf_in.reader:
         missing_for_site = False
         missing_at_site = 0
-        for i in range(9,len(la)):
-            geno = la[i]
-            if '.' in geno:
+        #for i in range(9,len(la)):
+        for i in range(len(record.samples)):
+            #geno = la[i]
+            #if '.' in geno:
+            if record.samples[i].alleles[0] in [None,'N']:
                 missing_at_site += 1
                 if missing_at_site > args.missing_count:
                     missing_for_site = True
                     break
-        cur_pos = int(la[1])
-        if prev_pos == 0 or prev_chrom != la[0]:
+        #cur_pos = int(la[1])
+        cur_pos = record.pos
+        #if prev_pos == 0 or prev_chrom != la[0]:
+        if prev_pos == 0 or prev_chrom != record.chrom:
             if prev_pos != 0:
                 start_pos = ((prev_miss_pos+prev_full_pos+1)//2 if args.extend else prev_full_pos)
                 end_pos = prev_pos
                 outstream.write(outputLine(prev_chrom,start_pos,end_pos,args))
             prev_miss_pos = cur_pos
             prev_full_pos = cur_pos
-            prev_chrom = la[0]
+            #prev_chrom = la[0]
+            prev_chrom = record.chrom
             if not missing_for_site:
                 in_section = True
             prev_pos = cur_pos
@@ -119,23 +203,14 @@ def regionsWithData(sysargs):
                     end_pos = prev_pos
                 diff = end_pos - start_pos
                 if diff > args.window_size:
-                    #if args.zero_ho:
-                    #    start_pos -= 1
-                    #elif args.zero_closed:
-                    #    start_pos -= 1
-                    #    end_pos -= 1
-                    #chrom = fixChromName(la[0],args.addchr,args.removechr)
-                    #outstream.write(chrom+'\t'+str(start_pos)+'\t'+str(end_pos)+'\n')
-                    outstream.write(outputLine(la[0],start_pos,end_pos,args))
-                    #sys.stdout.write(la[0]+'\t'+str(prev_full_pos)+'\t'+str(prev_pos)+'\n')
-                    #print (la[0],prev_miss_pos,prev_full_pos,prev_pos,cur_pos,diff)
+                    outstream.write(outputLine(record.chrom,start_pos,end_pos,args))
         else:
             if not in_section:
                 prev_miss_pos = prev_pos
                 prev_full_pos = cur_pos
                 in_section = True
         prev_pos = cur_pos
-        line = getl(instream,compressed_input)
+        #line = getl(instream,compressed_input)
     if in_section:
         if args.extend:
             start_pos = (prev_miss_pos+prev_full_pos+1)//2
@@ -149,4 +224,4 @@ def regionsWithData(sysargs):
         pass
 
 if __name__ == '__main__':
-    regionsWithData(sys.argv[1:])
+    regionsWithData(**parseArguments())

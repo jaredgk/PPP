@@ -5,20 +5,23 @@
   <requirements>
       <requirement type="package" >pandas</requirement>
       <requirement type="package" >pysam</requirement>
+      <requirement type='package'>shapeit</requirement>
   </requirements>
 
   <command><![CDATA[
-    #if $input.is_of_type('vcf_bgzip')
-      ln -fs $input input.vcf.gz &&
-      ln -fs $input.metadata.tabix_index input.vcf.gz.tbi &&
-    #end if
-    #if $input.is_of_type('vcf')
-      ln -fs $input input.vcf &&
-    #end if
-    python $__tool_directory__/vcf_phase.py
+ 
+	#if $input.is_of_type('vcf_bgzip')
+ 		ln -fs $input input.vcf.gz &&
+		ln -fs $input.metadata.tabix_index input.vcf.gz.tbi &&
+    	#end if
+    	#if $input.is_of_type('vcf')
+      		ln -fs $input input.vcf &&
+    	#end if
+    	python $__tool_directory__/vcf_phase.py
             --phase-algorithm $phase.phase_algorithm
             --out $output
             --out-format $out_format
+            --overwrite
 
             #if $input.is_of_type('vcf_bgzip')
                --vcf input.vcf.gz
