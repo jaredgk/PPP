@@ -430,7 +430,126 @@
 
   </outputs>
   <help>
-      VCF Statistics Calculator Help Text
+      Automates the calculation of site/windowed fixation index (Fst), Tajima's D, nucleotide diversity (Pi), allele frequency, and heterozygosity using VCFTools. If no statistic is specified, windowed Fst is used by default.
+
+      ############################
+      Input Arguments
+      ############################
+      **vcf** *<input_filename>*
+          Select the filename of the VCF file for calculations.
+      
+      Optional Arguments: 
+      **model-file** *<model_filename>*
+          Select model file. Please note that this argument cannot be 
+          used with the **pop-file** argument or individual-based filters.
+      **model** *<model_str>*
+          Argument used to define the model (i.e. the individual(s) to include and/or the 
+          populations for relevant statistics). May be used with any statistic. Please note 
+          that this argument cannot be used with **--pop-file** argument or the 
+          individual-based filters.
+    
+    #############################
+    Output Command-line Arguments
+    #############################
+    **--out** *<output_filename>*
+        Argument used to define the complete output filename, overrides **--out-prefix**.
+        Cannot be used if multiple output files are created.
+    **--out-prefix** *<output_prefix>*
+        Argument used to define the output prefix (i.e. filename without file extension)
+    **--out-dir** *<output_dir_name>*
+        Argument used to define the output directory. Only used if 3+ populations are
+        specified.
+    **--overwrite**
+        Argument used to define if previous output should be overwritten.
+    
+    ####################################
+    Statistic Command-line Specification
+    ####################################
+    **--calc-statistic** *<weir-fst, windowed-weir-fst, TajimaD, site-pi, window-pi, freq, het-fit, het-fis, hardy-weinberg>*
+        Argument used to define the statistic to be calculated. Site Fst (weir-fst), 
+        windowed Fst (windowed-weir-fst), Tajima's D (TajimaD), site nucleotide 
+        diversity (site-pi), windowed nucleotide diversity (window-pi), allele frequency
+        (freq), Fit (het-fit), Fis (het-fis), and the hardy-weinberg equilibrium 
+        (hardy-weinberg).
+    **************************
+    Models with 3+ populations
+    **************************
+    If a model is specified with 3 or more populations, the following statistics will
+    result in the creation of an output directory - see **--out-dir** - of pairwise
+    comparisons: *weir-fst*, *windowed-weir-fst*, *site-pi*, *window-pi*.
+    ***********************************************
+    Statistic Command-line Requirements and Options
+    ***********************************************
+    It should be noted that some of the statistics in the VCF calculator require additional
+    arguments (i.e. **--pop-file**, **--statistic-window-size**, **--statistic-window-step**).
+    These statistics may be found below with their additional requirements and optional 
+    arguments. If a statistic is not given, only the statistic specification (i.e. 
+    **--calc-statistic**) is required.
+    **--calc-statistic** *weir-fst*
+        Requires: **--pop-file**/**--model**.
+    **--calc-statistic** *windowed-weir-fst*
+        Requires: **--pop-file**/**--model** and **--statistic-window-size**. If
+        **--statistic-window-step** is not given, it will default to the value of
+        **--statistic-window-size**.
+    **--calc-statistic** *TajimaD*
+        Requires: **--statistic-window-size**
+     **--calc-statistic** *site-pi*
+        Optional: **--pop-file**/**--model**.
+    **--calc-statistic** *windowed-pi*
+        Requires: **--statistic-window-size**. . If **--statistic-window-step** is 
+        not given, it will default to the value of **--statistic-window-size**.
+        Optional: **--pop-file**/**--model**.
+    **--calc-statistic** *het-fis*
+        Requires: **--pop-file**/**--model**.
+    
+    *******************************************
+    Additional Statistic Command-line Arguments
+    *******************************************
+    **--statistic-window-size** *<size_int>*
+        Defines the statistic window size. Not usable with all statistics.
+    **--statistic-window-step** *<step_int>*
+        Defines the statistic window step size. Not usable with all statistics.
+    **--pop-file** *<pop_filename>*
+        Population file. This argument may be used multiple times if desired. Please note
+        the this argument is not compatible with either the **--model** or **--model-file** 
+        command-line arguments.
+    
+    #############################
+    Filter Command-line Arguments
+    #############################
+    If using an unfiltered VCF file (e.g. reduce the creation of unnecessary large files)
+    the VCF calculator is able to use either a kept or removed sites/BED file and the
+    individual-based paramemeters. 
+    
+    **************************
+    Individual-Based Arguments
+    **************************
+    Please note that all individual-based arguments are not compatible with either the 
+    **--model** or **--model-file** command-line arguments.
+    **--filter-include-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to include. This argument may be used 
+        multiple times if desired.
+    **--filter-exclude-indv** *<indv_str>* *<indv1_str, indv2_str, etc.>*
+        Argument used to define the individual(s) to exclude. This argument may be used 
+        multiple times if desired.
+    **--filter-include-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to include.
+    **--filter-exclude-indv-file** *<indv_filename>*
+        Argument used to define a file of individuals to exclude.
+    
+    ************************
+    Position-Based Arguments
+    ************************
+    **--filter-include-positions** *<position_filename>*
+        Argument used to define a file of positions to include within a tsv file 
+        (chromosome and position).
+    **--filter-exclude-positions** *<position_filename>*
+        Argument used to define a file of positions to exclude within a tsv file 
+        (chromosome and position).
+    **--filter-include-bed** *<position_bed_filename>*
+        Argument used to define a BED file of positions to include.
+    **--filter-exclude-bed** *<position_bed_filename>*
+        Argument used to define a BED file of positions to exclude.
   </help>
 
 </tool>
