@@ -171,7 +171,7 @@ def admix_parser(passed_arguments = []):
     # General arguments
     admix_parser.add_argument('--bootstrap', help = 'Defines the number of bootstrap replicates', type = int)
     admix_parser.add_argument('--threads', help = 'Defines the number of threads to be used for computation', type = int)
-    admix_parser.add_argument('--cv', help = "Defines the cross validation fold, defaulted to 5 fold", type = int)
+    admix_parser.add_argument('--cv', nargs = "?", help = "Defines the cross validation fold, defaulted to 5 fold", type = int)
     admix_parser.add_argument('--random-seed', help = "Defines the seed value for the random number generator", type = int)
     admix_parser.add_argument('--overwrite', help = "Defines if previous output should be overwritten", action = 'store_true')
 
