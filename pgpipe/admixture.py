@@ -171,9 +171,9 @@ def admix_parser(passed_arguments = []):
     # General arguments
     admix_parser.add_argument('--bootstrap', help = 'Defines the number of bootstrap replicates', type = int)
     admix_parser.add_argument('--threads', help = 'Defines the number of threads to be used for computation', type = int)
-    admix_parser.add_argument('--cv', nargs = "?", help = "Defines the cross validation fold, defaulted to 5 fold", type = int)
     admix_parser.add_argument('--random-seed', help = "Defines the seed value for the random number generator", type = int)
     admix_parser.add_argument('--overwrite', help = "Defines if previous output should be overwritten", action = 'store_true')
+    admix_parser.add_argument('--cross-validation', action='store_true', help="Option to add cross validation")
 
 
     if passed_arguments:
@@ -240,6 +240,10 @@ def run(**kwargs):
         # Assign the number of threads to the argument list
         admix_call_args.append("-j" + str(admix_args.threads))
 
+    # Check if the user has definied cross validation
+    if admix_args.cross_validation:
+        admix_call_args.append("--cv")
+
     # Check if the a ped prefix was assigned
     if admix_args.ped_prefix and confirm_ped_prefix(admix_args.ped_prefix):
 
@@ -291,7 +295,11 @@ def run(**kwargs):
         raise IOError("admixture not found. Please confirm the executable is installed")
 
     # Run 'admixture' executable file with options provided by user
-    admixture_call = subprocess.Popen([admixture_path] + list(map(str, admix_call_args)), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    admixture_call = subprocess.Popen(
+        [admixture_path] + list(map(str, admix_call_args)),
+        stdout=open(f'log{str(admix_args.pop)}.out', 'w'),
+        stderr=subprocess.STDOUT  # Redirects stderr to the same file as stdout
+    )
 
     # Store command output and/or error to variables
     admix_stdout, admix_stderr = admixture_call.communicate()
