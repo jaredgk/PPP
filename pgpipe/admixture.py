@@ -101,7 +101,7 @@
         Argument used to define the seed value for the random number generator.
     **--threads** *<thread_int>*
         Argument used to define the number of threads to be used for computation.
-    **--cv** *<cross_validation>*
+    **--cross-validation** *<cross_validation>*
         In this default setting, the
         cross-validation procedure will perform 5-fold CV—you can get 10-fold CV, for example,
         using --cv=10. The cross-validation error is reported in the output. 
