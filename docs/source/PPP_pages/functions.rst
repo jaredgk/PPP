@@ -13,4 +13,5 @@ The functions below were developed to perform many of the core operations typica
    Functions/vcf_split
    Functions/vcf_phase
    Functions/vcf_four_gamete
+   Functions/pixy
    
