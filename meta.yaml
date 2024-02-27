@@ -46,6 +46,7 @@ requirements:
     - r-tidyr
     - r-tidyselect
     - r-zeallot
+    - pixy
 
 test:
   imports:
