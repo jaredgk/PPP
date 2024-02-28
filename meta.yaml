@@ -47,6 +47,7 @@ requirements:
     - r-tidyselect
     - r-zeallot
     - pixy
+    - htslib
 
 test:
   imports:

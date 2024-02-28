@@ -14,9 +14,10 @@
 """
 import os
 import argparse
+import subprocess
 
 from pgpipe.logging_module import initLogger, logArgs
-from pgpipe.misc import argprase_kwargs
+from pgpipe.misc import argprase_kwargs, confirm_executable
 
 
 def pixy_calc_parser(passed_arguments=[]):
@@ -47,43 +48,6 @@ def pixy_calc_parser(passed_arguments=[]):
                 setattr(args, self.dest, value)
 
         return customAction
-
-    def parser_confirm_file_list():
-        """Custom action to confirm file exists in list"""
-
-        class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
-                # Loop the list
-                for value_item in value:
-                    # Check if the file exists
-                    if not os.path.isfile(value_item):
-                        raise IOError("%s not found" % value_item)
-                if not getattr(args, self.dest):
-                    setattr(args, self.dest, value)
-                else:
-                    getattr(args, self.dest).extend(value)
-
-        return customAction
-
-    def parser_add_to_list():
-        """Custom action to add items to a list"""
-
-        class customAction(argparse.Action):
-            def __call__(self, parser, args, value, option_string=None):
-
-                # Clean up any commas
-                value = [item.strip(",") for item in value]
-
-                if not getattr(args, self.dest):
-                    setattr(args, self.dest, value)
-                else:
-                    getattr(args, self.dest).extend(value)
-
-        return customAction
-
-    def metavar_list(var_list):
-        """Create a formmated metavar list for the help output"""
-        return "{" + ", ".join(var_list) + "}"
 
     pixy_parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -127,6 +91,7 @@ def pixy_calc_parser(passed_arguments=[]):
         nargs="?",
         help="Path to a headerless .BED file with columns [chrom chromStart chromEnd]",
         required=False,
+        action=parser_confirm_file(),
     )
 
     # Optional arguments
@@ -230,8 +195,26 @@ def run(**kwargs):
     if pixy_args.out_dir:
         pixy_call_args.extend(["--output_folder", pixy_args.out_dir])
 
-    # TODO for testing
-    print(pixy_call_args)
+    # Confirm where the specified executable is located
+    pixy_path = confirm_executable("pixy")
+
+    # Check if executable was found
+    if not pixy_path:
+        raise IOError("pixy not found. Please confirm the exectuable is installed")
+
+    # Run pixy executable file with options provided by user
+    pixy_call = subprocess.Popen(
+        [pixy_path] + list(map(str, pixy_call_args)),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    # Store command output and/or error to variables
+    pixy_stdout, pixy_stderr = pixy_call.communicate()
+
+    # Check if pixy returned an error
+    if pixy_stderr:
+        raise Exception(pixy_stderr)
 
 
 if __name__ == "__main__":
