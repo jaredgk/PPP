@@ -68,6 +68,7 @@ def pixy_calc_parser(passed_arguments=[]):
         required=True,
         action=parser_confirm_file(),
     )
+
     pixy_parser.add_argument(
         "--stats",
         help="Defines which statistic(s) pixy should perform [pi|fst|dxy]",
@@ -81,14 +82,12 @@ def pixy_calc_parser(passed_arguments=[]):
     pixy_parser.add_argument(
         "--statistic-window-size",
         type=int,
-        nargs="?",
         help="Defines window size in base pairs over which to calculate stats",
         required=False,
     )
     pixy_parser.add_argument(
         "--bed-file",
         type=str,
-        nargs="?",
         help="Path to a headerless .BED file with columns [chrom chromStart chromEnd]",
         required=False,
         action=parser_confirm_file(),
@@ -98,14 +97,12 @@ def pixy_calc_parser(passed_arguments=[]):
     pixy_parser.add_argument(
         "--out-dir",
         type=str,
-        nargs="?",
         help="Defines the output directory",
         required=False,
     )
     pixy_parser.add_argument(
         "--out",
         type=str,
-        nargs="?",
         help="Defines prefix for output file(s)",
         required=False,
     )
@@ -195,6 +192,7 @@ def run(**kwargs):
     if pixy_args.out_dir:
         pixy_call_args.extend(["--output_folder", pixy_args.out_dir])
 
+    # TODO figure out how to install pixy
     # Confirm where the specified executable is located
     pixy_path = confirm_executable("pixy")
 
