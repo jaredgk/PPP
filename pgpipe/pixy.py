@@ -86,7 +86,7 @@ def pixy_calc_parser(passed_arguments=[]):
         return "{" + ", ".join(var_list) + "}"
 
     pixy_parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaulsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
     # Required arguments
@@ -95,14 +95,14 @@ def pixy_calc_parser(passed_arguments=[]):
         help="Defines the path and/or filename of the VCF",
         type=str,
         required=True,
-        action=parser_confirm_file,
+        action=parser_confirm_file(),
     )
     pixy_parser.add_argument(
         "--pop-file",
         help="Defines the path and/or filename of the populations file",
         type=str,
         required=True,
-        action=parser_confirm_file,
+        action=parser_confirm_file(),
     )
     pixy_parser.add_argument(
         "--stats",
@@ -197,37 +197,43 @@ def run(**kwargs):
     # Argument container for pixy
     pixy_call_args = []
 
-    # TODO add args to pixy_call_args
     # Add required arguments
     if pixy_args.vcf:
-        pixy_call_args.extend(["--vcf" + pixy_args.vcf])
+        pixy_call_args.extend(["--vcf", pixy_args.vcf])
 
     if pixy_args.pop_file:
-        pixy_call_args.extend(["--populations" + pixy_args.pop_file])
+        pixy_call_args.extend(["--populations", pixy_args.pop_file])
 
     if pixy_args.stats:
-        pixy_call_args.extend(["stats" + {arg} for arg in pixy_args.stats])
+        pixy_call_args.extend(["--stats"])
+        pixy_call_args.extend(pixy_args.stats)
 
     # Assign one of either
     if pixy_args.bed_file and pixy_args.statistic_window_size:
         raise Exception(
             "Cannot have both bed-file and statistic-window-size parameters. Must be one or the other"
         )
-    
+
     elif not pixy_args.bed_file and not pixy_args.statistic_window_size:
         raise Exception("Must specificy a bed file or a window size")
-    
+
     if pixy_args.bed_file and not pixy_args.statistic_window_size:
-        pixy_call_args.extend(["--bed_file" + pixy_args.bed_file])
+        pixy_call_args.extend(["--bed_file", pixy_args.bed_file])
 
     elif pixy_args.statistic_window_size and not pixy_args.bed_file:
-        pixy_call_args.extend(["--window_size" + str(pixy_args.statistic_window_size)])
+        pixy_call_args.extend(["--window_size", str(pixy_args.statistic_window_size)])
 
     # Add optional arguments
     if pixy_args.out:
-        pixy_call_args.extend(["--output_prefix" + pixy_args.out])
-    
-    if pixy_args.out_dir:
-        pixy_call_args.extend(["--output_folder" + pixy_args.out_dir])
+        pixy_call_args.extend(["--output_prefix", pixy_args.out])
 
-    
+    if pixy_args.out_dir:
+        pixy_call_args.extend(["--output_folder", pixy_args.out_dir])
+
+    # TODO for testing
+    print(pixy_call_args)
+
+
+if __name__ == "__main__":
+    initLogger()
+    run(**pixy_calc_parser())
